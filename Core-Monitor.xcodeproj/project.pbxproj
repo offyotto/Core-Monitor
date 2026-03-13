@@ -6,27 +6,22 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXContainerItemProxy section */
-		353B02E12F640A0800A65F2C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 353B02C92F640A0700A65F2C /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 353B02D02F640A0700A65F2C;
-			remoteInfo = "Core-Monitor";
+/* Begin PBXCopyFilesBuildPhase section */
+		35F039A92F64444D004CB9F8 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
 		};
-		353B02EB2F640A0800A65F2C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 353B02C92F640A0700A65F2C /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 353B02D02F640A0700A65F2C;
-			remoteInfo = "Core-Monitor";
-		};
-/* End PBXContainerItemProxy section */
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		353B02D12F640A0700A65F2C /* Core-Monitor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Core-Monitor.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		353B02E02F640A0800A65F2C /* Core-MonitorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Core-MonitorTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		353B02EA2F640A0800A65F2C /* Core-MonitorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Core-MonitorUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		35F039A42F6441FE004CB9F8 /* SMCHelperManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMCHelperManager.swift; sourceTree = "<group>"; };
+		35F039AB2F64444D004CB9F8 /* smc-helper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "smc-helper"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -45,6 +40,11 @@
 			path = "Core-MonitorUITests";
 			sourceTree = "<group>";
 		};
+		35F039AC2F64444D004CB9F8 /* smc-helper */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "smc-helper";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,14 +55,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		353B02DD2F640A0800A65F2C /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		353B02E72F640A0800A65F2C /* Frameworks */ = {
+		35F039A82F64444D004CB9F8 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -78,7 +71,9 @@
 				353B02D32F640A0700A65F2C /* Core-Monitor */,
 				353B02E32F640A0800A65F2C /* Core-MonitorTests */,
 				353B02ED2F640A0800A65F2C /* Core-MonitorUITests */,
+				35F039AC2F64444D004CB9F8 /* smc-helper */,
 				353B02D22F640A0700A65F2C /* Products */,
+				35F039A42F6441FE004CB9F8 /* SMCHelperManager.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -86,8 +81,7 @@
 			isa = PBXGroup;
 			children = (
 				353B02D12F640A0700A65F2C /* Core-Monitor.app */,
-				353B02E02F640A0800A65F2C /* Core-MonitorTests.xctest */,
-				353B02EA2F640A0800A65F2C /* Core-MonitorUITests.xctest */,
+				35F039AB2F64444D004CB9F8 /* smc-helper */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -117,51 +111,27 @@
 			productReference = 353B02D12F640A0700A65F2C /* Core-Monitor.app */;
 			productType = "com.apple.product-type.application";
 		};
-		353B02DF2F640A0800A65F2C /* Core-MonitorTests */ = {
+		35F039AA2F64444D004CB9F8 /* smc-helper */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 353B02F72F640A0800A65F2C /* Build configuration list for PBXNativeTarget "Core-MonitorTests" */;
+			buildConfigurationList = 35F039AF2F64444D004CB9F8 /* Build configuration list for PBXNativeTarget "smc-helper" */;
 			buildPhases = (
-				353B02DC2F640A0800A65F2C /* Sources */,
-				353B02DD2F640A0800A65F2C /* Frameworks */,
-				353B02DE2F640A0800A65F2C /* Resources */,
+				35F039A72F64444D004CB9F8 /* Sources */,
+				35F039A82F64444D004CB9F8 /* Frameworks */,
+				35F039A92F64444D004CB9F8 /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				353B02E22F640A0800A65F2C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				353B02E32F640A0800A65F2C /* Core-MonitorTests */,
+				35F039AC2F64444D004CB9F8 /* smc-helper */,
 			);
-			name = "Core-MonitorTests";
+			name = "smc-helper";
 			packageProductDependencies = (
 			);
-			productName = "Core-MonitorTests";
-			productReference = 353B02E02F640A0800A65F2C /* Core-MonitorTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		353B02E92F640A0800A65F2C /* Core-MonitorUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 353B02FA2F640A0800A65F2C /* Build configuration list for PBXNativeTarget "Core-MonitorUITests" */;
-			buildPhases = (
-				353B02E62F640A0800A65F2C /* Sources */,
-				353B02E72F640A0800A65F2C /* Frameworks */,
-				353B02E82F640A0800A65F2C /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				353B02EC2F640A0800A65F2C /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				353B02ED2F640A0800A65F2C /* Core-MonitorUITests */,
-			);
-			name = "Core-MonitorUITests";
-			packageProductDependencies = (
-			);
-			productName = "Core-MonitorUITests";
-			productReference = 353B02EA2F640A0800A65F2C /* Core-MonitorUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
+			productName = "smc-helper";
+			productReference = 35F039AB2F64444D004CB9F8 /* smc-helper */;
+			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
@@ -176,13 +146,8 @@
 					353B02D02F640A0700A65F2C = {
 						CreatedOnToolsVersion = 26.3;
 					};
-					353B02DF2F640A0800A65F2C = {
+					35F039AA2F64444D004CB9F8 = {
 						CreatedOnToolsVersion = 26.3;
-						TestTargetID = 353B02D02F640A0700A65F2C;
-					};
-					353B02E92F640A0800A65F2C = {
-						CreatedOnToolsVersion = 26.3;
-						TestTargetID = 353B02D02F640A0700A65F2C;
 					};
 				};
 			};
@@ -201,28 +166,13 @@
 			projectRoot = "";
 			targets = (
 				353B02D02F640A0700A65F2C /* Core-Monitor */,
-				353B02DF2F640A0800A65F2C /* Core-MonitorTests */,
-				353B02E92F640A0800A65F2C /* Core-MonitorUITests */,
+				35F039AA2F64444D004CB9F8 /* smc-helper */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		353B02CF2F640A0700A65F2C /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		353B02DE2F640A0800A65F2C /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		353B02E82F640A0800A65F2C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -239,14 +189,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		353B02DC2F640A0800A65F2C /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		353B02E62F640A0800A65F2C /* Sources */ = {
+		35F039A72F64444D004CB9F8 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -254,19 +197,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		353B02E22F640A0800A65F2C /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 353B02D02F640A0700A65F2C /* Core-Monitor */;
-			targetProxy = 353B02E12F640A0800A65F2C /* PBXContainerItemProxy */;
-		};
-		353B02EC2F640A0800A65F2C /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 353B02D02F640A0700A65F2C /* Core-Monitor */;
-			targetProxy = 353B02EB2F640A0800A65F2C /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		353B02F22F640A0800A65F2C /* Debug */ = {
@@ -398,12 +328,21 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6VDP675K4L;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "App-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -430,12 +369,21 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6VDP675K4L;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "App-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -453,83 +401,33 @@
 			};
 			name = Release;
 		};
-		353B02F82F640A0800A65F2C /* Debug */ = {
+		35F039B02F64444D004CB9F8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6VDP675K4L;
-				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "ventaphobia.Core-MonitorTests";
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "ventaphobia.smc-helper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Core-Monitor.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Core-Monitor";
 			};
 			name = Debug;
 		};
-		353B02F92F640A0800A65F2C /* Release */ = {
+		35F039B12F64444D004CB9F8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6VDP675K4L;
-				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "ventaphobia.Core-MonitorTests";
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "ventaphobia.smc-helper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Core-Monitor.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Core-Monitor";
-			};
-			name = Release;
-		};
-		353B02FB2F640A0800A65F2C /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 6VDP675K4L;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "ventaphobia.Core-MonitorUITests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = "Core-Monitor";
-			};
-			name = Debug;
-		};
-		353B02FC2F640A0800A65F2C /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 6VDP675K4L;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "ventaphobia.Core-MonitorUITests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = "Core-Monitor";
 			};
 			name = Release;
 		};
@@ -554,20 +452,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		353B02F72F640A0800A65F2C /* Build configuration list for PBXNativeTarget "Core-MonitorTests" */ = {
+		35F039AF2F64444D004CB9F8 /* Build configuration list for PBXNativeTarget "smc-helper" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				353B02F82F640A0800A65F2C /* Debug */,
-				353B02F92F640A0800A65F2C /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		353B02FA2F640A0800A65F2C /* Build configuration list for PBXNativeTarget "Core-MonitorUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				353B02FB2F640A0800A65F2C /* Debug */,
-				353B02FC2F640A0800A65F2C /* Release */,
+				35F039B02F64444D004CB9F8 /* Debug */,
+				35F039B12F64444D004CB9F8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
