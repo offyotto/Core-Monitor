@@ -132,6 +132,7 @@ final class SystemMonitor: ObservableObject {
     private let smcReadBytes: UInt8 = 5
     private let smcReadKeyInfo: UInt8 = 9
     private let kernelIndexSmc: UInt32 = 2
+    private let maxFanProbeCount = 12
 
     init() {
         hasSMCAccess = openSMCConnection()
@@ -198,12 +199,10 @@ final class SystemMonitor: ObservableObject {
 
     private func detectFans() {
         var count = 0
-        for i in 0..<8 {
+        for i in 0..<maxFanProbeCount {
             let key = String(format: "F%dAc", i)
             if readSMCValue(key: key) != nil {
                 count += 1
-            } else {
-                break
             }
         }
         numberOfFans = count
@@ -304,7 +303,7 @@ final class SystemMonitor: ObservableObject {
 
         let total = user + system + idle + nice
         guard total > 0 else {
-            return CPUStats(usagePercent: 0)
+            return CPUStats(usagePercent: cpuUsagePercent)
         }
 
         let used = user + system + nice
@@ -419,8 +418,13 @@ final class SystemMonitor: ObservableObject {
                 }
 
                 if let tempRaw = properties["Temperature"] as? Int {
-                    let celsius = (Double(tempRaw) / 100.0) - 273.15
-                    if celsius > -40, celsius < 120 {
+                    // AppleSmartBattery temperature units vary by machine/OS build.
+                    // Prefer deci-Kelvin, then fall back to centi-Kelvin.
+                    let candidates = [
+                        (Double(tempRaw) / 10.0) - 273.15,
+                        (Double(tempRaw) / 100.0) - 273.15
+                    ]
+                    if let celsius = candidates.first(where: { $0 > -40 && $0 < 120 }) {
                         info.temperatureC = celsius
                     }
                 }
@@ -434,7 +438,7 @@ final class SystemMonitor: ObservableObject {
                 }
 
                 if let volts = info.voltageV, let amps = info.amperageA {
-                    info.powerWatts = abs(volts * amps)
+                    info.powerWatts = volts * amps
                 }
             }
         }
@@ -514,12 +518,8 @@ final class SystemMonitor: ObservableObject {
         switch dataType {
         case dataTypeFlt:
             if dataSize == 4 {
-                var value: Float32 = 0
-                withUnsafeMutableBytes(of: &value) { buffer in
-                    buffer[0] = raw[0]
-                    buffer[1] = raw[1]
-                    buffer[2] = raw[2]
-                    buffer[3] = raw[3]
+                let value = raw.withUnsafeBufferPointer {
+                    $0.baseAddress!.withMemoryRebound(to: Float32.self, capacity: 1) { $0.pointee }
                 }
                 return Double(value)
             }

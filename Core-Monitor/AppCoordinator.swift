@@ -12,12 +12,12 @@ final class AppCoordinator: ObservableObject {
     private var cpuTempHistory: [Double] = []
     private var memoryUsageHistory: [Double] = []
     private var fanHistory: [Double] = []
+    private let touchBarHistoryLimit = 24
 
     init() {
         let monitor = SystemMonitor()
         self.systemMonitor = monitor
         self.fanController = FanController(systemMonitor: monitor)
-
         DispatchQueue.main.async { [weak self] in
             self?.start()
         }
@@ -38,7 +38,6 @@ final class AppCoordinator: ObservableObject {
         }
         if let touchBarTimer {
             touchBarTimer.tolerance = 0.25
-            RunLoop.current.add(touchBarTimer, forMode: .common)
         }
     }
 
@@ -52,7 +51,7 @@ final class AppCoordinator: ObservableObject {
 
     private func updateTouchBar() {
         let cpuUsage = max(0, min(100, systemMonitor.cpuUsagePercent))
-        let cpuTemp = max(0, min(120, systemMonitor.cpuTemperature ?? 0))
+        let cpuTemp = systemMonitor.cpuTemperature.map { max(0, min(120, $0)) }
 
         let memUsage = max(0, min(100, systemMonitor.memoryUsagePercent))
         let memPressure = memoryPressureEmoji(systemMonitor.memoryPressure)
@@ -64,12 +63,16 @@ final class AppCoordinator: ObservableObject {
         let fanPercent = max(0, min(100, ((fanRPM - fanMin) / fanRange) * 100))
 
         append(&cpuUsageHistory, cpuUsage)
-        append(&cpuTempHistory, cpuTemp)
+        if let cpuTemp {
+            append(&cpuTempHistory, cpuTemp)
+        } else if let lastTemp = cpuTempHistory.last {
+            append(&cpuTempHistory, lastTemp)
+        }
         append(&memoryUsageHistory, memUsage)
         append(&fanHistory, fanPercent)
 
-        let cpuTempText = cpuTemp > 0 ? String(format: "%.0f°", cpuTemp) : "--"
-        let topText = "CPU \(cpuTempText) \(Int(cpuUsage))%   MEM \(Int(memUsage))% \(memPressure)   FAN \(Int(fanRPM))rpm"
+        let cpuTempText = cpuTemp.map { String(format: "%.0f°", $0) } ?? "--"
+        let topText = "CPU \(cpuTempText) \(Int(cpuUsage.rounded()))%   MEM \(Int(memUsage.rounded()))% \(memPressure)   FAN \(Int(fanRPM.rounded()))rpm"
 
         let graphText = "T \(sparkline(cpuTempHistory, maxScale: 110))  M \(sparkline(memoryUsageHistory))  C \(sparkline(cpuUsageHistory))  F \(sparkline(fanHistory))"
 
@@ -78,8 +81,8 @@ final class AppCoordinator: ObservableObject {
 
     private func append(_ history: inout [Double], _ value: Double) {
         history.append(value)
-        if history.count > 24 {
-            history.removeFirst(history.count - 24)
+        if history.count > touchBarHistoryLimit {
+            history.removeFirst(history.count - touchBarHistoryLimit)
         }
     }
 

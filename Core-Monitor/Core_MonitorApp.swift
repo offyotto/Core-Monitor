@@ -1,14 +1,25 @@
 import SwiftUI
+import AppKit
 
 @main
 struct Core_MonitorApp: App {
+    private enum SceneID {
+        static let mainWindow = "main"
+    }
+
     @StateObject private var coordinator = AppCoordinator()
+    @StateObject private var startupManager = StartupManager()
+
+    init() {
+        NSWindow.allowsAutomaticWindowTabbing = false
+    }
 
     var body: some Scene {
-        WindowGroup(id: "main") {
+        WindowGroup(id: SceneID.mainWindow) {
             ContentView(
                 systemMonitor: coordinator.systemMonitor,
-                fanController: coordinator.fanController
+                fanController: coordinator.fanController,
+                startupManager: startupManager
             )
         }
         .defaultSize(width: 920, height: 620)

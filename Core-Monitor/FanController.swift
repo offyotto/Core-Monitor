@@ -33,6 +33,7 @@ final class FanController: ObservableObject {
         self.mode = mode
 
         if mode == .automatic {
+            resetToSystemAutomatic()
             startAutoControl()
         } else {
             stopAutoControl()
@@ -56,14 +57,12 @@ final class FanController: ObservableObject {
 
     func resetToSystemAutomatic() {
         guard let monitor = systemMonitor, monitor.numberOfFans > 0 else { return }
-
         var allSuccess = true
         for fanID in 0..<monitor.numberOfFans {
             if !runSmcHelper(arguments: ["auto", "\(fanID)"]) {
                 allSuccess = false
             }
         }
-
         statusMessage = allSuccess ? "System automatic control restored" : "Failed to restore automatic control"
     }
 
@@ -118,14 +117,15 @@ final class FanController: ObservableObject {
             statusMessage = "No fan detected"
             return
         }
-
         var allSuccess = true
         for fanID in 0..<monitor.numberOfFans {
-            if !runSmcHelper(arguments: ["set", "\(fanID)", "\(speed)"]) {
+            let perFanMin = fanID < monitor.fanMinSpeeds.count ? monitor.fanMinSpeeds[fanID] : minSpeed
+            let perFanMax = fanID < monitor.fanMaxSpeeds.count ? monitor.fanMaxSpeeds[fanID] : maxSpeed
+            let clamped = max(perFanMin, min(perFanMax, speed))
+            if !runSmcHelper(arguments: ["set", "\(fanID)", "\(clamped)"]) {
                 allSuccess = false
             }
         }
-
         statusMessage = allSuccess ? "Applied \(speed) RPM" : "Failed to apply fan speed"
     }
 

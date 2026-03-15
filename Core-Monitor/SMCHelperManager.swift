@@ -19,22 +19,29 @@ final class SMCHelperManager: ObservableObject {
     private let helperLabel = "ventaphobia.smc-helper"
 
     private var helperCandidates: [String] {
+        var candidates = [
+            "/Library/PrivilegedHelperTools/\(helperLabel)",
+            "/usr/local/bin/smc-helper",
+            "/opt/homebrew/bin/smc-helper"
+        ]
+#if DEBUG
         let derivedProductsHelper = URL(fileURLWithPath: Bundle.main.bundlePath)
             .deletingLastPathComponent()
             .appendingPathComponent("smc-helper")
             .path
-        return [
-            "/Library/PrivilegedHelperTools/\(helperLabel)",
-            derivedProductsHelper,
-            "/Users/bookme/Desktop/Core-Monitor/Products/smc-helper",
-            "/usr/local/bin/smc-helper",
-            "/opt/homebrew/bin/smc-helper",
-            "/Users/bookme/Downloads/solofan-1.3.0/tools/smc-helper/smc-helper"
-        ]
+        let workspaceBuildHelper = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appendingPathComponent("Core-Monitor/Products/smc-helper")
+            .path
+        candidates.append(contentsOf: [derivedProductsHelper, workspaceBuildHelper])
+#endif
+        return candidates
     }
 
     func refreshStatus() {
         isInstalled = helperCandidates.contains { FileManager.default.fileExists(atPath: $0) }
+        if isInstalled, statusMessage == "smc-helper not found" {
+            statusMessage = nil
+        }
     }
 
     func installViaSMJobBless() {
@@ -56,13 +63,7 @@ final class SMCHelperManager: ObservableObject {
             return
         }
 
-        if #unavailable(macOS 13.0) {
-            installLegacyViaSMJobBless()
-            return
-        }
-
-        statusMessage = "Helper registration is only available on macOS 13+ (SMAppService) or older systems with SMJobBless."
-        refreshStatus()
+        installLegacyViaSMJobBless()
     }
 
     @available(macOS, introduced: 10.6)
@@ -144,6 +145,7 @@ final class SMCHelperManager: ObservableObject {
             try direct.run()
             direct.waitUntilExit()
             if direct.terminationStatus == 0 {
+                statusMessage = nil
                 return true
             }
         } catch {
@@ -158,6 +160,7 @@ final class SMCHelperManager: ObservableObject {
             try sudo.run()
             sudo.waitUntilExit()
             if sudo.terminationStatus == 0 {
+                statusMessage = nil
                 return true
             }
         } catch {
@@ -169,18 +172,34 @@ final class SMCHelperManager: ObservableObject {
             return false
         }
 
-        let command = "'\(helperPath)' \(arguments.joined(separator: " "))"
-        let script = "do shell script \"\(command)\" with administrator privileges"
-
-        var scriptError: NSDictionary?
-        guard let appleScript = NSAppleScript(source: script) else {
-            statusMessage = "Failed to prepare privilege prompt"
-            return false
+        if runWithAdminPrompt(helperPath: helperPath, arguments: arguments) {
+            statusMessage = nil
+            return true
         }
 
+        statusMessage = "Helper command failed. Install/approve the privileged helper first."
+        return false
+    }
+
+    private func runWithAdminPrompt(helperPath: String, arguments: [String]) -> Bool {
+        let command = ([helperPath] + arguments)
+            .map { shellQuote($0) }
+            .joined(separator: " ")
+
+        let escapedCommand = command
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+        let scriptSource = "do shell script \"\(escapedCommand)\" with administrator privileges"
+
+        var scriptError: NSDictionary?
+        guard let appleScript = NSAppleScript(source: scriptSource) else {
+            return false
+        }
         _ = appleScript.executeAndReturnError(&scriptError)
-        let ok = scriptError == nil
-        statusMessage = ok ? "Helper command succeeded" : "Helper command failed"
-        return ok
+        return scriptError == nil
+    }
+
+    private func shellQuote(_ string: String) -> String {
+        "'" + string.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 }

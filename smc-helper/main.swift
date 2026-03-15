@@ -242,14 +242,23 @@ private final class SMCController {
         }
 
         if dataType == typeFlt, dataSize == 4 {
-            var value: Float32 = 0
-            withUnsafeMutableBytes(of: &value) { buffer in
-                buffer[0] = raw[0]
-                buffer[1] = raw[1]
-                buffer[2] = raw[2]
-                buffer[3] = raw[3]
-            }
-            return Double(value)
+            let bigEndianBits = (UInt32(raw[0]) << 24)
+                | (UInt32(raw[1]) << 16)
+                | (UInt32(raw[2]) << 8)
+                | UInt32(raw[3])
+            let littleEndianBits = (UInt32(raw[3]) << 24)
+                | (UInt32(raw[2]) << 16)
+                | (UInt32(raw[1]) << 8)
+                | UInt32(raw[0])
+
+            let be = Double(Float(bitPattern: bigEndianBits))
+            let le = Double(Float(bitPattern: littleEndianBits))
+            let beValid = be.isFinite && abs(be) < 100_000
+            let leValid = le.isFinite && abs(le) < 100_000
+            if beValid && !leValid { return be }
+            if leValid && !beValid { return le }
+            if beValid && leValid { return abs(be) <= abs(le) ? be : le }
+            return be.isFinite ? be : (le.isFinite ? le : nil)
         }
 
         return nil

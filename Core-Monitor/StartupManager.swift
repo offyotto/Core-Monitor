@@ -17,11 +17,19 @@ final class StartupManager: ObservableObject {
             switch status {
             case .enabled:
                 isEnabled = true
+                errorMessage = nil
             case .requiresApproval:
                 isEnabled = false
                 errorMessage = "Startup requires approval in System Settings > Login Items."
+            case .notFound:
+                isEnabled = false
+                errorMessage = "Login item was not found. Re-enable launch at login."
+            case .notRegistered:
+                isEnabled = false
+                errorMessage = nil
             default:
                 isEnabled = false
+                errorMessage = nil
             }
         } else {
             isEnabled = false
@@ -40,9 +48,21 @@ final class StartupManager: ObservableObject {
             }
             errorMessage = nil
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = startupErrorMessage(for: error)
         }
 
         refreshState()
+    }
+
+    private func startupErrorMessage(for error: Error) -> String {
+        let nsError = error as NSError
+        let description = nsError.localizedDescription.lowercased()
+        if description.contains("authorization") || description.contains("permission") {
+            return "Permission denied. Open System Settings > Login Items and approve Core Monitor."
+        }
+        if description.contains("already") {
+            return "Login item is already registered."
+        }
+        return nsError.localizedDescription
     }
 }
