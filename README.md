@@ -1,6 +1,6 @@
 # Core-Monitor
 
-Core-Monitor is an all-in-one macOS stats and multitasking app. It is meant to stay fairly light while still packing in a lot of utility.
+Core-Monitor is an all-in-one macOS stats and fan control and VM app. It is meant to stay fairly light while still packing in a lot of utility.
 
 ## UI Preview
 
