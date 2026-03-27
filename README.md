@@ -10,6 +10,7 @@ Core-Monitor is not just a stats window. It is meant to be a serious all-in-one 
 - live machine telemetry
 - real fan control
 - SMC-backed features
+- built-in benchmarking
 - menu bar visibility
 - a genuinely useful Touch Bar widget
 - built-in VM workflows through CoreVisor
@@ -43,6 +44,7 @@ That is why the project combines monitoring, fan control, Touch Bar overlays, an
 | Dashboard | Live CPU, memory, thermals, power, battery, fan state, and VM-aware monitoring |
 | Menu Bar | Quick status, quick controls, fast app access |
 | Fan Control | SMC-backed fan write support through a privileged helper |
+| Benchmarking | Sustained-load benchmark with local leaderboard and thermal-aware ratings |
 | Touch Bar | Persistent live hardware widget while the app is open |
 | CoreVisor | Built-in VM setup, management, and runtime workflows |
 | Open Source | The app, helper, and CoreVisor logic are visible in the repo |
@@ -70,6 +72,17 @@ Core-Monitor is built around one idea: system data should not just be visible, i
 - One-app flow for seeing thermals and reacting to them
 - Fast access to fan actions from the interface
 - Helper-backed write path instead of keeping everything read-only
+
+### Benchmarking
+
+- Built-in local benchmark mode
+- Sustained throughput scoring
+- Thermal and load sampling during a run
+- Peak and average temperature tracking
+- Peak and average CPU load tracking
+- Quality ratings based on thermal behavior and sustained throughput
+- Local leaderboard with filters
+- Custom fan-control / tamper detection flagging
 
 ### Menu Bar
 
@@ -248,6 +261,132 @@ The point of fan control here is not to be a gimmick toggle. It matters because 
 
 That makes the monitoring layer more useful than pure read-only telemetry.
 
+## Benchmark
+
+Core-Monitor now includes a built-in benchmark system. It is not just a decorative score generator and it is not pretending to be a giant third-party benchmark suite. It exists because this app already understands machine load, thermals, fan state, and sustained behavior, so it makes sense for it to measure them together.
+
+The benchmark is designed around sustained work and thermal response rather than a single short burst. During a benchmark run, Core-Monitor:
+
+- runs a CPU-heavy workload across performance cores
+- samples CPU load once per second
+- tracks package temperature and benchmark temperature readings
+- records fan RPM during the run
+- computes a running raw score against an internal baseline
+- stores the full sample timeline for later inspection
+
+That means the benchmark is trying to answer a useful question:
+
+How well did this machine sustain load, and what did its thermal behavior look like while doing it?
+
+### What a benchmark result contains
+
+Each saved benchmark result stores:
+
+- machine model
+- chip name
+- performance core count
+- efficiency core count
+- total logical core count
+- raw score
+- quality rating
+- peak temperature
+- average temperature
+- average CPU load
+- whether custom fan control/tampering was detected
+- duration in seconds
+- full recorded sample timeline
+
+So a result is not just one number. It is a local performance and thermal record of the run.
+
+### How the score works
+
+The benchmark engine tracks operations completed over time and compares that throughput to an internal baseline. The score is meant to represent sustained behavior, not just the first second of the run.
+
+The score is influenced by:
+
+- total work completed
+- how well throughput holds up across the run
+- whether the machine appears to lose performance late in the session
+- the thermal conditions surrounding that performance
+
+This makes the benchmark more aligned with the rest of Core-Monitor’s philosophy: sustained behavior matters more than one flashy spike.
+
+### Quality ratings
+
+Benchmark runs are also given a quality rating:
+
+- `Platinum`
+- `Gold`
+- `Silver`
+- `Bronze`
+- `Thermal Throttle`
+
+These ratings are derived from:
+
+- average sustained CPU load
+- peak temperature
+- whether late-run throughput drops enough to look like thermal throttling
+
+That means the rating is a quick interpretation layer on top of the score. It is not just asking “how fast was this run?” It is also asking:
+
+- did the machine stay loaded cleanly?
+- did it keep thermal headroom?
+- did performance fall off under heat?
+
+### Custom fan-control detection
+
+The benchmark also checks whether outside fan-control conditions may have affected the run.
+
+Core-Monitor includes a tamper detector that:
+
+- looks for known fan-control apps
+- probes fan mode state through SMC reads
+- flags benchmark sessions that appear to be running under custom fan-control conditions
+
+That matters because benchmark runs are not really comparable if one is using altered fan behavior and another is not. Core-Monitor does not hide that difference.
+
+### Local leaderboard
+
+Saved results can be stored in a local leaderboard.
+
+The leaderboard supports filters for:
+
+- Mac family
+- total core count
+- quality rating
+- custom-fan-control-only runs
+- top-score-only view
+
+This is useful if you want to:
+
+- compare multiple runs on one machine
+- compare your own Macs locally
+- test whether custom fan behavior changes sustained results
+- see whether a machine is thermally healthy under repeated runs
+
+### What the benchmark is good for
+
+The benchmark is especially useful for:
+
+- checking sustained thermal behavior
+- comparing local machines
+- seeing whether performance falls off late in a run
+- validating whether cooling behavior appears stable
+- tying one benchmark result back to the rest of Core-Monitor’s live system view
+
+Because it uses the same monitoring layer as the rest of the app, it feels like part of Core-Monitor instead of a random extra tab.
+
+### Benchmark result flow
+
+```mermaid
+flowchart TD
+    A["Start Benchmark"] --> B["Run Sustained Workload"]
+    B --> C["Sample CPU Load, Temp, Fan RPM"]
+    C --> D["Compute Score + Quality Rating"]
+    D --> E["Save Local Result"]
+    E --> F["Compare In Local Leaderboard"]
+```
+
 ## Launch At Login
 
 Core-Monitor includes launch-at-login support through macOS login item registration.
@@ -273,6 +412,8 @@ Virtual machines stress exactly the things Core-Monitor is already watching:
 - power draw
 
 That is why CoreVisor belongs here. It keeps monitoring and workload management in the same app.
+
+CoreVisor and the benchmark feature complement each other well. CoreVisor is about driving real workloads inside the app’s world, while the benchmark is about measuring sustained thermal/performance behavior directly. Together they push Core-Monitor beyond a passive readout utility.
 
 ## CoreVisor Backend Model
 
@@ -459,6 +600,16 @@ This repo also contains:
 - the `smc-helper` target
 - the `EmbeddedQEMU` directory used for CoreVisor resource bundling
 
+If you are working on the benchmark feature specifically, the main files currently include:
+
+- `Core-Monitor/BenchmarkEngine.swift`
+- `Core-Monitor/BenchmarkResult.swift`
+- `Core-Monitor/BenchmarkView.swift`
+- `Core-Monitor/LeaderboardView.swift`
+- `Core-Monitor/QualityRatingEngine.swift`
+- `Core-Monitor/MacModelRegistry.swift`
+- `Core-Monitor/SMCTamperDetector.swift`
+
 If you want CoreVisor to use bundled QEMU binaries in development, follow the resource layout described in [EmbeddedQEMU/README.md](EmbeddedQEMU/README.md).
 
 ## After install
@@ -470,6 +621,7 @@ After the app is built or downloaded:
 3. If you want fan writes, approve/install the helper path when prompted
 4. If you want launch-at-login, enable it from the app and approve it in Login Items if macOS asks
 5. If you want Windows 11 ARM in CoreVisor, install `swtpm`
+6. If you want to compare runs locally, use the built-in benchmark and save results to the leaderboard
 
 ## First Launch On macOS
 
@@ -537,6 +689,7 @@ It is a good fit for:
 - Apple silicon users who care about E-core / P-core behavior
 - people who want more than a tiny menu bar graph
 - Touch Bar Mac users who want that hardware to do something useful
+- people who want a built-in sustained benchmark tied to live thermal data
 - people who run VMs and want to watch how they affect the system
 - users who prefer open-source utilities over closed, feature-gated apps
 
@@ -573,6 +726,18 @@ Only for TPM-related VM flows, especially Windows 11 ARM setup. The app explicit
 
 No. Monitoring is the center of the app, but not the whole point. The app also includes control surfaces, Touch Bar behavior, and CoreVisor workflows.
 
+### Is the benchmark an online leaderboard?
+
+No. The benchmark leaderboard is local. It stores benchmark results on the machine and is designed for your own comparisons and repeated runs.
+
+### What does the benchmark rating mean?
+
+The benchmark quality rating is a fast interpretation of how cleanly the machine sustained load. It combines throughput behavior with thermal behavior instead of only showing one raw score.
+
+### Can custom fan tools affect benchmark results?
+
+Yes. That is why Core-Monitor checks for custom fan-control conditions and flags benchmark runs where outside fan behavior may have changed the result.
+
 ## Current Direction
 
 Core-Monitor is already useful, but it is still evolving. The direction is clear:
@@ -580,6 +745,7 @@ Core-Monitor is already useful, but it is still evolving. The direction is clear
 - better optimization
 - wider compatibility
 - more refined fan and SMC behavior
+- better benchmark modeling and result interpretation
 - deeper CoreVisor workflows
 - a better Touch Bar and menu bar experience
 - keeping the project open source and feature-rich without turning it into bloat
