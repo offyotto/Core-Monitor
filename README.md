@@ -8,11 +8,11 @@ It was built around a simple goal: make a free, easy-to-use macOS utility that g
 
 ### Dashboard
 
-![Core-Monitor dashboard](docs/images/ui/dashboard.png)
+![Core-Monitor dashboard](docs/images/ui/dashboard-v2.png)
 
 ### Menu Bar Panel
 
-![Core-Monitor menu bar panel](docs/images/ui/menu-bar.png)
+![Core-Monitor menu bar panel](docs/images/ui/menu-bar-v2.png)
 
 ## What It Does
 
