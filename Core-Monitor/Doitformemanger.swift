@@ -194,8 +194,30 @@ final class SwtpmController {
 enum Win11ISOCatalog {
     struct Entry { let url: URL; let name: String; let bytes: Int; let sha256: String? }
     private static let consumerURL = "https://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/26200.6584.250915-1905.25h2_ge_release_svc_refresh_CLIENT_CONSUMER_A64FRE_en-us.iso"
-    static func resolve() -> Entry {
-        Entry(url: URL(string: consumerURL)!, name: "Win11_25H2_ARM64_en-us.iso", bytes: 5_000_000_000, sha256: nil)
+
+    static func resolve() async -> Entry {
+        let url = URL(string: consumerURL)!
+        let fallbackBytes = 7_500_000_000
+        let bytes = await fetchContentLength(for: url) ?? fallbackBytes
+        return Entry(url: url, name: "Win11_25H2_ARM64_en-us.iso", bytes: bytes, sha256: nil)
+    }
+
+    private static func fetchContentLength(for url: URL) async -> Int? {
+        var request = URLRequest(url: url)
+        request.httpMethod = "HEAD"
+        request.timeoutInterval = 15
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            if let http = response as? HTTPURLResponse,
+               let length = http.value(forHTTPHeaderField: "Content-Length"),
+               let bytes = Int(length),
+               bytes > 0 {
+                return bytes
+            }
+        } catch { }
+
+        return nil
     }
 }
 
@@ -632,7 +654,7 @@ final class DoItForMeManager: ObservableObject {
             if !manualISOPath.isEmpty && FileManager.default.fileExists(atPath: manualISOPath) {
                 baseISOPath = manualISOPath
             } else {
-                let iso  = Win11ISOCatalog.resolve()
+                let iso  = await Win11ISOCatalog.resolve()
                 let dest = isoDir.appendingPathComponent(iso.name)
                 let existingSize = (try? FileManager.default
                     .attributesOfItem(atPath: dest.path)[.size] as? Int64) ?? 0
@@ -778,9 +800,10 @@ final class DoItForMeManager: ObservableObject {
                 try? await Task.sleep(nanoseconds: 500_000_000)
                 let recv = (try? FileManager.default
                     .attributesOfItem(atPath: tmpDest.path)[.size] as? Int64) ?? 0
-                let frac  = totalBytes > 0 ? min(Double(recv) / Double(totalBytes), 0.99) : 0
+                let displayedTotal = max(Int64(totalBytes), recv)
+                let frac = displayedTotal > 0 ? min(Double(recv) / Double(displayedTotal), 0.99) : 0
                 let label = "Downloading from \(sourceLabel)... \(Self.fmtBytes(recv))"
-                          + (totalBytes > 0 ? " / \(Self.fmtBytes(Int64(totalBytes)))" : "")
+                          + (displayedTotal > 0 ? " / \(Self.fmtBytes(displayedTotal))" : "")
                 await MainActor.run { onProgress(frac, label) }
             }
         }
@@ -855,4 +878,3 @@ final class DoItForMeManager: ObservableObject {
     }
 
 }
-
