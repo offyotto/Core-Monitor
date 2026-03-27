@@ -2,6 +2,16 @@
 
 Core-Monitor is an all-in-one macOS stats and multitasking app. It is meant to stay fairly light while still packing in a lot of utility.
 
+## UI Preview
+
+### Dashboard
+
+![Core-Monitor dashboard](docs/images/ui/dashboard.png)
+
+### Menu Bar Panel
+
+![Core-Monitor menu bar panel](docs/images/ui/menu-bar.png)
+
 ## What It Does
 
 - System monitoring
