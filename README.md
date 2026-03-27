@@ -13,6 +13,8 @@ Core-Monitor combines:
 
 No subscriptions. No feature paywall. No bloated cross-platform shell. Just a native macOS utility that tries to do a lot, while still feeling fast and clean.
 
+What makes Core-Monitor different is that it is not trying to be a single-purpose sensor panel. The whole project is built around the idea that system information should be actionable, visible from multiple places, and connected to the workflows that actually stress your machine. That is why the app keeps growing across the dashboard, menu bar, Touch Bar, and CoreVisor instead of staying trapped as one small read-only widget.
+
 ## Why Core-Monitor?
 
 Most Mac utility apps force a tradeoff:
@@ -49,6 +51,8 @@ That means the same live machine state can be used in different ways depending o
 - glancing at the menu bar when you want quick status
 - using the Touch Bar as a persistent hardware HUD
 - managing VMs through CoreVisor while watching the system react in real time
+
+That multi-surface approach is the point of the app. Core-Monitor is designed to feel like a single monitoring system expressed through different interfaces, not like a random collection of disconnected features.
 
 ## Highlights
 
@@ -138,6 +142,36 @@ flowchart LR
 
 The point is not just to collect metrics. The point is to make those metrics useful across the whole app.
 
+## Dashboard Philosophy
+
+The dashboard is the main "deep view" of Core-Monitor. It is where the app stops being a simple menu bar utility and starts feeling like a proper hardware and workflow console.
+
+It is meant to answer a few practical questions fast:
+
+- What is my Mac doing right now?
+- Is the machine getting hot, memory-constrained, or power-limited?
+- Are my fans doing what I expect?
+- Is a VM changing system behavior?
+- Do I need to intervene, or is everything stable?
+
+The dashboard exists because menu bar stats alone are not enough once you start caring about thermals, memory pressure, fan state, and VM load at the same time.
+
+## Menu Bar Utility
+
+The menu bar side of Core-Monitor is not just a launcher. It is meant to be a fast-access control surface for everyday use.
+
+That matters because the best utility apps are often the ones you do not have to fully open all the time. The menu bar lets Core-Monitor stay close by without becoming intrusive.
+
+The menu bar view is intended to make a few actions immediate:
+
+- check live status without opening the dashboard
+- see whether SMC access is working
+- inspect battery, fan, and thermal state quickly
+- jump straight into CoreVisor
+- switch or restore behavior without hunting through a full settings UI
+
+In other words, the dashboard is for depth, and the menu bar is for immediacy.
+
 ## Touch Bar Overlay
 
 The Touch Bar support is one of the most unusual parts of Core-Monitor.
@@ -154,6 +188,23 @@ Instead of disappearing on every app switch, the Touch Bar can stay useful as a 
 
 That turns it from a novelty into a real system HUD.
 
+What makes this different from a normal app Touch Bar implementation is that the widget is not just tied to whatever window is focused. Core-Monitor uses reverse-engineered Touch Bar presentation hooks so the panel can behave more like a system-level overlay than a normal per-window customization strip.
+
+That gives the feature a completely different feel in practice:
+
+- you can keep coding, browsing, editing, or working in another app
+- the Touch Bar can still show live machine state
+- the information remains useful instead of vanishing every time you switch tasks
+
+The widget is meant to stay compact but still communicate meaningful information. It is not there to mirror the whole dashboard. It is there to answer the questions you care about most at a glance:
+
+- Is CPU load spiking?
+- Is memory climbing?
+- Are fans ramping?
+- Do I have active VMs?
+
+That makes the Touch Bar feature one of the clearest examples of Core-Monitor's design philosophy: system information should remain visible where it is actually useful, not only where macOS traditionally expects it to live.
+
 ### Touch Bar Flow
 
 ```mermaid
@@ -163,6 +214,23 @@ flowchart TD
     C --> D["Present System-Style Touch Bar Overlay"]
     D --> E["Stats Stay Visible Across App Switching"]
 ```
+
+### Why The Touch Bar Feature Exists
+
+On a lot of Touch Bar Macs, the hardware ends up wasted because most apps either ignore it or use it for shortcuts you stop caring about after five minutes. Core-Monitor tries to make it valuable again by turning it into a live machine-status strip.
+
+That is why this feature is more than a gimmick:
+
+- it gives older Touch Bar hardware a clear systems-use case
+- it keeps your machine state visible without taking screen space
+- it rewards leaving the app running in the background
+- it makes Core-Monitor useful even when the main dashboard is closed or buried
+
+## CoreVisor Deep Dive
+
+CoreVisor is one of the most important parts of the project, because it changes what kind of app Core-Monitor is.
+
+Without CoreVisor, Core-Monitor would still be a capable monitoring and control utility. With CoreVisor, it becomes a multitasking and virtualization environment that can participate directly in the workloads it is measuring.
 
 ## CoreVisor
 
@@ -177,6 +245,66 @@ That makes CoreVisor more than just a random extra feature:
 - it makes the dashboard more meaningful because you can watch the machine react live
 
 CoreVisor is one of the biggest reasons Core-Monitor feels like a utility suite instead of a basic monitor.
+
+### What CoreVisor Adds To The App
+
+CoreVisor makes Core-Monitor more than observational software.
+
+It gives the app an active role in:
+
+- creating or managing VM workflows
+- watching how virtualization impacts thermals and memory
+- understanding fan behavior under heavier mixed workloads
+- keeping all of that in one interface instead of splitting it across separate apps
+
+That matters because virtualization is one of the cleanest examples of a workload that stresses multiple parts of the machine at once:
+
+- CPU load rises
+- memory allocation becomes more important
+- power draw changes
+- fans may ramp
+- thermal behavior becomes more obvious
+
+CoreVisor keeps those effects close to the monitoring layer instead of making you bounce between unrelated tools.
+
+### Why CoreVisor Fits Here
+
+CoreVisor is not included just because virtualization is cool. It fits the app because it turns Core-Monitor into something broader than a passive monitor.
+
+If the app already knows:
+
+- what the machine temperature looks like
+- what memory pressure looks like
+- what the fan controller is doing
+- whether the system is staying stable under load
+
+then it makes sense for the same app to help you launch and manage the workflow causing that load.
+
+That is what makes CoreVisor feel native to Core-Monitor instead of bolted on.
+
+### CoreVisor Concept Flow
+
+```mermaid
+flowchart TD
+    A["Create / Import VM"] --> B["Launch Through CoreVisor"]
+    B --> C["VM Load Hits CPU / Memory / Thermals"]
+    C --> D["Core-Monitor Observes System Response"]
+    D --> E["User Adjusts Fans, Watches Thermals, Or Tunes Workflow"]
+```
+
+### CoreVisor As A Product Direction
+
+CoreVisor also signals where the project is heading overall.
+
+Core-Monitor is clearly not trying to become a tiny single-purpose utility. It is trying to become a serious all-in-one Mac power-user tool with:
+
+- monitoring
+- control
+- live secondary surfaces
+- virtualization
+- workflow-aware system visibility
+
+That broader direction is part of what makes the project more ambitious than a lot of other Mac utility apps.
 
 ## Why Open Source Matters
 
@@ -198,6 +326,15 @@ Open source means:
 - easier auditing for unusual low-level behavior
 
 If an app is doing genuinely interesting macOS-specific work, it should be inspectable.
+
+Open source also matters for the future of a project like this because some of the most interesting parts of Core-Monitor are unusual enough that people naturally want to understand how they work:
+
+- how the Touch Bar overlay stays present across apps
+- how fan and SMC features are wired into the app
+- how CoreVisor fits into the same runtime as the monitoring layer
+- how the app keeps multiple UI surfaces in sync
+
+That kind of curiosity is a good thing. The repo should support it.
 
 ## Why I Made It
 
@@ -223,6 +360,30 @@ The Touch Bar overlay comes from that mindset. It is there because I wanted live
 
 CoreVisor comes from the same place. If the app is already tracking my machine, it should also help with the VM workflows that are stressing it.
 
+## What Core-Monitor Is Trying To Be
+
+Core-Monitor is trying to sit in a space that a lot of apps ignore.
+
+It is not just:
+
+- a temperature meter
+- a fan utility
+- a menu bar widget
+- a VM frontend
+- a Touch Bar experiment
+
+It is trying to be the app that ties those ideas together into one tool that still feels coherent.
+
+That is why the project keeps emphasizing:
+
+- multiple useful interfaces
+- open-source transparency
+- Apple silicon-aware monitoring
+- practical control surfaces
+- unusual but actually useful extras
+
+The goal is not minimalism for its own sake. The goal is to be feature-rich without collapsing into clutter.
+
 ## Comparison
 
 Core-Monitor is not trying to be a clone of a single-purpose app. It is broader than that.
@@ -239,6 +400,53 @@ Core-Monitor is not trying to be a clone of a single-purpose app. It is broader 
 | Built-in virtualization workflows | Yes |
 | Open source | Yes |
 | Free | Yes |
+
+## App Structure
+
+You can think of the project as four layers:
+
+| Layer | Purpose |
+| --- | --- |
+| Monitoring Layer | Reads and aggregates live machine state |
+| Control Layer | Fan control, SMC-backed actions, restore/revert behaviors |
+| Interface Layer | Dashboard, menu bar panel, Touch Bar overlay |
+| Workflow Layer | CoreVisor and VM-related flows |
+
+That layered structure is part of why Core-Monitor can do more than just show numbers. The app is designed so the same underlying system data can power different UI surfaces and different user actions.
+
+## Why It Is Slightly Weird On Purpose
+
+Some of the best parts of Core-Monitor are a little unusual by normal app standards:
+
+- reverse-engineered Touch Bar presentation
+- system-monitoring plus virtualization in one app
+- trying to make a Touch Bar feature genuinely practical
+- treating the menu bar as part of a larger utility system instead of a separate mini-app
+
+That weirdness is intentional. A lot of macOS utilities are conservative to the point of being forgettable. Core-Monitor is trying to be more interesting than that without becoming sloppy.
+
+## Use Cases
+
+Core-Monitor is especially useful if you are doing any of the following:
+
+- watching your Mac under sustained load
+- checking thermals while compiling or exporting
+- leaving a quick status panel available from the menu bar
+- wanting Touch Bar hardware to show something actually useful
+- running VMs and wanting to see their system impact in real time
+- keeping one all-in-one utility open instead of juggling multiple apps
+
+## Philosophy
+
+Core-Monitor is built around a few beliefs:
+
+- utility apps should not need a subscription to be interesting
+- good system tools should feel clean, not ugly
+- advanced features should not require an ugly interface
+- monitoring should connect to action, not just observation
+- low-level Mac behavior becomes more compelling when it is visible and open source
+
+Those ideas matter more to the app than trying to look minimal for marketing screenshots.
 
 ## Compatibility
 
@@ -257,6 +465,22 @@ Core-Monitor is mainly aimed at modern Macs, especially Apple silicon systems, b
 | --- | --- |
 | MacBook Pro 13-inch M2 | Tested |
 | MacBook Air 2015 Intel | Tested |
+
+Compatibility coverage is still early. The project should get stronger as more machines are tested and edge cases are surfaced.
+
+## Installation Expectations
+
+Core-Monitor is currently a power-user-oriented utility. That means the installation experience may include the normal friction that comes with unsigned macOS apps and hardware-adjacent features.
+
+That does not mean it is hard to use, but it does mean the app is closer to a serious independent utility than a mass-market App Store product.
+
+The current expectation is:
+
+- download the app
+- allow first launch through Gatekeeper
+- run it and start using the dashboard, menu bar, Touch Bar, and CoreVisor features
+
+The README includes the Gatekeeper flow below because macOS will warn about unsigned apps even when the build is legitimate.
 
 ## First Launch On macOS
 
@@ -287,6 +511,30 @@ Because Core-Monitor is not signed with a paid Apple Developer certificate, macO
 
 ![Confirm open anyway dialog](docs/images/gatekeeper/04-confirm-open.png)
 
+## Current Strengths
+
+Right now, the strongest parts of Core-Monitor are:
+
+- broad feature scope
+- multi-surface design
+- Touch Bar integration that is actually interesting
+- CoreVisor making the app feel bigger than a simple monitor
+- a clean UI direction instead of a generic utility look
+- open-source transparency
+
+## Current Weaknesses
+
+Core-Monitor is ambitious, and the tradeoff is that some areas are still rougher than the overall vision.
+
+Current weak spots include:
+
+- limited hardware coverage so far
+- still-evolving optimization
+- some Intel limitations
+- areas where the feature set is ahead of the project polish
+
+That is normal for a project with this scope, but it is worth saying directly.
+
 ## Who This Is For
 
 - Mac users who want more than a tiny stats widget
@@ -295,6 +543,17 @@ Because Core-Monitor is not signed with a paid Apple Developer certificate, macO
 - Touch Bar Mac users who want hardware stats visible across apps
 - people running VMs who want monitoring and virtualization in one place
 - users who prefer open-source utilities over locked-down paid tools
+
+## Who This Is Not For
+
+Core-Monitor is probably not for you if you want:
+
+- a tiny one-feature utility with no extra surfaces
+- an App Store-style sealed experience with no quirks
+- something focused only on fan control and nothing else
+- a super-minimal monitor with almost no ambition beyond read-only stats
+
+The app is intentionally broader and a little more experimental than that.
 
 ## Current Direction
 
@@ -305,6 +564,14 @@ Core-Monitor is already useful, but it is still evolving. The goal is not just t
 - more refined fan and SMC behavior
 - better CoreVisor workflows
 - more polish across the dashboard, menu bar, and Touch Bar surfaces
+
+Long term, the project direction is pretty clear:
+
+- deepen the monitoring layer
+- refine control behavior
+- make CoreVisor more capable
+- keep the Touch Bar and menu bar experiences useful instead of decorative
+- preserve the open-source, no-paywall identity of the app
 
 ## Notes
 
