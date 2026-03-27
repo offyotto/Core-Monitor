@@ -658,6 +658,12 @@ Relevant benchmark files currently include:
 
 If you want CoreVisor to use bundled QEMU binaries in development, follow the resource layout described in [EmbeddedQEMU/README.md](EmbeddedQEMU/README.md).
 
+## Install Walkthrough Video
+
+If you want to see the install flow before doing it yourself, watch the recorded walkthrough here:
+
+- [Install video walkthrough](docs/videos/install-walkthrough.mov)
+
 ### After install
 
 After the app is built or downloaded:
