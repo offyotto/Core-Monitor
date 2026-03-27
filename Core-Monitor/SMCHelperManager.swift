@@ -203,3 +203,5 @@ final class SMCHelperManager: ObservableObject {
         "'" + string.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 }
+
+

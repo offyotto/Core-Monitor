@@ -20,20 +20,20 @@ final class StartupManager: ObservableObject {
                 errorMessage = nil
             case .requiresApproval:
                 isEnabled = false
-                errorMessage = "Startup requires approval in System Settings > Login Items."
+                errorMessage = "Startup requires approval in System Settings → General → Login Items."
             case .notFound:
                 isEnabled = false
-                errorMessage = "Login item was not found. Re-enable launch at login."
+                errorMessage = "Login item was not found. Try toggling launch at login off and on again."
             case .notRegistered:
                 isEnabled = false
-                errorMessage = nil
-            default:
+                errorMessage = nil   // not registered yet — no error, just off
+            @unknown default:
                 isEnabled = false
                 errorMessage = nil
             }
         } else {
             isEnabled = false
-            errorMessage = "Startup at login requires macOS 13 or newer."
+            errorMessage = "Launch at login requires macOS 13 or newer."
         }
     }
 
@@ -66,3 +66,4 @@ final class StartupManager: ObservableObject {
         return nsError.localizedDescription
     }
 }
+
