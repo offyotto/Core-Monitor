@@ -1,55 +1,104 @@
 # Core-Monitor
 
-**Free, open-source macOS monitoring, fan control, Touch Bar, and virtualization utility.**  
+**Free, open-source macOS monitoring, fan control, benchmarking, Touch Bar, and virtualization utility.**  
 Dashboard + menu bar + Touch Bar widget + CoreVisor.
 
-Built as a native Swift app for macOS. No subscriptions. No telemetry. No Electron shell. No paid “pro” tier hiding the interesting features.
+Built as a native Swift app for macOS. No subscriptions. No telemetry. No Electron shell. No paid "pro" tier hiding the useful features.
 
-Core-Monitor is not just a stats window. It is meant to be a serious all-in-one utility for people who want:
+**License:** GPL-3.0  
+**Platform focus:** Apple silicon first, with some Intel support  
+**Current surfaces:** Dashboard, menu bar, Touch Bar, benchmark view, CoreVisor VM workflows
 
-- live machine telemetry
-- real fan control
-- SMC-backed features
-- built-in benchmarking
-- menu bar visibility
-- a genuinely useful Touch Bar widget
-- built-in VM workflows through CoreVisor
+## What Core-Monitor Is
+
+Core-Monitor is not just a stats window and it is not just a fan app.
+
+It is a multi-surface Mac utility built around one idea:
+
+**system data should not just be visible, it should be useful.**
+
+That is why the project combines:
+
+- live hardware and system monitoring
+- SMC-backed fan control paths
+- a built-in sustained benchmark
+- a persistent Touch Bar hardware HUD
+- menu bar quick access
+- built-in virtualization workflows through CoreVisor
+
+Instead of splitting those jobs across several tiny utilities, Core-Monitor tries to keep them in one native app that can stay open all day without turning into bloat.
+
+## At A Glance
+
+| Area | What it does |
+| --- | --- |
+| Monitoring | Live CPU, memory, thermals, power, battery, and fan telemetry |
+| Fan Control | SMC-backed fan writes through `smc-helper` |
+| Benchmarking | Sustained-load benchmark with local leaderboard and thermal-aware ratings |
+| Menu Bar | Quick status and quick actions without opening the full dashboard |
+| Touch Bar | Persistent live stats widget while the app is running |
+| CoreVisor | Built-in VM workflows with Apple Virtualization and QEMU backends |
+| Open Source | App logic, helper logic, and virtualization logic are visible in the repo |
 
 ## Why Core-Monitor?
 
-A lot of Mac utility apps make you pick one of these:
+A lot of Mac utilities make you choose between:
 
-- clean UI, but barely any features
-- powerful features, but bloated or ugly
-- useful controls, but locked behind a paid upgrade
-- hardware monitoring, but no real interaction
-- fan control, but no broader system view
-- menu bar metrics, but nothing deeper than a tiny popup
+- clean UI, but barely any depth
+- powerful controls, but ugly or bloated design
+- useful features, but locked behind a paid upgrade
+- menu bar stats, but nothing beyond a tiny popup
+- system monitoring, but no real control
+- fan control, but no broader machine view
 
-Core-Monitor was built to avoid that tradeoff.
+Core-Monitor exists to avoid that tradeoff.
 
-The goal is to give you one app that can stay open all day and still earn its place:
+The goal is to give you one Mac utility that is:
 
 - detailed enough to matter
-- light enough to keep running
-- broad enough to replace several smaller utilities
+- lightweight enough to keep running
+- broad enough to replace multiple smaller apps
 - open enough that the weird low-level parts are inspectable
 
-That is why the project combines monitoring, fan control, Touch Bar overlays, and CoreVisor instead of stopping at one narrow feature.
+That is why the project does not stop at "show some numbers in the menu bar." It tries to connect observation, control, benchmarking, and virtualization in one place.
 
-## What Core-Monitor Actually Is
+## What Makes It Different
 
-| Area | What it covers |
-| --- | --- |
-| Dashboard | Live CPU, memory, thermals, power, battery, fan state, and VM-aware monitoring |
-| Menu Bar | Quick status, quick controls, fast app access |
-| Fan Control | SMC-backed fan write support through a privileged helper |
-| Benchmarking | Sustained-load benchmark with local leaderboard and thermal-aware ratings |
-| Touch Bar | Persistent live hardware widget while the app is open |
-| CoreVisor | Built-in VM setup, management, and runtime workflows |
-| Open Source | The app, helper, and CoreVisor logic are visible in the repo |
+### 1. It is multi-surface on purpose
 
-Core-Monitor is built around one idea: system data should not just be visible, it should be useful across multiple surfaces.
+Core-Monitor is designed so the same machine state can show up in different ways depending on how deep you need to go:
+
+- the dashboard for depth
+- the menu bar for quick checks
+- the Touch Bar for persistent visibility
+- CoreVisor for workload-aware virtualization
+
+### 2. It connects monitoring to action
+
+A lot of monitor apps stop at read-only telemetry. Core-Monitor tries to let you actually do something with what you are seeing:
+
+- check thermals
+- inspect fan state
+- change behavior
+- run a benchmark
+- launch or manage a VM
+- watch how the machine responds
+
+### 3. It uses older Mac hardware in more interesting ways
+
+Touch Bar support is not treated like a gimmick row of shortcuts. Core-Monitor uses reverse-engineered Touch Bar presentation APIs so the widget can behave like a persistent live system strip while the app is running.
+
+### 4. It treats virtualization as part of system behavior, not a separate universe
+
+CoreVisor belongs in this app because VMs stress exactly the things Core-Monitor already watches:
+
+- CPU
+- memory
+- thermals
+- fan behavior
+- power use
+
+That makes CoreVisor a natural extension of the app instead of a random extra tab.
 
 ## Feature Summary
 
@@ -67,43 +116,44 @@ Core-Monitor is built around one idea: system data should not just be visible, i
 
 ### Fan Control / SMC
 
-- Fan control support
-- SMC-backed system features where available
+- SMC-backed fan control support
+- Helper-based write path instead of staying read-only
 - One-app flow for seeing thermals and reacting to them
-- Fast access to fan actions from the interface
-- Helper-backed write path instead of keeping everything read-only
+- Fast access to fan actions from the UI
+- Hardware-aware workflow instead of isolated fan sliders
 
 ### Benchmarking
 
-- Built-in local benchmark mode
-- Sustained throughput scoring
-- Thermal and load sampling during a run
+- Built-in sustained benchmark mode
+- CPU-heavy workload across performance cores
+- Once-per-second thermal and load sampling
 - Peak and average temperature tracking
 - Peak and average CPU load tracking
+- Local result storage
 - Quality ratings based on thermal behavior and sustained throughput
 - Local leaderboard with filters
 - Custom fan-control / tamper detection flagging
 
 ### Menu Bar
 
-- Quick machine status without opening the full dashboard
+- Quick machine status without opening the main dashboard
 - Fast access to app actions
-- Fan, battery, and SMC state visibility
-- CoreVisor access directly from the menu bar UI
+- Fan, battery, and system state visibility
+- CoreVisor entry point directly from the menu bar UI
 
 ### Touch Bar Widget
 
 - Live Touch Bar metrics while the app is open
 - Not limited to the app staying frontmost
-- Designed as a real status surface, not a throwaway shortcut strip
-- Useful for seeing load, memory, fan, and VM state while working elsewhere
+- Designed as a status HUD, not just a shortcut strip
+- Useful for watching load, memory, fan, and VM state while working elsewhere
 
 ### CoreVisor
 
 - Built-in VM workflows inside the same app
 - Apple Virtualization support for Linux guests in the current build
 - QEMU-based workflows for broader guest support
-- Windows 11 ARM automation path
+- Windows 11 ARM guided setup flow
 - VirtIO driver handling
 - Snapshot support
 - USB passthrough support
@@ -119,36 +169,39 @@ Core-Monitor is built around one idea: system data should not just be visible, i
 
 ![Core-Monitor menu bar panel](docs/images/ui/menu-bar-v2.png)
 
-## Architecture At A Glance
+## How The App Fits Together
 
 ```mermaid
 flowchart LR
-    A["macOS Hardware + Sensors"] --> B["System Monitor Layer"]
-    B --> C["Dashboard"]
-    B --> D["Menu Bar Panel"]
-    B --> E["Touch Bar Widget"]
-    B --> F["Fan / SMC Control Layer"]
-    B --> G["CoreVisor"]
+    A["SystemMonitor + SMC readings"] --> B["Dashboard"]
+    A --> C["Menu Bar"]
+    A --> D["Touch Bar Widget"]
+    A --> E["Benchmark Engine"]
+    A --> F["CoreVisor"]
+    G["smc-helper"] --> A
+    H["QEMU / Apple Virtualization"] --> F
     F --> A
-    G --> B
+    E --> I["Local Leaderboard"]
 ```
 
-Core-Monitor is not structured like a tiny menu bar app with a bonus window. The same machine state powers every surface:
+Core-Monitor is not structured like a tiny menu bar app with a bonus window. The same machine-state layer feeds multiple parts of the product.
 
-- the dashboard for depth
-- the menu bar for immediacy
-- the Touch Bar for persistent visibility
-- CoreVisor for workload-aware system interaction
+That matters because it keeps the app coherent:
+
+- the dashboard is not disconnected from the menu bar
+- the benchmark is not a random standalone gimmick
+- the Touch Bar widget is not just cosmetic
+- CoreVisor lives inside the same thermal and system-awareness model
 
 ## Dashboard
 
-The dashboard is the main “deep view” of the app.
+The dashboard is the deep view of the app.
 
-It exists because quick menu bar stats stop being enough once you care about:
+It exists because menu bar stats stop being enough once you care about:
 
 - CPU behavior under sustained load
 - memory pressure instead of just memory used
-- thermal behavior over time instead of a single instant value
+- thermal behavior over time instead of one instant value
 - fan state and intervention
 - what a VM is doing to the machine
 
@@ -164,70 +217,62 @@ That is the difference between a decorative monitor and a useful one.
 
 ## Menu Bar Utility
 
-The menu bar part of Core-Monitor is not just a launcher. It is meant to be usable enough that you can rely on it for quick checks and quick actions without fully opening the dashboard every time.
+The menu bar part of Core-Monitor is not just a launcher.
 
-The menu bar is there for:
+It is there for:
 
 - live at-a-glance status
 - quick access to app actions
 - fast fan and system checks
 - jumping into CoreVisor
-- restoring or switching behavior without opening a larger control surface
+- switching behavior without opening a larger control surface
 
-That gives the app a useful “always close by” mode instead of forcing the full dashboard for every interaction.
+That gives the app a useful "always close by" mode instead of forcing the full dashboard for every interaction.
 
 ## Touch Bar Widget
 
 The Touch Bar support is one of the most distinctive parts of Core-Monitor.
 
-Normally, app Touch Bar content disappears as soon as you switch focus to another app. Core-Monitor goes further by using reverse-engineered Touch Bar presentation APIs to show a system-style modal Touch Bar overlay.
+Normally, app Touch Bar content disappears as soon as you switch focus to another app. Core-Monitor goes further by using reverse-engineered Touch Bar presentation APIs to present a system-modal Touch Bar overlay. In the current code, that is handled through private selectors such as `presentSystemModalTouchBar`.
 
-That matters because it changes the feature from a novelty into an actually useful hardware HUD.
-
-Instead of only existing while Core-Monitor is frontmost, the Touch Bar widget can stay relevant while you:
-
-- code
-- browse
-- edit
-- render
-- manage a VM
+That matters because it changes the feature from a novelty into a real hardware HUD.
 
 ### What the Touch Bar widget is for
 
-The widget is meant to stay compact, but still tell you the things that matter most:
+The widget is meant to stay compact while still surfacing the signals that matter most:
 
-- Is CPU load spiking?
-- Is memory climbing?
-- Are fans ramping?
-- Are there active VMs?
+- CPU activity
+- memory state
+- fan RPM
+- VM activity
 
-It is not trying to mirror the entire dashboard. It is trying to keep the most important machine-state signals visible without taking up screen space.
+It is not trying to mirror the full dashboard. It is trying to keep the most useful information visible without taking up screen space.
 
 ### Why this is different from normal Touch Bar support
 
 Core-Monitor does not treat the Touch Bar like a row of throwaway app shortcuts. It treats it like a status surface.
 
-That is why the reverse-engineered overlay behavior matters:
+That is why the overlay behavior matters:
 
 - the widget stays useful across app switching
 - the Touch Bar becomes a persistent live strip instead of a per-window accessory
-- older Touch Bar hardware gets a legitimate systems-use case again
+- older Touch Bar hardware gets a real systems-use case again
 
-### Touch Bar Flow
+### Touch Bar flow
 
 ```mermaid
 flowchart TD
-    A["Core-Monitor Running"] --> B["Collect Live Metrics"]
-    B --> C["Build Touch Bar Panel"]
-    C --> D["Present System-Style Overlay"]
-    D --> E["Widget Stays Useful Across App Switching"]
+    A["Core-Monitor running"] --> B["Collect live CPU / memory / fan / VM state"]
+    B --> C["Build Touch Bar content"]
+    C --> D["Present system-modal Touch Bar overlay"]
+    D --> E["Stay visible while user works in another app"]
 ```
 
 ### Touch Bar expectations
 
-- Touch Bar features only matter on Macs that actually have Touch Bar hardware.
-- The widget is most useful when you keep Core-Monitor running in the background.
-- The point is persistent visibility, not full interactivity or dashboard duplication.
+- Touch Bar features only matter on Macs that actually have Touch Bar hardware
+- the widget is most useful when Core-Monitor is left running in the background
+- the point is persistent visibility, not dashboard duplication
 
 ## Fan Control And `smc-helper`
 
@@ -241,16 +286,16 @@ The project includes a separate helper binary, `smc-helper`, for fan write acces
 
 ### Why a helper exists
 
-Fan writes are a different class of operation than reading telemetry. A proper fan-control workflow needs elevated behavior, so Core-Monitor separates that into the helper instead of pretending everything can happen as a normal read-only app.
+Fan writes are a different class of operation than reading telemetry. A proper fan-control workflow needs elevated behavior, so Core-Monitor separates that into a helper instead of pretending everything can happen as a normal read-only app.
 
 ### What to expect
 
-- You can use the dashboard and most monitoring features without needing helper write access.
-- Fan writes require the helper path to be available and approved.
-- The app can attempt privileged execution when needed.
-- If helper setup is missing, the app reports that instead of silently failing.
+- You can use the dashboard and most monitoring features without helper write access
+- Fan writes require the helper path to be available and approved
+- The app can attempt privileged execution when needed
+- If helper setup is missing, the app reports that instead of silently failing
 
-### Fan control in practice
+### Why this matters
 
 The point of fan control here is not to be a gimmick toggle. It matters because Core-Monitor is supposed to connect observation with action:
 
@@ -259,28 +304,43 @@ The point of fan control here is not to be a gimmick toggle. It matters because 
 - change behavior
 - immediately watch the machine respond
 
-That makes the monitoring layer more useful than pure read-only telemetry.
-
 ## Benchmark
 
-Core-Monitor now includes a built-in benchmark system. It is not just a decorative score generator and it is not pretending to be a giant third-party benchmark suite. It exists because this app already understands machine load, thermals, fan state, and sustained behavior, so it makes sense for it to measure them together.
+Core-Monitor includes a built-in benchmark system designed around sustained behavior, not just a short burst score.
 
-The benchmark is designed around sustained work and thermal response rather than a single short burst. During a benchmark run, Core-Monitor:
+It exists because this app already understands:
+
+- sustained CPU load
+- thermal response
+- fan RPM
+- cooling conditions
+
+So it makes sense for it to measure those things together instead of pretending performance and thermals are separate topics.
+
+### What the benchmark actually does
+
+During a benchmark run, Core-Monitor:
 
 - runs a CPU-heavy workload across performance cores
 - samples CPU load once per second
-- tracks package temperature and benchmark temperature readings
-- records fan RPM during the run
+- reads package temperature and benchmark temperature sensors
+- records fan RPM
 - computes a running raw score against an internal baseline
-- stores the full sample timeline for later inspection
+- stores the full sample timeline
 
-That means the benchmark is trying to answer a useful question:
+The workload itself is not a fake progress bar. The benchmark engine is doing real repeated work and tracking how well the machine sustains that work over time.
 
-How well did this machine sustain load, and what did its thermal behavior look like while doing it?
+### What the benchmark is trying to answer
 
-### What a benchmark result contains
+The benchmark is meant to answer one practical question:
 
-Each saved benchmark result stores:
+**How well did this Mac sustain load, and what did its thermal behavior look like while doing it?**
+
+That makes it more useful than a one-number benchmark that ignores cooling behavior.
+
+### What gets saved in a benchmark result
+
+Each result stores:
 
 - machine model
 - chip name
@@ -292,28 +352,26 @@ Each saved benchmark result stores:
 - peak temperature
 - average temperature
 - average CPU load
-- whether custom fan control/tampering was detected
+- whether custom fan control / tampering was detected
 - duration in seconds
-- full recorded sample timeline
+- full sample timeline
 
-So a result is not just one number. It is a local performance and thermal record of the run.
+Results are saved locally in Application Support, not uploaded to an online service.
 
 ### How the score works
 
-The benchmark engine tracks operations completed over time and compares that throughput to an internal baseline. The score is meant to represent sustained behavior, not just the first second of the run.
+The benchmark engine tracks completed work over time and compares it to an internal baseline constant. The score is meant to represent sustained throughput, not just "how fast was the first second."
 
-The score is influenced by:
+That means the result is influenced by:
 
-- total work completed
-- how well throughput holds up across the run
-- whether the machine appears to lose performance late in the session
-- the thermal conditions surrounding that performance
-
-This makes the benchmark more aligned with the rest of Core-Monitor’s philosophy: sustained behavior matters more than one flashy spike.
+- how much work the machine completed
+- how well throughput held up across the run
+- whether performance dropped later in the session
+- the thermal conditions around that performance
 
 ### Quality ratings
 
-Benchmark runs are also given a quality rating:
+Benchmark results are assigned one of these ratings:
 
 - `Platinum`
 - `Gold`
@@ -325,9 +383,9 @@ These ratings are derived from:
 
 - average sustained CPU load
 - peak temperature
-- whether late-run throughput drops enough to look like thermal throttling
+- whether late-run throughput drops enough to look like throttling
 
-That means the rating is a quick interpretation layer on top of the score. It is not just asking “how fast was this run?” It is also asking:
+So the rating is not just "how fast was it?" It is also asking:
 
 - did the machine stay loaded cleanly?
 - did it keep thermal headroom?
@@ -335,15 +393,15 @@ That means the rating is a quick interpretation layer on top of the score. It is
 
 ### Custom fan-control detection
 
-The benchmark also checks whether outside fan-control conditions may have affected the run.
+The benchmark checks whether outside fan-control conditions may have affected the run.
 
 Core-Monitor includes a tamper detector that:
 
 - looks for known fan-control apps
 - probes fan mode state through SMC reads
-- flags benchmark sessions that appear to be running under custom fan-control conditions
+- flags runs that appear to be using custom fan-control behavior
 
-That matters because benchmark runs are not really comparable if one is using altered fan behavior and another is not. Core-Monitor does not hide that difference.
+That matters because benchmark results are not really comparable if cooling conditions were altered outside the app.
 
 ### Local leaderboard
 
@@ -357,45 +415,34 @@ The leaderboard supports filters for:
 - custom-fan-control-only runs
 - top-score-only view
 
-This is useful if you want to:
+That makes it useful for:
 
-- compare multiple runs on one machine
-- compare your own Macs locally
-- test whether custom fan behavior changes sustained results
-- see whether a machine is thermally healthy under repeated runs
-
-### What the benchmark is good for
-
-The benchmark is especially useful for:
-
-- checking sustained thermal behavior
-- comparing local machines
-- seeing whether performance falls off late in a run
-- validating whether cooling behavior appears stable
-- tying one benchmark result back to the rest of Core-Monitor’s live system view
-
-Because it uses the same monitoring layer as the rest of the app, it feels like part of Core-Monitor instead of a random extra tab.
+- comparing repeated runs on one machine
+- comparing your own Macs locally
+- checking whether cooling behavior changes sustained results
+- seeing whether a machine stays thermally healthy over repeated runs
 
 ### Benchmark result flow
 
 ```mermaid
 flowchart TD
-    A["Start Benchmark"] --> B["Run Sustained Workload"]
-    B --> C["Sample CPU Load, Temp, Fan RPM"]
-    C --> D["Compute Score + Quality Rating"]
-    D --> E["Save Local Result"]
-    E --> F["Compare In Local Leaderboard"]
+    A["Start benchmark"] --> B["Spawn CPU-heavy workload on performance cores"]
+    B --> C["Sample CPU load, temperatures, and fan RPM every second"]
+    C --> D["Compute running score and ops timeline"]
+    D --> E["Evaluate quality rating"]
+    E --> F["Save result locally"]
+    F --> G["Show in leaderboard"]
 ```
 
 ## Launch At Login
 
-Core-Monitor includes launch-at-login support through macOS login item registration.
+Core-Monitor includes launch-at-login support through `SMAppService`.
 
 Practical notes:
 
-- Launch at login requires macOS 13 or newer in the current implementation.
-- On some systems, approval may need to happen in `System Settings -> General -> Login Items`.
-- If macOS says approval is required, that is normal system behavior for login items.
+- launch at login requires macOS 13 or newer in the current implementation
+- approval may need to happen in `System Settings -> General -> Login Items`
+- if macOS says approval is required, that is normal system behavior for login items
 
 ## CoreVisor
 
@@ -413,7 +460,12 @@ Virtual machines stress exactly the things Core-Monitor is already watching:
 
 That is why CoreVisor belongs here. It keeps monitoring and workload management in the same app.
 
-CoreVisor and the benchmark feature complement each other well. CoreVisor is about driving real workloads inside the app’s world, while the benchmark is about measuring sustained thermal/performance behavior directly. Together they push Core-Monitor beyond a passive readout utility.
+CoreVisor and the benchmark feature complement each other well:
+
+- CoreVisor is about driving real workloads inside the app's world
+- the benchmark is about measuring sustained thermal and performance behavior directly
+
+Together they push Core-Monitor beyond a passive readout utility.
 
 ## CoreVisor Backend Model
 
@@ -426,17 +478,27 @@ CoreVisor currently supports two backend paths:
 
 ### Apple Virtualization
 
-In the current build, Apple Virtualization is the lightweight native path for Linux guests.
+In the current build, Apple Virtualization is the lighter native path for Linux guests.
 
-That path matters because it gives CoreVisor a native macOS virtualization mode where supported, instead of routing everything through QEMU.
+Important constraints in the current implementation:
+
+- requires macOS 13 or newer
+- requires the macOS virtualization entitlement
+- Linux is the supported guest type in this path
 
 ### QEMU
 
 QEMU is the broader compatibility and power-user backend.
 
-CoreVisor looks for bundled or custom QEMU binaries. If no usable QEMU binary is found, CoreVisor reports that clearly instead of pretending everything is fine.
+CoreVisor looks for:
 
-Bundled QEMU is expected in the app’s `EmbeddedQEMU` resources. The repo includes [EmbeddedQEMU/README.md](EmbeddedQEMU/README.md) describing the expected layout.
+- a custom QEMU binary path
+- a system-installed QEMU binary
+- bundled QEMU resources
+
+If no usable QEMU binary is found, CoreVisor reports that clearly instead of pretending everything is fine.
+
+Bundled QEMU is expected in the app's `EmbeddedQEMU` resources. The repo includes [EmbeddedQEMU/README.md](EmbeddedQEMU/README.md) describing the expected layout.
 
 Expected bundled binaries include:
 
@@ -454,7 +516,7 @@ CoreVisor is not just a launch button for one hardcoded VM. It supports a broade
 - VM bundle storage
 - runtime state tracking
 - logs
-- hardware/resource configuration
+- hardware and resource configuration
 - import and editing flows
 
 ### Guest types
@@ -466,13 +528,13 @@ The codebase supports guest categories such as:
 - NetBSD
 - UNIX
 
-and uses backend compatibility rules to determine what is actually valid in the current build.
+Backend compatibility rules decide what is valid in the current build.
 
 ### USB passthrough
 
 CoreVisor can enumerate QEMU USB devices and expose passthrough options in the setup flow.
 
-That matters for more serious VM use because it moves the app beyond a minimal “boot this image” implementation.
+That matters because it moves the app beyond a minimal "boot this image" implementation.
 
 ### Snapshots
 
@@ -487,25 +549,18 @@ That makes it much more practical for testing, unstable guests, and iterative VM
 
 ### VirtIO support
 
-For Windows-on-QEMU workflows, CoreVisor has explicit VirtIO handling:
+For Windows-on-QEMU workflows, CoreVisor includes:
 
 - VirtIO ISO download support
 - per-machine VirtIO path persistence
 - guidance inside the UI for Windows ARM storage-driver behavior
+- post-install VirtIO GPU guidance
 
-This matters because Windows ARM install flows are not “just attach ISO and go.”
-
-### VirGL and graphics-related options
-
-CoreVisor includes VirGL- and VirtIO GPU-related logic for QEMU where supported.
-
-That gives the project room to be more than a minimal headless VM wrapper.
+This matters because Windows ARM setup is not just "attach ISO and go."
 
 ### TPM support
 
 CoreVisor supports TPM-related workflows through `swtpm`.
-
-That matters especially for Windows 11 ARM flows, where TPM support is part of making the setup path viable.
 
 If `swtpm` is missing, the UI explicitly points users toward:
 
@@ -513,46 +568,35 @@ If `swtpm` is missing, the UI explicitly points users toward:
 brew install swtpm
 ```
 
-## Windows 11 ARM “Do It For Me” Flow
+## Windows 11 ARM "Do It For Me" Flow
 
 One of the more ambitious CoreVisor features is the automated Windows 11 ARM setup path.
 
-This is not just “attach an ISO and good luck.” The codebase includes an automation pipeline that can:
+This is not just "attach an ISO and good luck." The codebase includes an automation pipeline that can:
 
 - download the Windows 11 ARM ISO
 - download VirtIO drivers
 - prepare setup-support media
 - initialize TPM through `swtpm`
 - build an unattended installation flow
-
-The app describes this as a “Do It For Me” Windows 11 ARM setup path, and that is exactly the kind of feature that makes CoreVisor more than a generic VM launcher.
+- guide the user through the remaining Windows setup steps
 
 ### Practical Windows 11 ARM expectations
 
-- `swtpm` is required for the TPM path.
-- VirtIO drivers matter during and after installation.
-- The setup flow is much more guided than a raw QEMU command-line workflow.
-- This is one of the most advanced parts of the app and one of the clearest examples of the project’s ambition.
-
-## Why CoreVisor Changes The App
-
-Without CoreVisor, Core-Monitor would still be a good monitoring utility.
-
-With CoreVisor, it becomes a broader power-user tool that can both:
-
-- observe the system
-- participate in the workloads stressing the system
-
-That changes the identity of the app.
+- `swtpm` is required for the TPM path
+- VirtIO drivers matter during and after installation
+- the setup flow is much more guided than a raw QEMU command-line workflow
+- Windows guests are QEMU-only in the current build
 
 ### CoreVisor concept flow
 
 ```mermaid
 flowchart TD
-    A["Create / Import VM"] --> B["Launch Through CoreVisor"]
-    B --> C["VM Load Hits CPU / Memory / Thermals"]
-    C --> D["Core-Monitor Observes The Response"]
-    D --> E["User Watches, Tunes, Or Adjusts Workflow"]
+    A["Choose guest type"] --> B["Select backend: Apple VZ or QEMU"]
+    B --> C["Configure resources, storage, display, USB, TPM"]
+    C --> D["Optional: download VirtIO / Windows assets"]
+    D --> E["Launch VM"]
+    E --> F["Monitor runtime state, logs, thermals, and fan behavior from Core-Monitor"]
 ```
 
 ## Why Open Source Matters
@@ -565,7 +609,8 @@ That matters for:
 - SMC-backed behavior
 - fan control paths
 - reverse-engineered Touch Bar overlay behavior
-- CoreVisor backend logic
+- benchmark logic and result storage
+- CoreVisor backend behavior
 
 Open source here means:
 
@@ -578,15 +623,15 @@ If a utility app is doing unusual hardware- and system-adjacent things, it shoul
 
 ## Install
 
-## Option A: Download a release
+### Option A: Download a release
 
-Download the latest release build from the project’s GitHub releases page, then open the app normally.
+Download the latest release build from the project's GitHub releases page, then open the app normally.
 
-Because the app is not signed with a paid Apple Developer certificate, macOS may block the first launch. The Gatekeeper flow is documented further below.
+Because the app is not signed with a paid Apple Developer certificate, macOS may block the first launch. The Gatekeeper flow is documented below.
 
-If you want fan write access, expect a one-time approval/admin flow for the helper path when the app first needs it.
+If you want fan write access, expect a one-time approval or admin flow for the helper path when the app first needs it.
 
-## Option B: Build from source in Xcode
+### Option B: Build from source in Xcode
 
 ```bash
 open Core-Monitor.xcodeproj
@@ -600,7 +645,7 @@ This repo also contains:
 - the `smc-helper` target
 - the `EmbeddedQEMU` directory used for CoreVisor resource bundling
 
-If you are working on the benchmark feature specifically, the main files currently include:
+Relevant benchmark files currently include:
 
 - `Core-Monitor/BenchmarkEngine.swift`
 - `Core-Monitor/BenchmarkResult.swift`
@@ -612,14 +657,14 @@ If you are working on the benchmark feature specifically, the main files current
 
 If you want CoreVisor to use bundled QEMU binaries in development, follow the resource layout described in [EmbeddedQEMU/README.md](EmbeddedQEMU/README.md).
 
-## After install
+### After install
 
 After the app is built or downloaded:
 
 1. Open `Core-Monitor`
 2. Allow first launch through Gatekeeper if macOS blocks it
-3. If you want fan writes, approve/install the helper path when prompted
-4. If you want launch-at-login, enable it from the app and approve it in Login Items if macOS asks
+3. If you want fan writes, approve or install the helper path when prompted
+4. If you want launch at login, enable it in the app and approve it in Login Items if macOS asks
 5. If you want Windows 11 ARM in CoreVisor, install `swtpm`
 6. If you want to compare runs locally, use the built-in benchmark and save results to the leaderboard
 
@@ -629,12 +674,12 @@ Because Core-Monitor is not signed with a paid Apple Developer certificate, macO
 
 ### First-launch steps
 
-1. Try to open `Core-Monitor` once.
-2. When macOS blocks it, press `Done`.
-3. Open `System Settings`.
-4. Go to `Privacy & Security`.
-5. Find the blocked app notice and press `Open Anyway`.
-6. Confirm the follow-up dialog by pressing `Open Anyway`.
+1. Try to open `Core-Monitor` once
+2. When macOS blocks it, press `Done`
+3. Open `System Settings`
+4. Go to `Privacy & Security`
+5. Find the blocked app notice and press `Open Anyway`
+6. Confirm the follow-up dialog by pressing `Open Anyway`
 
 ### Step 1: macOS blocks the app on first launch
 
@@ -658,11 +703,11 @@ Core-Monitor is mainly aimed at modern Macs, especially Apple silicon systems, b
 
 - Apple silicon support is a major focus
 - E-core / P-core monitoring is available where supported
-- Fan control, CoreVisor, Touch Bar features, and SMC functionality are working on tested Apple silicon systems
+- fan control, CoreVisor, Touch Bar features, and SMC functionality are working on tested Apple silicon systems
 - Intel support is also present and has been tested on a 2015 MacBook Air
-- Some Apple silicon-specific features are automatically disabled on Intel Macs
-- Fan curve control on Intel is still not working correctly
-- Launch at login requires macOS 13 or newer in the current implementation
+- some Apple silicon-specific features are automatically disabled on Intel Macs
+- fan curve control on Intel is still not working correctly
+- launch at login requires macOS 13 or newer in the current implementation
 - Touch Bar features obviously require Touch Bar hardware to matter
 
 ### Tested systems
@@ -674,12 +719,13 @@ Core-Monitor is mainly aimed at modern Macs, especially Apple silicon systems, b
 
 Compatibility coverage is still early and should improve as more machines are tested.
 
-## What This App Is For
+## Who This App Is For
 
 Core-Monitor is especially useful if you want one app that covers:
 
 - machine monitoring
 - fan control
+- local benchmarking
 - menu bar status
 - Touch Bar visibility
 - VM workflows
@@ -692,17 +738,6 @@ It is a good fit for:
 - people who want a built-in sustained benchmark tied to live thermal data
 - people who run VMs and want to watch how they affect the system
 - users who prefer open-source utilities over closed, feature-gated apps
-
-## What This App Is Not
-
-Core-Monitor is probably not for you if you want:
-
-- a tiny one-feature widget
-- a fan-only tool and nothing else
-- an App Store-style sealed experience with zero rough edges
-- a minimal monitor that never tries anything unusual
-
-The app is intentionally broader and more experimental than that.
 
 ## FAQ
 
@@ -724,15 +759,15 @@ Only for TPM-related VM flows, especially Windows 11 ARM setup. The app explicit
 
 ### Is Core-Monitor just a monitor app?
 
-No. Monitoring is the center of the app, but not the whole point. The app also includes control surfaces, Touch Bar behavior, and CoreVisor workflows.
+No. Monitoring is the center of the app, but not the whole point. The app also includes control surfaces, benchmarking, Touch Bar behavior, and CoreVisor workflows.
 
 ### Is the benchmark an online leaderboard?
 
-No. The benchmark leaderboard is local. It stores benchmark results on the machine and is designed for your own comparisons and repeated runs.
+No. The benchmark leaderboard is local. It stores results on the machine and is designed for your own comparisons and repeated runs.
 
 ### What does the benchmark rating mean?
 
-The benchmark quality rating is a fast interpretation of how cleanly the machine sustained load. It combines throughput behavior with thermal behavior instead of only showing one raw score.
+The benchmark quality rating is a quick interpretation of how cleanly the machine sustained load. It combines throughput behavior with thermal behavior instead of only showing one raw number.
 
 ### Can custom fan tools affect benchmark results?
 
@@ -752,10 +787,10 @@ Core-Monitor is already useful, but it is still evolving. The direction is clear
 
 ## Notes
 
-- The app is still being actively refined.
-- Testing coverage is currently limited to a small number of machines.
-- Some features are more mature than others.
-- Reports, issues, and improvements are useful.
+- The app is still being actively refined
+- testing coverage is currently limited to a small number of machines
+- some features are more mature than others
+- reports, issues, and improvements are useful
 
 ## License
 
