@@ -85,6 +85,15 @@ private struct SMCParamStruct {
 }
 
 final class SystemMonitor: ObservableObject {
+    private enum BenchmarkKeys {
+        static let allTemperatureKeys = [
+            "TC0P", "Tp09", "TCXC", "TC0E", "TC0F", "TC0D",
+            "TC1C", "TC2C", "TC3C", "TC4C",
+            "Tg0e", "Tg0f", "Tg0m", "Tg0n",
+            "Tp01", "Tp05", "Tp0D", "Tp0b"
+        ]
+    }
+
     @Published var cpuTemperature: Double?
     @Published var gpuTemperature: Double?
     @Published var fanSpeeds: [Int] = []
@@ -120,6 +129,38 @@ final class SystemMonitor: ObservableObject {
         var size = MemoryLayout<Int32>.size
         let result = sysctlbyname("hw.optional.arm64", &value, &size, nil, 0)
         return result == 0 && value == 1
+    }
+
+    static func hostModelIdentifier() -> String {
+        sysctlString(named: "hw.model") ?? "Unknown Mac"
+    }
+
+    static func chipName() -> String {
+        if let targetType = sysctlString(named: "hw.targettype"), !targetType.isEmpty {
+            return targetType
+        }
+        if let brand = sysctlString(named: "machdep.cpu.brand_string"), !brand.isEmpty {
+            return brand
+        }
+        return isAppleSilicon ? "Apple Silicon" : "Intel"
+    }
+
+    static func performanceCoreCount() -> Int {
+        if let count = sysctlInt(named: "hw.perflevel0.logicalcpu"), count > 0 {
+            return count
+        }
+        return totalLogicalCoreCount()
+    }
+
+    static func efficiencyCoreCount() -> Int {
+        if let count = sysctlInt(named: "hw.perflevel1.logicalcpu"), count >= 0 {
+            return count
+        }
+        return 0
+    }
+
+    static func totalLogicalCoreCount() -> Int {
+        sysctlInt(named: "hw.logicalcpu") ?? ProcessInfo.processInfo.activeProcessorCount
     }
 
     private var smcConnection: io_connect_t = 0
@@ -208,6 +249,25 @@ final class SystemMonitor: ObservableObject {
     func stopMonitoring() {
         timer?.invalidate()
         timer = nil
+    }
+
+    func benchmarkTemperatureReadings() -> [String: Double] {
+        var readings: [String: Double] = [:]
+
+        for key in BenchmarkKeys.allTemperatureKeys {
+            guard let value = readSMCValue(key: key), value > 0, value < 150 else { continue }
+            readings[key] = value
+        }
+
+        if let packageTemp = readings["TC0P"] ?? readings["Tp09"] ?? cpuTemperature {
+            readings["package"] = packageTemp
+        }
+
+        if let gpuTemp = gpuTemperature {
+            readings["gpu"] = gpuTemp
+        }
+
+        return readings
     }
 
     private func openSMCConnection() -> Bool {
@@ -719,7 +779,7 @@ final class SystemMonitor: ObservableObject {
     }
 }
 
-private func fourCharCodeFrom(_ string: String) -> UInt32 {
+func fourCharCodeFrom(_ string: String) -> UInt32 {
     var result: UInt32 = 0
     for (index, byte) in string.utf8.prefix(4).enumerated() {
         result |= UInt32(byte) << (8 * (3 - index))
@@ -727,3 +787,17 @@ private func fourCharCodeFrom(_ string: String) -> UInt32 {
     return result
 }
 
+private func sysctlString(named name: String) -> String? {
+    var size: size_t = 0
+    guard sysctlbyname(name, nil, &size, nil, 0) == 0, size > 1 else { return nil }
+    var buffer = [CChar](repeating: 0, count: size)
+    guard sysctlbyname(name, &buffer, &size, nil, 0) == 0 else { return nil }
+    return String(cString: buffer)
+}
+
+private func sysctlInt(named name: String) -> Int? {
+    var value: Int32 = 0
+    var size = MemoryLayout<Int32>.size
+    guard sysctlbyname(name, &value, &size, nil, 0) == 0 else { return nil }
+    return Int(value)
+}
