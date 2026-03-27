@@ -1,8 +1,50 @@
-A not so basic, all in one stats/multitasking app for mac0S! its ment to be light (68ish mb) while maintaining utility!
+# Core-Monitor
 
-Also, once you start the zipped app, it'll say "Apple Could Not Verify "Core-Monitor" was safe for your mac" because it doesn't have a paid apple developer certifcate, but you can just go to privacy and security, and press open anyway.
+Core-Monitor is an all-in-one macOS stats and multitasking app. It is meant to stay fairly light while still packing in a lot of utility.
 
-Works on intel perfectly (kinda) too! Tested on 2015 Macbook Air, everything works! (apple silicon features are auto disabled tho) but fan control and smc works! (No fan curve control sadly working on intel..)
-Also, everything works perfectly on a M2 Macbook Pro 13in, including fan control, corevisor, and smc.
-Report any issues please! I only really have 2 devices to test this out so things can be inconsistant sadly:/
-The app is still kind of a mess, with still a lot of optimization remaining, so help is appreciated!!! 
+## What It Does
+
+- System monitoring
+- Fan control
+- SMC-backed hardware features
+- CoreVisor / VM management
+- Intel and Apple silicon compatibility handling
+
+## Compatibility
+
+- Intel support is working fairly well. It has been tested on a 2015 MacBook Air.
+- Apple silicon support is also working, including fan control, CoreVisor, and SMC features on an M2 MacBook Pro 13-inch.
+- Some Apple silicon-only features are automatically disabled on Intel Macs.
+- Fan curve control on Intel is still not working correctly.
+
+## First Launch on macOS
+
+Because Core-Monitor is not signed with a paid Apple Developer certificate, macOS may block it on first launch with a message saying Apple could not verify that it is free from malware. If you downloaded it from this repo and trust the build, you can allow it manually:
+
+1. Try to open `Core-Monitor` once.
+2. When macOS blocks it, press `Done`.
+3. Open `System Settings` -> `Privacy & Security`.
+4. Scroll to the security section and press `Open Anyway`.
+5. Confirm by pressing `Open Anyway` in the follow-up dialog.
+
+### Step 1: macOS blocks the app on first launch
+
+![Core-Monitor blocked on first launch](docs/images/gatekeeper/01-blocked.png)
+
+### Step 2: Open System Settings
+
+![System Settings general view](docs/images/gatekeeper/02-general.png)
+
+### Step 3: In Privacy & Security, press Open Anyway
+
+![Privacy and Security open anyway button](docs/images/gatekeeper/03-open-anyway.png)
+
+### Step 4: Confirm the launch
+
+![Confirm open anyway dialog](docs/images/gatekeeper/04-confirm-open.png)
+
+## Notes
+
+- The app is still rough in places and there is still optimization work left.
+- Testing coverage is limited because it has only been validated on a small number of machines so far.
+- Bug reports and help improving the project are appreciated.
