@@ -1,4 +1,5 @@
 # Core-Monitor
+# ⭐️ Star us on Github to support the project!
 
 **Free, open-source macOS monitoring, fan control, benchmarking, Touch Bar, and virtualization utility.**  
 Dashboard + menu bar + Touch Bar widget + CoreVisor.
