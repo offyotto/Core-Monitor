@@ -56,6 +56,7 @@ private final class SMCController {
     private let kernelIndexSmc: UInt32 = 2
 
     private let typeFpe2 = fourCharCodeFrom("fpe2")
+    private let typeFlt = fourCharCodeFrom("flt ")
     private let typeUi8 = fourCharCodeFrom("ui8 ")
     private let typeUi16 = fourCharCodeFrom("ui16")
 
@@ -201,6 +202,12 @@ private final class SMCController {
             let v = UInt16(max(0, min(16383, value)))
             raw[0] = UInt8((v >> 6) & 0xFF)
             raw[1] = UInt8((v & 0x3F) << 2)
+        } else if dataType == typeFlt, dataSize >= 4 {
+            let bits = Float(value).bitPattern.littleEndian
+            raw[0] = UInt8((bits >> 0) & 0xFF)
+            raw[1] = UInt8((bits >> 8) & 0xFF)
+            raw[2] = UInt8((bits >> 16) & 0xFF)
+            raw[3] = UInt8((bits >> 24) & 0xFF)
         } else {
             throw HelperError("Unsupported write type for key")
         }

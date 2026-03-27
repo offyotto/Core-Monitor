@@ -61,7 +61,7 @@ private struct CVSectionHeader: View {
             Text(title.uppercased())
                 .font(.cvMono(9, weight: .bold))
                 .foregroundStyle(Color.cvSecondary)
-                .kerning(1.4)
+                .cmKerning(1.4)
             Spacer()
         }
     }
@@ -111,6 +111,11 @@ struct CoreVisorSetupView: View {
     @State private var machineSearchQuery = ""
     @State private var editWindowControllers: [UUID: NSWindowController] = [:]
     @State private var editWindowCloseObservers: [UUID: NSObjectProtocol] = [:]
+    @State private var wizardVirtioDownloading = false
+    @State private var wizardVirtioProgress: Double = 0
+    @State private var showDoItForMe = false
+    // Lazily populated on first use so we can pass the real manager reference
+    @State private var doItForMeMgr: DoItForMeManager? = nil
 
     private let stepTitles = ["Template", "Backend", "Resources", "Display", "Review"]
     private var direction: Int { step > previousStep ? 1 : -1 }
@@ -172,7 +177,7 @@ struct CoreVisorSetupView: View {
             showEntitlementGuide = manager.requiresVirtualizationEntitlement
             customQEMUPathInput = manager.customQEMUBinaryPath
         }
-        .onChange(of: manager.customQEMUBinaryPath) { _, v in customQEMUPathInput = v }
+        .onChange(of: manager.customQEMUBinaryPath) { v in customQEMUPathInput = v }
         .onDisappear {
             for o in editWindowCloseObservers.values { NotificationCenter.default.removeObserver(o) }
             editWindowCloseObservers.removeAll()
@@ -234,7 +239,7 @@ struct CoreVisorSetupView: View {
                     Text("COREVISOR")
                         .font(.cvMono(10, weight: .bold))
                         .foregroundStyle(Color.cvAmber)
-                        .kerning(2)
+                        .cmKerning(2)
                 }
                 Text("Virtual Machine Setup")
                     .font(.cvRound(16, weight: .bold))
@@ -247,6 +252,7 @@ struct CoreVisorSetupView: View {
                     .tint(Color.cvAmber)
             }
             cvActionButton("Import UTM", icon: "square.and.arrow.down") { importUTMBundleFromPicker() }
+            cvActionButton("Import Disk Image", icon: "externaldrive.badge.plus") { importDiskImageFromPicker() }
             cvActionButton("Refresh", icon: "arrow.clockwise") { Task { await manager.refreshRuntimeData() } }
         }
     }
@@ -258,7 +264,7 @@ struct CoreVisorSetupView: View {
                     .font(.system(size: 10, weight: .semibold))
                 Text(label)
                     .font(.cvMono(10, weight: .bold))
-                    .kerning(0.3)
+                    .cmKerning(0.3)
             }
             .foregroundStyle(Color.cvSecondary)
             .padding(.horizontal, 10)
@@ -289,7 +295,7 @@ struct CoreVisorSetupView: View {
                         Text(title.uppercased())
                             .font(.cvMono(9, weight: .bold))
                             .foregroundStyle(idx == step ? Color.cvPrimary : Color.cvDim)
-                            .kerning(0.6)
+                            .cmKerning(0.6)
                     }
                     .padding(.horizontal, 9)
                     .padding(.vertical, 5)
@@ -347,7 +353,7 @@ struct CoreVisorSetupView: View {
                 Text(info.title.uppercased())
                     .font(.cvMono(9, weight: .bold))
                     .foregroundStyle(Color.cvAmber)
-                    .kerning(0.8)
+                    .cmKerning(0.8)
                 Text(info.subtitle)
                     .font(.cvRound(11, weight: .medium))
                     .foregroundStyle(Color.cvSecondary)
@@ -371,6 +377,64 @@ struct CoreVisorSetupView: View {
     // MARK: - Template step
     private var templateStep: some View {
         VStack(alignment: .leading, spacing: 10) {
+
+            // ── Do It For Me — top-level CTA ────────────────────────────────────
+            Button {
+                if doItForMeMgr == nil {
+                    doItForMeMgr = DoItForMeManager(coreVisorManager: manager)
+                }
+                showDoItForMe = true
+            } label: {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.black.opacity(0.18))
+                            .frame(width: 44, height: 44)
+                        Image(systemName: "wand.and.stars.inverse")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(.black.opacity(0.85))
+                    }
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("DO IT FOR ME — WINDOWS 11 ARM")
+                            .font(.cvMono(9, weight: .bold))
+                            .cmKerning(0.7)
+                        Text("CoreVisor auto-downloads Windows 11 ARM + VirtIO drivers, creates the VM, and guides you through every setup step")
+                            .font(.cvMono(8))
+                            .opacity(0.75)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer()
+                    Image(systemName: "arrow.right.circle.fill")
+                        .font(.system(size: 22))
+                        .opacity(0.7)
+                }
+                .foregroundStyle(Color.cvBackground)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    LinearGradient(
+                        colors: [Color(red: 0.22, green: 0.92, blue: 0.55),
+                                 Color(red: 0.18, green: 0.72, blue: 1.0)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+            .buttonStyle(CVScaleButtonStyle())
+            .sheet(isPresented: $showDoItForMe) {
+                if let mgr = doItForMeMgr {
+                    DoItForMeView(doItMgr: mgr, manager: manager, isPresented: $showDoItForMe)
+                        .frame(minWidth: 680, minHeight: 420)
+                }
+            }
+
+            Text("— or pick a template to configure manually —")
+                .font(.cvMono(8))
+                .foregroundStyle(Color.cvDim)
+                .frame(maxWidth: .infinity, alignment: .center)
+
             CVSectionHeader(title: "Starting Template")
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                 ForEach(manager.templates) { tmpl in
@@ -393,7 +457,7 @@ struct CoreVisorSetupView: View {
                             Text(tmpl.guest.rawValue.uppercased())
                                 .font(.cvMono(8, weight: .bold))
                                 .foregroundStyle(Color.cvAmber.opacity(0.7))
-                                .kerning(0.8)
+                                .cmKerning(0.8)
                             HStack(spacing: 5) {
                                 specTag("\(tmpl.cpuCores) CORE")
                                 specTag("\(tmpl.memoryGB) GB")
@@ -414,7 +478,7 @@ struct CoreVisorSetupView: View {
         Text(text)
             .font(.cvMono(8, weight: .bold))
             .foregroundStyle(Color.cvAmber)
-            .kerning(0.5)
+            .cmKerning(0.5)
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
             .background(Color.cvAmber.opacity(0.10))
@@ -501,7 +565,7 @@ struct CoreVisorSetupView: View {
             Text("CUSTOM QEMU BINARY")
                 .font(.cvMono(8, weight: .bold))
                 .foregroundStyle(Color.cvDim)
-                .kerning(1)
+                .cmKerning(1)
             HStack(spacing: 7) {
                 TextField("/path/to/qemu-system-aarch64", text: $customQEMUPathInput)
                     .font(.cvMono(10))
@@ -545,11 +609,75 @@ struct CoreVisorSetupView: View {
     // MARK: - Resources step
     private var resourcesStep: some View {
         VStack(alignment: .leading, spacing: 14) {
+
+            // ── Do It For Me — full-width banner for Windows QEMU guests ─────────
+            if draft.guest == .windows && draft.backend == .qemu {
+                Button {
+                    if doItForMeMgr == nil {
+                        doItForMeMgr = DoItForMeManager(coreVisorManager: manager)
+                    }
+                    showDoItForMe = true
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "wand.and.stars.inverse")
+                            .font(.system(size: 18, weight: .semibold))
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("DO IT FOR ME")
+                                .font(.cvMono(10, weight: .bold))
+                                .cmKerning(0.8)
+                            Text("CoreVisor downloads Windows 11 ARM + VirtIO drivers,\ncreates the VM, and walks you through setup step by step")
+                                .font(.cvMono(8))
+                                .opacity(0.8)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer()
+                        Image(systemName: "arrow.right.circle.fill")
+                            .font(.system(size: 20))
+                            .opacity(0.7)
+                    }
+                    .foregroundStyle(Color.cvBackground)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        LinearGradient(
+                            colors: [Color(red: 0.22, green: 0.92, blue: 0.55),
+                                     Color(red: 0.18, green: 0.72, blue: 1.0)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 9))
+                }
+                .buttonStyle(CVScaleButtonStyle())
+                .sheet(isPresented: $showDoItForMe) {
+                    if let mgr = doItForMeMgr {
+                        DoItForMeView(doItMgr: mgr, manager: manager, isPresented: $showDoItForMe)
+                            .frame(minWidth: 680, minHeight: 420)
+                    }
+                }
+
+                Text("— or configure manually below —")
+                    .font(.cvMono(8))
+                    .foregroundStyle(Color.cvDim)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+
             CVSectionHeader(title: "VM Identity & Boot")
             VStack(spacing: 7) {
                 cvField(label: "VM NAME", placeholder: "My Virtual Machine", text: $draft.name)
                 cvField(label: "INSTALLER ISO", placeholder: "/path/to/installer.iso", text: $draft.isoPath) {
                     if let p = pickFilePath(title: "Select Installer", allowedExtensions: ["iso","img"]) { draft.isoPath = p }
+                }
+
+                // VirtIO drivers ISO — shown for all QEMU guests but highlighted for Windows ARM
+                HStack(alignment: .top, spacing: 0) {
+                    cvField(label: "VIRTIO DRIVERS", placeholder: "/path/to/virtio-win.iso (Windows ARM)", text: $draft.virtioDriversISOPath) {
+                        if let p = pickFilePath(title: "Select VirtIO Drivers ISO", allowedExtensions: ["iso"]) { draft.virtioDriversISOPath = p }
+                    }
+                }
+                if draft.guest == .windows && draft.backend == .qemu && draft.virtioDriversISOPath.isEmpty {
+                    virtioDriversBanner
                 }
                 cvField(label: "LINUX KERNEL", placeholder: "/path/to/vmlinuz (optional)", text: $draft.kernelPath) {
                     if let p = pickFilePath(title: "Select Kernel") { draft.kernelPath = p }
@@ -592,7 +720,7 @@ struct CoreVisorSetupView: View {
                     HStack(spacing: 7) {
                         Text("CONTINUE TO DISPLAY")
                             .font(.cvMono(10, weight: .bold))
-                            .kerning(0.8)
+                            .cmKerning(0.8)
                         Image(systemName: "arrow.right")
                             .font(.system(size: 10, weight: .bold))
                     }
@@ -614,7 +742,7 @@ struct CoreVisorSetupView: View {
             Text(label)
                 .font(.cvMono(8, weight: .bold))
                 .foregroundStyle(Color.cvDim)
-                .kerning(0.8)
+                .cmKerning(0.8)
                 .frame(width: 96, alignment: .trailing)
             HStack(spacing: 6) {
                 TextField(placeholder, text: text)
@@ -640,12 +768,12 @@ struct CoreVisorSetupView: View {
         VStack(alignment: .leading, spacing: 9) {
             HStack(spacing: 5) {
                 Image(systemName: icon).font(.system(size: 10, weight: .semibold)).foregroundStyle(Color.cvDim)
-                Text(label).font(.cvMono(8, weight: .bold)).foregroundStyle(Color.cvDim).kerning(0.8)
+                Text(label).font(.cvMono(8, weight: .bold)).foregroundStyle(Color.cvDim).cmKerning(0.8)
             }
             Text(display)
                 .font(.cvMono(20, weight: .bold))
                 .foregroundStyle(color)
-                .contentTransition(.numericText())
+                .cmNumericTextTransition()
             Slider(value: value, in: range, step: 1).tint(color)
         }
         .padding(11)
@@ -667,6 +795,48 @@ struct CoreVisorSetupView: View {
                 cvInfoNote("OpenGL not detected for this QEMU build. VirGL may fail at launch.")
             }
 
+            // VirtIO GPU — Windows-only, post-install WDDM 2D acceleration
+            if draft.guest == .windows && draft.backend == .qemu {
+                HStack(spacing: 8) {
+                    toggleTile(
+                        title: "VirtIO GPU",
+                        subtitle: "WDDM 2D — Aero Glass,\nrounded corners, DWM",
+                        icon: "rectangle.3.group",
+                        isOn: $draft.enableVirtioGPU,
+                        disabled: false
+                    )
+                    toggleTile(
+                        title: "TPM 2.0",
+                        subtitle: manager.swtpmAvailable
+                            ? "Emulated via swtpm\nSeed in Keychain"
+                            : "Install: brew install swtpm",
+                        icon: "lock.shield",
+                        isOn: $draft.enableTPM,
+                        disabled: !manager.swtpmAvailable
+                    )
+                }
+                if draft.enableVirtioGPU {
+                    cvInfoNote("VirtIO GPU requires the viogpudo driver from virtio-win. Install after Windows is running via Device Manager → viogpudo\\w11\\ARM64. During setup, keep this OFF — switch to VirtIO GPU once Windows is on the desktop.")
+                }
+                if draft.enableTPM && !manager.swtpmAvailable {
+                    cvInfoNote("⚠︎ swtpm not found. Run: brew install swtpm — then restart CoreVisor.")
+                }
+            }
+
+            CVSectionHeader(title: "Storage")
+            toggleTile(
+                title: "Use virtio-blk Storage",
+                subtitle: draft.guest == .windows
+                    ? "Faster I/O — only safe post-install on Windows ARM (WinPE has no inbox virtio driver)"
+                    : "virtio-blk for faster guest I/O",
+                icon: "internaldrive",
+                isOn: $draft.useVirtioStorage,
+                disabled: draft.backend != .qemu
+            )
+            if draft.guest == .windows && draft.useVirtioStorage {
+                cvInfoNote("⚠︎ Windows ARM WinPE has no inbox virtio-blk driver. Enable this only after Windows is fully installed, or driver injection will be needed during setup.")
+            }
+
             CVSectionHeader(title: "USB Passthrough")
             if manager.usbDevices.isEmpty {
                 cvInfoNote("No QEMU USB devices detected.")
@@ -686,7 +856,7 @@ struct CoreVisorSetupView: View {
                 HStack(spacing: 7) {
                     Text("REVIEW & CREATE")
                         .font(.cvMono(10, weight: .bold))
-                        .kerning(0.8)
+                        .cmKerning(0.8)
                     Image(systemName: "checkmark.seal")
                         .font(.system(size: 10, weight: .bold))
                 }
@@ -785,7 +955,7 @@ struct CoreVisorSetupView: View {
                     } label: {
                         Label("COPY", systemImage: "doc.on.doc")
                             .font(.cvMono(8, weight: .bold))
-                            .kerning(0.5)
+                            .cmKerning(0.5)
                     }
                     .foregroundStyle(Color.cvSecondary)
                     .buttonStyle(CVScaleButtonStyle())
@@ -817,7 +987,7 @@ struct CoreVisorSetupView: View {
                             .font(.system(size: 11, weight: .bold))
                         Text("CREATE VM")
                             .font(.cvMono(10, weight: .bold))
-                            .kerning(1)
+                            .cmKerning(1)
                     }
                     .foregroundStyle(canCreateVM ? Color.cvBackground : Color.cvDim)
                     .padding(.horizontal, 16)
@@ -835,7 +1005,7 @@ struct CoreVisorSetupView: View {
                     } label: {
                         Label("COPY GUEST SCRIPT", systemImage: "doc.text")
                             .font(.cvMono(9, weight: .bold))
-                            .kerning(0.5)
+                            .cmKerning(0.5)
                     }
                     .foregroundStyle(Color.cvSecondary)
                     .buttonStyle(CVScaleButtonStyle())
@@ -852,7 +1022,7 @@ struct CoreVisorSetupView: View {
             Text(label)
                 .font(.cvMono(7, weight: .bold))
                 .foregroundStyle(Color.cvDim)
-                .kerning(0.5)
+                .cmKerning(0.5)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
@@ -870,7 +1040,7 @@ struct CoreVisorSetupView: View {
                 } label: {
                     HStack(spacing: 5) {
                         Image(systemName: "chevron.left").font(.system(size: 9, weight: .bold))
-                        Text("BACK").font(.cvMono(9, weight: .bold)).kerning(0.8)
+                        Text("BACK").font(.cvMono(9, weight: .bold)).cmKerning(0.8)
                     }
                     .foregroundStyle(Color.cvSecondary)
                     .padding(.horizontal, 11).padding(.vertical, 6)
@@ -889,7 +1059,7 @@ struct CoreVisorSetupView: View {
                 } label: {
                     Text("DONE")
                         .font(.cvMono(9, weight: .bold))
-                        .kerning(1)
+                        .cmKerning(1)
                         .foregroundStyle(Color.cvBackground)
                         .padding(.horizontal, 16).padding(.vertical, 6)
                         .background(Color.cvAmber)
@@ -913,7 +1083,7 @@ struct CoreVisorSetupView: View {
                 Text("SAVED MACHINES")
                     .font(.cvMono(9, weight: .bold))
                     .foregroundStyle(Color.cvAmber)
-                    .kerning(1.5)
+                    .cmKerning(1.5)
                 Spacer()
                 if manager.isScanning {
                     ProgressView().controlSize(.mini).tint(Color.cvAmber)
@@ -946,7 +1116,7 @@ struct CoreVisorSetupView: View {
                     }
                 } label: {
                     Label("START ALL", systemImage: "play.fill")
-                        .font(.cvMono(8, weight: .bold)).kerning(0.5)
+                        .font(.cvMono(8, weight: .bold)).cmKerning(0.5)
                         .foregroundStyle(Color.cvBackground)
                         .frame(maxWidth: .infinity).padding(.vertical, 6)
                         .background(Color.cvGreen)
@@ -965,7 +1135,7 @@ struct CoreVisorSetupView: View {
                             Text("NO VMS YET")
                                 .font(.cvMono(9, weight: .bold))
                                 .foregroundStyle(Color.cvDim)
-                                .kerning(1)
+                                .cmKerning(1)
                         }
                         .frame(maxWidth: .infinity).padding(.top, 28)
                     } else {
@@ -996,7 +1166,7 @@ struct CoreVisorSetupView: View {
                 Text(state.rawValue.uppercased())
                     .font(.cvMono(7, weight: .bold))
                     .foregroundStyle(stateColor(state))
-                    .kerning(0.6)
+                    .cmKerning(0.6)
                     .padding(.horizontal, 6).padding(.vertical, 2)
                     .background(stateColor(state).opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: 4))
@@ -1005,7 +1175,7 @@ struct CoreVisorSetupView: View {
             Text("\(machine.guest.rawValue.uppercased())  ·  \(machine.backend.rawValue.uppercased())")
                 .font(.cvMono(8, weight: .bold))
                 .foregroundStyle(Color.cvDim)
-                .kerning(0.5)
+                .cmKerning(0.5)
 
             // Primary actions
             HStack(spacing: 5) {
@@ -1043,10 +1213,134 @@ struct CoreVisorSetupView: View {
                 if let script = manager.guestPasteScript(for: machine.guest) {
                     Button("SCRIPT") { copyToPasteboard(script) }
                 }
+                if state == .running {
+                    Button("SNAP") {
+                        Task {
+                            let tag = "snap-\(Int(Date().timeIntervalSince1970))"
+                            await manager.saveSnapshot(name: tag, for: machine)
+                        }
+                    }
+                    .foregroundStyle(Color.cvBlue)
+                }
             }
             .font(.cvMono(8, weight: .bold))
             .foregroundStyle(Color.cvDim)
             .buttonStyle(.plain)
+
+            // Snapshot panel (shown when snapshots exist or VM is running)
+            snapshotPanel(for: machine, state: state)
+
+            // VirtIO drivers warning for Windows VMs without a drivers ISO
+            if machine.guest == .windows && machine.backend == .qemu && machine.virtioDriversISOPath.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 9))
+                            .foregroundStyle(Color.cvAmber)
+                        Text("NO VIRTIO DRIVERS ISO")
+                            .font(.cvMono(8, weight: .bold))
+                            .foregroundStyle(Color.cvAmber)
+                            .cmKerning(0.6)
+                    }
+
+                    if let progress = manager.virtioDownloadProgress[machine.id] {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 6) {
+                                ProgressView(value: progress)
+                                    .tint(Color.cvAmber)
+                                    .frame(maxWidth: .infinity)
+                                Text("\(Int(progress * 100))%")
+                                    .font(.cvMono(8, weight: .bold))
+                                    .foregroundStyle(Color.cvAmber)
+                                    .frame(width: 32, alignment: .trailing)
+                            }
+                            Text("Downloading virtio-win.iso…")
+                                .font(.cvMono(8))
+                                .foregroundStyle(Color.cvSecondary)
+                        }
+                    } else {
+                        Text("WinPE will report \"media driver missing\" without the VirtIO ISO attached. The app can download and mount it automatically on next start.")
+                            .font(.cvMono(8))
+                            .foregroundStyle(Color.cvSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        HStack(spacing: 5) {
+                            Button {
+                                Task { await manager.downloadVirtioISO(for: machine) }
+                            } label: {
+                                Label("AUTO-DOWNLOAD", systemImage: "arrow.down.circle")
+                                    .font(.cvMono(7, weight: .bold))
+                                    .foregroundStyle(Color.cvAmber)
+                            }
+                            .buttonStyle(.plain)
+                            Button { openEditVMWindow(for: machine) } label: {
+                                Label("SET PATH", systemImage: "pencil")
+                                    .font(.cvMono(7, weight: .bold))
+                                    .foregroundStyle(Color.cvSecondary)
+                            }
+                            .buttonStyle(.plain)
+                            .disabled([.running, .starting, .stopping].contains(state))
+                        }
+                    }
+                }
+                .padding(8)
+                .background(Color.cvAmber.opacity(0.06))
+                .clipShape(RoundedRectangle(cornerRadius: 7))
+                .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.cvAmber.opacity(0.20)))
+            }
+
+            // ── Do It For Me — shown for all Windows QEMU VMs when stopped ────────
+            if machine.guest == .windows && machine.backend == .qemu
+                && [.stopped, .error].contains(state) {
+                Button {
+                    if doItForMeMgr == nil {
+                        doItForMeMgr = DoItForMeManager(coreVisorManager: manager)
+                    }
+                    showDoItForMe = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "wand.and.stars.inverse")
+                            .font(.system(size: 11, weight: .semibold))
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("DO IT FOR ME")
+                                .font(.cvMono(8, weight: .bold))
+                                .cmKerning(0.6)
+                            Text("Download Win 11 ARM + drivers & guided setup")
+                                .font(.cvMono(7))
+                                .opacity(0.75)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 9, weight: .semibold))
+                            .opacity(0.5)
+                    }
+                    .foregroundStyle(Color.cvBackground)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        LinearGradient(
+                            colors: [Color(red: 0.22, green: 0.92, blue: 0.55),
+                                     Color(red: 0.18, green: 0.72, blue: 1.0)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 7))
+                }
+                .buttonStyle(CVScaleButtonStyle())
+                .sheet(isPresented: $showDoItForMe) {
+                    if let mgr = doItForMeMgr {
+                        DoItForMeView(doItMgr: mgr, manager: manager, isPresented: $showDoItForMe)
+                            .frame(minWidth: 680, minHeight: 420)
+                    }
+                }
+            }
+
+            // VirtIO drivers ISO mounted + VM running → show step-by-step install guide
+            if machine.guest == .windows && machine.backend == .qemu
+                && !machine.virtioDriversISOPath.isEmpty && state == .running {
+                vioscsiInstallGuide(machine: machine)
+            }
 
             // Error banner
             if let err = manager.lastError {
@@ -1119,7 +1413,7 @@ struct CoreVisorSetupView: View {
                         Text("ENTITLEMENT MISSING")
                             .font(.cvMono(12, weight: .bold))
                             .foregroundStyle(Color.cvAmber)
-                            .kerning(1)
+                            .cmKerning(1)
                         Text("Apple Virtualization VMs cannot start without com.apple.security.virtualization.")
                             .font(.cvRound(11))
                             .foregroundStyle(Color.cvSecondary)
@@ -1183,6 +1477,158 @@ struct CoreVisorSetupView: View {
         }
     }
 
+    // MARK: - Snapshot panel
+    @ViewBuilder
+    private func snapshotPanel(for machine: CoreVisorMachine, state: CoreVisorRuntimeState) -> some View {
+        let snapshots = manager.snapshotList(for: machine)
+        let busy      = manager.snapshotInProgress[machine.id] == true
+        let isRunning = state == .running
+
+        if !snapshots.isEmpty || isRunning {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 5) {
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(Color.cvBlue)
+                    Text("SNAPSHOTS")
+                        .font(.cvMono(8, weight: .bold))
+                        .foregroundStyle(Color.cvBlue)
+                        .cmKerning(0.6)
+                    Spacer()
+                    if busy {
+                        ProgressView().scaleEffect(0.55).frame(width: 12, height: 12)
+                    }
+                    if isRunning && !busy {
+                        Button {
+                            Task {
+                                let tag = "snap-\(Int(Date().timeIntervalSince1970))"
+                                await manager.saveSnapshot(name: tag, for: machine)
+                            }
+                        } label: {
+                            Label("SAVE NOW", systemImage: "camera")
+                                .font(.cvMono(7, weight: .bold))
+                                .foregroundStyle(Color.cvBlue)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
+                if snapshots.isEmpty {
+                    Text("No snapshots yet. Click Save Now while VM is running.")
+                        .font(.cvMono(8))
+                        .foregroundStyle(Color.cvDim)
+                } else {
+                    ForEach(snapshots, id: \.self) { snap in
+                        HStack(spacing: 6) {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.system(size: 8))
+                                .foregroundStyle(Color.cvDim)
+                            Text(snap)
+                                .font(.cvMono(8, weight: .bold))
+                                .foregroundStyle(Color.cvPrimary)
+                                .lineLimit(1)
+                            Spacer()
+                            if isRunning && !busy {
+                                Button("LOAD") {
+                                    Task { await manager.loadSnapshot(name: snap, for: machine) }
+                                }
+                                .font(.cvMono(7, weight: .bold))
+                                .foregroundStyle(Color.cvGreen)
+                                .buttonStyle(.plain)
+                            }
+                            Button("DEL") {
+                                Task { await manager.deleteSnapshot(name: snap, for: machine) }
+                            }
+                            .font(.cvMono(7, weight: .bold))
+                            .foregroundStyle(Color.cvRed)
+                            .buttonStyle(.plain)
+                            .disabled(busy)
+                        }
+                        .padding(.horizontal, 6).padding(.vertical, 3)
+                        .background(Color.cvSurfaceRaised)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                    }
+                }
+            }
+            .padding(8)
+            .background(Color.cvBlue.opacity(0.05))
+            .clipShape(RoundedRectangle(cornerRadius: 7))
+            .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.cvBlue.opacity(0.18)))
+            .onAppear {
+                Task { await manager.refreshSnapshots(for: machine) }
+            }
+        }
+    }
+
+    // MARK: - vioscsi in-VM install guide (shown while Windows VM is running)
+    @ViewBuilder
+    private func vioscsiInstallGuide(machine: CoreVisorMachine) -> some View {
+        let steps: [(String, String)] = [
+            ("1", "When Windows Setup shows \"A media driver your computer needs is missing\" — click Browse."),
+            ("2", "In the file browser, find the USB drive (virtio-win). Open it."),
+            ("3", "Navigate to  vioscsi › w10 › ARM64  and click OK."),
+            ("4", "Select  vioscsi.inf  from the list and click Next."),
+            ("5", "The disk now appears. Continue the installation normally."),
+            ("6", "After install completes and Windows boots: open Device Manager, find any yellow-flagged devices, and install drivers from the same USB drive."),
+        ]
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(spacing: 5) {
+                Image(systemName: "checklist")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(Color.cvGreen)
+                Text("VIOSCSI INSTALL GUIDE")
+                    .font(.cvMono(8, weight: .bold))
+                    .foregroundStyle(Color.cvGreen)
+                    .cmKerning(0.6)
+                Spacer()
+                Button {
+                    copyToPasteboard("""
+                    vioscsi ARM64 driver path (inside VirtIO USB drive):
+                    vioscsi\\w10\\ARM64\\vioscsi.inf
+
+                    Post-install recommended drivers (same USB drive):
+                    NetKVM\\w10\\ARM64   (network)
+                    Balloon\\w10\\ARM64  (memory balloon)
+                    viostor\\w10\\ARM64  (block storage, if using virtio-blk)
+                    """)
+                } label: {
+                    Label("COPY PATHS", systemImage: "doc.on.doc")
+                        .font(.cvMono(7, weight: .bold))
+                        .foregroundStyle(Color.cvSecondary)
+                }
+                .buttonStyle(.plain)
+            }
+
+            ForEach(steps, id: \.0) { step in
+                HStack(alignment: .top, spacing: 7) {
+                    Text(step.0)
+                        .font(.cvMono(7, weight: .bold))
+                        .foregroundStyle(Color.cvGreen)
+                        .frame(width: 10, alignment: .center)
+                        .padding(.top, 1)
+                    Text(step.1)
+                        .font(.cvMono(8))
+                        .foregroundStyle(Color.cvSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            // Reveal the ISO in Finder
+            Button {
+                NSWorkspace.shared.selectFile(machine.virtioDriversISOPath, inFileViewerRootedAtPath: "")
+            } label: {
+                Label("SHOW ISO IN FINDER", systemImage: "folder")
+                    .font(.cvMono(7, weight: .bold))
+                    .foregroundStyle(Color.cvSecondary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(9)
+        .background(Color.cvGreen.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: 7))
+        .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.cvGreen.opacity(0.18)))
+    }
+
     // MARK: - Shared UI helpers
     private func cvErrorBanner(_ text: String) -> some View {
         HStack(alignment: .top, spacing: 7) {
@@ -1212,6 +1658,137 @@ struct CoreVisorSetupView: View {
         .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.cvBorder))
     }
 
+    // MARK: - VirtIO drivers banner (Windows guests without a drivers ISO set)
+    private var virtioDriversBanner: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 7) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.cvAmber)
+                Text("VIRTIO DRIVERS REQUIRED FOR WINDOWS ARM")
+                    .font(.cvMono(9, weight: .bold))
+                    .foregroundStyle(Color.cvAmber)
+                    .cmKerning(0.6)
+            }
+            Text("Windows ARM WinPE has no inbox virtio-scsi or virtio-blk driver. Without the VirtIO ISO mounted, Setup will show \"A media driver your computer needs is missing\" and fail to see the disk.")
+                .font(.cvMono(9))
+                .foregroundStyle(Color.cvSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("During setup, when the driver dialog appears: click Browse → select the VirtIO CD drive → open the vioscsi\\w10\\ARM64 folder → load vioscsi.inf. The disk will become visible immediately.")
+                .font(.cvMono(9))
+                .foregroundStyle(Color.cvSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 7) {
+                if wizardVirtioDownloading {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            ProgressView(value: wizardVirtioProgress)
+                                .tint(Color.cvAmber)
+                                .frame(maxWidth: .infinity)
+                            Text("\(Int(wizardVirtioProgress * 100))%")
+                                .font(.cvMono(9, weight: .bold))
+                                .foregroundStyle(Color.cvAmber)
+                                .frame(width: 36, alignment: .trailing)
+                        }
+                        Text("Downloading virtio-win.iso…")
+                            .font(.cvMono(8))
+                            .foregroundStyle(Color.cvSecondary)
+                    }
+                } else {
+                    Button {
+                        let dest = manager.libraryRootURL().appendingPathComponent("virtio-win.iso")
+                        wizardVirtioDownloading = true
+                        wizardVirtioProgress = 0
+                        Task {
+                            do {
+                                // Use a wrapper that streams progress back
+                                let downloaded = try await manager.downloadVirtioISOToURLWithProgress(dest) { p in
+                                    wizardVirtioProgress = p
+                                }
+                                draft.virtioDriversISOPath = downloaded.path
+                            } catch {
+                                manager.lastError = "Download failed: \(error.localizedDescription)"
+                            }
+                            wizardVirtioDownloading = false
+                        }
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "arrow.down.circle.fill")
+                                .font(.system(size: 10, weight: .bold))
+                            Text("AUTO-DOWNLOAD VIRTIO-WIN.ISO")
+                                .font(.cvMono(9, weight: .bold))
+                                .cmKerning(0.4)
+                        }
+                        .foregroundStyle(Color.cvBackground)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.cvAmber)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                    }
+                    .buttonStyle(CVScaleButtonStyle())
+                    Button {
+                        if let p = pickFilePath(title: "Select VirtIO Drivers ISO", allowedExtensions: ["iso"]) {
+                            draft.virtioDriversISOPath = p
+                        }
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "folder")
+                                .font(.system(size: 10, weight: .semibold))
+                            Text("BROWSE…")
+                                .font(.cvMono(9, weight: .bold))
+                                .cmKerning(0.4)
+                        }
+                        .foregroundStyle(Color.cvSecondary)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.cvSurfaceRaised)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.cvBorder))
+                    }
+                    .buttonStyle(CVScaleButtonStyle())
+
+                    Spacer()
+
+                    // ── Do It For Me ─────────────────────────────────────────
+                    Button {
+                        if doItForMeMgr == nil { doItForMeMgr = DoItForMeManager(coreVisorManager: manager) }
+                        showDoItForMe = true
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "wand.and.stars")
+                                .font(.system(size: 10, weight: .bold))
+                            Text("DO IT FOR ME")
+                                .font(.cvMono(9, weight: .bold))
+                                .cmKerning(0.5)
+                        }
+                        .foregroundStyle(Color.cvBackground)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(
+                            LinearGradient(
+                                colors: [Color(red:0.22,green:0.92,blue:0.55), Color(red:0.18,green:0.72,blue:1.0)],
+                                startPoint: .leading, endPoint: .trailing
+                            )
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                    }
+                    .buttonStyle(CVScaleButtonStyle())
+                    .help("CoreVisor will download Windows 11 ARM and all drivers automatically, then guide you through setup step by step.")
+                }
+            }
+        }
+        .padding(11)
+        .background(Color.cvAmber.opacity(0.07))
+        .clipShape(RoundedRectangle(cornerRadius: 9))
+        .overlay(RoundedRectangle(cornerRadius: 9).stroke(Color.cvAmber.opacity(0.28), lineWidth: 1))
+        .sheet(isPresented: $showDoItForMe) {
+            if let mgr = doItForMeMgr {
+                DoItForMeView(doItMgr: mgr, manager: manager, isPresented: $showDoItForMe)
+                    .frame(minWidth: 680, minHeight: 420)
+            }
+        }
+    }
+
     // MARK: - Validation
     private var isCompatible: Bool { manager.isBackendSupported(draft.backend, for: draft.guest) }
     private var filteredMachines: [CoreVisorMachine] {
@@ -1235,7 +1812,7 @@ struct CoreVisorSetupView: View {
     private var hasAnyLinuxBootInput: Bool {
         !draft.kernelPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !draft.isoPath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
-    private var hasValidPathInputs: Bool { isPathOK(draft.isoPath) && isPathOK(draft.kernelPath) && isPathOK(draft.ramdiskPath) }
+    private var hasValidPathInputs: Bool { isPathOK(draft.isoPath) && isPathOK(draft.virtioDriversISOPath) && isPathOK(draft.kernelPath) && isPathOK(draft.ramdiskPath) }
     private func isPathOK(_ path: String) -> Bool {
         let t = path.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !t.isEmpty else { return true }
@@ -1281,6 +1858,21 @@ struct CoreVisorSetupView: View {
         guard panel.runModal() == .OK, let url = panel.url else { return }
         guard url.pathExtension.lowercased() == "utm" else { manager.lastError = "Please select a .utm bundle."; return }
         Task { await manager.importUTMBundle(at: url) }
+    }
+
+    private func importDiskImageFromPicker() {
+        let panel = NSOpenPanel()
+        panel.title       = "Import Pre-Built Disk Image"
+        panel.prompt      = "Import"
+        panel.message     = "Select a pre-installed disk image (qcow2, vhdx, vmdk, img, raw, vhd).\nNo installer ISO is needed — the VM will boot directly."
+        panel.canChooseFiles           = true
+        panel.canChooseDirectories     = false
+        panel.allowsMultipleSelection  = false
+        let exts  = ["qcow2", "vhdx", "vmdk", "img", "raw", "vhd"]
+        let types = exts.compactMap { UTType(filenameExtension: $0) }
+        if !types.isEmpty { panel.allowedContentTypes = types }
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        Task { await manager.importDiskImage(at: url) }
     }
     private func installVirGLBundleFromPicker() {
         let panel = NSOpenPanel()
@@ -1333,6 +1925,8 @@ private struct CoreVisorEditVMWindowView: View {
     @State private var draft = CoreVisorDraft()
     @State private var loadedMachine: CoreVisorMachine?
     @State private var isSaving = false
+    @State private var isDownloadingISO = false
+    @State private var isoDownloadProgress: Double = 0
 
     var body: some View {
         ZStack {
@@ -1344,7 +1938,7 @@ private struct CoreVisorEditVMWindowView: View {
                         Text("EDIT VIRTUAL MACHINE")
                             .font(.cvMono(9, weight: .bold))
                             .foregroundStyle(Color.cvAmber)
-                            .kerning(1.5)
+                            .cmKerning(1.5)
                         Text(loadedMachine?.name ?? "")
                             .font(.cvRound(16, weight: .bold))
                             .foregroundStyle(Color.cvPrimary)
@@ -1372,13 +1966,13 @@ private struct CoreVisorEditVMWindowView: View {
 
                             HStack(spacing: 10) {
                                 VStack(alignment: .leading, spacing: 5) {
-                                    Text("GUEST OS").font(.cvMono(8, weight: .bold)).foregroundStyle(Color.cvDim).kerning(1)
+                                    Text("GUEST OS").font(.cvMono(8, weight: .bold)).foregroundStyle(Color.cvDim).cmKerning(1)
                                     Picker("Guest", selection: $draft.guest) {
                                         ForEach(VMGuestType.allCases.filter { $0 != .macOS }) { Text($0.rawValue).tag($0) }
                                     }.pickerStyle(.segmented)
                                 }
                                 VStack(alignment: .leading, spacing: 5) {
-                                    Text("BACKEND").font(.cvMono(8, weight: .bold)).foregroundStyle(Color.cvDim).kerning(1)
+                                    Text("BACKEND").font(.cvMono(8, weight: .bold)).foregroundStyle(Color.cvDim).cmKerning(1)
                                     Picker("Backend", selection: $draft.backend) {
                                         ForEach(VMBackend.allCases) { Text($0.rawValue).tag($0) }
                                     }.pickerStyle(.segmented)
@@ -1392,6 +1986,52 @@ private struct CoreVisorEditVMWindowView: View {
                             editField("INSTALLER ISO", placeholder: "/path/to/installer.iso", text: $draft.isoPath) {
                                 pickFile(title: "Select Installer", exts: ["iso","img"]) { draft.isoPath = $0 }
                             }
+                            editField("VIRTIO DRIVERS", placeholder: "/path/to/virtio-win.iso (Windows ARM)", text: $draft.virtioDriversISOPath) {
+                                pickFile(title: "Select VirtIO Drivers ISO", exts: ["iso"]) { draft.virtioDriversISOPath = $0 }
+                            }
+                            if draft.guest == .windows && draft.backend == .qemu && draft.virtioDriversISOPath.isEmpty {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .font(.system(size: 9))
+                                        .foregroundStyle(Color.cvAmber)
+                                    Text("No VirtIO drivers ISO — WinPE will show \"media driver missing\". Download virtio-win.iso and set the path above.")
+                                        .font(.cvMono(8))
+                                        .foregroundStyle(Color.cvAmber)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Spacer()
+                                    if isDownloadingISO {
+                                        VStack(alignment: .trailing, spacing: 3) {
+                                            ProgressView(value: isoDownloadProgress)
+                                                .tint(Color.cvAmber)
+                                                .frame(width: 80)
+                                            Text("\(Int(isoDownloadProgress * 100))%")
+                                                .font(.cvMono(7, weight: .bold))
+                                                .foregroundStyle(Color.cvAmber)
+                                        }
+                                    } else {
+                                        Button("AUTO-DOWNLOAD") {
+                                            let dest = manager.libraryRootURL().appendingPathComponent("virtio-win.iso")
+                                            isDownloadingISO = true
+                                            isoDownloadProgress = 0
+                                            Task {
+                                                if let url = try? await manager.downloadVirtioISOToURLWithProgress(dest, progress: { p in
+                                                    isoDownloadProgress = p
+                                                }) {
+                                                    draft.virtioDriversISOPath = url.path
+                                                }
+                                                isDownloadingISO = false
+                                            }
+                                        }
+                                        .font(.cvMono(8, weight: .bold))
+                                        .foregroundStyle(Color.cvAmber)
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                .padding(7)
+                                .background(Color.cvAmber.opacity(0.07))
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.cvAmber.opacity(0.22)))
+                            }
                             editField("LINUX KERNEL", placeholder: "/path/to/vmlinuz (optional)", text: $draft.kernelPath) {
                                 pickFile(title: "Select Kernel") { draft.kernelPath = $0 }
                             }
@@ -1404,7 +2044,7 @@ private struct CoreVisorEditVMWindowView: View {
                                 editSlider("CPU", value: Binding(get: { Double(draft.cpuCores) }, set: { draft.cpuCores = Int($0) }), range: 1...16, display: "\(draft.cpuCores) cores", color: .cvAmber)
                                 editSlider("RAM", value: Binding(get: { Double(draft.memoryGB) }, set: { draft.memoryGB = Int($0) }), range: 2...64, display: "\(draft.memoryGB) GB", color: .cvBlue)
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Text("DISK").font(.cvMono(8, weight: .bold)).foregroundStyle(Color.cvDim).kerning(1)
+                                    Text("DISK").font(.cvMono(8, weight: .bold)).foregroundStyle(Color.cvDim).cmKerning(1)
                                     Text("\(loadedMachine?.diskGB ?? draft.diskGB) GB").font(.cvMono(16, weight: .bold)).foregroundStyle(Color.cvGreen)
                                     Text("Resize disabled").font(.cvMono(8)).foregroundStyle(Color.cvDim)
                                 }
@@ -1419,12 +2059,59 @@ private struct CoreVisorEditVMWindowView: View {
                                 .font(.cvRound(12))
                                 .foregroundStyle(Color.cvPrimary)
 
+                            if draft.guest == .windows && draft.backend == .qemu {
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Toggle("VirtIO GPU — WDDM 2D acceleration", isOn: $draft.enableVirtioGPU)
+                                        .tint(Color.cvGreen)
+                                        .font(.cvRound(12))
+                                        .foregroundStyle(Color.cvPrimary)
+                                    if draft.enableVirtioGPU {
+                                        Text("Aero Glass, DWM compositing, rounded corners. Requires viogpudo driver installed in the guest (viogpudo\\w11\\ARM64 on the VirtIO ISO). Keep OFF during Windows setup — enable after.")
+                                            .font(.cvMono(8))
+                                            .foregroundStyle(Color.cvSecondary)
+                                            .padding(.leading, 4)
+                                    }
+                                }
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Toggle("TPM 2.0 (emulated via swtpm)", isOn: $draft.enableTPM)
+                                        .disabled(!manager.swtpmAvailable)
+                                        .tint(Color.cvGreen)
+                                        .font(.cvRound(12))
+                                        .foregroundStyle(manager.swtpmAvailable ? Color.cvPrimary : Color.cvDim)
+                                    if !manager.swtpmAvailable {
+                                        Text("swtpm not found. Install with: brew install swtpm")
+                                            .font(.cvMono(8))
+                                            .foregroundStyle(Color.cvAmber)
+                                            .padding(.leading, 4)
+                                    } else if draft.enableTPM {
+                                        Text("TPM seed stored in macOS Keychain. Required for Windows 11 Secure Boot.")
+                                            .font(.cvMono(8))
+                                            .foregroundStyle(Color.cvSecondary)
+                                            .padding(.leading, 4)
+                                    }
+                                }
+                            }
+
                             Toggle("Enable audio", isOn: $draft.enableSound)
                                 .tint(Color.cvAmber)
                                 .font(.cvRound(12))
                                 .foregroundStyle(Color.cvPrimary)
 
-                            Text("USB DEVICES").font(.cvMono(8, weight: .bold)).foregroundStyle(Color.cvDim).kerning(1)
+                            VStack(alignment: .leading, spacing: 5) {
+                                Toggle("Use virtio-blk storage", isOn: $draft.useVirtioStorage)
+                                    .disabled(draft.backend != .qemu)
+                                    .tint(Color.cvAmber)
+                                    .font(.cvRound(12))
+                                    .foregroundStyle(Color.cvPrimary)
+                                if draft.guest == .windows && draft.useVirtioStorage {
+                                    Text("⚠︎ Only safe after Windows is fully installed. WinPE has no inbox virtio-blk driver.")
+                                        .font(.cvMono(8))
+                                        .foregroundStyle(Color.cvAmber)
+                                        .padding(.leading, 4)
+                                }
+                            }
+
+                            Text("USB DEVICES").font(.cvMono(8, weight: .bold)).foregroundStyle(Color.cvDim).cmKerning(1)
                             LazyVStack(spacing: 5) {
                                 if manager.usbDevices.isEmpty {
                                     Text("No QEMU USB devices detected.").font(.cvMono(9)).foregroundStyle(Color.cvDim)
@@ -1488,7 +2175,7 @@ private struct CoreVisorEditVMWindowView: View {
     private func editField(_ label: String, placeholder: String, text: Binding<String>, browse: (() -> Void)? = nil) -> some View {
         HStack(spacing: 10) {
             Text(label)
-                .font(.cvMono(7, weight: .bold)).foregroundStyle(Color.cvDim).kerning(0.8)
+                .font(.cvMono(7, weight: .bold)).foregroundStyle(Color.cvDim).cmKerning(0.8)
                 .frame(width: 88, alignment: .trailing)
             HStack(spacing: 5) {
                 TextField(placeholder, text: text)
@@ -1505,8 +2192,8 @@ private struct CoreVisorEditVMWindowView: View {
 
     private func editSlider(_ label: String, value: Binding<Double>, range: ClosedRange<Double>, display: String, color: Color) -> some View {
         VStack(alignment: .leading, spacing: 7) {
-            Text(label).font(.cvMono(8, weight: .bold)).foregroundStyle(Color.cvDim).kerning(0.8)
-            Text(display).font(.cvMono(16, weight: .bold)).foregroundStyle(color).contentTransition(.numericText())
+            Text(label).font(.cvMono(8, weight: .bold)).foregroundStyle(Color.cvDim).cmKerning(0.8)
+            Text(display).font(.cvMono(16, weight: .bold)).foregroundStyle(color).cmNumericTextTransition()
             Slider(value: value, in: range, step: 1).tint(color)
         }
         .padding(10).frame(maxWidth: .infinity)

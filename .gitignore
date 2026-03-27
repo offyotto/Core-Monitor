@@ -1,0 +1,17 @@
+.DS_Store
+
+# Xcode user data
+xcuserdata/
+*.xcuserstate
+
+# Build output
+build/
+DerivedData/
+*.app
+*.dSYM
+
+# Exported archives and local packaging artifacts
+*.zip
+Archive*/
+Core-Monitor 20*/
+

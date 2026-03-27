@@ -2,7 +2,10 @@ import Foundation
 import Combine
 import IOKit
 import IOKit.ps
+import IOKit.storage
 import Darwin
+import CoreAudio
+
 
 struct CPUStats {
     let usagePercent: Double
@@ -99,6 +102,19 @@ final class SystemMonitor: ObservableObject {
     @Published var totalMemoryGB: Double = 0
     @Published var memoryPressure: MemoryPressureLevel = .green
 
+    // Network throughput (bytes/sec)
+    @Published var netBytesInPerSec: Double  = 0
+    @Published var netBytesOutPerSec: Double = 0
+
+    /// Disk read throughput in bytes/sec (all physical disks, excl. RAM disk).
+    @Published var diskReadBytesPerSec:  Double = 0
+    /// Disk write throughput in bytes/sec.
+    @Published var diskWriteBytesPerSec: Double = 0
+
+    // System volume and display brightness (0–1), polled each cycle
+    @Published var currentVolume:     Float = 0.5
+    @Published var currentBrightness: Float = 1.0
+
     static var isAppleSilicon: Bool {
         var value: Int32 = 0
         var size = MemoryLayout<Int32>.size
@@ -107,12 +123,41 @@ final class SystemMonitor: ObservableObject {
     }
 
     private var smcConnection: io_connect_t = 0
-    private let monitoringInterval: TimeInterval = 2.0
+    /// Normal: 2 s. Basic mode: 5 s (saves CPU/GPU significantly).
+    private var monitoringInterval: TimeInterval = 2.0
     private var timer: Timer?
     private var keyInfoCache: [UInt32: SMCKeyData_keyInfo_t] = [:]
 
+    // MARK: - Basic mode adaptive polling
+    /// Called by ContentView when the user toggles Basic Mode.
+    /// Restarts the timer at the appropriate interval so the change takes effect immediately.
+    func setBasicMode(_ enabled: Bool) {
+        let newInterval: TimeInterval = enabled ? 5.0 : 2.0
+        guard newInterval != monitoringInterval else { return }
+        monitoringInterval = newInterval
+        // Restart timer only if monitoring is already running
+        guard timer != nil else { return }
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: monitoringInterval, repeats: true) { [weak self] _ in
+            self?.updateReadings()
+        }
+        if let timer {
+            timer.tolerance = monitoringInterval * 0.15
+            RunLoop.current.add(timer, forMode: .common)
+        }
+    }
+
     private var previousCPULoadInfo = host_cpu_load_info_data_t()
     private var hasPreviousCPUInfo = false
+
+    // Network sampling
+    private var previousNetBytesIn:  UInt64 = 0
+    private var previousNetBytesOut: UInt64 = 0
+    private var hasPreviousNetStats  = false
+
+    private var previousDiskRead:    UInt64 = 0
+    private var previousDiskWrite:   UInt64 = 0
+    private var hasPreviousDiskStats = false
 
     private let cpuTempKeys = [
         "TC0P", "TCXC", "TC0E", "TC0F", "TC0D", "TC1C", "TC2C", "TC3C", "TC4C",
@@ -153,7 +198,9 @@ final class SystemMonitor: ObservableObject {
             self?.updateReadings()
         }
         if let timer {
-            timer.tolerance = 0.3
+            // Allow up to 15% timer slip — OS can batch timer callbacks to
+            // reduce wakeup frequency, cutting idle CPU usage.
+            timer.tolerance = monitoringInterval * 0.15
             RunLoop.current.add(timer, forMode: .common)
         }
     }
@@ -223,6 +270,9 @@ final class SystemMonitor: ObservableObject {
         let newBattery = readBatteryInfo()
         batteryInfo = newBattery
         totalSystemWatts = newBattery.powerWatts
+        updateNetworkStats()
+        updateDiskStats()
+        updateSystemControls()
     }
 
     private func readCPUTemperature() -> Double? {
@@ -568,6 +618,105 @@ final class SystemMonitor: ObservableObject {
 
         return nil
     }
+    private func updateSystemControls() {
+        // Volume
+        var dev = AudioDeviceID(kAudioObjectUnknown)
+        var sz  = UInt32(MemoryLayout<AudioDeviceID>.size)
+        var addr = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+            mScope:    kAudioObjectPropertyScopeGlobal,
+            mElement:  kAudioObjectPropertyElementMain)
+        if AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject),
+                                      &addr, 0, nil, &sz, &dev) == noErr,
+           dev != kAudioObjectUnknown {
+            var vol: Float32 = currentVolume
+            sz = UInt32(MemoryLayout<Float32>.size)
+            var volAddr = AudioObjectPropertyAddress(
+                mSelector: kAudioDevicePropertyVolumeScalar,
+                mScope:    kAudioObjectPropertyScopeOutput,
+                mElement:  kAudioObjectPropertyElementMain)
+            if AudioObjectGetPropertyData(dev, &volAddr, 0, nil, &sz, &vol) == noErr {
+                currentVolume = vol
+            }
+        }
+
+        // Brightness
+        var svc = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IODisplayConnect"))
+        if svc == 0 {
+            svc = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleBacklightDisplay"))
+        }
+        if svc != 0 {
+            var bri: Float = currentBrightness
+            IODisplayGetFloatParameter(svc, 0, kIODisplayBrightnessKey as CFString, &bri)
+            currentBrightness = bri
+            IOObjectRelease(svc)
+        }
+    }
+
+    private func updateNetworkStats() {
+        var ifaddrsPtr: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&ifaddrsPtr) == 0, let firstAddr = ifaddrsPtr else { return }
+        defer { freeifaddrs(ifaddrsPtr) }
+
+        var totalIn:  UInt64 = 0
+        var totalOut: UInt64 = 0
+
+        var cursor: UnsafeMutablePointer<ifaddrs>? = firstAddr
+        while let current = cursor {
+            let addr = current.pointee
+            let flags = Int32(addr.ifa_flags)
+            // AF_LINK = 18 on macOS, IFF_LOOPBACK = 0x8
+            if addr.ifa_addr?.pointee.sa_family == UInt8(AF_LINK),
+               (flags & IFF_LOOPBACK) == 0,
+               let data = addr.ifa_data?.assumingMemoryBound(to: if_data.self) {
+                totalIn  += UInt64(data.pointee.ifi_ibytes)
+                totalOut += UInt64(data.pointee.ifi_obytes)
+            }
+            cursor = addr.ifa_next
+        }
+
+        if hasPreviousNetStats {
+            let interval = monitoringInterval
+            netBytesInPerSec  = max(0, Double(totalIn  &- previousNetBytesIn)  / interval)
+            netBytesOutPerSec = max(0, Double(totalOut &- previousNetBytesOut) / interval)
+        }
+
+        previousNetBytesIn  = totalIn
+        previousNetBytesOut = totalOut
+        hasPreviousNetStats = true
+    }
+
+    private func updateDiskStats() {
+        var totalRead:  UInt64 = 0
+        var totalWrite: UInt64 = 0
+
+        let matchingDict = IOServiceMatching(kIOMediaClass) as NSMutableDictionary
+        matchingDict[kIOMediaWholeKey] = true
+
+        var iter: io_iterator_t = 0
+        guard IOServiceGetMatchingServices(kIOMainPortDefault, matchingDict, &iter) == KERN_SUCCESS else { return }
+        defer { IOObjectRelease(iter) }
+
+        var service = IOIteratorNext(iter)
+        while service != 0 {
+            defer { IOObjectRelease(service); service = IOIteratorNext(iter) }
+            var props: Unmanaged<CFMutableDictionary>?
+            guard IORegistryEntryCreateCFProperties(service, &props, kCFAllocatorDefault, 0) == KERN_SUCCESS,
+                  let dict = props?.takeRetainedValue() as? [String: Any],
+                  let stats = dict["Statistics"] as? [String: Any] else { continue }
+            if let r = (stats["Bytes (Read)"]  as? NSNumber)?.uint64Value { totalRead  += r }
+            if let w = (stats["Bytes (Write)"] as? NSNumber)?.uint64Value { totalWrite += w }
+        }
+
+        if hasPreviousDiskStats {
+            let interval = monitoringInterval
+            diskReadBytesPerSec  = max(0, Double(totalRead  &- previousDiskRead)  / interval)
+            diskWriteBytesPerSec = max(0, Double(totalWrite &- previousDiskWrite) / interval)
+        }
+        previousDiskRead    = totalRead
+        previousDiskWrite   = totalWrite
+        hasPreviousDiskStats = true
+    }
 }
 
 private func fourCharCodeFrom(_ string: String) -> UInt32 {
@@ -577,3 +726,4 @@ private func fourCharCodeFrom(_ string: String) -> UInt32 {
     }
     return result
 }
+
