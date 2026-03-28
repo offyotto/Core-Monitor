@@ -58,6 +58,7 @@ final class TouchBarPrivatePresenter: NSObject {
         cpuHistory: [Double],
         memHistory: [Double],
         fanHistory: [Double],
+        customWidget: TouchBarCustomWidget,
         volume: Float,
         brightness: Float
     ) {
@@ -68,6 +69,7 @@ final class TouchBarPrivatePresenter: NSObject {
             fanRPM: fanRPM, fanFrac: fanFrac,
             vmCount: vmCount,
             cpuHistory: cpuHistory, memHistory: memHistory, fanHistory: fanHistory,
+            customWidget: customWidget,
             volume: volume, brightness: brightness
         )
     }
@@ -96,6 +98,14 @@ final class TouchBarPrivatePresenter: NSObject {
     }
 }
 
+struct TouchBarCustomWidget {
+    let label: String
+    let value: String
+    let symbolName: String
+    let color: NSColor
+    let alerting: Bool
+}
+
 extension TouchBarPrivatePresenter: NSTouchBarDelegate {
     func touchBar(_ touchBar: NSTouchBar,
                   makeItemForIdentifier identifier: NSTouchBarItem.Identifier) -> NSTouchBarItem? {
@@ -116,10 +126,10 @@ final class CoreMonitorTouchBarView: NSView {
     private let cpuChip = MetricChip(label: "CPU",  color: .systemBlue,   symbolName: "cpu")
     private let memChip = MetricChip(label: "MEM",  color: .systemPurple, symbolName: "memorychip")
     private let fanChip = MetricChip(label: "FAN",  color: .systemTeal,   symbolName: "wind")
-    private let vmChip  = MetricChip(label: "VM",   color: .systemOrange, symbolName: "server.rack")
+    private let customChip = MetricChip(label: "WIDGET", color: .systemOrange, symbolName: "server.rack")
 
     private lazy var stack: NSStackView = {
-        let s = NSStackView(views: [cpuChip, memChip, fanChip, vmChip])
+        let s = NSStackView(views: [cpuChip, memChip, fanChip, customChip])
         s.orientation  = .horizontal
         s.spacing      = 4
         s.alignment    = .centerY
@@ -142,7 +152,6 @@ final class CoreMonitorTouchBarView: NSView {
             stack.topAnchor.constraint(equalTo: topAnchor),
             stack.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
-        vmChip.isHidden = true
     }
 
     // MARK: Updates
@@ -164,8 +173,8 @@ final class CoreMonitorTouchBarView: NSView {
             } else if s.contains("VM") {
                 let num = s.filter { $0.isNumber }
                 if !num.isEmpty {
-                    vmChip.isHidden = false
-                    vmChip.set(value: "\(num) running", sparkValues: [])
+                    customChip.configure(label: "VM", color: .systemOrange, symbolName: "server.rack")
+                    customChip.set(value: "\(num) running", sparkValues: [])
                 }
             }
         }
@@ -177,6 +186,7 @@ final class CoreMonitorTouchBarView: NSView {
         fanRPM: Int, fanFrac: Double,
         vmCount: Int,
         cpuHistory: [Double], memHistory: [Double], fanHistory: [Double],
+        customWidget: TouchBarCustomWidget,
         volume: Float, brightness: Float
     ) {
         let tempStr = cpuTempC.map { String(format: "%.0f°C", $0) } ?? "--"
@@ -204,10 +214,8 @@ final class CoreMonitorTouchBarView: NSView {
             alerting: fanFrac > 0.9
         )
 
-        vmChip.isHidden = vmCount == 0
-        if vmCount > 0 {
-            vmChip.set(value: "\(vmCount) VM\(vmCount > 1 ? "s" : "")", sparkValues: [], alerting: false)
-        }
+        customChip.configure(label: customWidget.label, color: customWidget.color, symbolName: customWidget.symbolName)
+        customChip.set(value: customWidget.value, sparkValues: [], alerting: customWidget.alerting)
     }
 }
 
@@ -216,8 +224,8 @@ final class CoreMonitorTouchBarView: NSView {
 /// Single metric chip: SF Symbol icon + name label + value label + mini sparkline.
 final class MetricChip: NSView {
 
-    private let accentColor: NSColor
-    private let symbolName:  String
+    private var accentColor: NSColor
+    private var symbolName:  String
 
     private let iconView   = NSImageView()
     private let topLabel   = NSTextField(labelWithString: "")
@@ -308,9 +316,22 @@ final class MetricChip: NSView {
         ])
     }
 
+    func configure(label: String, color: NSColor, symbolName: String) {
+        accentColor = color
+        self.symbolName = symbolName
+        topLabel.stringValue = label
+        topLabel.textColor = color.withAlphaComponent(0.85)
+        iconView.contentTintColor = color
+        let cfg = NSImage.SymbolConfiguration(pointSize: Self.iconSz, weight: .medium)
+        iconView.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
+            .withSymbolConfiguration(cfg)
+        sparkView.accentColor = color
+    }
+
     func set(value: String, sparkValues: [Double], alerting: Bool = false) {
         valueLabel.stringValue = value
         sparkView.values = sparkValues
+        sparkView.accentColor = accentColor
         layer?.backgroundColor = alerting
             ? NSColor.systemRed.withAlphaComponent(0.20).cgColor
             : NSColor.white.withAlphaComponent(0.08).cgColor
