@@ -1,5 +1,13 @@
 # Core-Monitor
 
+[![Website](https://img.shields.io/badge/Website-Core--Monitor-8A2BE2)](https://offyotto-sl3.github.io/Core-Monitor/)
+[![Download](https://img.shields.io/badge/Download-Latest%20Release-brightgreen)](https://github.com/offyotto-sl3/Core-Monitor/releases/latest)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](https://github.com/offyotto-sl3/Core-Monitor/blob/main/LICENSE)
+![macOS](https://img.shields.io/badge/macOS-12%2B-black?logo=apple)
+![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1--M5-orange)
+![Swift](https://img.shields.io/badge/Swift-Native-F05138?logo=swift&logoColor=white)
+![Open Source](https://img.shields.io/badge/Open%20Source-Yes-green)
+
 **The all-in-one open-source macOS control center.**
 
 Core-Monitor combines system monitoring, fan control, benchmarking, menu bar controls, Touch Bar HUDs, and built-in virtualization in one native Swift app.
