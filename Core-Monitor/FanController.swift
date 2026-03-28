@@ -12,7 +12,7 @@ enum FanControlMode: String, CaseIterable {
     case automatic
 
     static var quickModes: [FanControlMode] {
-        [.smart, .balanced, .performance, .max, .manual, .automatic]
+        [.smart, .silent, .balanced, .performance, .max, .manual, .automatic]
     }
 
     var title: String {
@@ -52,8 +52,6 @@ final class FanController: ObservableObject {
     @Published var statusMessage: String = "Idle"
     /// When true, auto mode adds +0.5 to aggressiveness to compensate for VM thermal load.
     @Published private(set) var vmBoostActive: Bool = false
-    @Published private(set) var safetyOverrideActive: Bool = false
-
     let minSpeed = 1000
     let maxSpeed = 6500
 
@@ -63,9 +61,6 @@ final class FanController: ObservableObject {
     private let helperManager = SMCHelperManager.shared
     private var baseAggressiveness: Double = 1.5  // user's chosen value, pre-boost
     private var workspaceObservers: [NSObjectProtocol] = []
-    private let safetyTempThreshold = 95.0
-    private let safetyReleaseThreshold = 90.0
-
     init(systemMonitor: SystemMonitor) {
         self.systemMonitor = systemMonitor
         registerForWakeNotifications()
@@ -81,7 +76,6 @@ final class FanController: ObservableObject {
 
     func setMode(_ mode: FanControlMode) {
         self.mode = mode
-        safetyOverrideActive = false
         lastAppliedSpeed = 0
         applyCurrentMode(force: true)
     }
@@ -150,29 +144,6 @@ final class FanController: ObservableObject {
     private func updateManagedControl() {
         guard let monitor = systemMonitor else { return }
         guard mode.isManagedProfile || mode == .manual || mode == .silent else { return }
-
-        let cpuTemp  = monitor.cpuTemperature ?? 0
-        let gpuTemp  = monitor.gpuTemperature ?? 0
-        let maxTemp  = max(cpuTemp, gpuTemp)
-
-        if maxTemp >= safetyTempThreshold {
-            if !safetyOverrideActive || lastAppliedSpeed != maxSpeed {
-                safetyOverrideActive = true
-                applyFanSpeed(maxSpeed)
-                lastAppliedSpeed = maxSpeed
-                statusMessage = "Safety override: MAX (\(Int(maxTemp))°C)"
-            }
-            return
-        }
-
-        if safetyOverrideActive {
-            guard maxTemp <= safetyReleaseThreshold else {
-                statusMessage = "Safety override active (\(Int(maxTemp))°C)"
-                return
-            }
-            safetyOverrideActive = false
-            lastAppliedSpeed = 0
-        }
 
         switch mode {
         case .manual:

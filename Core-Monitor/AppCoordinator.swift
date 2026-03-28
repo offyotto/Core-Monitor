@@ -212,15 +212,15 @@ final class AppCoordinator: ObservableObject {
                 alerting: false
             )
         case .fanMode:
-            let color: NSColor = fanController.safetyOverrideActive
-                ? .systemRed
-                : (fanController.mode == .manual || fanController.mode == .max ? .systemOrange : .systemTeal)
+            let color: NSColor = (fanController.mode == .manual || fanController.mode == .max)
+                ? .systemOrange
+                : .systemTeal
             return TouchBarCustomWidget(
                 label: "MODE",
-                value: fanController.safetyOverrideActive ? "SAFETY MAX" : fanController.mode.shortTitle,
+                value: fanController.mode.shortTitle,
                 symbolName: "fanblades.fill",
                 color: color,
-                alerting: fanController.safetyOverrideActive || fanController.mode == .manual || fanController.mode == .max
+                alerting: fanController.mode == .manual || fanController.mode == .max
             )
         }
     }
