@@ -346,7 +346,7 @@ private struct FanControlPanel: View {
                     Spacer()
                     Text(fanController.mode.title)
                         .font(.cmMono(12, weight: .bold))
-                        .foregroundStyle(fanController.safetyOverrideActive ? Color.cmRed : Color.cmAmber)
+                        .foregroundStyle(Color.cmAmber)
                 }
             }
 

@@ -49,6 +49,8 @@ private struct SMCParamStruct {
 private final class SMCController {
     private var connection: io_connect_t = 0
     private var keyInfoCache: [UInt32: SMCKeyData_keyInfo_t] = [:]
+    private var detectedModeKeyTemplate: String?
+    private var hasForceTestKey: Bool?
 
     private let smcReadBytes: UInt8 = 5
     private let smcWriteBytes: UInt8 = 6
@@ -77,6 +79,8 @@ private final class SMCController {
         guard result == kIOReturnSuccess else {
             throw HelperError("Failed to open AppleSMC (\(result))")
         }
+
+        detectHardwareCapabilities()
     }
 
     func close() {
@@ -84,19 +88,26 @@ private final class SMCController {
             IOServiceClose(connection)
             connection = 0
         }
+        detectedModeKeyTemplate = nil
+        hasForceTestKey = nil
     }
 
     func setFanManual(_ fanID: Int, rpm: Int) throws {
-        let modeKey = String(format: "F%dMd", fanID)
+        let modeKey = try modeKey(for: fanID)
         let targetKey = String(format: "F%dTg", fanID)
 
+        try unlockFansIfNeeded(for: fanID)
         try writeValue(key: modeKey, value: 1)
         try writeValue(key: targetKey, value: rpm)
     }
 
     func setFanAuto(_ fanID: Int) throws {
-        let modeKey = String(format: "F%dMd", fanID)
+        let modeKey = try modeKey(for: fanID)
         try writeValue(key: modeKey, value: 0)
+        try? writeValue(key: String(format: "F%dTg", fanID), value: 0)
+        if hasForceTest() {
+            try? writeValue(key: "Ftst", value: 0)
+        }
     }
 
     func readValue(_ key: String) throws -> Double {
@@ -187,6 +198,64 @@ private final class SMCController {
 
         keyInfoCache[keyCode] = output.keyInfo
         return output.keyInfo
+    }
+
+    private func detectHardwareCapabilities() {
+        if detectedModeKeyTemplate == nil {
+            let lower = String(format: "F%dmd", 0)
+            let upper = String(format: "F%dMd", 0)
+            if keyExists(lower) {
+                detectedModeKeyTemplate = "F%dmd"
+            } else if keyExists(upper) {
+                detectedModeKeyTemplate = "F%dMd"
+            } else {
+                detectedModeKeyTemplate = "F%dMd"
+            }
+        }
+
+        if hasForceTestKey == nil {
+            hasForceTestKey = keyExists("Ftst")
+        }
+    }
+
+    private func keyExists(_ key: String) -> Bool {
+        let keyCode = fourCharCodeFrom(key)
+        return (try? getKeyInfo(keyCode)) != nil
+    }
+
+    private func modeKey(for fanID: Int) throws -> String {
+        detectHardwareCapabilities()
+        let template = detectedModeKeyTemplate ?? "F%dMd"
+        return String(format: template, fanID)
+    }
+
+    private func hasForceTest() -> Bool {
+        detectHardwareCapabilities()
+        return hasForceTestKey == true
+    }
+
+    private func unlockFansIfNeeded(for fanID: Int) throws {
+        if hasForceTest() {
+            try? writeValue(key: "Ftst", value: 1)
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+
+        let modeKey = try modeKey(for: fanID)
+        var lastError: Error?
+        let deadline = Date().addingTimeInterval(5.0)
+        while Date() < deadline {
+            do {
+                try writeValue(key: modeKey, value: 1)
+                return
+            } catch {
+                lastError = error
+                Thread.sleep(forTimeInterval: 0.1)
+            }
+        }
+
+        if let lastError {
+            throw lastError
+        }
     }
 
     private func encode(value: Int, dataType: UInt32, dataSize: UInt32) throws -> SMCBytes {

@@ -97,11 +97,11 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgBlue,
         headline: "Fan Control",
         subheadline: "Quiet when idle. Aggressive when it counts.",
-        body: "The fan controller supports Smart, Silent, Balanced, Performance, Max, Manual, and System Auto modes. It can re-apply active profiles after wake and trigger a safety override if temperatures run too high.",
+        body: "The fan controller supports Smart, Silent, Balanced, Performance, Max, Manual, and System Auto modes. It can re-apply active profiles after wake and uses the helper to talk to the right SMC fan-control keys across different machines.",
         bullets: [
             ("bolt.fill",             .wgAmber,  "Smart mode ramps earlier under sustained load"),
             ("fanblades.fill",        .wgBlue,   "Balanced / Performance / Max quick profiles"),
-            ("exclamationmark.shield.fill", .wgRed, "Hard safety override at dangerous thermals"),
+            ("arrow.clockwise",       .wgPurple, "Wake re-apply for active fan profiles"),
             ("lock.open.fill",        .wgGreen,  "Requires SMCHelper privileged helper"),
         ]
     ),

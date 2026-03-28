@@ -176,7 +176,7 @@ struct MenuBarMenuView: View {
                     Spacer()
                     Text(fanController.mode.title)
                         .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .foregroundStyle(fanController.safetyOverrideActive ? .red : Color(red: 1.0, green: 0.72, blue: 0.18))
+                        .foregroundStyle(Color(red: 1.0, green: 0.72, blue: 0.18))
                 }
 
                 Menu {
