@@ -187,6 +187,9 @@ That makes CoreVisor a natural extension of the app instead of a random extra ta
 
 - SMC-backed fan control support
 - Helper-based write path instead of staying read-only
+- Fan profiles: Smart, Silent, Balanced, Performance, Max, Manual, and System Auto
+- Sleep/wake re-apply for active non-system fan modes
+- Safety override that forces max cooling if thermals cross the hard limit
 - One-app flow for seeing thermals and reacting to them
 - Fast access to fan actions from the UI
 - Hardware-aware workflow instead of isolated fan sliders

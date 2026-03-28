@@ -97,11 +97,11 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgBlue,
         headline: "Fan Control",
         subheadline: "Quiet when idle. Aggressive when it counts.",
-        body: "The fan controller reads your thermal targets and adjusts RPM in real time. You can set custom curves, override minimums, or let the automatic profile handle it.",
+        body: "The fan controller supports Smart, Silent, Balanced, Performance, Max, Manual, and System Auto modes. It can re-apply active profiles after wake and trigger a safety override if temperatures run too high.",
         bullets: [
-            ("slider.horizontal.3",   .wgBlue,   "Custom RPM curves per thermal zone"),
-            ("bolt.fill",             .wgAmber,  "Auto-boost on sustained CPU load"),
-            ("moon.fill",             .wgPurple, "Silent floor — hold minimum RPM at idle"),
+            ("bolt.fill",             .wgAmber,  "Smart mode ramps earlier under sustained load"),
+            ("fanblades.fill",        .wgBlue,   "Balanced / Performance / Max quick profiles"),
+            ("exclamationmark.shield.fill", .wgRed, "Hard safety override at dangerous thermals"),
             ("lock.open.fill",        .wgGreen,  "Requires SMCHelper privileged helper"),
         ]
     ),
@@ -449,4 +449,3 @@ private struct WGRandom {
         return z ^ (z >> 31)
     }
 }
-

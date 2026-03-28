@@ -1,47 +1,89 @@
 import Foundation
 import Combine
+import AppKit
 
 enum FanControlMode: String, CaseIterable {
+    case smart
+    case silent
+    case balanced
+    case performance
+    case max
     case manual
     case automatic
+
+    static var quickModes: [FanControlMode] {
+        [.smart, .balanced, .performance, .max, .manual, .automatic]
+    }
+
+    var title: String {
+        switch self {
+        case .smart: return "SMART"
+        case .silent: return "SILENT"
+        case .balanced: return "BALANCED"
+        case .performance: return "PERFORMANCE"
+        case .max: return "MAX"
+        case .manual: return "MANUAL"
+        case .automatic: return "SYSTEM"
+        }
+    }
+
+    var shortTitle: String {
+        switch self {
+        case .smart: return "SMART"
+        case .silent: return "SILENT"
+        case .balanced: return "BAL"
+        case .performance: return "PERF"
+        case .max: return "MAX"
+        case .manual: return "MANUAL"
+        case .automatic: return "SYSTEM"
+        }
+    }
+
+    var usesManualSlider: Bool { self == .manual }
+    var isManagedProfile: Bool { self != .manual && self != .automatic }
 }
 
+@MainActor
 final class FanController: ObservableObject {
-    @Published var mode: FanControlMode = .manual
+    @Published var mode: FanControlMode = .smart
     @Published var manualSpeed: Int = 2200
     @Published var autoAggressiveness: Double = 1.5
     @Published var autoMaxSpeed: Int = 6500
     @Published var statusMessage: String = "Idle"
     /// When true, auto mode adds +0.5 to aggressiveness to compensate for VM thermal load.
     @Published private(set) var vmBoostActive: Bool = false
+    @Published private(set) var safetyOverrideActive: Bool = false
 
     let minSpeed = 1000
     let maxSpeed = 6500
 
     private weak var systemMonitor: SystemMonitor?
-    private var autoTimer: Timer?
+    private var controlTimer: Timer?
     private var lastAppliedSpeed: Int = 0
     private let helperManager = SMCHelperManager.shared
     private var baseAggressiveness: Double = 1.5  // user's chosen value, pre-boost
+    private var workspaceObservers: [NSObjectProtocol] = []
+    private let safetyTempThreshold = 95.0
+    private let safetyReleaseThreshold = 90.0
 
     init(systemMonitor: SystemMonitor) {
         self.systemMonitor = systemMonitor
+        registerForWakeNotifications()
     }
 
     deinit {
-        stopAutoControl()
+        controlTimer?.invalidate()
+        controlTimer = nil
+        for observer in workspaceObservers {
+            NSWorkspace.shared.notificationCenter.removeObserver(observer)
+        }
     }
 
     func setMode(_ mode: FanControlMode) {
         self.mode = mode
-
-        if mode == .automatic {
-            resetToSystemAutomatic()
-            startAutoControl()
-        } else {
-            stopAutoControl()
-            applyFanSpeed(manualSpeed)
-        }
+        safetyOverrideActive = false
+        lastAppliedSpeed = 0
+        applyCurrentMode(force: true)
     }
 
     func setManualSpeed(_ speed: Int) {
@@ -55,9 +97,9 @@ final class FanController: ObservableObject {
         autoAggressiveness = vmBoostActive
             ? min(3.0, baseAggressiveness + 0.5)
             : baseAggressiveness
-        if mode == .automatic {
+        if mode == .smart {
             lastAppliedSpeed = 0
-            updateAutoControl()
+            updateManagedControl()
         }
     }
 
@@ -68,9 +110,9 @@ final class FanController: ObservableObject {
         autoAggressiveness = active
             ? min(3.0, baseAggressiveness + 0.5)
             : baseAggressiveness
-        if mode == .automatic {
+        if mode == .smart {
             lastAppliedSpeed = 0
-            updateAutoControl()
+            updateManagedControl()
         }
     }
 
@@ -85,36 +127,89 @@ final class FanController: ObservableObject {
         statusMessage = allSuccess ? "System automatic control restored" : "Failed to restore automatic control"
     }
 
-    private func startAutoControl() {
-        stopAutoControl()
-        updateAutoControl()
+    private func startControlLoop() {
+        stopControlLoop()
+        updateManagedControl()
 
-        autoTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
-            self?.updateAutoControl()
+        controlTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.updateManagedControl()
+            }
         }
 
-        if let autoTimer {
-            RunLoop.current.add(autoTimer, forMode: .common)
+        if let controlTimer {
+            RunLoop.current.add(controlTimer, forMode: .common)
         }
     }
 
-    private func stopAutoControl() {
-        autoTimer?.invalidate()
-        autoTimer = nil
+    private func stopControlLoop() {
+        controlTimer?.invalidate()
+        controlTimer = nil
     }
 
-    private func updateAutoControl() {
-        guard mode == .automatic, let monitor = systemMonitor else { return }
+    private func updateManagedControl() {
+        guard let monitor = systemMonitor else { return }
+        guard mode.isManagedProfile || mode == .manual || mode == .silent else { return }
 
-        // Use the highest thermal signal across CPU and GPU
+        let cpuTemp  = monitor.cpuTemperature ?? 0
+        let gpuTemp  = monitor.gpuTemperature ?? 0
+        let maxTemp  = max(cpuTemp, gpuTemp)
+
+        if maxTemp >= safetyTempThreshold {
+            if !safetyOverrideActive || lastAppliedSpeed != maxSpeed {
+                safetyOverrideActive = true
+                applyFanSpeed(maxSpeed)
+                lastAppliedSpeed = maxSpeed
+                statusMessage = "Safety override: MAX (\(Int(maxTemp))°C)"
+            }
+            return
+        }
+
+        if safetyOverrideActive {
+            guard maxTemp <= safetyReleaseThreshold else {
+                statusMessage = "Safety override active (\(Int(maxTemp))°C)"
+                return
+            }
+            safetyOverrideActive = false
+            lastAppliedSpeed = 0
+        }
+
+        switch mode {
+        case .manual:
+            if abs(manualSpeed - lastAppliedSpeed) >= 50 || lastAppliedSpeed == 0 {
+                applyFanSpeed(manualSpeed)
+                lastAppliedSpeed = manualSpeed
+            }
+            statusMessage = "Manual: \(manualSpeed) RPM"
+        case .automatic:
+            break
+        case .silent:
+            if lastAppliedSpeed != -1 {
+                resetToSystemAutomatic()
+                lastAppliedSpeed = -1
+            }
+            statusMessage = "Silent: system automatic"
+        case .balanced:
+            applyFixedPercentProfile(0.60, label: "Balanced")
+        case .performance:
+            applyFixedPercentProfile(0.85, label: "Performance")
+        case .max:
+            applyFixedPercentProfile(1.0, label: "Max")
+        case .smart:
+            updateSmartProfile()
+        }
+    }
+
+    private func updateSmartProfile() {
+        guard let monitor = systemMonitor else { return }
+
         let cpuTemp  = monitor.cpuTemperature ?? 0
         let gpuTemp  = monitor.gpuTemperature ?? 0
         let maxTemp  = max(cpuTemp, gpuTemp)
         guard maxTemp > 0 else { return }
 
-        // Watt-based pre-heat: if the chip is drawing hard, ramp up earlier
         let systemWatts   = abs(monitor.totalSystemWatts ?? 0)
-        let wattBoost     = min(1.0, systemWatts / 40.0) * 8.0  // up to +8 °C equivalent
+        let wattBoost     = min(1.0, systemWatts / 40.0) * 8.0
 
         let effectiveTemp = min(maxTemp + wattBoost, 105.0)
 
@@ -142,7 +237,41 @@ final class FanController: ObservableObject {
             let tempStr = gpuTemp > cpuTemp
                 ? String(format: "GPU %.0f°C", gpuTemp)
                 : String(format: "CPU %.0f°C", cpuTemp)
-            statusMessage = "Auto: \(finalSpeed) RPM (\(tempStr))"
+            statusMessage = "Smart: \(finalSpeed) RPM (\(tempStr))"
+        }
+    }
+
+    private func applyFixedPercentProfile(_ percent: Double, label: String) {
+        guard let monitor = systemMonitor, monitor.numberOfFans > 0 else {
+            statusMessage = "No fan detected"
+            return
+        }
+
+        let firstMax = monitor.fanMaxSpeeds.first ?? maxSpeed
+        let target = Int((Double(firstMax) * percent).rounded())
+        if abs(target - lastAppliedSpeed) >= 50 || lastAppliedSpeed == 0 {
+            applyFanSpeed(target)
+            lastAppliedSpeed = target
+        }
+        statusMessage = "\(label): \(target) RPM"
+    }
+
+    private func applyCurrentMode(force: Bool = false) {
+        if force {
+            stopControlLoop()
+        }
+
+        switch mode {
+        case .automatic:
+            resetToSystemAutomatic()
+            statusMessage = "System automatic control restored"
+        case .manual:
+            applyFanSpeed(manualSpeed)
+            lastAppliedSpeed = manualSpeed
+            statusMessage = "Manual: \(manualSpeed) RPM"
+            startControlLoop()
+        case .silent, .smart, .balanced, .performance, .max:
+            startControlLoop()
         }
     }
 
@@ -163,6 +292,27 @@ final class FanController: ObservableObject {
         statusMessage = allSuccess ? "Applied \(speed) RPM" : "Failed to apply fan speed"
     }
 
+    private func registerForWakeNotifications() {
+        let center = NSWorkspace.shared.notificationCenter
+
+        let wakeObserver = center.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                self.lastAppliedSpeed = 0
+                self.applyCurrentMode(force: true)
+                if self.mode != .automatic {
+                    self.statusMessage = "Re-applied \(self.mode.title.lowercased()) after wake"
+                }
+            }
+        }
+
+        workspaceObservers.append(wakeObserver)
+    }
+
     private func runSmcHelper(arguments: [String]) -> Bool {
         let ok = helperManager.execute(arguments: arguments, allowPrivilegePrompt: true)
         if !ok, let message = helperManager.statusMessage {
@@ -171,4 +321,3 @@ final class FanController: ObservableObject {
         return ok
     }
 }
-
