@@ -290,18 +290,6 @@ private struct FanControlPanel: View {
             }
 
             HStack(spacing: 6) {
-                ForEach(FanControlMode.allCases, id: \.self) { mode in
-                    Button { fanController.setMode(mode) } label: {
-                        Text(mode.rawValue.uppercased())
-                            .font(.cmMono(10, weight: .bold)).cmKerning(0.8)
-                            .foregroundStyle(fanController.mode == mode ? Color.cmBackground : Color.cmTextSecondary)
-                            .padding(.horizontal, 12).padding(.vertical, 6)
-                            .background(fanController.mode == mode ? Color.cmAmber : Color.cmSurfaceRaised)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                    }
-                    .buttonStyle(.plain)
-                }
-                Spacer()
                 Button { fanController.resetToSystemAutomatic() } label: {
                     Label("RESET AUTO", systemImage: "arrow.counterclockwise")
                         .font(.cmMono(9, weight: .bold)).cmKerning(0.5).foregroundStyle(Color.cmTextDim)
@@ -309,9 +297,25 @@ private struct FanControlPanel: View {
                 .buttonStyle(.plain)
                 .help("Reset fans to system automatic (⌘⇧R)")
                 .keyboardShortcut("r", modifiers: [.command, .shift])
+                Spacer()
             }
 
-            if fanController.mode == .manual {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 88), spacing: 6)], spacing: 6) {
+                ForEach(FanControlMode.quickModes, id: \.self) { mode in
+                    Button { fanController.setMode(mode) } label: {
+                        Text(mode.shortTitle)
+                            .font(.cmMono(10, weight: .bold)).cmKerning(0.8)
+                            .frame(maxWidth: .infinity)
+                            .foregroundStyle(fanController.mode == mode ? Color.cmBackground : Color.cmTextSecondary)
+                            .padding(.horizontal, 10).padding(.vertical, 7)
+                            .background(fanController.mode == mode ? Color.cmAmber : Color.cmSurfaceRaised)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            if fanController.mode.usesManualSlider {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Text("TARGET SPEED").font(.cmMono(9, weight: .bold)).foregroundStyle(Color.cmTextDim).cmKerning(1)
@@ -325,7 +329,7 @@ private struct FanControlPanel: View {
                            in: Double(fanController.minSpeed)...Double(fanController.maxSpeed), step: 50)
                         .tint(Color.cmAmber)
                 }
-            } else {
+            } else if fanController.mode == .smart {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Text("AGGRESSIVENESS").font(.cmMono(9, weight: .bold)).foregroundStyle(Color.cmTextDim).cmKerning(1)
@@ -335,6 +339,14 @@ private struct FanControlPanel: View {
                     }
                     Slider(value: Binding(get: { fanController.autoAggressiveness }, set: { fanController.setAutoAggressiveness($0) }), in: 0...3, step: 0.1)
                         .tint(Color.cmGreen)
+                }
+            } else {
+                HStack {
+                    Text("ACTIVE PROFILE").font(.cmMono(9, weight: .bold)).foregroundStyle(Color.cmTextDim).cmKerning(1)
+                    Spacer()
+                    Text(fanController.mode.title)
+                        .font(.cmMono(12, weight: .bold))
+                        .foregroundStyle(fanController.safetyOverrideActive ? Color.cmRed : Color.cmAmber)
                 }
             }
 
@@ -476,17 +488,16 @@ struct BasicModeView: View {
             .padding(.horizontal, 14)
 
             Button {
-                fanController.resetToSystemAutomatic()
-                fanController.setMode(.automatic)
+                fanController.setMode(.smart)
             } label: {
                 HStack(spacing: 5) {
-                    Image(systemName: "arrow.counterclockwise").font(.system(size: 9, weight: .bold))
-                    Text("AUTO").font(.cmMono(9, weight: .bold)).cmKerning(0.8)
+                    Image(systemName: "bolt.fill").font(.system(size: 9, weight: .bold))
+                    Text("SMART").font(.cmMono(9, weight: .bold)).cmKerning(0.8)
                 }
-                .foregroundStyle(fanController.mode == .automatic ? Color.bText : Color.bDim)
+                .foregroundStyle(fanController.mode == .smart ? Color.bText : Color.bDim)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
-                .overlay(Rectangle().stroke(fanController.mode == .automatic ? Color.bText.opacity(0.5) : Color.bBorder, lineWidth: 1))
+                .overlay(Rectangle().stroke(fanController.mode == .smart ? Color.bText.opacity(0.5) : Color.bBorder, lineWidth: 1))
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 14)

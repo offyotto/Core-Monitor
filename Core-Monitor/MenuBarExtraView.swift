@@ -169,24 +169,44 @@ struct MenuBarMenuView: View {
 
             Divider().overlay(Color(white: 1, opacity: 0.07))
 
-            // Fan mode quick-switch
-            HStack(spacing: 6) {
-                Text("FAN").font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .foregroundStyle(Color(white: 0.4)).cmKerning(1)
-                ForEach(FanControlMode.allCases, id: \.self) { mode in
-                    Button { fanController.setMode(mode) } label: {
-                        Text(mode.rawValue.uppercased())
-                            .font(.system(size: 9, weight: .bold, design: .monospaced)).cmKerning(0.8)
-                            .foregroundStyle(fanController.mode == mode
-                                             ? Color(red: 0.07, green: 0.07, blue: 0.08) : Color(white: 0.5))
-                            .padding(.horizontal, 8).padding(.vertical, 4)
-                            .background(fanController.mode == mode
-                                        ? Color(red: 1.0, green: 0.72, blue: 0.18) : Color(red: 0.13, green: 0.13, blue: 0.15))
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                    }
-                    .buttonStyle(.plain)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    Text("FAN PROFILE").font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Color(white: 0.4)).cmKerning(1)
+                    Spacer()
+                    Text(fanController.mode.title)
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .foregroundStyle(fanController.safetyOverrideActive ? .red : Color(red: 1.0, green: 0.72, blue: 0.18))
                 }
-                Spacer()
+
+                Menu {
+                    ForEach(FanControlMode.quickModes, id: \.self) { mode in
+                        Button(mode.title) { fanController.setMode(mode) }
+                    }
+                    Divider()
+                    Button("Reset To System Auto") {
+                        fanController.resetToSystemAutomatic()
+                        fanController.setMode(.automatic)
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "fanblades.fill")
+                            .font(.system(size: 9, weight: .bold))
+                        Text("CHANGE PROFILE")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .cmKerning(0.8)
+                        Spacer()
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 8, weight: .bold))
+                    }
+                    .foregroundStyle(Color(white: 0.7))
+                    .padding(.horizontal, 10).padding(.vertical, 7)
+                    .background(Color(red: 0.13, green: 0.13, blue: 0.15))
+                    .clipShape(RoundedRectangle(cornerRadius: 5))
+                }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .buttonStyle(.plain)
             }
             .padding(.horizontal, 14).padding(.vertical, 8)
 
