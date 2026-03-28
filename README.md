@@ -1,14 +1,58 @@
 # Core-Monitor
-# ⭐️ Star us on Github to support the project!
 
-**Free, open-source macOS monitoring, fan control, benchmarking, Touch Bar, and virtualization utility.**  
-Dashboard + menu bar + Touch Bar widget + CoreVisor.
+**An open-source macOS utility that combines system monitoring, fan control, benchmarking, Touch Bar HUDs, and built-in virtualization in one native Swift app.**
+
+Core-Monitor is built for people who want more than a tiny menu bar graph or a paid fan app. It is designed to cover the jobs normally split across tools like Macs Fan Control, Stats, TG Pro, and separate VM frontends, while staying lightweight, local-first, and fully inspectable.
 
 Built as a native Swift app for macOS. No subscriptions. No telemetry. No Electron shell. No paid "pro" tier hiding the useful features.
 
 **License:** GPL-3.0  
 **Platform focus:** Apple silicon first, with some Intel support  
 **Current surfaces:** Dashboard, menu bar, Touch Bar, benchmark view, CoreVisor VM workflows
+
+## Why This Is Different
+
+Core-Monitor is not just a monitor.
+
+It is one of the few macOS projects trying to do all of this in one place:
+
+- monitor live system state
+- control fan behavior through an SMC-backed helper
+- keep hardware stats visible in the menu bar and Touch Bar
+- benchmark sustained performance with thermal context
+- run and manage VM workloads through CoreVisor
+
+That makes it less like a single-purpose utility and more like an all-in-one power-user control surface for the Mac.
+
+## Quick Install
+
+### Download A Release
+
+Download the latest release from GitHub Releases, then open the app normally.
+
+If macOS blocks first launch because the app is not signed with a paid Apple Developer certificate, use the Gatekeeper steps further below.
+
+### Build From Source
+
+```bash
+open Core-Monitor.xcodeproj
+```
+
+Then build and run the `Core-Monitor` scheme in Xcode.
+
+### Install Help
+
+- [Install video walkthrough](docs/videos/install-walkthrough.mov)
+- [Jump to first-launch Gatekeeper steps](#first-launch-on-macos)
+
+### First-run checklist
+
+1. Open `Core-Monitor`
+2. Allow first launch through Gatekeeper if macOS blocks it
+3. If you want fan writes, approve or install the helper path when prompted
+4. If you want launch at login, enable it in the app and approve it in Login Items if macOS asks
+5. If you want Windows 11 ARM in CoreVisor, install `swtpm`
+6. If you want to compare runs locally, use the built-in benchmark and save results to the leaderboard
 
 ## What Core-Monitor Is
 
@@ -657,12 +701,6 @@ Relevant benchmark files currently include:
 - `Core-Monitor/SMCTamperDetector.swift`
 
 If you want CoreVisor to use bundled QEMU binaries in development, follow the resource layout described in [EmbeddedQEMU/README.md](EmbeddedQEMU/README.md).
-
-## Install Walkthrough Video
-
-If you want to see the install flow before doing it yourself, watch the recorded walkthrough here:
-
-- [Install video walkthrough](docs/videos/install-walkthrough.mov)
 
 ### After install
 
