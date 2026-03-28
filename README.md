@@ -6,10 +6,6 @@ Core-Monitor is built for people who want more than a tiny menu bar graph or a p
 
 Built as a native Swift app for macOS. No subscriptions. No telemetry. No Electron shell. No paid "pro" tier hiding the useful features.
 
-**License:** GPL-3.0  
-**Platform focus:** Apple silicon first, with some Intel support  
-**Current surfaces:** Dashboard, menu bar, Touch Bar, benchmark view, CoreVisor VM workflows
-
 ## Why This Is Different
 
 Core-Monitor is not just a monitor.
