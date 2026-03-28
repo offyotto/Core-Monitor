@@ -1,0 +1,494 @@
+:root {
+  --bg: #08080b;
+  --bg-soft: rgba(18, 18, 24, 0.88);
+  --panel: rgba(16, 16, 22, 0.88);
+  --panel-strong: #13131a;
+  --line: rgba(255, 255, 255, 0.1);
+  --text: #f6f1e8;
+  --muted: #b2a89a;
+  --accent: #ffc64d;
+  --accent-strong: #ffad14;
+  --mint: #7be3a2;
+  --blue: #78b5ff;
+  --shadow: 0 28px 80px rgba(0, 0, 0, 0.36);
+  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius-md: 18px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: "Space Grotesk", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(82, 28, 214, 0.32), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 167, 61, 0.18), transparent 24%),
+    linear-gradient(180deg, #070709 0%, #0f0f13 42%, #09090b 100%);
+  min-height: 100vh;
+}
+
+img,
+video {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+}
+
+code {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.92em;
+}
+
+.page-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 18px 0 72px;
+}
+
+.site-header {
+  position: sticky;
+  top: 18px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(10, 10, 14, 0.72);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--shadow);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #1e1300;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+}
+
+.brand-text,
+.site-nav a,
+.nav-download,
+.button {
+  text-decoration: none;
+}
+
+.brand-text {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.site-nav {
+  display: flex;
+  gap: 18px;
+  color: var(--muted);
+}
+
+.site-nav a {
+  font-size: 0.95rem;
+}
+
+.nav-download {
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #1f1500;
+  font-weight: 700;
+}
+
+main {
+  display: grid;
+  gap: 34px;
+  margin-top: 26px;
+}
+
+section {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(180deg, rgba(18, 18, 24, 0.92), rgba(10, 10, 14, 0.94));
+  box-shadow: var(--shadow);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.3fr 0.9fr;
+  gap: 28px;
+  padding: 42px;
+  overflow: hidden;
+}
+
+.hero-copy h1,
+.section-heading h2,
+.cta-band h2 {
+  margin: 0;
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+}
+
+.hero-copy h1 {
+  max-width: 11ch;
+  font-size: clamp(3.2rem, 6vw, 6rem);
+}
+
+.eyebrow,
+.card-label,
+.card-step {
+  margin: 0 0 14px;
+  color: var(--accent);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.hero-lead,
+.feature-card p,
+.detail-card p,
+.install-card p,
+.corevisor-copy p,
+.hero-card p,
+.video-copy p {
+  color: var(--muted);
+  line-height: 1.72;
+  font-size: 1.02rem;
+}
+
+.hero-actions,
+.video-actions,
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.button.primary {
+  background: var(--accent);
+  color: #231700;
+  border-color: transparent;
+}
+
+.button.secondary {
+  background: rgba(255, 198, 77, 0.12);
+  color: var(--accent);
+}
+
+.button.ghost {
+  background: transparent;
+}
+
+.hero-points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hero-points li {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.hero-panel,
+.install-grid,
+.feature-grid,
+.details-grid,
+.corevisor-grid,
+.gatekeeper-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.hero-panel {
+  align-content: end;
+}
+
+.hero-card,
+.install-card,
+.feature-card,
+.detail-card,
+.showcase-card,
+.gatekeeper-card {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.hero-card-accent {
+  background:
+    linear-gradient(135deg, rgba(255, 198, 77, 0.18), rgba(85, 162, 255, 0.12)),
+    rgba(255, 255, 255, 0.04);
+}
+
+.replace-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.replace-grid span {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--text);
+  text-align: center;
+}
+
+.section-heading {
+  padding: 34px 34px 0;
+}
+
+.section-heading h2,
+.cta-band h2 {
+  font-size: clamp(2rem, 4vw, 3.75rem);
+  max-width: 12ch;
+}
+
+.quick-install,
+.screens,
+.feature-band,
+.details,
+.video-section,
+.gatekeeper,
+.corevisor {
+  padding-bottom: 34px;
+}
+
+.install-grid,
+.showcase-grid,
+.feature-grid,
+.details-grid,
+.video-layout,
+.corevisor-layout {
+  padding: 24px 34px 0;
+}
+
+.install-grid {
+  grid-template-columns: 1.2fr 1fr 1fr;
+}
+
+.install-card-main {
+  background:
+    radial-gradient(circle at top left, rgba(255, 198, 77, 0.18), transparent 55%),
+    rgba(255, 255, 255, 0.04);
+}
+
+.text-link {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.showcase-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr;
+  gap: 18px;
+}
+
+.showcase-card {
+  overflow: hidden;
+  padding: 16px;
+}
+
+.showcase-card img {
+  border-radius: 18px;
+  border: 1px solid var(--line);
+}
+
+.showcase-card figcaption,
+.gatekeeper-card figcaption {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.showcase-card strong {
+  color: var(--text);
+  font-size: 1.08rem;
+}
+
+.feature-grid,
+.details-grid,
+.corevisor-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.video-layout,
+.corevisor-layout {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 20px;
+  align-items: center;
+}
+
+.install-video {
+  width: 100%;
+  min-height: 320px;
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  background: #000;
+}
+
+.steps {
+  display: grid;
+  gap: 12px;
+  margin: 24px 34px 0;
+  padding-left: 22px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.gatekeeper-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 24px 34px 0;
+}
+
+.gatekeeper-card {
+  overflow: hidden;
+  padding: 16px;
+}
+
+.gatekeeper-card img {
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+}
+
+.cta-band {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 30px 34px;
+  background:
+    linear-gradient(135deg, rgba(255, 198, 77, 0.16), rgba(123, 227, 162, 0.12)),
+    rgba(18, 18, 24, 0.96);
+}
+
+@media (max-width: 1080px) {
+  .site-header {
+    border-radius: 28px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .hero,
+  .showcase-grid,
+  .video-layout,
+  .corevisor-layout,
+  .install-grid,
+  .feature-grid,
+  .details-grid,
+  .corevisor-grid,
+  .gatekeeper-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-copy h1 {
+    max-width: none;
+  }
+
+  .cta-band {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .page-shell {
+    width: min(100% - 18px, 100%);
+    padding-top: 10px;
+    padding-bottom: 44px;
+  }
+
+  .site-nav {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .hero,
+  .section-heading,
+  .install-grid,
+  .showcase-grid,
+  .feature-grid,
+  .details-grid,
+  .video-layout,
+  .gatekeeper-grid,
+  .corevisor-layout,
+  .steps,
+  .cta-band {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .hero {
+    padding-top: 28px;
+    padding-bottom: 28px;
+  }
+
+  .hero-copy h1,
+  .section-heading h2,
+  .cta-band h2 {
+    font-size: clamp(2.2rem, 12vw, 3.4rem);
+  }
+
+  .hero-lead,
+  .feature-card p,
+  .detail-card p,
+  .install-card p,
+  .corevisor-copy p,
+  .hero-card p,
+  .video-copy p {
+    font-size: 0.98rem;
+  }
+
+  .install-video {
+    min-height: 220px;
+  }
+}
