@@ -164,8 +164,8 @@ final class SystemMonitor: ObservableObject {
     }
 
     private var smcConnection: io_connect_t = 0
-    /// Normal: 2 s. Basic mode: 5 s (saves CPU/GPU significantly).
-    private var monitoringInterval: TimeInterval = 2.0
+    /// Normal: 1 s. Basic mode: 4 s.
+    private var monitoringInterval: TimeInterval = 1.0
     private var timer: Timer?
     private var keyInfoCache: [UInt32: SMCKeyData_keyInfo_t] = [:]
 
@@ -173,7 +173,7 @@ final class SystemMonitor: ObservableObject {
     /// Called by ContentView when the user toggles Basic Mode.
     /// Restarts the timer at the appropriate interval so the change takes effect immediately.
     func setBasicMode(_ enabled: Bool) {
-        let newInterval: TimeInterval = enabled ? 5.0 : 2.0
+        let newInterval: TimeInterval = enabled ? 4.0 : 1.0
         guard newInterval != monitoringInterval else { return }
         monitoringInterval = newInterval
         // Restart timer only if monitoring is already running

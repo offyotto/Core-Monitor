@@ -59,7 +59,8 @@ struct Core_MonitorApp: App {
             systemMonitor:    coordinator.systemMonitor,
             fanController:    coordinator.fanController,
             startupManager:   startupManager,
-            coreVisorManager: coordinator.coreVisorManager
+            coreVisorManager: coordinator.coreVisorManager,
+            touchBarWidgetSettings: coordinator.touchBarWidgetSettings
         )
         .background(
             WindowAccessor { window in

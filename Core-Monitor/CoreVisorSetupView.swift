@@ -67,25 +67,6 @@ private struct CVSectionHeader: View {
     }
 }
 
-// MARK: - Motion blur modifier
-private struct MotionBlurModifier: ViewModifier {
-    let active: Bool
-    let direction: Int
-    func body(content: Content) -> some View {
-        content
-            .blur(radius: active ? 3.5 : 0)
-            .offset(x: active ? CGFloat(direction) * -5 : 0)
-            .opacity(active ? 0.80 : 1)
-            .animation(.easeOut(duration: 0.16), value: active)
-    }
-}
-
-private extension View {
-    func cvMotionBlur(active: Bool, direction: Int) -> some View {
-        modifier(MotionBlurModifier(active: active, direction: direction))
-    }
-}
-
 // MARK: - Scale button style
 private struct CVScaleButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
@@ -104,7 +85,6 @@ struct CoreVisorSetupView: View {
     @State private var draft = CoreVisorDraft()
     @State private var step = 0
     @State private var previousStep = 0
-    @State private var isTransitioning = false
     @State private var showEntitlementGuide = false
     @State private var customQEMUPathInput = ""
     @State private var pendingDeleteMachine: CoreVisorMachine?
@@ -119,6 +99,17 @@ struct CoreVisorSetupView: View {
 
     private let stepTitles = ["Template", "Backend", "Resources", "Display", "Review"]
     private var direction: Int { step > previousStep ? 1 : -1 }
+    private var stepTransition: AnyTransition {
+        let insertionEdge: Edge = direction > 0 ? .trailing : .leading
+        let removalEdge: Edge = direction > 0 ? .leading : .trailing
+        return .asymmetric(
+            insertion: .move(edge: insertionEdge)
+                .combined(with: .opacity)
+                .combined(with: .scale(scale: 0.985, anchor: .center)),
+            removal: .move(edge: removalEdge)
+                .combined(with: .opacity)
+        )
+    }
 
     var body: some View {
         ZStack {
@@ -144,15 +135,15 @@ struct CoreVisorSetupView: View {
                         .padding(.bottom, 10)
 
                     GeometryReader { geo in
-                        HStack(spacing: 0) {
-                            ForEach(0..<5, id: \.self) { idx in
+                        ZStack {
+                            ForEach([step], id: \.self) { idx in
                                 stepPage(for: idx)
-                                    .frame(width: geo.size.width)
-                                    .cvMotionBlur(active: isTransitioning && idx == step, direction: direction)
+                                    .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
+                                    .id(idx)
+                                    .transition(stepTransition)
                             }
                         }
-                        .offset(x: -CGFloat(step) * geo.size.width)
-                        .animation(.interpolatingSpring(stiffness: 340, damping: 38), value: step)
+                        .animation(.spring(response: 0.34, dampingFraction: 0.88), value: step)
                     }
                     .clipped()
 
@@ -202,16 +193,10 @@ struct CoreVisorSetupView: View {
 
     // MARK: - Scan-line overlay
     private var scanLines: some View {
-        Canvas { ctx, size in
-            var y: CGFloat = 0
-            while y < size.height {
-                ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 1)), with: .color(.white.opacity(0.016)))
-                y += 3
-            }
-        }
+        CVScanLinePattern()
+            .stroke(Color.white.opacity(0.016), lineWidth: 1)
         .ignoresSafeArea()
         .allowsHitTesting(false)
-        .drawingGroup()
     }
 
     // MARK: - Navigation
@@ -223,9 +208,9 @@ struct CoreVisorSetupView: View {
     private func goTo(_ idx: Int) {
         guard idx != step else { return }
         previousStep = step
-        isTransitioning = true
-        step = idx
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) { isTransitioning = false }
+        withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+            step = idx
+        }
     }
 
     // MARK: - Header
@@ -287,7 +272,6 @@ struct CoreVisorSetupView: View {
                             Circle()
                                 .fill(idx == step ? Color.cvAmber : Color.cvSurfaceRaised)
                                 .frame(width: 16, height: 16)
-                                .animation(.spring(response: 0.28), value: step)
                             Text("\(idx + 1)")
                                 .font(.cvMono(8, weight: .bold))
                                 .foregroundStyle(idx == step ? Color.cvBackground : Color.cvDim)
@@ -304,7 +288,6 @@ struct CoreVisorSetupView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
                             .stroke(idx == step ? Color.cvAmber.opacity(0.30) : Color.clear, lineWidth: 1)
-                            .animation(.easeOut(duration: 0.18), value: step)
                     )
                 }
                 .buttonStyle(.plain)
@@ -313,7 +296,6 @@ struct CoreVisorSetupView: View {
                     Rectangle()
                         .fill(idx < step ? Color.cvAmber.opacity(0.4) : Color.cvBorder)
                         .frame(width: 16, height: 1)
-                        .animation(.easeOut(duration: 0.22), value: step)
                 }
             }
             Spacer()
@@ -1908,6 +1890,19 @@ struct CoreVisorSetupView: View {
             editWindowControllers[machine.id] = nil
         }
         newController.showWindow(nil); newController.window?.makeKeyAndOrderFront(nil)
+    }
+}
+
+private struct CVScanLinePattern: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        var y: CGFloat = 0
+        while y < rect.height {
+            path.move(to: CGPoint(x: rect.minX, y: y))
+            path.addLine(to: CGPoint(x: rect.maxX, y: y))
+            y += 3
+        }
+        return path
     }
 }
 

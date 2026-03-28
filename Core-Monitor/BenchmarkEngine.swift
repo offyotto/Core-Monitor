@@ -20,6 +20,8 @@ final class BenchmarkSession: ObservableObject {
 
     var latestResult: BenchmarkResult?
     fileprivate var opsTimeline: [Double] = []
+    fileprivate var cumulativeTemp: Double = 0
+    fileprivate var cumulativeLoad: Double = 0
 
     func reset(customFanControl: Bool) {
         samples = []
@@ -34,6 +36,8 @@ final class BenchmarkSession: ObservableObject {
         isRunning = false
         latestResult = nil
         opsTimeline = []
+        cumulativeTemp = 0
+        cumulativeLoad = 0
         self.customFanControl = customFanControl
     }
 }
@@ -101,15 +105,16 @@ final class BenchmarkEngine {
                 )
                 session.samples.append(sample)
                 session.opsTimeline.append(delta)
+                session.cumulativeTemp += packageTemp
+                session.cumulativeLoad += load
                 session.elapsedSeconds = elapsed
                 session.currentLoad = load
                 session.currentTemp = packageTemp
                 session.peakLoad = max(session.peakLoad, load)
                 session.peakTemp = max(session.peakTemp, packageTemp)
-                let tempSum = session.samples.reduce(0) { $0 + $1.packageTemp }
-                let loadSum = session.samples.reduce(0) { $0 + $1.cpuLoad }
-                session.avgTemp = tempSum / Double(max(1, session.samples.count))
-                session.avgLoad = loadSum / Double(max(1, session.samples.count))
+                let sampleCount = Double(max(1, session.samples.count))
+                session.avgTemp = session.cumulativeTemp / sampleCount
+                session.avgLoad = session.cumulativeLoad / sampleCount
                 session.rawScore = Int((currentOps / kM2BaselineOps) * 1000.0)
 
                 if elapsed >= durationSeconds || self.shouldStop {

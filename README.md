@@ -613,14 +613,58 @@ brew install swtpm
 
 One of the more ambitious CoreVisor features is the automated Windows 11 ARM setup path.
 
-This is not just "attach an ISO and good luck." The codebase includes an automation pipeline that can:
+This is not just "attach an ISO and good luck." CoreVisor includes a dedicated Windows 11 ARM pipeline and UI that tries to remove most of the repetitive QEMU setup work.
+
+The "Do It For Me" flow can:
 
 - download the Windows 11 ARM ISO
 - download VirtIO drivers
-- prepare setup-support media
+- let you supply your own ISO instead of downloading one
+- generate setup-support media automatically
 - initialize TPM through `swtpm`
 - build an unattended installation flow
-- guide the user through the remaining Windows setup steps
+- create the VM with CPU, memory, disk, TPM, and driver settings
+- boot the VM and guide the remaining setup steps
+
+### What the pipeline actually prepares
+
+Under the hood, the pipeline does more than just fetch files.
+
+It builds a dedicated setup-support image that carries:
+
+- `autounattend.xml`
+- injected WinPE driver support
+- bypass keys for Windows 11 setup checks
+- first-logon driver install automation
+
+The current implementation is specifically designed to:
+
+- keep the original Microsoft ISO untouched
+- stage an unattended install configuration on separate removable media
+- add driver support that Windows ARM setup does not have by default
+- store TPM seed material in macOS Keychain for the VM
+
+### What gets automated
+
+The code currently automates these steps:
+
+1. Resolve and download a Windows 11 ARM ISO from Microsoft's CDN, or use a manually selected ISO
+2. Download the VirtIO driver ISO
+3. Generate an unattended setup image containing `autounattend.xml` and WinPE driver content
+4. Create the CoreVisor machine bundle and disk
+5. Enable TPM through `swtpm` when available
+6. Launch the VM with the prepared media attached
+
+### What the unattended config is trying to handle
+
+The generated unattended configuration is built to reduce the annoying setup friction that normally comes with Windows-on-QEMU on Apple silicon.
+
+The current flow includes logic for:
+
+- LabConfig bypass keys for setup checks such as TPM, Secure Boot, RAM, CPU, and storage requirements
+- local-account style setup instead of forcing a Microsoft-account-first path
+- first-logon automation for network and GPU-related VirtIO drivers
+- WinPE-visible setup media so required drivers can be found during install
 
 ### Practical Windows 11 ARM expectations
 
@@ -628,6 +672,27 @@ This is not just "attach an ISO and good luck." The codebase includes an automat
 - VirtIO drivers matter during and after installation
 - the setup flow is much more guided than a raw QEMU command-line workflow
 - Windows guests are QEMU-only in the current build
+- the setup window lets you choose VM name, CPU cores, RAM, disk size, and optionally your own ISO
+- the full pipeline is designed to feel mostly automatic, but it is not magic
+
+### The one manual step that still matters
+
+The current UI is very explicit about this: there is still one important manual step during Windows Setup.
+
+When Windows asks for a storage or media driver, load the VirtIO storage driver from the mounted VirtIO media. CoreVisor already prepares and attaches the needed driver sources, but you still need to point Windows Setup at the correct location.
+
+That is why the feature is best described as **mostly automated** rather than pretending it is a fully zero-interaction install.
+
+### Why this feature is a big deal
+
+Most Mac monitoring apps stop at showing load created by virtual machines. Core-Monitor goes further by including the workflow that creates that load.
+
+That matters because CoreVisor's Windows ARM path is not a random extra:
+
+- it turns the app into a more serious power-user tool
+- it makes the virtualization side of the project feel real, not aspirational
+- it gives Core-Monitor a feature almost nobody expects to find inside a monitoring utility
+- it makes the relationship between monitoring, thermals, fan behavior, and VMs much more obvious
 
 ### CoreVisor concept flow
 

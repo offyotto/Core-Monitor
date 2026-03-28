@@ -89,7 +89,6 @@ private struct GaugeRing: View {
                 .trim(from: 0, to: value)
                 .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .animation(.spring(response: 0.6, dampingFraction: 0.8), value: value)
         }
         .frame(width: size, height: size)
     }
@@ -154,7 +153,6 @@ private struct StatTile: View {
                             .font(.cmMono(28, weight: .bold))
                             .foregroundStyle(color)
                             .cmNumericTextTransition()
-                            .animation(.easeOut(duration: 0.3), value: value)
                         Text(unit)
                             .font(.cmMono(11, weight: .medium))
                             .foregroundStyle(color.opacity(0.6))
@@ -201,7 +199,6 @@ private struct FanBar: View {
                     RoundedRectangle(cornerRadius: 2).fill(Color.cmSurfaceRaised).frame(height: 4)
                     RoundedRectangle(cornerRadius: 2).fill(rpmColor)
                         .frame(width: safeWidth * fraction, height: 4)
-                        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: fraction)
                 }
             }
             .frame(height: 4)
@@ -228,7 +225,6 @@ private struct BatteryStatusBar: View {
                 RoundedRectangle(cornerRadius: 2).fill(chargeColor)
                     .frame(width: 36 * Double(info.chargePercent ?? 0) / 100.0, height: 16)
                     .padding(.leading, 2)
-                    .animation(.easeOut(duration: 0.4), value: info.chargePercent)
                 RoundedRectangle(cornerRadius: 1.5).fill(Color.cmBorderBright).frame(width: 3, height: 9).offset(x: 42)
             }
             .frame(width: 47)
@@ -304,7 +300,6 @@ private struct FanControlPanel: View {
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                     }
                     .buttonStyle(.plain)
-                    .animation(.easeOut(duration: 0.15), value: fanController.mode)
                 }
                 Spacer()
                 Button { fanController.resetToSystemAutomatic() } label: {
@@ -437,7 +432,6 @@ struct BasicModeView: View {
                 .font(.cmMono(22, weight: .bold))
                 .foregroundStyle(Color.bText)
                 .cmNumericTextTransition()
-                .animation(.easeOut(duration: 0.3), value: value)
             if let sub {
                 Text(sub).font(.cmMono(8)).foregroundStyle(Color.bDim)
             }
@@ -539,6 +533,7 @@ struct ContentView: View {
     @ObservedObject var fanController: FanController
     @ObservedObject var startupManager: StartupManager
     @ObservedObject var coreVisorManager: CoreVisorManager
+    @ObservedObject var touchBarWidgetSettings: TouchBarWidgetSettings
     @StateObject private var updater = AppUpdater.shared
     @StateObject private var modeState = AppModeState()
     @StateObject private var benchmarkStore = BenchmarkStore()
@@ -621,7 +616,7 @@ struct ContentView: View {
 
     private var dashboardScrollContent: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 16) {
+            LazyVStack(alignment: .leading, spacing: 16) {
                 dashboardHeader
 
                 if updater.updateAvailable != nil {
@@ -653,16 +648,10 @@ struct ContentView: View {
     }
 
     private var scanLineOverlay: some View {
-        Canvas { ctx, size in
-            var y: CGFloat = 0
-            while y < size.height {
-                ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 1)), with: .color(.white.opacity(0.018)))
-                y += 3
-            }
-        }
+        ScanLinePattern()
+            .stroke(Color.white.opacity(0.018), lineWidth: 1)
         .ignoresSafeArea()
         .allowsHitTesting(false)
-        .drawingGroup()
     }
 
     // MARK: - Header
@@ -732,8 +721,7 @@ struct ContentView: View {
                 .fill(active ? activeColor : Color.cmTextDim.opacity(0.4))
                 .frame(width: 6, height: 6)
                 .overlay(
-                    active ? Circle().fill(activeColor.opacity(0.3)).frame(width: 10, height: 10)
-                        .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: active) : nil
+                    active ? Circle().fill(activeColor.opacity(0.22)).frame(width: 10, height: 10) : nil
                 )
             Text(label).font(.cmMono(8, weight: .bold))
                 .foregroundStyle(active ? activeColor.opacity(0.8) : Color.cmTextDim).cmKerning(0.8)
@@ -857,6 +845,27 @@ struct ContentView: View {
                                 fraction: Double(systemMonitor.currentBrightness), color: .cmBlue)
             }
 
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("TOUCH BAR WIDGET").font(.cmMono(9, weight: .bold)).foregroundStyle(Color.cmTextDim).cmKerning(1)
+                    Spacer()
+                    Text("LAST SLOT").font(.cmMono(8)).foregroundStyle(Color.cmTextDim)
+                }
+
+                Picker("Touch Bar Widget", selection: $touchBarWidgetSettings.selectedPreset) {
+                    ForEach(TouchBarWidgetPreset.allCases) { preset in
+                        Text(preset.title).tag(preset)
+                    }
+                }
+                .pickerStyle(.menu)
+
+                Text("Choose what the programmable Touch Bar tile shows next to CPU, memory, and fan telemetry.")
+                    .font(.cmMono(8))
+                    .foregroundStyle(Color.cmTextDim)
+            }
+            .padding(12)
+            .cmPanel(accent: .cmBlue)
+
             HStack(spacing: 14) {
                 Image(systemName: "power")
                     .font(.system(size: 16, weight: .medium))
@@ -960,7 +969,6 @@ struct ContentView: View {
                         RoundedRectangle(cornerRadius: 2).fill(Color.cmSurfaceRaised).frame(height: 3)
                         RoundedRectangle(cornerRadius: 2).fill(color)
                             .frame(width: max(0, geo.size.width * fraction), height: 3)
-                            .animation(.easeOut(duration: 0.3), value: fraction)
                     }
                 }
                 .frame(height: 3)
@@ -1015,6 +1023,19 @@ struct ContentView: View {
         if bps >= 1_000_000 { return String(format: "%.1f MB/s", bps / 1_000_000) }
         if bps >= 1_000     { return String(format: "%.0f KB/s", bps / 1_000) }
         return String(format: "%.0f B/s", bps)
+    }
+}
+
+private struct ScanLinePattern: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        var y: CGFloat = 0
+        while y < rect.height {
+            path.move(to: CGPoint(x: rect.minX, y: y))
+            path.addLine(to: CGPoint(x: rect.maxX, y: y))
+            y += 3
+        }
+        return path
     }
 }
 
