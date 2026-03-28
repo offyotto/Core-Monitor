@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Core-Monitor | The all-in-one macOS control center</title>
+  <meta name="description" content="Core-Monitor is an open-source macOS control center with fan control, live monitoring, benchmark tools, a Touch Bar HUD, menu bar stats, and CoreVisor virtualization.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="#top">
+        <span class="brand-mark">CM</span>
+        <span class="brand-text">Core-Monitor</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#screens">Screens</a>
+        <a href="#install">Install</a>
+        <a href="#gatekeeper">Gatekeeper</a>
+        <a href="#corevisor">CoreVisor</a>
+      </nav>
+      <a class="nav-download" href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Download Latest</a>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Open-source macOS control center</p>
+          <h1>The clean way to monitor, control, benchmark, and virtualize your Mac.</h1>
+          <p class="hero-lead">
+            Core-Monitor combines live system monitoring, real fan control, menu bar stats, a persistent Touch Bar HUD, built-in benchmarking, and CoreVisor virtualization in one native Swift app.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Download Latest Release</a>
+            <a class="button secondary" href="#install">Install Guide</a>
+            <a class="button ghost" href="https://github.com/offyotto-sl3/Core-Monitor">View on GitHub</a>
+          </div>
+          <ul class="hero-points">
+            <li>No subscriptions</li>
+            <li>No telemetry</li>
+            <li>No Electron shell</li>
+            <li>No split-up utility stack</li>
+          </ul>
+        </div>
+
+        <div class="hero-panel">
+          <div class="hero-card">
+            <p class="card-label">What it replaces</p>
+            <div class="replace-grid">
+              <span>Macs Fan Control</span>
+              <span>Stats</span>
+              <span>TG Pro</span>
+              <span>VM frontends</span>
+            </div>
+          </div>
+          <div class="hero-card hero-card-accent">
+            <p class="card-label">Why it is different</p>
+            <p>
+              Most Mac utilities solve one layer of the problem. Core-Monitor connects system telemetry, fan control, Touch Bar visibility, benchmarking, and VM workflows in the same app.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="quick-install" id="install">
+        <div class="section-heading">
+          <p class="eyebrow">Install</p>
+          <h2>Get into the app fast.</h2>
+        </div>
+        <div class="install-grid">
+          <article class="install-card install-card-main">
+            <p class="card-step">1. Download</p>
+            <h3>Grab the latest release directly from GitHub.</h3>
+            <p>
+              The download button always points at the newest published release, so you do not need to hunt around the repository.
+            </p>
+            <a class="button primary" href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Download Latest Release</a>
+          </article>
+          <article class="install-card">
+            <p class="card-step">2. First launch</p>
+            <h3>Approve Gatekeeper once.</h3>
+            <p>
+              Core-Monitor is not signed with a paid Apple Developer certificate, so macOS may block first launch until you press <strong>Open Anyway</strong> in Privacy &amp; Security.
+            </p>
+            <a class="text-link" href="#gatekeeper">See Gatekeeper steps</a>
+          </article>
+          <article class="install-card">
+            <p class="card-step">3. Unlock the advanced parts</p>
+            <h3>Helper, login item, and CoreVisor extras.</h3>
+            <p>
+              Fan writes use the helper path when needed, launch-at-login needs standard macOS approval, and Windows 11 ARM workflows in CoreVisor need <code>swtpm</code>.
+            </p>
+            <a class="text-link" href="#install-details">See the install checklist</a>
+          </article>
+        </div>
+      </section>
+
+      <section class="screens" id="screens">
+        <div class="section-heading">
+          <p class="eyebrow">UI</p>
+          <h2>Built like a polished desktop app, not a pile of menus.</h2>
+        </div>
+        <div class="showcase-grid">
+          <figure class="showcase-card showcase-large">
+            <img src="images/ui/dashboard-v2.png" alt="Core-Monitor dashboard showing live macOS monitoring, fan control, and system metrics.">
+            <figcaption>
+              <strong>Dashboard</strong>
+              <span>The deep view for thermals, load, memory, power, fan behavior, benchmarking, and CoreVisor-aware system state.</span>
+            </figcaption>
+          </figure>
+          <figure class="showcase-card">
+            <img src="images/ui/menu-bar-v2.png" alt="Core-Monitor menu bar panel showing quick stats and controls.">
+            <figcaption>
+              <strong>Menu bar</strong>
+              <span>Fast checks, app actions, fan state, and direct CoreVisor access without opening the full dashboard.</span>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="feature-band" id="features">
+        <div class="section-heading">
+          <p class="eyebrow">Features</p>
+          <h2>One app, multiple control surfaces.</h2>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <h3>Live monitoring</h3>
+            <p>CPU activity, Apple silicon E-core and P-core awareness, memory pressure, thermal readings, power, battery state, and fan RPM in one native UI.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Real fan control</h3>
+            <p>SMC-backed helper flow, hardware-aware fan mode handling, profiles, and wake re-apply behavior instead of a fake read-only monitor.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Touch Bar HUD</h3>
+            <p>A persistent Touch Bar stats surface driven by reverse-engineered presentation behavior so the hardware stays useful beyond the foreground app.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Benchmarking</h3>
+            <p>Sustained benchmark runs with thermal context, quality ratings, local leaderboard storage, and fan-condition awareness.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Menu bar utility</h3>
+            <p>At-a-glance status and quick controls for the moments where opening a full dashboard would be overkill.</p>
+          </article>
+          <article class="feature-card">
+            <h3>CoreVisor</h3>
+            <p>Built-in virtualization workflows with Apple Virtualization and QEMU, plus a guided Windows 11 ARM path instead of a separate VM app.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="details" id="install-details">
+        <div class="section-heading">
+          <p class="eyebrow">First-run checklist</p>
+          <h2>Everything that matters after you launch it.</h2>
+        </div>
+        <div class="details-grid">
+          <article class="detail-card">
+            <h3>Open the app</h3>
+            <p>Launch Core-Monitor from the downloaded release or from Xcode if you built from source.</p>
+          </article>
+          <article class="detail-card">
+            <h3>Approve Gatekeeper</h3>
+            <p>If macOS blocks first launch, use the documented <strong>Open Anyway</strong> flow once. After that, the app launches normally.</p>
+          </article>
+          <article class="detail-card">
+            <h3>Enable helper-backed fan writes if you want them</h3>
+            <p>You can browse monitoring features without the helper, but fan writes and deeper hardware interaction depend on that path being available.</p>
+          </article>
+          <article class="detail-card">
+            <h3>Enable Launch at Login if you want it always nearby</h3>
+            <p>Core-Monitor supports launch-at-login through normal macOS login item approval instead of custom weirdness.</p>
+          </article>
+          <article class="detail-card">
+            <h3>Install <code>swtpm</code> for Windows 11 ARM in CoreVisor</h3>
+            <p>The advanced Windows workflow expects TPM support. CoreVisor points you toward <code>brew install swtpm</code> when it is missing.</p>
+          </article>
+          <article class="detail-card">
+            <h3>Use the benchmark and leaderboard locally</h3>
+            <p>Benchmark results stay local, letting you compare your own machines and repeated runs with thermal context attached.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="video-section">
+        <div class="section-heading">
+          <p class="eyebrow">Walkthrough</p>
+          <h2>Watch the install flow before you click anything.</h2>
+        </div>
+        <div class="video-layout">
+          <div class="video-copy">
+            <p>
+              If you want the shortest path from download to running app, the recorded install walkthrough shows the expected first-run flow and what macOS is going to ask you.
+            </p>
+            <div class="video-actions">
+              <a class="button secondary" href="videos/install-walkthrough.mov">Open Install Video</a>
+              <a class="button ghost" href="#gatekeeper">Jump to Gatekeeper screenshots</a>
+            </div>
+          </div>
+          <video class="install-video" controls preload="metadata">
+            <source src="videos/install-walkthrough.mov" type="video/quicktime">
+            Your browser does not support the install video. Use the direct file link instead.
+          </video>
+        </div>
+      </section>
+
+      <section class="gatekeeper" id="gatekeeper">
+        <div class="section-heading">
+          <p class="eyebrow">Gatekeeper</p>
+          <h2>If macOS blocks first launch, this is the exact path through it.</h2>
+        </div>
+        <ol class="steps">
+          <li>Try to open Core-Monitor once and let macOS block it.</li>
+          <li>Open <strong>System Settings</strong>.</li>
+          <li>Go to <strong>Privacy &amp; Security</strong>.</li>
+          <li>Press <strong>Open Anyway</strong> for Core-Monitor.</li>
+          <li>Confirm the follow-up dialog and launch the app.</li>
+        </ol>
+        <div class="gatekeeper-grid">
+          <figure class="gatekeeper-card">
+            <img src="images/gatekeeper/01-blocked.png" alt="macOS blocks Core-Monitor on first launch.">
+            <figcaption>1. macOS blocks the app on first launch.</figcaption>
+          </figure>
+          <figure class="gatekeeper-card">
+            <img src="images/gatekeeper/02-general.png" alt="System Settings open to the main view.">
+            <figcaption>2. Open System Settings.</figcaption>
+          </figure>
+          <figure class="gatekeeper-card">
+            <img src="images/gatekeeper/03-open-anyway.png" alt="Privacy and Security showing the Open Anyway button for Core-Monitor.">
+            <figcaption>3. Press Open Anyway in Privacy &amp; Security.</figcaption>
+          </figure>
+          <figure class="gatekeeper-card">
+            <img src="images/gatekeeper/04-confirm-open.png" alt="macOS confirmation dialog for opening Core-Monitor anyway.">
+            <figcaption>4. Confirm the follow-up dialog.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="corevisor" id="corevisor">
+        <div class="section-heading">
+          <p class="eyebrow">CoreVisor</p>
+          <h2>Virtualization is part of the app on purpose.</h2>
+        </div>
+        <div class="corevisor-layout">
+          <div class="corevisor-copy">
+            <p>
+              CoreVisor is what turns Core-Monitor from a good system utility into a broader Mac control center. Virtual machines stress the exact things the app already understands: CPU load, memory pressure, thermals, fan behavior, and power.
+            </p>
+            <p>
+              Instead of making you jump into another frontend, CoreVisor keeps monitoring and workload management in the same place.
+            </p>
+          </div>
+          <div class="corevisor-grid">
+            <article class="detail-card">
+              <h3>Apple Virtualization + QEMU</h3>
+              <p>Linux workflows can use Apple Virtualization while broader guest support runs through QEMU-backed paths.</p>
+            </article>
+            <article class="detail-card">
+              <h3>Windows 11 ARM “Do It For Me”</h3>
+              <p>Guided setup for Windows 11 ARM with ISO prep, VirtIO handling, TPM support, and a much friendlier path than hand-building commands.</p>
+            </article>
+            <article class="detail-card">
+              <h3>Snapshots, USB, and TPM</h3>
+              <p>CoreVisor is not just a launch button. It includes practical VM workflows for repeatable testing and real use.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-band">
+        <div>
+          <p class="eyebrow">Ready to try it?</p>
+          <h2>Download the newest release or inspect the full source.</h2>
+        </div>
+        <div class="cta-actions">
+          <a class="button primary" href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Download Latest Release</a>
+          <a class="button ghost" href="https://github.com/offyotto-sl3/Core-Monitor">Browse Source on GitHub</a>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
