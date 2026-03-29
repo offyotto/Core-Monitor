@@ -82,7 +82,6 @@
 				353B02CD2F640A0700A65F2C /* Sources */,
 				353B02CE2F640A0700A65F2C /* Frameworks */,
 				353B02CF2F640A0700A65F2C /* Resources */,
-				35AA00012F70000100ABCDEF /* Bundle Embedded QEMU */,
 			);
 			buildRules = (
 			);
@@ -167,35 +166,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		35AA00012F70000100ABCDEF /* Bundle Embedded QEMU */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(PROJECT_DIR)/EmbeddedQEMU/qemu-system-aarch64",
-				"$(PROJECT_DIR)/EmbeddedQEMU/qemu-system-x86_64",
-				"$(PROJECT_DIR)/EmbeddedQEMU/qemu-img",
-				"$(PROJECT_DIR)/EmbeddedQEMU/qemu-virgl",
-			);
-			name = "Bundle Embedded QEMU";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/EmbeddedQEMU/qemu-system-aarch64",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/EmbeddedQEMU/qemu-system-x86_64",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/EmbeddedQEMU/qemu-img",
-				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/EmbeddedQEMU/qemu-virgl",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "set -e\nSRC_DIR=${PROJECT_DIR}/EmbeddedQEMU\nRES_DIR=${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EmbeddedQEMU\nLIBS_DIR=${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/libs\nDEBUG_DYLIB=${TARGET_BUILD_DIR}/${EXECUTABLE_PATH}.debug.dylib\nSIGN_IDENTITY=${EXPANDED_CODE_SIGN_IDENTITY}\nQEMU_ENTITLEMENTS=${PROJECT_DIR}/EmbeddedQEMU.entitlements\n\nmkdir -p ${RES_DIR} ${RES_DIR}/lib ${LIBS_DIR}\n\ncopy_bin() {\n  NAME=$1\n  if [ -f ${SRC_DIR}/${NAME} ]; then\n    cp -f ${SRC_DIR}/${NAME} ${RES_DIR}/${NAME}\n    chmod +x ${RES_DIR}/${NAME}\n  fi\n}\n\nsign_runtime_binary() {\n  BIN=$1\n  ENTITLEMENTS=$2\n  if [ ! -f \"${BIN}\" ]; then\n    return\n  fi\n  if [ -n \"${SIGN_IDENTITY}\" ] && [ \"${SIGN_IDENTITY}\" != \"-\" ]; then\n    if [ -n \"${ENTITLEMENTS}\" ]; then\n      codesign --force --sign \"${SIGN_IDENTITY}\" --timestamp --options runtime --entitlements \"${ENTITLEMENTS}\" \"${BIN}\"\n    else\n      codesign --force --sign \"${SIGN_IDENTITY}\" --timestamp --options runtime \"${BIN}\"\n    fi\n  fi\n}\n\nsign_library() {\n  LIB=$1\n  if [ ! -f \"${LIB}\" ]; then\n    return\n  fi\n  if [ -n \"${SIGN_IDENTITY}\" ] && [ \"${SIGN_IDENTITY}\" != \"-\" ]; then\n    codesign --force --sign \"${SIGN_IDENTITY}\" --timestamp \"${LIB}\"\n  fi\n}\n\ncopy_bin qemu-system-aarch64\ncopy_bin qemu-system-x86_64\ncopy_bin qemu-img\ncopy_bin qemu-virgl\n\nif [ -d ${SRC_DIR}/lib ]; then\n  cp -f ${SRC_DIR}/lib/*.dylib ${RES_DIR}/lib/ 2>/dev/null || true\n  cp -f ${SRC_DIR}/lib/*.dylib ${LIBS_DIR}/ 2>/dev/null || true\nfi\n\nif [ -f ${DEBUG_DYLIB} ]; then\n  install_name_tool -change /opt/homebrew/opt/virglrenderer/lib/libvirglrenderer.1.dylib @executable_path/../libs/libvirglrenderer.1.dylib ${DEBUG_DYLIB} 2>/dev/null || true\nfi\n\n# Strip Finder/resource-fork metadata so codesign does not fail.\nxattr -cr ${RES_DIR} ${LIBS_DIR} 2>/dev/null || true\nAPP_BUNDLE=${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\nxattr -cr ${APP_BUNDLE} 2>/dev/null || true\n\nfor DYLIB in ${RES_DIR}/lib/*.dylib ${LIBS_DIR}/*.dylib; do\n  [ -e \"${DYLIB}\" ] || continue\n  sign_library \"${DYLIB}\"\ndone\n\nsign_runtime_binary \"${RES_DIR}/qemu-system-aarch64\" \"${QEMU_ENTITLEMENTS}\"\nsign_runtime_binary \"${RES_DIR}/qemu-system-x86_64\" \"${QEMU_ENTITLEMENTS}\"\nsign_runtime_binary \"${RES_DIR}/qemu-img\" \"\"\nsign_runtime_binary \"${RES_DIR}/qemu-virgl\" \"\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		353B02CD2F640A0700A65F2C /* Sources */ = {
@@ -354,6 +324,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "App-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -361,7 +332,7 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = "ventaphobia.Core-Monitor";
+				PRODUCT_BUNDLE_IDENTIFIER = "CoreTools.Core-Monitor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
@@ -398,6 +369,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "App-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -405,7 +377,7 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = "ventaphobia.Core-Monitor";
+				PRODUCT_BUNDLE_IDENTIFIER = "CoreTools.Core-Monitor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;

@@ -69,12 +69,12 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgAmber,
         headline: "Welcome to Core Monitor",
         subheadline: "Your M-series Mac, fully visible.",
-        body: "Core Monitor gives you deep, real-time insight into every subsystem of your Apple Silicon Mac — thermals, memory pressure, fan curves, and a full hypervisor for running VMs.",
+        body: "Core Monitor gives you deep, real-time insight into your Apple Silicon Mac — thermals, memory pressure, fan behavior, power draw, and a programmable Touch Bar.",
         bullets: [
             ("thermometer.medium",    .wgAmber,  "Live CPU, GPU & memory telemetry"),
             ("fan.fill",              .wgBlue,   "Intelligent fan speed control"),
-            ("square.stack.3d.up",    .wgPurple, "CoreVisor — QEMU & Apple VZ VMs"),
             ("waveform.path.ecg",     .wgGreen,  "Touch Bar metrics & sparklines"),
+            ("bolt.fill",             .wgPurple, "Power, battery, brightness and disk activity"),
         ]
     ),
     GuideStep(
@@ -97,26 +97,26 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgBlue,
         headline: "Fan Control",
         subheadline: "Quiet when idle. Aggressive when it counts.",
-        body: "The fan controller supports Smart, Silent, Balanced, Performance, Max, Manual, and System Auto modes. It can re-apply active profiles after wake and uses the helper to talk to the right SMC fan-control keys across different machines.",
+        body: "The fan controller supports Smart, Silent, Balanced, Performance, Max, Manual, and System Auto modes. It can re-apply active profiles after wake and only sends write commands through an already-installed helper.",
         bullets: [
             ("bolt.fill",             .wgAmber,  "Smart mode ramps earlier under sustained load"),
             ("fanblades.fill",        .wgBlue,   "Balanced / Performance / Max quick profiles"),
             ("arrow.clockwise",       .wgPurple, "Wake re-apply for active fan profiles"),
-            ("lock.open.fill",        .wgGreen,  "Requires SMCHelper privileged helper"),
+            ("lock.shield.fill",      .wgGreen,  "No in-app admin prompts or self-install"),
         ]
     ),
     GuideStep(
         id: 3,
-        icon: "square.stack.3d.up",
+        icon: "display.2",
         iconColor: .wgPurple,
-        headline: "CoreVisor",
-        subheadline: "Full VMs, right inside Core Monitor.",
-        body: "CoreVisor supports both Apple's Virtualization Framework for lightweight Linux/macOS guests and QEMU for full ARM64 emulation — including Windows 11 ARM.",
+        headline: "Touch Bar",
+        subheadline: "OLED space should look intentional.",
+        body: "Core Monitor can replace the system Touch Bar with a dense OLED dashboard for CPU, memory, fan, and one configurable custom widget.",
         bullets: [
-            ("apple.logo",            .wgText,   "Apple VZ — lightweight Linux & macOS guests"),
-            ("terminal.fill",         .wgGreen,  "QEMU — full ARM64: Windows, NetBSD, UNIX"),
-            ("externaldrive.badge.plus", .wgBlue, "Import pre-built VHDX / qcow2 disk images"),
-            ("arrow.down.circle.fill", .wgAmber, "VirtIO drivers auto-download on first Windows boot"),
+            ("battery.100",           .wgGreen,  "Custom widget can show battery, power, fan mode, volume or brightness"),
+            ("rectangle.3.group",     .wgBlue,   "Switch back to the system Touch Bar any time"),
+            ("circle.grid.2x2.fill",  .wgAmber,  "OLED-black chip styling for better contrast"),
+            ("waveform.path.ecg",     .wgPurple, "Live metrics update every second"),
         ]
     ),
     GuideStep(
@@ -125,11 +125,11 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgGreen,
         headline: "You're all set.",
         subheadline: "Dive in whenever you're ready.",
-        body: "The dashboard is live and already collecting data. Open CoreVisor from the toolbar to create or import your first VM, or explore the fan and thermal panels below.",
+        body: "The dashboard is live and already collecting data. Explore the thermal, power, fan, and benchmark panels, or switch to Basic Mode if you want the lightest possible UI.",
         bullets: [
-            ("sidebar.left",          .wgAmber,  "CoreVisor panel — toolbar top-right"),
+            ("sidebar.left",          .wgAmber,  "Dashboard sections collapse with a click"),
             ("fan.fill",              .wgBlue,   "Fan Control — scroll down on dashboard"),
-            ("arrow.down.circle",     .wgPurple, "SMCHelper — install once for fan write access"),
+            ("lock.shield",           .wgPurple, "Fan writes require an already-installed helper"),
             ("questionmark.circle",   .wgGreen,  "This guide lives in Help → Show Guide"),
         ]
     ),

@@ -3,7 +3,6 @@ import Combine
 import SwiftUI
 
 enum TouchBarWidgetPreset: String, CaseIterable, Identifiable {
-    case virtualMachines
     case battery
     case power
     case volume
@@ -14,7 +13,6 @@ enum TouchBarWidgetPreset: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .virtualMachines: return "Virtual Machines"
         case .battery: return "Battery"
         case .power: return "Power"
         case .volume: return "Volume"
@@ -36,7 +34,7 @@ final class TouchBarWidgetSettings: ObservableObject {
 
     init() {
         let rawValue = UserDefaults.standard.string(forKey: Self.selectedPresetKey)
-        selectedPreset = TouchBarWidgetPreset(rawValue: rawValue ?? "") ?? .virtualMachines
+        selectedPreset = TouchBarWidgetPreset(rawValue: rawValue ?? "") ?? .battery
     }
 }
 
@@ -49,12 +47,10 @@ final class AppCoordinator: ObservableObject {
 
     let systemMonitor: SystemMonitor
     let fanController: FanController
-    let coreVisorManager: CoreVisorManager
     let touchBarWidgetSettings = TouchBarWidgetSettings()
 
     private let touchBarPresenter = TouchBarPrivatePresenter()
     private var touchBarTimer: Timer?
-    private var vmBoostObserver: AnyCancellable?
     private var touchBarWidgetObserver: AnyCancellable?
     private let touchBarModeKey = "coremonitor.touchBarMode"
 
@@ -69,7 +65,6 @@ final class AppCoordinator: ObservableObject {
         let monitor = SystemMonitor()
         self.systemMonitor = monitor
         self.fanController = FanController(systemMonitor: monitor)
-        self.coreVisorManager = CoreVisorManager()
         start()
     }
 
@@ -80,14 +75,6 @@ final class AppCoordinator: ObservableObject {
     func start() {
         systemMonitor.startMonitoring()
         applySavedTouchBarMode()
-
-        vmBoostObserver = coreVisorManager.$machineStates
-            .receive(on: RunLoop.main)
-            .sink { [weak self] states in
-                guard let self else { return }
-                let anyRunning = states.values.contains { $0 == .running || $0 == .starting }
-                self.fanController.setVMBoost(anyRunning)
-            }
 
         touchBarWidgetObserver = touchBarWidgetSettings.$selectedPreset
             .dropFirst()
@@ -100,7 +87,6 @@ final class AppCoordinator: ObservableObject {
     func stop() {
         stopAppTouchBar()
         systemMonitor.stopMonitoring()
-        vmBoostObserver?.cancel()
         touchBarWidgetObserver?.cancel()
     }
 
@@ -131,11 +117,8 @@ final class AppCoordinator: ObservableObject {
         append(&memUsageHistory, memUsage)
         append(&fanHistory,      fanFrac * 100)
 
-        let vmCount = coreVisorManager.machines.filter {
-            coreVisorManager.runtimeState(for: $0) == .running
-        }.count
         let batteryPercent = systemMonitor.batteryInfo.chargePercent
-        let customWidget = touchBarCustomWidget(vmCount: vmCount, batteryPercent: batteryPercent)
+        let customWidget = touchBarCustomWidget(batteryPercent: batteryPercent)
 
         touchBarPresenter.updateMetrics(
             cpuPercent:  cpuUsage,
@@ -144,7 +127,6 @@ final class AppCoordinator: ObservableObject {
             memPressure: systemMonitor.memoryPressure,
             fanRPM:      fanRPM,
             fanFrac:     fanFrac,
-            vmCount:     vmCount,
             cpuHistory:  cpuUsageHistory,
             memHistory:  memUsageHistory,
             fanHistory:  fanHistory,
@@ -154,16 +136,8 @@ final class AppCoordinator: ObservableObject {
         )
     }
 
-    private func touchBarCustomWidget(vmCount: Int, batteryPercent: Int?) -> TouchBarCustomWidget {
+    private func touchBarCustomWidget(batteryPercent: Int?) -> TouchBarCustomWidget {
         switch touchBarWidgetSettings.selectedPreset {
-        case .virtualMachines:
-            return TouchBarCustomWidget(
-                label: "VM",
-                value: "\(vmCount) VM\(vmCount == 1 ? "" : "s")",
-                symbolName: "server.rack",
-                color: .systemOrange,
-                alerting: false
-            )
         case .battery:
             let value: String
             if let batteryPercent {

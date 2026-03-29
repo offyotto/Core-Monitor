@@ -11,9 +11,7 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
     private let systemMonitor:    SystemMonitor
     private let fanController:    FanController
     private let updater:          AppUpdater
-    private let coreVisorManager: CoreVisorManager
     private let openDashboardAction: () -> Void
-    private let openCoreVisorAction: () -> Void
     private let restoreAppTouchBarAction: () -> Void
     private let revertTouchBarAction: () -> Void
 
@@ -27,18 +25,14 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
         systemMonitor:    SystemMonitor,
         fanController:    FanController,
         updater:          AppUpdater,
-        coreVisorManager: CoreVisorManager,
         openDashboardAction: @escaping () -> Void,
-        openCoreVisorAction: @escaping () -> Void,
         restoreAppTouchBarAction: @escaping () -> Void,
         revertTouchBarAction: @escaping () -> Void
     ) {
         self.systemMonitor    = systemMonitor
         self.fanController    = fanController
         self.updater          = updater
-        self.coreVisorManager = coreVisorManager
         self.openDashboardAction = openDashboardAction
-        self.openCoreVisorAction = openCoreVisorAction
         self.restoreAppTouchBarAction = restoreAppTouchBarAction
         self.revertTouchBarAction = revertTouchBarAction
         super.init()
@@ -108,14 +102,9 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
             systemMonitor:    systemMonitor,
             fanController:    fanController,
             updater:          updater,
-            coreVisorManager: coreVisorManager,
             openDashboardAction: { [weak self] in
                 self?.popover.performClose(nil)
                 self?.openDashboardAction()
-            },
-            openCoreVisorAction: { [weak self] in
-                self?.popover.performClose(nil)
-                self?.openCoreVisorAction()
             },
             restoreAppTouchBarAction: { [weak self] in
                 self?.popover.performClose(nil)

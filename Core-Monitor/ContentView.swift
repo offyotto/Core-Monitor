@@ -279,17 +279,6 @@ private struct FanControlPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if fanController.vmBoostActive {
-                HStack(spacing: 4) {
-                    Image(systemName: "server.rack").font(.system(size: 8, weight: .bold)).foregroundStyle(Color.cmGreen)
-                    Text("VM BOOST").font(.cmMono(8, weight: .bold)).foregroundStyle(Color.cmGreen).cmKerning(0.5)
-                }
-                .padding(.horizontal, 6).padding(.vertical, 3)
-                .background(Color.cmGreen.opacity(0.10))
-                .clipShape(RoundedRectangle(cornerRadius: 4))
-                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.cmGreen.opacity(0.25)))
-            }
-
             HStack(spacing: 6) {
                 Button { fanController.resetToSystemAutomatic() } label: {
                     Label("RESET AUTO", systemImage: "arrow.counterclockwise")
@@ -565,7 +554,6 @@ struct ContentView: View {
     let systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
     @ObservedObject var startupManager: StartupManager
-    @ObservedObject var coreVisorManager: CoreVisorManager
     @ObservedObject var touchBarWidgetSettings: TouchBarWidgetSettings
     @StateObject private var updater = AppUpdater.shared
     @StateObject private var modeState = AppModeState()
@@ -585,8 +573,6 @@ struct ContentView: View {
     @State private var battExpanded    = true
     @State private var sysExpanded     = true
 
-    @State private var showCoreVisorSetup      = false
-    @State private var hasOpenedCoreVisorSetup = false
     @State private var showUpdateCheck         = false
     @State private var dashboardState = DashboardState()
 
@@ -602,9 +588,6 @@ struct ContentView: View {
             refreshDashboardState()
             updateHistories()
         }
-        .onReceive(NotificationCenter.default.publisher(for: .openCoreVisorSheet)) { _ in
-            showCoreVisorSetup = true
-        }
         .onChange(of: modeState.isBasicMode) { newValue in
             systemMonitor.setBasicMode(newValue)
         }
@@ -618,9 +601,6 @@ struct ContentView: View {
     private var fullDashboard: some View {
         ZStack {
             dashboardRoot
-                .sheet(isPresented: $showCoreVisorSetup) {
-                    CoreVisorSetupView(manager: coreVisorManager, hasOpenedCoreVisorSetup: $hasOpenedCoreVisorSetup)
-                }
                 .sheet(isPresented: $showUpdateCheck) {
                     UpdateCheckSheet(updater: updater)
                 }
@@ -916,43 +896,6 @@ struct ContentView: View {
                 .buttonStyle(.plain)
             }
             .padding(12).cmPanel(accent: startupManager.isEnabled ? .cmAmber : .clear)
-
-            Button { showCoreVisorSetup = true } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "server.rack").font(.system(size: 12, weight: .bold)).foregroundStyle(Color.cmAmber)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("START COREVISOR").font(.cmMono(10, weight: .bold)).foregroundStyle(Color.cmAmber).cmKerning(0.8)
-                        if !coreVisorManager.machines.isEmpty {
-                            let running = coreVisorManager.machines.filter { coreVisorManager.runtimeState(for: $0) == .running }.count
-                            let total = coreVisorManager.machines.count
-                            Text("\(total) VM\(total == 1 ? "" : "s") · \(running) running")
-                                .font(.cmMono(8))
-                                .foregroundStyle(running > 0 ? Color.cmGreen.opacity(0.8) : Color.cmTextDim)
-                        }
-                    }
-                    Spacer()
-                    if coreVisorManager.hasAnyRunningMachine {
-                        HStack(spacing: 4) {
-                            Circle().fill(Color.cmGreen).frame(width: 6, height: 6)
-                                .overlay(Circle().fill(Color.cmGreen.opacity(0.3)).frame(width: 10, height: 10))
-                            let runCount = coreVisorManager.machines.filter { coreVisorManager.runtimeState(for: $0) == .running }.count
-                            Text("\(runCount) RUNNING").font(.cmMono(8, weight: .bold)).foregroundStyle(Color.cmGreen).cmKerning(0.5)
-                        }
-                    } else if coreVisorManager.isDownloadingVirtioISO {
-                        HStack(spacing: 5) {
-                            ProgressView().scaleEffect(0.6).frame(width: 10, height: 10)
-                            Text("DOWNLOADING ISO").font(.cmMono(8, weight: .bold)).foregroundStyle(Color.cmAmber).cmKerning(0.5)
-                        }
-                    } else {
-                        Image(systemName: "arrow.up.forward.app").font(.system(size: 10, weight: .bold)).foregroundStyle(Color.cmAmber.opacity(0.75))
-                    }
-                }
-                .padding(.horizontal, 12).padding(.vertical, 10)
-                .background(Color.cmAmber.opacity(0.10))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.cmAmber.opacity(0.30), lineWidth: 1))
-            }
-            .buttonStyle(.plain)
 
             if let msg = startupManager.errorMessage {
                 HStack(alignment: .top, spacing: 8) {

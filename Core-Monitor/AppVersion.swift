@@ -2,5 +2,5 @@ import Foundation
 
 enum AppVersion {
     // Update this when you ship a new release tag.
-    static let current = "9.1"
+    static let current = "v10.1"
 }

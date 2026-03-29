@@ -54,7 +54,6 @@ final class TouchBarPrivatePresenter: NSObject {
         memPressure: MemoryPressureLevel,
         fanRPM: Int,
         fanFrac: Double,
-        vmCount: Int,
         cpuHistory: [Double],
         memHistory: [Double],
         fanHistory: [Double],
@@ -67,7 +66,6 @@ final class TouchBarPrivatePresenter: NSObject {
             cpuPercent: cpuPercent, cpuTempC: cpuTempC,
             memPercent: memPercent, memPressure: memPressure,
             fanRPM: fanRPM, fanFrac: fanFrac,
-            vmCount: vmCount,
             cpuHistory: cpuHistory, memHistory: memHistory, fanHistory: fanHistory,
             customWidget: customWidget,
             volume: volume, brightness: brightness
@@ -126,7 +124,7 @@ final class CoreMonitorTouchBarView: NSView {
     private let cpuChip = MetricChip(label: "CPU",  color: .systemBlue,   symbolName: "cpu")
     private let memChip = MetricChip(label: "MEM",  color: .systemPurple, symbolName: "memorychip")
     private let fanChip = MetricChip(label: "FAN",  color: .systemTeal,   symbolName: "wind")
-    private let customChip = MetricChip(label: "WIDGET", color: .systemOrange, symbolName: "server.rack")
+    private let customChip = MetricChip(label: "WIDGET", color: .systemGreen, symbolName: "battery.100")
 
     private lazy var stack: NSStackView = {
         let s = NSStackView(views: [cpuChip, memChip, fanChip, customChip])
@@ -170,12 +168,6 @@ final class CoreMonitorTouchBarView: NSView {
             } else if s.hasPrefix("FAN ") {
                 let rpm = s.dropFirst(4).replacingOccurrences(of: "rpm", with: "").trimmingCharacters(in: .whitespaces)
                 fanChip.set(value: "\(rpm) rpm", sparkValues: [])
-            } else if s.contains("VM") {
-                let num = s.filter { $0.isNumber }
-                if !num.isEmpty {
-                    customChip.configure(label: "VM", color: .systemOrange, symbolName: "server.rack")
-                    customChip.set(value: "\(num) running", sparkValues: [])
-                }
             }
         }
     }
@@ -184,7 +176,6 @@ final class CoreMonitorTouchBarView: NSView {
         cpuPercent: Double, cpuTempC: Double?,
         memPercent: Double, memPressure: MemoryPressureLevel,
         fanRPM: Int, fanFrac: Double,
-        vmCount: Int,
         cpuHistory: [Double], memHistory: [Double], fanHistory: [Double],
         customWidget: TouchBarCustomWidget,
         volume: Float, brightness: Float

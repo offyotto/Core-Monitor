@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import Security
 
 @MainActor
 final class SMCHelperManager: ObservableObject {
@@ -9,6 +10,7 @@ final class SMCHelperManager: ObservableObject {
     @Published var statusMessage: String?
 
     private let helperLabel = "ventaphobia.smc-helper"
+    private let fileManager = FileManager.default
 
     private init() {
         refreshStatus()
@@ -16,9 +18,7 @@ final class SMCHelperManager: ObservableObject {
 
     private var helperCandidates: [String] {
         var candidates = [
-            "/Library/PrivilegedHelperTools/\(helperLabel)",
-            "/usr/local/bin/smc-helper",
-            "/opt/homebrew/bin/smc-helper"
+            "/Library/PrivilegedHelperTools/\(helperLabel)"
         ]
 #if DEBUG
         let derivedProductsHelper = URL(fileURLWithPath: Bundle.main.bundlePath)
@@ -34,7 +34,7 @@ final class SMCHelperManager: ObservableObject {
     }
 
     func refreshStatus() {
-        isInstalled = helperCandidates.contains { FileManager.default.fileExists(atPath: $0) }
+        isInstalled = helperCandidates.contains { validatedHelperURL(atPath: $0) != nil }
         if isInstalled, statusMessage == "Fan write access unavailable: no installed helper found." {
             statusMessage = nil
         }
@@ -43,13 +43,13 @@ final class SMCHelperManager: ObservableObject {
     func execute(arguments: [String]) -> Bool {
         refreshStatus()
 
-        guard let helperPath = helperCandidates.first(where: { FileManager.default.fileExists(atPath: $0) }) else {
+        guard let helperURL = helperCandidates.compactMap({ validatedHelperURL(atPath: $0) }).first else {
             statusMessage = "Fan write access unavailable: no installed helper found."
             return false
         }
 
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: helperPath)
+        process.executableURL = helperURL
         process.arguments = arguments
 
         do {
@@ -65,5 +65,80 @@ final class SMCHelperManager: ObservableObject {
         }
 
         return false
+    }
+
+    private func validatedHelperURL(atPath path: String) -> URL? {
+        let url = URL(fileURLWithPath: path).standardizedFileURL
+        guard isPathAllowed(url) else { return nil }
+        guard let values = try? url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey]),
+              values.isRegularFile == true,
+              values.isSymbolicLink != true else {
+            return nil
+        }
+        guard let attributes = try? fileManager.attributesOfItem(atPath: url.path) else {
+            return nil
+        }
+        guard isOwnershipValid(for: url, attributes: attributes),
+              isPermissionsValid(attributes: attributes),
+              isCodeSignatureValid(for: url) else {
+            return nil
+        }
+        return url
+    }
+
+    private func isPathAllowed(_ url: URL) -> Bool {
+        if url.path == "/Library/PrivilegedHelperTools/\(helperLabel)" {
+            return true
+        }
+#if DEBUG
+        let derivedProductsHelper = URL(fileURLWithPath: Bundle.main.bundlePath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("smc-helper")
+            .standardizedFileURL
+        let workspaceBuildHelper = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appendingPathComponent("Core-Monitor/Products/smc-helper")
+            .standardizedFileURL
+        return url == derivedProductsHelper || url == workspaceBuildHelper
+#else
+        return false
+#endif
+    }
+
+    private func isOwnershipValid(for url: URL, attributes: [FileAttributeKey: Any]) -> Bool {
+#if DEBUG
+        if url.path != "/Library/PrivilegedHelperTools/\(helperLabel)" {
+            if let owner = attributes[.ownerAccountID] as? NSNumber {
+                return owner.uint32Value == getuid()
+            }
+            return false
+        }
+#endif
+        guard let owner = attributes[.ownerAccountID] as? NSNumber else {
+            return false
+        }
+        return owner.uint32Value == 0
+    }
+
+    private func isPermissionsValid(attributes: [FileAttributeKey: Any]) -> Bool {
+        guard let permissions = attributes[.posixPermissions] as? NSNumber else {
+            return false
+        }
+        let mode = permissions.uint16Value
+        return (mode & 0o022) == 0
+    }
+
+    private func isCodeSignatureValid(for url: URL) -> Bool {
+#if DEBUG
+        if url.path != "/Library/PrivilegedHelperTools/\(helperLabel)" {
+            return true
+        }
+#endif
+        var staticCode: SecStaticCode?
+        let createStatus = SecStaticCodeCreateWithPath(url as CFURL, [], &staticCode)
+        guard createStatus == errSecSuccess, let staticCode else {
+            return false
+        }
+        let checkStatus = SecStaticCodeCheckValidity(staticCode, [], nil)
+        return checkStatus == errSecSuccess
     }
 }

@@ -179,7 +179,6 @@ section {
 .feature-card p,
 .detail-card p,
 .install-card p,
-.corevisor-copy p,
 .hero-card p,
 .video-copy p {
   color: var(--muted);
@@ -243,7 +242,6 @@ section {
 .install-grid,
 .feature-grid,
 .details-grid,
-.corevisor-grid,
 .gatekeeper-grid {
   display: grid;
   gap: 16px;
@@ -300,8 +298,7 @@ section {
 .feature-band,
 .details,
 .video-section,
-.gatekeeper,
-.corevisor {
+.gatekeeper {
   padding-bottom: 34px;
 }
 
@@ -309,8 +306,7 @@ section {
 .showcase-grid,
 .feature-grid,
 .details-grid,
-.video-layout,
-.corevisor-layout {
+.video-layout {
   padding: 24px 34px 0;
 }
 
@@ -360,13 +356,11 @@ section {
 }
 
 .feature-grid,
-.details-grid,
-.corevisor-grid {
+.details-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.video-layout,
-.corevisor-layout {
+.video-layout {
   display: grid;
   grid-template-columns: 0.9fr 1.1fr;
   gap: 20px;
@@ -427,11 +421,9 @@ section {
   .hero,
   .showcase-grid,
   .video-layout,
-  .corevisor-layout,
   .install-grid,
   .feature-grid,
   .details-grid,
-  .corevisor-grid,
   .gatekeeper-grid {
     grid-template-columns: 1fr;
   }
@@ -468,7 +460,6 @@ section {
   .details-grid,
   .video-layout,
   .gatekeeper-grid,
-  .corevisor-layout,
   .steps,
   .cta-band {
     padding-left: 18px;
@@ -490,7 +481,6 @@ section {
   .feature-card p,
   .detail-card p,
   .install-card p,
-  .corevisor-copy p,
   .hero-card p,
   .video-copy p {
     font-size: 0.98rem;

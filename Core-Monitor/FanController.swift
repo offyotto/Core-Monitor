@@ -50,8 +50,6 @@ final class FanController: ObservableObject {
     @Published var autoAggressiveness: Double = 1.5
     @Published var autoMaxSpeed: Int = 6500
     @Published var statusMessage: String = "Idle"
-    /// When true, auto mode adds +0.5 to aggressiveness to compensate for VM thermal load.
-    @Published private(set) var vmBoostActive: Bool = false
     let minSpeed = 1000
     let maxSpeed = 6500
 
@@ -59,7 +57,6 @@ final class FanController: ObservableObject {
     private var controlTimer: Timer?
     private var lastAppliedSpeed: Int = 0
     private let helperManager = SMCHelperManager.shared
-    private var baseAggressiveness: Double = 1.5  // user's chosen value, pre-boost
     private var workspaceObservers: [NSObjectProtocol] = []
     init(systemMonitor: SystemMonitor) {
         self.systemMonitor = systemMonitor
@@ -87,23 +84,7 @@ final class FanController: ObservableObject {
     }
 
     func setAutoAggressiveness(_ value: Double) {
-        baseAggressiveness = max(0.0, min(3.0, value))
-        autoAggressiveness = vmBoostActive
-            ? min(3.0, baseAggressiveness + 0.5)
-            : baseAggressiveness
-        if mode == .smart {
-            lastAppliedSpeed = 0
-            updateManagedControl()
-        }
-    }
-
-    /// Called by AppCoordinator when VMs start/stop to bump fan aggressiveness.
-    func setVMBoost(_ active: Bool) {
-        guard vmBoostActive != active else { return }
-        vmBoostActive = active
-        autoAggressiveness = active
-            ? min(3.0, baseAggressiveness + 0.5)
-            : baseAggressiveness
+        autoAggressiveness = max(0.0, min(3.0, value))
         if mode == .smart {
             lastAppliedSpeed = 0
             updateManagedControl()
@@ -285,7 +266,7 @@ final class FanController: ObservableObject {
     }
 
     private func runSmcHelper(arguments: [String]) -> Bool {
-        let ok = helperManager.execute(arguments: arguments, allowPrivilegePrompt: true)
+        let ok = helperManager.execute(arguments: arguments)
         if !ok, let message = helperManager.statusMessage {
             statusMessage = message
         }

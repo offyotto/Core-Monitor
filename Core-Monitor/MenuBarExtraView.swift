@@ -1,9 +1,5 @@
 import SwiftUI
 
-extension Notification.Name {
-    static let openCoreVisorSheet = Notification.Name("com.coremonitor.openCoreVisorSheet")
-}
-
 // MARK: - Menu bar status label
 struct MenuBarStatusLabel: View {
     @ObservedObject var systemMonitor: SystemMonitor
@@ -71,9 +67,7 @@ struct MenuBarMenuView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
     @ObservedObject var updater: AppUpdater
-    @ObservedObject var coreVisorManager: CoreVisorManager
     var openDashboardAction: () -> Void = {}
-    var openCoreVisorAction: () -> Void = {}
     var restoreAppTouchBarAction: () -> Void = {}
     var revertTouchBarAction: () -> Void = {}
 
@@ -206,93 +200,10 @@ struct MenuBarMenuView: View {
 
             Divider().overlay(Color(white: 1, opacity: 0.07))
 
-            // CoreVisor VM status (only shown when VMs exist)
-            if !coreVisorManager.machines.isEmpty {
-                VStack(spacing: 1) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "server.rack")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(Color(red: 1.0, green: 0.72, blue: 0.18))
-                        Text("COREVISOR")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .foregroundStyle(Color(red: 1.0, green: 0.72, blue: 0.18))
-                            .cmKerning(1)
-                        Spacer()
-                        let runCount = coreVisorManager.machines.filter {
-                            coreVisorManager.runtimeState(for: $0) == .running
-                        }.count
-                        if runCount > 0 {
-                            HStack(spacing: 4) {
-                                Circle()
-                                    .fill(Color(red: 0.22, green: 0.92, blue: 0.55))
-                                    .frame(width: 5, height: 5)
-                                Text("\(runCount) RUNNING")
-                                    .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                    .foregroundStyle(Color(red: 0.22, green: 0.92, blue: 0.55))
-                                    .cmKerning(0.5)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 14).padding(.top, 8).padding(.bottom, 4)
-
-                    ForEach(coreVisorManager.machines.prefix(4)) { machine in
-                        let state = coreVisorManager.runtimeState(for: machine)
-                        HStack(spacing: 8) {
-                            Circle()
-                                .fill(vmStateColor(state))
-                                .frame(width: 5, height: 5)
-                            Text(machine.name)
-                                .font(.system(size: 10, weight: .medium, design: .monospaced))
-                                .foregroundStyle(Color(white: 0.75))
-                                .lineLimit(1)
-                            Spacer()
-                            Text(state.rawValue.uppercased())
-                                .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                .foregroundStyle(vmStateColor(state))
-                                .cmKerning(0.5)
-                            // Quick start/stop
-                            if state == .running || state == .starting {
-                                Button {
-                                    coreVisorManager.stopMachine(machine)
-                                } label: {
-                                    Image(systemName: "stop.fill")
-                                        .font(.system(size: 8, weight: .bold))
-                                        .foregroundStyle(Color(red: 1.0, green: 0.72, blue: 0.18))
-                                }
-                                .buttonStyle(.plain)
-                            } else if state == .stopped || state == .error {
-                                Button {
-                                    Task { await coreVisorManager.startMachine(machine) }
-                                } label: {
-                                    Image(systemName: "play.fill")
-                                        .font(.system(size: 8, weight: .bold))
-                                        .foregroundStyle(Color(red: 0.22, green: 0.92, blue: 0.55))
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding(.horizontal, 14).padding(.vertical, 4)
-                    }
-
-                    if coreVisorManager.machines.count > 4 {
-                        Text("+ \(coreVisorManager.machines.count - 4) more…")
-                            .font(.system(size: 8, design: .monospaced))
-                            .foregroundStyle(Color(white: 0.3))
-                            .padding(.horizontal, 14).padding(.bottom, 4)
-                    }
-                }
-                .padding(.bottom, 4)
-
-                Divider().overlay(Color(white: 1, opacity: 0.07))
-            }
-
             // Actions
             VStack(spacing: 0) {
                 menuActionButton(label: "Open Dashboard", icon: "gauge.medium") {
                     openDashboardAction()
-                }
-                menuActionButton(label: "Open CoreVisor", icon: "server.rack") {
-                    openCoreVisorAction()
                 }
                 menuActionButton(label: "Restore System Auto", icon: "arrow.counterclockwise") {
                     fanController.resetToSystemAutomatic()
@@ -333,15 +244,6 @@ struct MenuBarMenuView: View {
 
     private func menuActionButton(label: String, icon: String, destructive: Bool = false, accent: Color? = nil, action: @escaping () -> Void) -> some View {
         HoverActionButton(label: label, icon: icon, destructive: destructive, accent: accent, action: action)
-    }
-
-    private func vmStateColor(_ state: CoreVisorRuntimeState) -> Color {
-        switch state {
-        case .stopped:           return Color(white: 0.3)
-        case .starting, .stopping: return Color(red: 1.0, green: 0.72, blue: 0.18)
-        case .running:           return Color(red: 0.22, green: 0.92, blue: 0.55)
-        case .error:             return Color(red: 1.0, green: 0.34, blue: 0.34)
-        }
     }
 
     private func tempColor(_ temp: Double?) -> Color {

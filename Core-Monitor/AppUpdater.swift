@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import AppKit
+import Darwin
 
 // MARK: - GitHub release model
 private struct GitHubRelease: Decodable {
@@ -126,9 +127,9 @@ final class AppUpdater: ObservableObject {
                 tagName: release.tag_name,
                 displayName: release.name ?? release.tag_name,
                 releaseNotes: release.body ?? "No release notes provided.",
-                releasePageURL: URL(string: release.html_url)!,
+                releasePageURL: try Self.validatedGitHubURL(release.html_url),
                 publishedAt: publishedFormatted,
-                downloadURL: bestAsset.flatMap { URL(string: $0.browser_download_url) },
+                downloadURL: try bestAsset.map { try Self.validatedGitHubAssetURL($0.browser_download_url) },
                 downloadFileName: bestAsset?.name,
                 downloadSizeBytes: bestAsset?.size ?? 0
             )
@@ -164,13 +165,7 @@ final class AppUpdater: ObservableObject {
             let localURL = try await downloadFile(from: url, fileName: info.downloadFileName ?? "update")
             downloadedFileURL = localURL
 
-            if url.pathExtension.lowercased() == "dmg" {
-                NSWorkspace.shared.open(localURL)
-            } else if url.pathExtension.lowercased() == "zip" {
-                NSWorkspace.shared.selectFile(localURL.path, inFileViewerRootedAtPath: localURL.deletingLastPathComponent().path)
-            } else {
-                NSWorkspace.shared.open(localURL)
-            }
+            NSWorkspace.shared.selectFile(localURL.path, inFileViewerRootedAtPath: localURL.deletingLastPathComponent().path)
         } catch {
             checkError = "Download failed: \(error.localizedDescription)"
         }
@@ -191,14 +186,12 @@ final class AppUpdater: ObservableObject {
 
     private func fetchLatestRelease() async throws -> GitHubRelease {
         let urlString = "https://api.github.com/repos/\(repoOwner)/\(repoName)/releases/latest"
-        guard let url = URL(string: urlString) else {
-            throw URLError(.badURL)
-        }
+        let url = try Self.validatedGitHubURL(urlString)
 
         var request = URLRequest(url: url)
         request.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
         request.setValue("Core-Monitor/\(currentVersion) (macOS)", forHTTPHeaderField: "User-Agent")
-        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.cachePolicy = URLRequest.CachePolicy.reloadIgnoringLocalCacheData
         request.timeoutInterval = 12
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -216,17 +209,19 @@ final class AppUpdater: ObservableObject {
     }
 
     private func downloadFile(from url: URL, fileName: String) async throws -> URL {
+        let validatedURL = try Self.validatedGitHubAssetURL(url.absoluteString)
+        let sanitizedName = Self.sanitizedDownloadFileName(fileName)
         let tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("CoreMonitorUpdate", isDirectory: true)
-        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
-        let destURL = tempDir.appendingPathComponent(fileName)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        let destURL = tempDir.appendingPathComponent(sanitizedName, isDirectory: false)
 
         // Remove stale file if present
         try? FileManager.default.removeItem(at: destURL)
 
         return try await withCheckedThrowingContinuation { continuation in
-            let session = URLSession(configuration: .default)
-            let task = session.downloadTask(with: url) { [weak self] tmpURL, response, error in
+            let session = URLSession(configuration: .ephemeral)
+            let task = session.downloadTask(with: validatedURL) { [weak self] tmpURL, response, error in
                 if let error {
                     Task { @MainActor in continuation.resume(throwing: error) }
                     return
@@ -240,7 +235,18 @@ final class AppUpdater: ObservableObject {
                     return
                 }
                 do {
+                    guard let http = response as? HTTPURLResponse,
+                          (200..<300).contains(http.statusCode),
+                          let finalURL = http.url else {
+                        throw NSError(
+                            domain: "AppUpdater",
+                            code: -2,
+                            userInfo: [NSLocalizedDescriptionKey: "Update download returned an unexpected response."]
+                        )
+                    }
+                    _ = try Self.validatedGitHubAssetURL(finalURL.absoluteString)
                     try FileManager.default.moveItem(at: tmpURL, to: destURL)
+                    Self.applyQuarantine(to: destURL)
                     Task { @MainActor [weak self] in
                         self?.downloadProgress = 1.0
                         continuation.resume(returning: destURL)
@@ -259,6 +265,51 @@ final class AppUpdater: ObservableObject {
                     try? await Task.sleep(nanoseconds: 120_000_000)
                 }
             }
+        }
+    }
+
+    nonisolated private static func validatedGitHubURL(_ rawValue: String) throws -> URL {
+        let allowedReleaseHosts: Set<String> = [
+            "github.com",
+            "api.github.com",
+            "objects.githubusercontent.com",
+            "release-assets.githubusercontent.com"
+        ]
+        guard let url = URL(string: rawValue),
+              url.scheme?.lowercased() == "https",
+              let host = url.host?.lowercased(),
+              allowedReleaseHosts.contains(host) else {
+            throw NSError(
+                domain: "AppUpdater",
+                code: -3,
+                userInfo: [NSLocalizedDescriptionKey: "Update source is not a trusted GitHub host."]
+            )
+        }
+        return url
+    }
+
+    nonisolated private static func validatedGitHubAssetURL(_ rawValue: String) throws -> URL {
+        let url = try validatedGitHubURL(rawValue)
+        let ext = url.pathExtension.lowercased()
+        guard ext == "zip" || ext == "dmg" else {
+            throw NSError(
+                domain: "AppUpdater",
+                code: -4,
+                userInfo: [NSLocalizedDescriptionKey: "Only .zip and .dmg update assets are allowed."]
+            )
+        }
+        return url
+    }
+
+    nonisolated private static func sanitizedDownloadFileName(_ fileName: String) -> String {
+        let baseName = URL(fileURLWithPath: fileName).lastPathComponent
+        return baseName.isEmpty ? "Core-Monitor-Update" : baseName
+    }
+
+    nonisolated private static func applyQuarantine(to fileURL: URL) {
+        let quarantineValue = "0081;\(Int(Date().timeIntervalSince1970));Core-Monitor;"
+        _ = quarantineValue.withCString { valuePointer in
+            setxattr(fileURL.path, "com.apple.quarantine", valuePointer, strlen(valuePointer), 0, 0)
         }
     }
 
@@ -378,7 +429,7 @@ struct UpdateBannerView: View {
                                         HStack(spacing: 5) {
                                             Image(systemName: "arrow.down.circle")
                                                 .font(.system(size: 10, weight: .bold))
-                                            Text("DOWNLOAD & INSTALL")
+                                            Text("DOWNLOAD UPDATE")
                                                 .font(.system(size: 9, weight: .bold, design: .monospaced))
                                                 .cmKerning(0.5)
                                         }

@@ -43,9 +43,7 @@ struct Core_MonitorApp: App {
                             systemMonitor:    coordinator.systemMonitor,
                             fanController:    coordinator.fanController,
                             updater:          AppUpdater.shared,
-                            coreVisorManager: coordinator.coreVisorManager,
                             openDashboardAction: openDashboard,
-                            openCoreVisorAction: openCoreVisor,
                             restoreAppTouchBarAction: coordinator.revertToAppTouchBar,
                             revertTouchBarAction: coordinator.revertToSystemTouchBar
                         )
@@ -59,7 +57,6 @@ struct Core_MonitorApp: App {
             systemMonitor:    coordinator.systemMonitor,
             fanController:    coordinator.fanController,
             startupManager:   startupManager,
-            coreVisorManager: coordinator.coreVisorManager,
             touchBarWidgetSettings: coordinator.touchBarWidgetSettings
         )
         .background(
@@ -80,13 +77,6 @@ struct Core_MonitorApp: App {
         } else if let fallbackWindow = NSApp.windows.first(where: { $0.styleMask.contains(.titled) }) {
             fallbackWindow.makeKeyAndOrderFront(nil)
             fallbackWindow.orderFrontRegardless()
-        }
-    }
-
-    private func openCoreVisor() {
-        openDashboard()
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(name: .openCoreVisorSheet, object: nil)
         }
     }
 }

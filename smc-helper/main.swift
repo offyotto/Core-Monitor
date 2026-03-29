@@ -360,6 +360,28 @@ private func printUsageAndExit() -> Never {
     Foundation.exit(64)
 }
 
+private func validatedFanID(_ rawValue: String) throws -> Int {
+    guard let fanID = Int(rawValue), (0..<12).contains(fanID) else {
+        throw HelperError("Fan ID must be between 0 and 11")
+    }
+    return fanID
+}
+
+private func validatedRPM(_ rawValue: String) throws -> Int {
+    guard let rpm = Int(rawValue), (500...10_000).contains(rpm) else {
+        throw HelperError("RPM must be between 500 and 10000")
+    }
+    return rpm
+}
+
+private func validatedSMCKey(_ rawValue: String) throws -> String {
+    let bytes = Array(rawValue.utf8)
+    guard bytes.count == 4, bytes.allSatisfy({ (0x20...0x7E).contains($0) }) else {
+        throw HelperError("SMC key must be exactly 4 printable ASCII characters")
+    }
+    return rawValue
+}
+
 let args = CommandLine.arguments
 guard args.count >= 2 else { printUsageAndExit() }
 
@@ -371,18 +393,22 @@ do {
 
     switch command {
     case "set":
-        guard args.count == 4, let fanID = Int(args[2]), let rpm = Int(args[3]) else { printUsageAndExit() }
+        guard args.count == 4 else { printUsageAndExit() }
+        let fanID = try validatedFanID(args[2])
+        let rpm = try validatedRPM(args[3])
         try controller.setFanManual(fanID, rpm: rpm)
         print("ok")
 
     case "auto":
-        guard args.count == 3, let fanID = Int(args[2]) else { printUsageAndExit() }
+        guard args.count == 3 else { printUsageAndExit() }
+        let fanID = try validatedFanID(args[2])
         try controller.setFanAuto(fanID)
         print("ok")
 
     case "read":
         guard args.count == 3 else { printUsageAndExit() }
-        let value = try controller.readValue(args[2])
+        let key = try validatedSMCKey(args[2])
+        let value = try controller.readValue(key)
         print(value)
 
     default:
