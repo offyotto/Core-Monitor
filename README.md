@@ -1,4 +1,5 @@
 # Core-Monitor
+# ⭐️ Star us on github to support the project!
 
 [![Website](https://img.shields.io/badge/Website-Core--Monitor-8A2BE2)](https://offyotto-sl3.github.io/Core-Monitor/)
 [![Download](https://img.shields.io/badge/Download-Latest%20Release-brightgreen)](https://github.com/offyotto-sl3/Core-Monitor/releases/latest)
