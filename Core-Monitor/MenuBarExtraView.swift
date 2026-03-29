@@ -139,18 +139,12 @@ struct MenuBarMenuView: View {
                                   value: "\(pct)%\(systemMonitor.batteryInfo.isCharging ? " ⚡" : "")",
                                   color: pct < 20 ? .red : pct < 40 ? .orange : Color(red: 0.22, green: 0.92, blue: 0.55))
                 }
-                // Network if available
-                if systemMonitor.netBytesInPerSec > 0 || systemMonitor.netBytesOutPerSec > 0 {
-                    menuMetricRow(icon: "network", label: "NETWORK",
-                                  value: "↓ \(formatBytes(systemMonitor.netBytesInPerSec))  ↑ \(formatBytes(systemMonitor.netBytesOutPerSec))",
-                                  color: Color(red: 0.72, green: 0.40, blue: 1.0))
-                }
-                // Disk I/O if active
-                if systemMonitor.diskReadBytesPerSec > 0 || systemMonitor.diskWriteBytesPerSec > 0 {
-                    menuMetricRow(icon: "internaldrive", label: "DISK I/O",
-                                  value: "R \(formatBytes(systemMonitor.diskReadBytesPerSec))  W \(formatBytes(systemMonitor.diskWriteBytesPerSec))",
-                                  color: Color(red: 1.0, green: 0.72, blue: 0.18))
-                }
+                menuMetricRow(
+                    icon: "internaldrive",
+                    label: "DISK I/O",
+                    value: "R \(formatBytes(systemMonitor.diskReadBytesPerSec))  W \(formatBytes(systemMonitor.diskWriteBytesPerSec))",
+                    color: diskColor
+                )
                 // Volume & brightness
                 menuMetricRow(
                     icon: systemMonitor.currentVolume < 0.01 ? "speaker.slash.fill" : "speaker.wave.2.fill",
@@ -321,6 +315,7 @@ struct MenuBarMenuView: View {
             }
             .padding(.vertical, 4)
         }
+        .frame(maxWidth: .infinity, alignment: .top)
         } // ScrollView
         .frame(width: 310)
         .background(Color(red: 0.07, green: 0.07, blue: 0.08))
@@ -361,9 +356,17 @@ struct MenuBarMenuView: View {
         return Color(red: 1.0, green: 0.72, blue: 0.18)
     }
     private func formatBytes(_ bps: Double) -> String {
+        if bps <= 0 { return "0" }
         if bps >= 1_000_000 { return String(format: "%.1fM", bps / 1_000_000) }
         if bps >= 1_000     { return String(format: "%.0fK", bps / 1_000) }
         return String(format: "%.0f", bps)
+    }
+
+    private var diskColor: Color {
+        if systemMonitor.diskReadBytesPerSec > 0 || systemMonitor.diskWriteBytesPerSec > 0 {
+            return Color(red: 1.0, green: 0.72, blue: 0.18)
+        }
+        return Color(white: 0.32)
     }
 
 }

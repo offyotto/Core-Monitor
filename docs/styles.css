@@ -91,6 +91,14 @@ code {
   font-weight: 600;
 }
 
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+}
+
 .brand-text,
 .site-nav a,
 .nav-download,

@@ -6,6 +6,9 @@ import IOKit.storage
 import Darwin
 import CoreAudio
 
+extension Notification.Name {
+    static let systemMonitorDidUpdate = Notification.Name("SystemMonitorDidUpdate")
+}
 
 struct CPUStats {
     let usagePercent: Double
@@ -85,6 +88,27 @@ private struct SMCParamStruct {
 }
 
 final class SystemMonitor: ObservableObject {
+    private struct SystemSnapshot {
+        let cpuTemperature: Double?
+        let gpuTemperature: Double?
+        let fanSpeeds: [Int]
+        let fanMinSpeeds: [Int]
+        let fanMaxSpeeds: [Int]
+        let cpuUsagePercent: Double
+        let memoryUsagePercent: Double
+        let memoryUsedGB: Double
+        let totalMemoryGB: Double
+        let memoryPressure: MemoryPressureLevel
+        let batteryInfo: BatteryInfo
+        let totalSystemWatts: Double?
+        let netBytesInPerSec: Double
+        let netBytesOutPerSec: Double
+        let diskReadBytesPerSec: Double
+        let diskWriteBytesPerSec: Double
+        let currentVolume: Float
+        let currentBrightness: Float
+    }
+
     private enum BenchmarkKeys {
         static let allTemperatureKeys = [
             "TC0P", "Tp09", "TCXC", "TC0E", "TC0F", "TC0D",
@@ -94,35 +118,35 @@ final class SystemMonitor: ObservableObject {
         ]
     }
 
-    @Published var cpuTemperature: Double?
-    @Published var gpuTemperature: Double?
-    @Published var fanSpeeds: [Int] = []
-    @Published var fanMinSpeeds: [Int] = []
-    @Published var fanMaxSpeeds: [Int] = []
+    var cpuTemperature: Double?
+    var gpuTemperature: Double?
+    var fanSpeeds: [Int] = []
+    var fanMinSpeeds: [Int] = []
+    var fanMaxSpeeds: [Int] = []
     @Published var numberOfFans: Int = 0
-    @Published var cpuUsagePercent: Double = 0
+    var cpuUsagePercent: Double = 0
     @Published var hasSMCAccess: Bool = false
     @Published var lastError: String?
 
-    @Published var batteryInfo = BatteryInfo()
-    @Published var totalSystemWatts: Double?
-    @Published var memoryUsagePercent: Double = 0
-    @Published var memoryUsedGB: Double = 0
-    @Published var totalMemoryGB: Double = 0
-    @Published var memoryPressure: MemoryPressureLevel = .green
+    var batteryInfo = BatteryInfo()
+    var totalSystemWatts: Double?
+    var memoryUsagePercent: Double = 0
+    var memoryUsedGB: Double = 0
+    var totalMemoryGB: Double = 0
+    var memoryPressure: MemoryPressureLevel = .green
 
     // Network throughput (bytes/sec)
-    @Published var netBytesInPerSec: Double  = 0
-    @Published var netBytesOutPerSec: Double = 0
+    var netBytesInPerSec: Double  = 0
+    var netBytesOutPerSec: Double = 0
 
     /// Disk read throughput in bytes/sec (all physical disks, excl. RAM disk).
-    @Published var diskReadBytesPerSec:  Double = 0
+    var diskReadBytesPerSec:  Double = 0
     /// Disk write throughput in bytes/sec.
-    @Published var diskWriteBytesPerSec: Double = 0
+    var diskWriteBytesPerSec: Double = 0
 
     // System volume and display brightness (0–1), polled each cycle
-    @Published var currentVolume:     Float = 0.5
-    @Published var currentBrightness: Float = 1.0
+    var currentVolume:     Float = 0.5
+    var currentBrightness: Float = 1.0
 
     static var isAppleSilicon: Bool {
         var value: Int32 = 0
@@ -168,6 +192,8 @@ final class SystemMonitor: ObservableObject {
     private var monitoringInterval: TimeInterval = 1.0
     private var timer: Timer?
     private var keyInfoCache: [UInt32: SMCKeyData_keyInfo_t] = [:]
+    private let samplingQueue = DispatchQueue(label: "CoreMonitor.SystemMonitorSampling", qos: .utility)
+    private var isSampling = false
 
     // MARK: - Basic mode adaptive polling
     /// Called by ContentView when the user toggles Basic Mode.
@@ -316,23 +342,68 @@ final class SystemMonitor: ObservableObject {
     }
 
     private func updateReadings() {
-        cpuTemperature = readCPUTemperature()
-        gpuTemperature = readGPUTemperature()
-        updateFanReadings()
-        cpuUsagePercent = readCPUUsage().usagePercent
+        guard !isSampling else { return }
+        isSampling = true
 
-        let memoryStats = readMemoryStats()
-        memoryUsagePercent = memoryStats.usagePercent
-        memoryUsedGB = memoryStats.usedGB
-        totalMemoryGB = memoryStats.totalGB
-        memoryPressure = memoryStats.pressure
+        samplingQueue.async { [weak self] in
+            guard let self else { return }
 
-        let newBattery = readBatteryInfo()
-        batteryInfo = newBattery
-        totalSystemWatts = newBattery.powerWatts
-        updateNetworkStats()
-        updateDiskStats()
-        updateSystemControls()
+            let cpuTemperature = self.readCPUTemperature()
+            let gpuTemperature = self.readGPUTemperature()
+            let fanReadings = self.readFanReadings()
+            let cpuUsagePercent = self.readCPUUsage().usagePercent
+            let memoryStats = self.readMemoryStats()
+            let batteryInfo = self.readBatteryInfo()
+            let networkStats = self.readNetworkStats()
+            let diskStats = self.readDiskStats()
+            let systemControls = self.readSystemControls()
+
+            let snapshot = SystemSnapshot(
+                cpuTemperature: cpuTemperature,
+                gpuTemperature: gpuTemperature,
+                fanSpeeds: fanReadings.speeds,
+                fanMinSpeeds: fanReadings.mins,
+                fanMaxSpeeds: fanReadings.maxs,
+                cpuUsagePercent: cpuUsagePercent,
+                memoryUsagePercent: memoryStats.usagePercent,
+                memoryUsedGB: memoryStats.usedGB,
+                totalMemoryGB: memoryStats.totalGB,
+                memoryPressure: memoryStats.pressure,
+                batteryInfo: batteryInfo,
+                totalSystemWatts: batteryInfo.powerWatts,
+                netBytesInPerSec: networkStats.inbound,
+                netBytesOutPerSec: networkStats.outbound,
+                diskReadBytesPerSec: diskStats.read,
+                diskWriteBytesPerSec: diskStats.write,
+                currentVolume: systemControls.volume,
+                currentBrightness: systemControls.brightness
+            )
+
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.objectWillChange.send()
+                self.cpuTemperature = snapshot.cpuTemperature
+                self.gpuTemperature = snapshot.gpuTemperature
+                self.fanSpeeds = snapshot.fanSpeeds
+                self.fanMinSpeeds = snapshot.fanMinSpeeds
+                self.fanMaxSpeeds = snapshot.fanMaxSpeeds
+                self.cpuUsagePercent = snapshot.cpuUsagePercent
+                self.memoryUsagePercent = snapshot.memoryUsagePercent
+                self.memoryUsedGB = snapshot.memoryUsedGB
+                self.totalMemoryGB = snapshot.totalMemoryGB
+                self.memoryPressure = snapshot.memoryPressure
+                self.batteryInfo = snapshot.batteryInfo
+                self.totalSystemWatts = snapshot.totalSystemWatts
+                self.netBytesInPerSec = snapshot.netBytesInPerSec
+                self.netBytesOutPerSec = snapshot.netBytesOutPerSec
+                self.diskReadBytesPerSec = snapshot.diskReadBytesPerSec
+                self.diskWriteBytesPerSec = snapshot.diskWriteBytesPerSec
+                self.currentVolume = snapshot.currentVolume
+                self.currentBrightness = snapshot.currentBrightness
+                self.isSampling = false
+                NotificationCenter.default.post(name: .systemMonitorDidUpdate, object: self)
+            }
+        }
     }
 
     private func readCPUTemperature() -> Double? {
@@ -353,12 +424,9 @@ final class SystemMonitor: ObservableObject {
         return nil
     }
 
-    private func updateFanReadings() {
+    private func readFanReadings() -> (speeds: [Int], mins: [Int], maxs: [Int]) {
         guard numberOfFans > 0 else {
-            fanSpeeds = []
-            fanMinSpeeds = []
-            fanMaxSpeeds = []
-            return
+            return ([], [], [])
         }
 
         var speeds: [Int] = []
@@ -379,9 +447,7 @@ final class SystemMonitor: ObservableObject {
             maxs.append(Int(readSMCValue(key: maxKey) ?? 6500))
         }
 
-        fanSpeeds = speeds
-        fanMinSpeeds = mins
-        fanMaxSpeeds = maxs
+        return (speeds, mins, maxs)
     }
 
     private func readCPUUsage() -> CPUStats {
@@ -678,7 +744,10 @@ final class SystemMonitor: ObservableObject {
 
         return nil
     }
-    private func updateSystemControls() {
+    private func readSystemControls() -> (volume: Float, brightness: Float) {
+        var volume = currentVolume
+        var brightness = currentBrightness
+
         // Volume
         var dev = AudioDeviceID(kAudioObjectUnknown)
         var sz  = UInt32(MemoryLayout<AudioDeviceID>.size)
@@ -696,7 +765,7 @@ final class SystemMonitor: ObservableObject {
                 mScope:    kAudioObjectPropertyScopeOutput,
                 mElement:  kAudioObjectPropertyElementMain)
             if AudioObjectGetPropertyData(dev, &volAddr, 0, nil, &sz, &vol) == noErr {
-                currentVolume = vol
+                volume = vol
             }
         }
 
@@ -706,16 +775,20 @@ final class SystemMonitor: ObservableObject {
             svc = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleBacklightDisplay"))
         }
         if svc != 0 {
-            var bri: Float = currentBrightness
+            var bri: Float = brightness
             IODisplayGetFloatParameter(svc, 0, kIODisplayBrightnessKey as CFString, &bri)
-            currentBrightness = bri
+            brightness = bri
             IOObjectRelease(svc)
         }
+
+        return (volume, brightness)
     }
 
-    private func updateNetworkStats() {
+    private func readNetworkStats() -> (inbound: Double, outbound: Double) {
         var ifaddrsPtr: UnsafeMutablePointer<ifaddrs>?
-        guard getifaddrs(&ifaddrsPtr) == 0, let firstAddr = ifaddrsPtr else { return }
+        guard getifaddrs(&ifaddrsPtr) == 0, let firstAddr = ifaddrsPtr else {
+            return (netBytesInPerSec, netBytesOutPerSec)
+        }
         defer { freeifaddrs(ifaddrsPtr) }
 
         var totalIn:  UInt64 = 0
@@ -735,18 +808,21 @@ final class SystemMonitor: ObservableObject {
             cursor = addr.ifa_next
         }
 
+        var inbound = netBytesInPerSec
+        var outbound = netBytesOutPerSec
         if hasPreviousNetStats {
             let interval = monitoringInterval
-            netBytesInPerSec  = max(0, Double(totalIn  &- previousNetBytesIn)  / interval)
-            netBytesOutPerSec = max(0, Double(totalOut &- previousNetBytesOut) / interval)
+            inbound = max(0, Double(totalIn  &- previousNetBytesIn)  / interval)
+            outbound = max(0, Double(totalOut &- previousNetBytesOut) / interval)
         }
 
         previousNetBytesIn  = totalIn
         previousNetBytesOut = totalOut
         hasPreviousNetStats = true
+        return (inbound, outbound)
     }
 
-    private func updateDiskStats() {
+    private func readDiskStats() -> (read: Double, write: Double) {
         var totalRead:  UInt64 = 0
         var totalWrite: UInt64 = 0
 
@@ -754,7 +830,9 @@ final class SystemMonitor: ObservableObject {
         matchingDict[kIOMediaWholeKey] = true
 
         var iter: io_iterator_t = 0
-        guard IOServiceGetMatchingServices(kIOMainPortDefault, matchingDict, &iter) == KERN_SUCCESS else { return }
+        guard IOServiceGetMatchingServices(kIOMainPortDefault, matchingDict, &iter) == KERN_SUCCESS else {
+            return (diskReadBytesPerSec, diskWriteBytesPerSec)
+        }
         defer { IOObjectRelease(iter) }
 
         var service = IOIteratorNext(iter)
@@ -768,14 +846,17 @@ final class SystemMonitor: ObservableObject {
             if let w = (stats["Bytes (Write)"] as? NSNumber)?.uint64Value { totalWrite += w }
         }
 
+        var readPerSec = diskReadBytesPerSec
+        var writePerSec = diskWriteBytesPerSec
         if hasPreviousDiskStats {
             let interval = monitoringInterval
-            diskReadBytesPerSec  = max(0, Double(totalRead  &- previousDiskRead)  / interval)
-            diskWriteBytesPerSec = max(0, Double(totalWrite &- previousDiskWrite) / interval)
+            readPerSec = max(0, Double(totalRead  &- previousDiskRead)  / interval)
+            writePerSec = max(0, Double(totalWrite &- previousDiskWrite) / interval)
         }
         previousDiskRead    = totalRead
         previousDiskWrite   = totalWrite
         hasPreviousDiskStats = true
+        return (readPerSec, writePerSec)
     }
 }
 

@@ -231,6 +231,7 @@ final class MetricChip: NSView {
     private let topLabel   = NSTextField(labelWithString: "")
     private let valueLabel = NSTextField(labelWithString: "--")
     private let sparkView  = SparklineView()
+    private let borderLayer = CAShapeLayer()
 
     private static let chipW:  CGFloat = 158
     private static let chipH:  CGFloat = 30
@@ -253,7 +254,11 @@ final class MetricChip: NSView {
     private func build(label: String) {
         wantsLayer = true
         layer?.cornerRadius = 6
-        layer?.backgroundColor = NSColor.white.withAlphaComponent(0.08).cgColor
+        layer?.backgroundColor = NSColor.black.cgColor
+        borderLayer.fillColor = NSColor.clear.cgColor
+        borderLayer.strokeColor = accentColor.withAlphaComponent(0.22).cgColor
+        borderLayer.lineWidth = 1
+        layer?.addSublayer(borderLayer)
 
         // SF Symbol icon
         let cfg = NSImage.SymbolConfiguration(pointSize: Self.iconSz, weight: .medium)
@@ -326,6 +331,7 @@ final class MetricChip: NSView {
         iconView.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
             .withSymbolConfiguration(cfg)
         sparkView.accentColor = color
+        borderLayer.strokeColor = color.withAlphaComponent(0.22).cgColor
     }
 
     func set(value: String, sparkValues: [Double], alerting: Bool = false) {
@@ -333,8 +339,15 @@ final class MetricChip: NSView {
         sparkView.values = sparkValues
         sparkView.accentColor = accentColor
         layer?.backgroundColor = alerting
-            ? NSColor.systemRed.withAlphaComponent(0.20).cgColor
-            : NSColor.white.withAlphaComponent(0.08).cgColor
+            ? NSColor.systemRed.withAlphaComponent(0.14).cgColor
+            : NSColor.black.cgColor
+        borderLayer.strokeColor = (alerting ? NSColor.systemRed : accentColor).withAlphaComponent(alerting ? 0.30 : 0.22).cgColor
+    }
+
+    override func layout() {
+        super.layout()
+        borderLayer.frame = bounds
+        borderLayer.path = CGPath(roundedRect: bounds.insetBy(dx: 0.5, dy: 0.5), cornerWidth: 6, cornerHeight: 6, transform: nil)
     }
 }
 

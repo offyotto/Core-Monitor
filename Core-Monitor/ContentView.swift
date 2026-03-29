@@ -19,6 +19,7 @@ private struct CopyOnTap: ViewModifier {
     @State private var flashed = false
     func body(content: Content) -> some View {
         content
+            .contentShape(Rectangle())
             .opacity(flashed ? 0.45 : 1.0)
             .onTapGesture {
                 NSPasteboard.general.clearContents()
@@ -28,8 +29,6 @@ private struct CopyOnTap: ViewModifier {
                     withAnimation(.easeIn(duration: 0.15)) { flashed = false }
                 }
             }
-            .onHover { inside in inside ? NSCursor.pointingHand.push() : NSCursor.pop() }
-            .help("Click to copy")
     }
 }
 private extension View {
@@ -269,24 +268,26 @@ private struct BatteryStatusBar: View {
 
 // MARK: - Fan control panel
 private struct FanControlPanel: View {
+    struct Snapshot {
+        var fanSpeeds: [Int] = []
+        var fanMinSpeeds: [Int] = []
+        var fanMaxSpeeds: [Int] = []
+    }
+
     @ObservedObject var fanController: FanController
-    @ObservedObject var systemMonitor: SystemMonitor
+    let snapshot: Snapshot
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                if fanController.vmBoostActive {
-                    HStack(spacing: 4) {
-                        Image(systemName: "server.rack").font(.system(size: 8, weight: .bold)).foregroundStyle(Color.cmGreen)
-                        Text("VM BOOST").font(.cmMono(8, weight: .bold)).foregroundStyle(Color.cmGreen).cmKerning(0.5)
-                    }
-                    .padding(.horizontal, 6).padding(.vertical, 3)
-                    .background(Color.cmGreen.opacity(0.10))
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
-                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.cmGreen.opacity(0.25)))
+            if fanController.vmBoostActive {
+                HStack(spacing: 4) {
+                    Image(systemName: "server.rack").font(.system(size: 8, weight: .bold)).foregroundStyle(Color.cmGreen)
+                    Text("VM BOOST").font(.cmMono(8, weight: .bold)).foregroundStyle(Color.cmGreen).cmKerning(0.5)
                 }
-                Spacer()
-                Text(fanController.statusMessage).font(.cmMono(10)).foregroundStyle(Color.cmTextDim)
+                .padding(.horizontal, 6).padding(.vertical, 3)
+                .background(Color.cmGreen.opacity(0.10))
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.cmGreen.opacity(0.25)))
             }
 
             HStack(spacing: 6) {
@@ -350,12 +351,12 @@ private struct FanControlPanel: View {
                 }
             }
 
-            if !systemMonitor.fanSpeeds.isEmpty {
+            if !snapshot.fanSpeeds.isEmpty {
                 VStack(spacing: 8) {
-                    ForEach(systemMonitor.fanSpeeds.indices, id: \.self) { i in
-                        FanBar(index: i, rpm: systemMonitor.fanSpeeds[i],
-                               minRPM: i < systemMonitor.fanMinSpeeds.count ? systemMonitor.fanMinSpeeds[i] : 1000,
-                               maxRPM: i < systemMonitor.fanMaxSpeeds.count ? systemMonitor.fanMaxSpeeds[i] : 6500)
+                    ForEach(snapshot.fanSpeeds.indices, id: \.self) { i in
+                        FanBar(index: i, rpm: snapshot.fanSpeeds[i],
+                               minRPM: i < snapshot.fanMinSpeeds.count ? snapshot.fanMinSpeeds[i] : 1000,
+                               maxRPM: i < snapshot.fanMaxSpeeds.count ? snapshot.fanMaxSpeeds[i] : 6500)
                     }
                 }
                 .padding(10).cmPanel()
@@ -540,7 +541,28 @@ struct BasicModeView: View {
 
 // MARK: - Main ContentView
 struct ContentView: View {
-    @ObservedObject var systemMonitor: SystemMonitor
+    private struct DashboardState {
+        var hasSMCAccess = false
+        var numberOfFans = 0
+        var fanSpeeds: [Int] = []
+        var fanMinSpeeds: [Int] = []
+        var fanMaxSpeeds: [Int] = []
+        var cpuUsagePercent: Double = 0
+        var cpuTemperature: Double?
+        var gpuTemperature: Double?
+        var memoryUsagePercent: Double = 0
+        var memoryUsedGB: Double = 0
+        var totalMemoryGB: Double = 0
+        var memoryPressure: MemoryPressureLevel = .green
+        var batteryInfo = BatteryInfo()
+        var totalSystemWatts: Double?
+        var diskReadBytesPerSec: Double = 0
+        var diskWriteBytesPerSec: Double = 0
+        var currentVolume: Float = 0.5
+        var currentBrightness: Float = 1.0
+    }
+
+    let systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
     @ObservedObject var startupManager: StartupManager
     @ObservedObject var coreVisorManager: CoreVisorManager
@@ -557,7 +579,6 @@ struct ContentView: View {
     @State private var procExpanded    = true
     @State private var thermalExpanded = true
     @State private var memExpanded     = true
-    @State private var netExpanded     = true
     @State private var diskExpanded    = true
     @State private var fanExpanded     = true
     @State private var benchmarkExpanded = true
@@ -567,6 +588,7 @@ struct ContentView: View {
     @State private var showCoreVisorSetup      = false
     @State private var hasOpenedCoreVisorSetup = false
     @State private var showUpdateCheck         = false
+    @State private var dashboardState = DashboardState()
 
     var body: some View {
         Group {
@@ -576,9 +598,10 @@ struct ContentView: View {
                 fullDashboard
             }
         }
-        .onReceive(systemMonitor.$cpuUsagePercent,    perform: updateCPUHistory)
-        .onReceive(systemMonitor.$memoryUsagePercent, perform: updateMemoryHistory)
-        .onReceive(systemMonitor.$cpuTemperature,     perform: updateCPUTempHistory)
+        .onReceive(NotificationCenter.default.publisher(for: .systemMonitorDidUpdate)) { _ in
+            refreshDashboardState()
+            updateHistories()
+        }
         .onReceive(NotificationCenter.default.publisher(for: .openCoreVisorSheet)) { _ in
             showCoreVisorSetup = true
         }
@@ -587,6 +610,7 @@ struct ContentView: View {
         }
         .onAppear {
             systemMonitor.setBasicMode(modeState.isBasicMode)
+            refreshDashboardState()
         }
     }
 
@@ -605,12 +629,12 @@ struct ContentView: View {
         .welcomeGuide()
         .cmHandleSpaceKeyPress {
             let allExpanded = procExpanded && thermalExpanded && memExpanded &&
-                              netExpanded && diskExpanded && fanExpanded && benchmarkExpanded &&
+                              diskExpanded && fanExpanded && benchmarkExpanded &&
                               battExpanded && sysExpanded
             let target = !allExpanded
             withAnimation(.spring(response: 0.3)) {
                 procExpanded = target; thermalExpanded = target; memExpanded = target
-                netExpanded = target; diskExpanded = target; fanExpanded = target
+                diskExpanded = target; fanExpanded = target
                 benchmarkExpanded = target
                 battExpanded = target; sysExpanded = target
             }
@@ -620,7 +644,6 @@ struct ContentView: View {
     private var dashboardRoot: some View {
         ZStack {
             Color.cmBackground.ignoresSafeArea()
-            scanLineOverlay
             dashboardScrollContent
         }
     }
@@ -638,17 +661,23 @@ struct ContentView: View {
                 CollapsibleSection(title: "Processor", isExpanded: $procExpanded) { primaryMetricsRow }
                 CollapsibleSection(title: "Thermals", isExpanded: $thermalExpanded) { temperatureRow }
                 CollapsibleSection(title: "Memory Detail", isExpanded: $memExpanded) { memoryAndPowerRow }
-                CollapsibleSection(title: "Network", isExpanded: $netExpanded) { networkContent }
                 CollapsibleSection(title: "Disk I/O", isExpanded: $diskExpanded) { diskContent }
                 CollapsibleSection(title: "Fan Control", trailing: fanController.statusMessage, isExpanded: $fanExpanded) {
-                    FanControlPanel(fanController: fanController, systemMonitor: systemMonitor)
+                    FanControlPanel(
+                        fanController: fanController,
+                        snapshot: FanControlPanel.Snapshot(
+                            fanSpeeds: dashboardState.fanSpeeds,
+                            fanMinSpeeds: dashboardState.fanMinSpeeds,
+                            fanMaxSpeeds: dashboardState.fanMaxSpeeds
+                        )
+                    )
                 }
                 CollapsibleSection(title: "Benchmark", isExpanded: $benchmarkExpanded) {
                     BenchmarkView(systemMonitor: systemMonitor, store: benchmarkStore)
                 }
-                if systemMonitor.batteryInfo.hasBattery {
+                if dashboardState.batteryInfo.hasBattery {
                     CollapsibleSection(title: "Power", isExpanded: $battExpanded) {
-                        BatteryStatusBar(info: systemMonitor.batteryInfo)
+                        BatteryStatusBar(info: dashboardState.batteryInfo)
                     }
                 }
                 CollapsibleSection(title: "System", isExpanded: $sysExpanded) { startupContent }
@@ -656,13 +685,6 @@ struct ContentView: View {
             }
             .padding(16)
         }
-    }
-
-    private var scanLineOverlay: some View {
-        ScanLinePattern()
-            .stroke(Color.white.opacity(0.018), lineWidth: 1)
-        .ignoresSafeArea()
-        .allowsHitTesting(false)
     }
 
     // MARK: - Header
@@ -678,11 +700,11 @@ struct ContentView: View {
             }
             Spacer()
             HStack(spacing: 6) {
-                statusDot(label: "SMC", active: systemMonitor.hasSMCAccess, activeColor: .cmGreen)
-                statusDot(label: "FAN", active: systemMonitor.numberOfFans > 0, activeColor: .cmGreen)
-                if systemMonitor.batteryInfo.hasBattery {
+                statusDot(label: "SMC", active: dashboardState.hasSMCAccess, activeColor: .cmGreen)
+                statusDot(label: "FAN", active: dashboardState.numberOfFans > 0, activeColor: .cmGreen)
+                if dashboardState.batteryInfo.hasBattery {
                     statusDot(label: "BAT", active: true,
-                              activeColor: systemMonitor.batteryInfo.isCharging ? .cmAmber : .cmGreen)
+                              activeColor: dashboardState.batteryInfo.isCharging ? .cmAmber : .cmGreen)
                 }
                 // Basic mode toggle
                 Button {
@@ -745,24 +767,24 @@ struct ContentView: View {
     // MARK: - Sections
     private var primaryMetricsRow: some View {
         HStack(spacing: 10) {
-            StatTile(label: "CPU Load", value: "\(Int(systemMonitor.cpuUsagePercent.rounded()))", unit: "%",
-                     color: cpuLoadColor, gauge: systemMonitor.cpuUsagePercent / 100, history: cpuHistory, wide: true)
-            StatTile(label: "Memory",  value: "\(Int(systemMonitor.memoryUsagePercent.rounded()))", unit: "%",
-                     color: memColor,     gauge: systemMonitor.memoryUsagePercent / 100, history: memHistory, wide: true)
+            StatTile(label: "CPU Load", value: "\(Int(dashboardState.cpuUsagePercent.rounded()))", unit: "%",
+                     color: cpuLoadColor, gauge: dashboardState.cpuUsagePercent / 100, history: cpuHistory, wide: true)
+            StatTile(label: "Memory",  value: "\(Int(dashboardState.memoryUsagePercent.rounded()))", unit: "%",
+                     color: memColor,     gauge: dashboardState.memoryUsagePercent / 100, history: memHistory, wide: true)
         }
     }
 
     private var temperatureRow: some View {
         HStack(spacing: 10) {
-            if let cpuTemp = systemMonitor.cpuTemperature {
+            if let cpuTemp = dashboardState.cpuTemperature {
                 StatTile(label: "CPU Temp", value: "\(Int(cpuTemp.rounded()))", unit: "°C",
                          color: tempColor(cpuTemp), gauge: min(cpuTemp, 110) / 110, history: cpuTempHistory, wide: true)
             }
-            if let gpuTemp = systemMonitor.gpuTemperature {
+            if let gpuTemp = dashboardState.gpuTemperature {
                 StatTile(label: "GPU Temp", value: "\(Int(gpuTemp.rounded()))", unit: "°C",
                          color: tempColor(gpuTemp), gauge: min(gpuTemp, 110) / 110, wide: true)
             }
-            if systemMonitor.cpuTemperature == nil && systemMonitor.gpuTemperature == nil {
+            if dashboardState.cpuTemperature == nil && dashboardState.gpuTemperature == nil {
                 Text("No thermal sensors available").font(.cmMono(11)).foregroundStyle(Color.cmTextDim)
                     .frame(maxWidth: .infinity, alignment: .leading).padding(14).cmPanel()
             }
@@ -772,25 +794,23 @@ struct ContentView: View {
     private var memoryAndPowerRow: some View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 6) {
-                memoryRow(label: "USED",     value: String(format: "%.1f", systemMonitor.memoryUsedGB), unit: "GB", color: memColor)
-                memoryRow(label: "TOTAL",    value: String(format: "%.0f", systemMonitor.totalMemoryGB), unit: "GB", color: .cmTextSecondary)
+                memoryRow(label: "USED",     value: String(format: "%.1f", dashboardState.memoryUsedGB), unit: "GB", color: memColor)
+                memoryRow(label: "TOTAL",    value: String(format: "%.0f", dashboardState.totalMemoryGB), unit: "GB", color: .cmTextSecondary)
                 memoryRow(label: "PRESSURE", value: pressureLabel, unit: "", color: pressureColor)
             }
             .padding(12).frame(maxWidth: .infinity).cmPanel(accent: memColor)
 
-            if let watts = systemMonitor.totalSystemWatts {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("SYSTEM POWER").font(.cmMono(9, weight: .bold)).foregroundStyle(Color.cmTextDim).cmKerning(1)
-                    HStack(alignment: .lastTextBaseline, spacing: 3) {
-                        Text(String(format: "%.1f", abs(watts)))
-                            .font(.cmMono(28, weight: .bold)).foregroundStyle(Color.cmBlue).cmNumericTextTransition()
-                        Text("W").font(.cmMono(11)).foregroundStyle(Color.cmBlue.opacity(0.6))
-                    }
-                    Sparkline(values: Array(repeating: 50, count: 30), color: .cmBlue)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("SYSTEM POWER").font(.cmMono(9, weight: .bold)).foregroundStyle(Color.cmTextDim).cmKerning(1)
+                HStack(alignment: .lastTextBaseline, spacing: 3) {
+                    Text(dashboardState.totalSystemWatts.map { String(format: "%.1f", abs($0)) } ?? "--")
+                        .font(.cmMono(28, weight: .bold)).foregroundStyle(Color.cmBlue).cmNumericTextTransition()
+                    Text("W").font(.cmMono(11)).foregroundStyle(Color.cmBlue.opacity(0.6))
                 }
-                .padding(12).frame(maxWidth: .infinity).cmPanel(accent: .cmBlue)
-                .copyOnTap(String(format: "%.1f W", abs(watts)))
+                Sparkline(values: Array(repeating: 50, count: 30), color: .cmBlue)
             }
+            .padding(12).frame(maxWidth: .infinity).cmPanel(accent: .cmBlue)
+            .copyOnTap(dashboardState.totalSystemWatts.map { String(format: "%.1f W", abs($0)) } ?? "Power unavailable")
         }
     }
 
@@ -807,24 +827,11 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    private var networkContent: some View {
-        if systemMonitor.netBytesInPerSec > 0 || systemMonitor.netBytesOutPerSec > 0 {
-            HStack(spacing: 10) {
-                ioTile(label: "RX", value: formatBytes(systemMonitor.netBytesInPerSec),  color: .cmGreen,  icon: "arrow.down.circle.fill")
-                ioTile(label: "TX", value: formatBytes(systemMonitor.netBytesOutPerSec), color: .cmBlue,   icon: "arrow.up.circle.fill")
-            }
-        } else {
-            Text("No network activity").font(.cmMono(11)).foregroundStyle(Color.cmTextDim)
-                .frame(maxWidth: .infinity, alignment: .leading).padding(14).cmPanel()
-        }
-    }
-
-    @ViewBuilder
     private var diskContent: some View {
-        if systemMonitor.diskReadBytesPerSec > 0 || systemMonitor.diskWriteBytesPerSec > 0 {
+        if dashboardState.diskReadBytesPerSec > 0 || dashboardState.diskWriteBytesPerSec > 0 {
             HStack(spacing: 10) {
-                ioTile(label: "READ",  value: formatBytes(systemMonitor.diskReadBytesPerSec),  color: .cmAmber,  icon: "arrow.down.circle.fill")
-                ioTile(label: "WRITE", value: formatBytes(systemMonitor.diskWriteBytesPerSec), color: .cmPurple, icon: "arrow.up.circle.fill")
+                ioTile(label: "READ",  value: formatBytes(dashboardState.diskReadBytesPerSec),  color: .cmAmber,  icon: "arrow.down.circle.fill")
+                ioTile(label: "WRITE", value: formatBytes(dashboardState.diskWriteBytesPerSec), color: .cmPurple, icon: "arrow.up.circle.fill")
             }
         } else {
             Text("No disk activity").font(.cmMono(11)).foregroundStyle(Color.cmTextDim)
@@ -850,10 +857,10 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
                 systemLevelTile(label: "VOLUME",
-                                icon: systemMonitor.currentVolume < 0.01 ? "speaker.slash.fill" : "speaker.wave.2.fill",
-                                fraction: Double(systemMonitor.currentVolume), color: .cmAmber)
+                                icon: dashboardState.currentVolume < 0.01 ? "speaker.slash.fill" : "speaker.wave.2.fill",
+                                fraction: Double(dashboardState.currentVolume), color: .cmAmber)
                 systemLevelTile(label: "BRIGHTNESS", icon: "sun.max.fill",
-                                fraction: Double(systemMonitor.currentBrightness), color: .cmBlue)
+                                fraction: Double(dashboardState.currentBrightness), color: .cmBlue)
             }
 
             VStack(alignment: .leading, spacing: 8) {
@@ -990,6 +997,12 @@ struct ContentView: View {
     }
 
     // MARK: - History
+    private func updateHistories() {
+        updateCPUHistory(dashboardState.cpuUsagePercent)
+        updateMemoryHistory(dashboardState.memoryUsagePercent)
+        updateCPUTempHistory(dashboardState.cpuTemperature)
+    }
+
     private func updateCPUHistory(_ value: Double) {
         cpuHistory.removeFirst(); cpuHistory.append(value)
     }
@@ -1003,17 +1016,17 @@ struct ContentView: View {
 
     // MARK: - Colors
     private var cpuLoadColor: Color {
-        let p = systemMonitor.cpuUsagePercent
+        let p = dashboardState.cpuUsagePercent
         if p > 80 { return .cmRed }; if p > 50 { return .cmAmber }; return .cmGreen
     }
     private var memColor: Color {
-        switch systemMonitor.memoryPressure { case .green: return .cmGreen; case .yellow: return .cmAmber; case .red: return .cmRed }
+        switch dashboardState.memoryPressure { case .green: return .cmGreen; case .yellow: return .cmAmber; case .red: return .cmRed }
     }
     private var pressureLabel: String {
-        switch systemMonitor.memoryPressure { case .green: return "NORMAL"; case .yellow: return "ELEVATED"; case .red: return "CRITICAL" }
+        switch dashboardState.memoryPressure { case .green: return "NORMAL"; case .yellow: return "ELEVATED"; case .red: return "CRITICAL" }
     }
     private var pressureColor: Color {
-        switch systemMonitor.memoryPressure { case .green: return .cmGreen; case .yellow: return .cmAmber; case .red: return .cmRed }
+        switch dashboardState.memoryPressure { case .green: return .cmGreen; case .yellow: return .cmAmber; case .red: return .cmRed }
     }
     private func tempColor(_ temp: Double) -> Color {
         if temp > 90 { return .cmRed }; if temp > 70 { return .cmAmber }; return .cmGreen
@@ -1035,18 +1048,28 @@ struct ContentView: View {
         if bps >= 1_000     { return String(format: "%.0f KB/s", bps / 1_000) }
         return String(format: "%.0f B/s", bps)
     }
-}
 
-private struct ScanLinePattern: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        var y: CGFloat = 0
-        while y < rect.height {
-            path.move(to: CGPoint(x: rect.minX, y: y))
-            path.addLine(to: CGPoint(x: rect.maxX, y: y))
-            y += 3
-        }
-        return path
+    private func refreshDashboardState() {
+        dashboardState = DashboardState(
+            hasSMCAccess: systemMonitor.hasSMCAccess,
+            numberOfFans: systemMonitor.numberOfFans,
+            fanSpeeds: systemMonitor.fanSpeeds,
+            fanMinSpeeds: systemMonitor.fanMinSpeeds,
+            fanMaxSpeeds: systemMonitor.fanMaxSpeeds,
+            cpuUsagePercent: systemMonitor.cpuUsagePercent,
+            cpuTemperature: systemMonitor.cpuTemperature,
+            gpuTemperature: systemMonitor.gpuTemperature,
+            memoryUsagePercent: systemMonitor.memoryUsagePercent,
+            memoryUsedGB: systemMonitor.memoryUsedGB,
+            totalMemoryGB: systemMonitor.totalMemoryGB,
+            memoryPressure: systemMonitor.memoryPressure,
+            batteryInfo: systemMonitor.batteryInfo,
+            totalSystemWatts: systemMonitor.totalSystemWatts,
+            diskReadBytesPerSec: systemMonitor.diskReadBytesPerSec,
+            diskWriteBytesPerSec: systemMonitor.diskWriteBytesPerSec,
+            currentVolume: systemMonitor.currentVolume,
+            currentBrightness: systemMonitor.currentBrightness
+        )
     }
 }
 
