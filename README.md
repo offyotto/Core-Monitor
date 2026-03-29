@@ -46,7 +46,7 @@ Sensors information (Temperature/Voltage/Power)
 Touch-bar widgets
 
 # Documentation
-Core-Monitor will be notarized by v11 hopefully. 
+Core-Monitor will be notarized by v11.1 hopefully. 
 Explanation of smc-helper below. 
 
 # smc-helper
