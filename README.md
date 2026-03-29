@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="./docs/images/ui/dashboard-v2.png" alt="Core-Monitor dashboard" width="95%">
+  <img src="./docs/images/ui/ui.png" alt="Core-Monitor dashboard" width="95%">
 </p>
 
 <p align="center">
