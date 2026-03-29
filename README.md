@@ -1,20 +1,20 @@
 <p align="center">
-  <img src="Core-Monitor/Assets.xcassets/AppIcon.appiconset/icon_512x512.png" alt="Core-Monitor icon" width="128" height="128">
+  <img src="./Core-Monitor/Assets.xcassets/AppIcon.appiconset/icon_512x512.png" alt="Core-Monitor icon" width="128" height="128">
 </p>
 
 <h1 align="center">Core-Monitor</h1>
 
 <p align="center">
-  Open-source macOS system monitor.
+  Open-source macOS control center for live monitoring, fan control, benchmarking, menu bar stats, and Touch Bar tools.
 </p>
 
 <p align="center">
-  <img src="docs/images/screenshots/Screenshot 2026-03-28 at 5.14.17 pm.png" alt="Core-Monitor dashboard" width="95%">
+  <img src="./docs/images/screenshots/dashboard.png" alt="Core-Monitor dashboard" width="95%">
 </p>
 
 <p align="center">
-  <img src="docs/images/screenshots/Screenshot 2026-03-28 at 5.14.29 pm.png" alt="Core-Monitor menu bar panel" width="48%">
-  <img src="docs/images/screenshots/Screenshot 2026-03-29 at 3.41.55 pm.png" alt="Core-Monitor benchmark and system controls" width="48%">
+  <img src="./docs/images/screenshots/menu-bar.png" alt="Core-Monitor menu bar panel" width="48%">
+  <img src="./docs/images/screenshots/benchmark.png" alt="Core-Monitor benchmark and system controls" width="48%">
 </p>
 
 
