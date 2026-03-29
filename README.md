@@ -33,6 +33,19 @@ Which is why I made this app. It is intended to be used for someone who wanted a
 # Install
 Install the latest release from releases or build from source. Clone via the web url with https://github.com/offyotto-sl3/Core-Monitor.git.
 
+# System Requirements
+Requires macOS 12 or later. Certain features may not work on intel models.
+
+# Features
+CPU utilization
+GPU utilization
+Memory usage
+Battery level
+Fan control
+Sensors information (Temperature/Voltage/Power)
+clock
+Touch-bar widgets
+
 # Documentation
 Core-Monitor will be notarized by v11 hopefully. 
 Explanation of smc-helper below. 
