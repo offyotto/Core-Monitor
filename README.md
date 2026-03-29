@@ -43,7 +43,6 @@ Memory usage
 Battery level
 Fan control
 Sensors information (Temperature/Voltage/Power)
-clock
 Touch-bar widgets
 
 # Documentation
