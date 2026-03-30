@@ -45,8 +45,6 @@ Which is why I made this app. It is intended for someone who wants an all-around
 Install
 Install the latest release from Releases or build from source. Clone via the web URL: https://github.com/offyotto-sl3/Core-Monitor.git.
 
-Fan control writes are optional. The main app does not request administrator privileges in-app. If you want manual fan control, install the smc​-helper yourself and review what it does first.
-
 System Requirements
 Requires macOS 12 or later. Certain features may not work on Intel models.
 
@@ -67,24 +65,7 @@ Touch Bar widgets
 
 Documentation
 
-Core-Monitor is unsigned at the moment. Monitoring, Touch Bar widgets, menu bar stats, and benchmark features run without elevated privileges. Fan write access is separated behind smc​-helper and requires a manual install by the user.
-
-## Manual `smc-helper` install
-
-If you want fan control write access, install `smc-helper` manually:
-
-```bash
-sudo mkdir -p /usr/local/bin
-sudo cp /path/to/smc-helper /usr/local/bin/smc-helper
-sudo chown root:wheel /usr/local/bin/smc-helper
-sudo chmod 755 /usr/local/bin/smc-helper
-echo '%admin ALL=(root) NOPASSWD: /usr/local/bin/smc-helper' | sudo tee /etc/sudoers.d/smc-fan-helper >/dev/null
-sudo chmod 440 /etc/sudoers.d/smc-fan-helper
-sudo chown root:wheel /etc/sudoers.d/smc-fan-helper
-```
-
-Replace `/path/to/smc-helper` with the actual path to the helper binary on your machine.
-After that, relaunch Core-Monitor and fan write controls should work.
+Core-Monitor is unsigned at the moment. Monitoring, Touch Bar widgets, menu bar stats, and benchmark features run without elevated privileges. 
 
 
 Explanation of smc​-helper below.
