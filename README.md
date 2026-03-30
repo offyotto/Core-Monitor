@@ -52,14 +52,21 @@ Requires macOS 12 or later. Certain features may not work on Intel models.
 
 Features
 CPU utilization
+
 GPU utilization
+
 Memory usage
+
 Battery level
+
 Fan control
+
 Sensor information (Temperature/Voltage/Power)
+
 Touch Bar widgets
 
 Documentation
+
 Core-Monitor is unsigned at the moment. Monitoring, Touch Bar widgets, menu bar stats, and benchmark features run without elevated privileges. Fan write access is separated behind smc​-helper and requires a manual install by the user.
 
 ## Manual `smc-helper` install
