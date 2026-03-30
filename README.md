@@ -5,7 +5,7 @@
 <h1 align="center">Core-Monitor</h1>
 
 <p align="center">
-  Open-source macOS system monitor for live monitoring, fan control, benchmarking, menu bar stats, and Touch Bar tools.
+  Open-source macOS system monitor for live monitoring, fan control, and a easy way to see tempretures, memory pressure, cpu usage, and time and battery percentage all in your touchbar.
 </p>
 
 <p align="center">
