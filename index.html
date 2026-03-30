@@ -21,7 +21,6 @@
         <a href="#features">Features</a>
         <a href="#screens">Screens</a>
         <a href="#install">Install</a>
-        <a href="#gatekeeper">Gatekeeper</a>
       </nav>
       <a class="nav-download" href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Download Latest</a>
     </header>
@@ -82,11 +81,10 @@
           </article>
           <article class="install-card">
             <p class="card-step">2. First launch</p>
-            <h3>Approve Gatekeeper once.</h3>
+            <h3>Open the app.</h3>
             <p>
-              Core-Monitor is not signed with a paid Apple Developer certificate, so macOS may block first launch until you press <strong>Open Anyway</strong> in Privacy &amp; Security.
+              Launch Core-Monitor from the downloaded release and macOS will guide you through the normal first-run flow for your system.
             </p>
-            <a class="text-link" href="#gatekeeper">See Gatekeeper steps</a>
           </article>
           <article class="install-card">
             <p class="card-step">3. Unlock the advanced parts</p>
@@ -166,8 +164,8 @@
             <p>Launch Core-Monitor from the downloaded release or from Xcode if you built from source.</p>
           </article>
           <article class="detail-card">
-            <h3>Approve Gatekeeper</h3>
-            <p>If macOS blocks first launch, use the documented <strong>Open Anyway</strong> flow once. After that, the app launches normally.</p>
+            <h3>Allow the app if macOS asks</h3>
+            <p>Use the normal macOS first-run prompts if your system asks for confirmation before opening the app.</p>
           </article>
           <article class="detail-card">
             <h3>Enable helper-backed fan writes if you want them</h3>
@@ -196,45 +194,12 @@
             </p>
             <div class="video-actions">
               <a class="button secondary" href="docs/videos/install-walkthrough.mov">Open Install Video</a>
-              <a class="button ghost" href="#gatekeeper">Jump to Gatekeeper screenshots</a>
             </div>
           </div>
           <video class="install-video" controls preload="metadata">
             <source src="docs/videos/install-walkthrough.mov" type="video/quicktime">
             Your browser does not support the install video. Use the direct file link instead.
           </video>
-        </div>
-      </section>
-
-      <section class="gatekeeper" id="gatekeeper">
-        <div class="section-heading">
-          <p class="eyebrow">Gatekeeper</p>
-          <h2>If macOS blocks first launch, this is the exact path through it.</h2>
-        </div>
-        <ol class="steps">
-          <li>Try to open Core-Monitor once and let macOS block it.</li>
-          <li>Open <strong>System Settings</strong>.</li>
-          <li>Go to <strong>Privacy &amp; Security</strong>.</li>
-          <li>Press <strong>Open Anyway</strong> for Core-Monitor.</li>
-          <li>Confirm the follow-up dialog and launch the app.</li>
-        </ol>
-        <div class="gatekeeper-grid">
-          <figure class="gatekeeper-card">
-            <img src="docs/images/gatekeeper/01-blocked.png" alt="macOS blocks Core-Monitor on first launch.">
-            <figcaption>1. macOS blocks the app on first launch.</figcaption>
-          </figure>
-          <figure class="gatekeeper-card">
-            <img src="docs/images/gatekeeper/02-general.png" alt="System Settings open to the main view.">
-            <figcaption>2. Open System Settings.</figcaption>
-          </figure>
-          <figure class="gatekeeper-card">
-            <img src="docs/images/gatekeeper/03-open-anyway.png" alt="Privacy and Security showing the Open Anyway button for Core-Monitor.">
-            <figcaption>3. Press Open Anyway in Privacy &amp; Security.</figcaption>
-          </figure>
-          <figure class="gatekeeper-card">
-            <img src="docs/images/gatekeeper/04-confirm-open.png" alt="macOS confirmation dialog for opening Core-Monitor anyway.">
-            <figcaption>4. Confirm the follow-up dialog.</figcaption>
-          </figure>
         </div>
       </section>
 

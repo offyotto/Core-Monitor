@@ -241,8 +241,7 @@ section {
 .hero-panel,
 .install-grid,
 .feature-grid,
-.details-grid,
-.gatekeeper-grid {
+.details-grid {
   display: grid;
   gap: 16px;
 }
@@ -255,8 +254,7 @@ section {
 .install-card,
 .feature-card,
 .detail-card,
-.showcase-card,
-.gatekeeper-card {
+.showcase-card {
   padding: 22px;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -297,8 +295,7 @@ section {
 .screens,
 .feature-band,
 .details,
-.video-section,
-.gatekeeper {
+.video-section {
   padding-bottom: 34px;
 }
 
@@ -341,8 +338,7 @@ section {
   border: 1px solid var(--line);
 }
 
-.showcase-card figcaption,
-.gatekeeper-card figcaption {
+.showcase-card figcaption {
   display: grid;
   gap: 8px;
   margin-top: 16px;
@@ -375,31 +371,6 @@ section {
   background: #000;
 }
 
-.steps {
-  display: grid;
-  gap: 12px;
-  margin: 24px 34px 0;
-  padding-left: 22px;
-  color: var(--muted);
-  line-height: 1.7;
-}
-
-.gatekeeper-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding: 24px 34px 0;
-}
-
-.gatekeeper-card {
-  overflow: hidden;
-  padding: 16px;
-}
-
-.gatekeeper-card img {
-  width: 100%;
-  border-radius: 18px;
-  border: 1px solid var(--line);
-}
-
 .cta-band {
   display: flex;
   align-items: center;
@@ -423,8 +394,7 @@ section {
   .video-layout,
   .install-grid,
   .feature-grid,
-  .details-grid,
-  .gatekeeper-grid {
+  .details-grid {
     grid-template-columns: 1fr;
   }
 
@@ -459,7 +429,6 @@ section {
   .feature-grid,
   .details-grid,
   .video-layout,
-  .gatekeeper-grid,
   .steps,
   .cta-band {
     padding-left: 18px;
