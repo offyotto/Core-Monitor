@@ -33,12 +33,12 @@
 
 ## what is this
 
-i made this because every free mac fan control app either:
-- doesn’t support the touch bar
-- looks ancient
-- or locks features behind a paywall
+i made this because most free mac fan control apps:
+- don’t support the touch bar  
+- feel outdated  
+- or lock basic features behind a paywall  
 
-this just puts everything in one place.
+this keeps things simple and in one place.
 
 ---
 
