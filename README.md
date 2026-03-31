@@ -1,99 +1,73 @@
 <p align="center">
-
-  <img src="./Core-Monitor/Assets.xcassets/AppIcon.appiconset/icon-512.png" alt="Core-Monitor icon" width="128">
-
+  <img src="./Core-Monitor/Assets.xcassets/AppIcon.appiconset/icon-512.png" width="128">
 </p>
-
 
 <h1 align="center">Core-Monitor</h1>
 
-
 <p align="center">
-
-Open-source macOS system monitor for live monitoring, fan control, benchmarking, menu bar stats, and Touch Bar tools.
+  macOS system monitor with fan control, menu bar stats, and Touch Bar support.
 </p>
 
-
 <p align="center">
-
-  <img src="./docs/images/ui/dashboard-v2.png" alt="Core-Monitor dashboard" width="95%">
-
+  <a href="https://offyotto-sl3.github.io/Core-Monitor/">
+    <img src="https://img.shields.io/badge/Website-Core--Monitor-8A2BE2?style=for-the-badge">
+  </a>
+  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">
+    <img src="https://img.shields.io/badge/Download-Latest%20Release-brightgreen?style=for-the-badge">
+  </a>
+  <a href="https://github.com/offyotto-sl3/Core-Monitor">
+    <img src="https://img.shields.io/github/stars/offyotto-sl3/Core-Monitor?style=for-the-badge">
+  </a>
+  <a href="./LICENSE">
+    <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge">
+  </a>
 </p>
 
-
 <p align="center">
-
-  <img src="./docs/images/ui/menu-bar-v2.png" alt="Core-Monitor menu bar panel" width="48%">
-
+  <img src="https://img.shields.io/badge/macOS-12%2B-black?style=for-the-badge&logo=apple">
+  <img src="https://img.shields.io/badge/Apple%20Silicon-Yes-black?style=for-the-badge&logo=apple">
+  <img src="https://img.shields.io/badge/Swift-Native-orange?style=for-the-badge&logo=swift">
 </p>
 
+---
 
+## what is this
 
-Core-Monitor
-Website
-Download
-License: GPL-3.0
-macOS
-Apple Silicon
-Swift
-Open Source
+i made this because every free mac fan control app either:
+- doesn’t support the touch bar
+- looks ancient
+- or locks features behind a paywall
 
-Core-Monitor is a native Swift application made to combine features like Touch Bar integration, menu bar implementation, and fan control.
-The app is designed to provide Touch Bar support, menu bar implementation, and fan control in one app. Usually, if you want Touch Bar support in a free fan control app, you have to manually set it up with another Touch Bar app, or pay for a paid alternative (for example, iStat Menus).
-Which is why I made this app. It is intended for someone who wants an all-around fan control app with useful extras that is free and open source.
+this just puts everything in one place.
 
-Install
-Install the latest release from Releases or build from source. Clone via the web URL: https://github.com/offyotto-sl3/Core-Monitor.git.
+---
 
-System Requirements
-Requires macOS 12 or later. Certain features may not work on Intel models.
+<p align="center">
+  <img src="./docs/images/ui/dashboard-v2.png" width="95%">
+</p>
 
-Features
-CPU utilization
+<p align="center">
+  <img src="./docs/images/ui/menu-bar-v2.png" width="48%">
+</p>
 
-GPU utilization
+---
 
-Memory usage
+## features
 
-Battery level
+- cpu / gpu / memory usage  
+- battery stats  
+- fan control (manual + auto)  
+- temps, voltage, power  
+- menu bar stats  
+- touch bar widgets  
 
-Fan control
+---
 
-Sensor information (Temperature/Voltage/Power)
+## install
 
-Touch Bar widgets
+download:
+https://github.com/offyotto-sl3/Core-Monitor/releases/latest
 
-Documentation
-
-Core-Monitor is unsigned at the moment. Monitoring, Touch Bar widgets, menu bar stats, and benchmark features run without elevated privileges. 
-
-
-Explanation of smc​-helper below.
-
-smc-helper
-
-smc​-helper is only needed for fan writes. Core-Monitor no longer installs it or elevates privileges from inside the app.
-
-Opens the Apple​SMC service with IOService​Get​Matching​Service(..., ​IOService​Matching("​Apple​SMC")).
-Uses IOConnect​Call​Struct​Method to talk to the SMC keyspace.
-Supports exactly three commands:
-set <fan​ID> <rpm>
-auto <fan​ID>
-read <key>
-
-set <fan​ID> <rpm>
-Detects the fan mode key form: F​%dmd or F​%d​Md
-Optionally enables Ftst​=1 if that key exists
-Writes manual mode: F0​Md​=1 or F0md​=1
-Writes target RPM: F0​Tg=<rpm>
-auto <fan​ID>
-Writes automatic mode: F0​Md​=0 or F0md​=0
-Clears target if possible: F0​Tg​=0
-Clears force-test if present: Ftst​=0
-read <key>
-Reads any 4-character SMC key, for example temperature, RPM, limits, etc.
-Parses a few known SMC data types: sp78, fpe2, ui8, ui16, flt
-
-License
-
-Core-Monitor is open source. See LICENSE for the full license text.
+or build:
+```bash
+git clone https://github.com/offyotto-sl3/Core-Monitor.git
