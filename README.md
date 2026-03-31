@@ -10,7 +10,7 @@
 
 <p align="center">
 
-Open-source macOS control center for live monitoring, fan control, benchmarking, menu bar stats, and Touch Bar tools.
+Open-source macOS system monitor for live monitoring, fan control, benchmarking, menu bar stats, and Touch Bar tools.
 </p>
 
 
