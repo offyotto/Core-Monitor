@@ -63,42 +63,75 @@ this keeps everything in one place without extra setup.
 ## install
 
 download:  
-https://github.com/offyotto-sl3/Core-Monitor/releases/latest
+https://github.com/offyotto-sl3/Core-Monitor/releases/latest  
 
 or build from source:
+
 ```bash
 git clone https://github.com/offyotto-sl3/Core-Monitor.git
+````
+
 open in xcode and build.
 
-# requirements
-macOS 12 or later
-apple silicon recommended
-intel supported (some features may be limited)
-notarization
+---
+
+## requirements
+
+* macOS 12 or later
+* apple silicon recommended
+* intel supported (some features may be limited)
+
+---
+
+## notarization
+
 the app is signed and notarized through the apple developer program.
-it opens normally without security warnings.
-# permissions
-monitoring works without elevated privileges
-fan control requires smc-helper (optional)
+
+---
+
+## permissions
+
+* monitoring works without elevated privileges
+* fan control requires `smc-helper` (optional)
+
 nothing runs in the background without you knowing.
-smc-helper
+
+---
+
+## smc-helper
+
 used only for fan control writes.
+
 it communicates directly with apple smc:
-opens AppleSMC service
-uses IOConnectCallStructMethod
-commands
+
+* opens AppleSMC service
+* uses IOConnectCallStructMethod
+
+### commands
+
+```
 set <fanID> <rpm>
 auto <fanID>
 read <key>
-behavior
-set → enables manual mode and writes target rpm
-auto → restores system control
-read → reads any 4-character smc key
-supports common data types like:
-sp78
-fpe2
-ui8 / ui16
-flt
+```
 
-license
-GPL-3.0 
+### behavior
+
+* `set` → enables manual mode and writes target rpm
+* `auto` → restores system control
+* `read` → reads any 4-character smc key
+
+supports:
+
+* sp78
+* fpe2
+* ui8 / ui16
+* flt
+
+no auto install. no hidden services.
+
+---
+
+## license
+
+GPL-3.0
