@@ -15,9 +15,7 @@
   <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">
     <img src="https://img.shields.io/badge/Download-Latest%20Release-brightgreen?style=for-the-badge">
   </a>
-  <a href="https://github.com/offyotto-sl3/Core-Monitor">
-    <img src="https://img.shields.io/github/stars/offyotto-sl3/Core-Monitor?style=for-the-badge">
-  </a>
+</a>
   <a href="./LICENSE">
     <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge">
   </a>
