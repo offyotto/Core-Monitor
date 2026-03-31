@@ -85,7 +85,7 @@ open in xcode and build.
 
 ## notarization
 
-the app is signed and notarized through the apple developer program.
+the app is signed and notarized through the apple developer program (v12 or higher, v12 is still in testing sadly, will be ready in 1-2d)
 
 ---
 
@@ -127,8 +127,6 @@ supports:
 * fpe2
 * ui8 / ui16
 * flt
-
-no auto install. no hidden services.
 
 ---
 
