@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>ventaphobia.smc-helper</string>
+    <key>SMAuthorizedClients</key>
+    <array>
+        <string>identifier "CoreTools.Core-Monitor" and anchor apple generic and certificate leaf[subject.OU] = "6VDP675K4L"</string>
+    </array>
+</dict>
+</plist>
