@@ -6,7 +6,7 @@ struct MenuBarStatusLabel: View {
     @ObservedObject var updater: AppUpdater
     @State private var angle: Double = 0
 
-    var body: some  View {
+    var body: some View {
         HStack(spacing: 5) {
             Image(systemName: "fanblades.fill")
                 .font(.system(size: 10, weight: .bold))
@@ -14,295 +14,238 @@ struct MenuBarStatusLabel: View {
                 .rotationEffect(.degrees(angle))
                 .task(id: spinDuration) {
                     angle = 0
-                    withAnimation(.linear(duration: spinDuration).repeatForever(autoreverses: false)) {
-                        angle = 360
-                    }
+                    withAnimation(.linear(duration: spinDuration).repeatForever(autoreverses: false)) { angle = 360 }
                 }
-
             Text(compactMetric)
                 .font(.system(size: 11, weight: .semibold, design: .monospaced))
                 .monospacedDigit()
                 .foregroundStyle(metricColor)
                 .frame(minWidth: 46, alignment: .leading)
-
-            // Blue dot when update is available
             if updater.updateAvailable != nil {
-                Circle()
-                    .fill(Color(red: 0.35, green: 0.72, blue: 1.0))
-                    .frame(width: 5, height: 5)
+                Circle().fill(Color(red: 0.35, green: 0.72, blue: 1)).frame(width: 5, height: 5)
             }
         }
     }
 
     private var compactMetric: String {
-        if let temp = systemMonitor.cpuTemperature  { return "\(Int(temp.rounded()))°"                }
-        if let watts = systemMonitor.totalSystemWatts { return String(format: "%.0fW", abs(watts))     }
-        if let rpm = systemMonitor.fanSpeeds.first, rpm > 0 { return "\(rpm)"                         }
+        if let t = systemMonitor.cpuTemperature  { return "\(Int(t.rounded()))°"                }
+        if let w = systemMonitor.totalSystemWatts  { return String(format: "%.0fW", abs(w))     }
+        if let r = systemMonitor.fanSpeeds.first, r > 0 { return "\(r)"                        }
         return "\(Int(systemMonitor.cpuUsagePercent.rounded()))%"
     }
-
     private var metricColor: Color {
-        if let temp = systemMonitor.cpuTemperature {
-            if temp > 90 { return .red    }
-            if temp > 70 { return .orange }
-        }
+        if let t = systemMonitor.cpuTemperature { if t > 90 { return .red }; if t > 70 { return .orange } }
         return Color(red: 1.0, green: 0.72, blue: 0.18)
     }
-
     private var fanColor: Color {
-        let load = systemMonitor.cpuUsagePercent
-        if load > 80 { return .red }
-        if load > 50 { return .orange }
+        let l = systemMonitor.cpuUsagePercent; if l > 80 { return .red }; if l > 50 { return .orange }
         return Color(red: 1.0, green: 0.72, blue: 0.18)
     }
-
-    private var spinDuration: Double {
-        let load = max(0, min(100, systemMonitor.cpuUsagePercent))
-        return 1.8 - (load / 100.0) * 1.2
-    }
+    private var spinDuration: Double { 1.8 - (max(0, min(100, systemMonitor.cpuUsagePercent)) / 100.0) * 1.2 }
 }
 
-// MARK: - Menu bar dropdown
+// MARK: - Colours (matches ContentView dark palette)
+private extension Color {
+    static let mbBG     = Color(red: 0.100, green: 0.100, blue: 0.110)  // popover background
+    static let mbCard   = Color(red: 0.160, green: 0.160, blue: 0.175)  // row / card bg
+    static let mbDiv    = Color.white.opacity(0.08)                      // dividers
+    static let mbAccent = Color(red: 0.35,  green: 0.72,  blue: 1.00)   // system blue
+}
+
+// MARK: - Menu bar popover
 struct MenuBarMenuView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
     @ObservedObject var updater: AppUpdater
-    var openDashboardAction: () -> Void = {}
+    var openDashboardAction:      () -> Void = {}
     var restoreAppTouchBarAction: () -> Void = {}
-    var revertTouchBarAction: () -> Void = {}
+    var revertTouchBarAction:     () -> Void = {}
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
         VStack(spacing: 0) {
-            // Header strip
-            HStack(spacing: 8) {
-                Image(systemName: "cpu.fill")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(Color(red: 1.0, green: 0.72, blue: 0.18))
-                Text("CORE MONITOR")
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
-                    .foregroundStyle(Color(red: 1.0, green: 0.72, blue: 0.18))
-                    .cmKerning(1.5)
-                Spacer()
-                if updater.updateAvailable != nil {
-                    HStack(spacing: 4) {
-                        Circle().fill(Color(red: 0.35, green: 0.72, blue: 1.0)).frame(width: 5, height: 5)
-                        Text("UPDATE")
-                            .font(.system(size: 8, weight: .bold, design: .monospaced))
-                            .foregroundStyle(Color(red: 0.35, green: 0.72, blue: 1.0))
-                            .cmKerning(0.5)
-                    }
-                } else {
-                    Circle()
-                        .fill(systemMonitor.hasSMCAccess ? Color(red: 0.22, green: 0.92, blue: 0.55) : .red)
-                        .frame(width: 6, height: 6)
-                    Text(systemMonitor.hasSMCAccess ? "SMC OK" : "NO SMC")
-                        .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Color(white: 0.5)).cmKerning(0.8)
-                }
-            }
-            .padding(.horizontal, 14).padding(.vertical, 10)
-            .background(Color(red: 0.10, green: 0.10, blue: 0.12))
-
-            Divider().overlay(Color(white: 1, opacity: 0.07))
-
-            // Metrics grid
-            VStack(spacing: 1) {
-                menuMetricRow(icon: "thermometer.medium", label: "CPU TEMP",
-                              value: systemMonitor.cpuTemperature.map { "\(Int($0.rounded()))°C" } ?? "—",
-                              color: tempColor(systemMonitor.cpuTemperature))
-                menuMetricRow(icon: "chart.bar.fill", label: "CPU LOAD",
-                              value: "\(Int(systemMonitor.cpuUsagePercent.rounded()))%",
-                              color: loadColor(systemMonitor.cpuUsagePercent))
-                menuMetricRow(icon: "memorychip", label: "MEMORY",
-                              value: String(format: "%.1f / %.0f GB", systemMonitor.memoryUsedGB, systemMonitor.totalMemoryGB),
-                              color: Color(white: 0.75))
-                if !systemMonitor.fanSpeeds.isEmpty {
-                    menuMetricRow(icon: "fanblades", label: "FAN",
-                                  value: systemMonitor.fanSpeeds.map { "\($0)" }.joined(separator: " / ") + " RPM",
-                                  color: Color(red: 0.22, green: 0.92, blue: 0.55))
-                }
-                if let watts = systemMonitor.totalSystemWatts {
-                    menuMetricRow(icon: "bolt.fill", label: "POWER",
-                                  value: String(format: "%.1f W", abs(watts)),
-                                  color: Color(red: 0.35, green: 0.72, blue: 1.0))
-                }
-                if systemMonitor.batteryInfo.hasBattery, let pct = systemMonitor.batteryInfo.chargePercent {
-                    menuMetricRow(icon: systemMonitor.batteryInfo.isCharging ? "battery.100.bolt" : "battery.75",
-                                  label: "BATTERY",
-                                  value: "\(pct)%\(systemMonitor.batteryInfo.isCharging ? " ⚡" : "")",
-                                  color: pct < 20 ? .red : pct < 40 ? .orange : Color(red: 0.22, green: 0.92, blue: 0.55))
-                }
-                menuMetricRow(
-                    icon: "internaldrive",
-                    label: "DISK I/O",
-                    value: "R \(formatBytes(systemMonitor.diskReadBytesPerSec))  W \(formatBytes(systemMonitor.diskWriteBytesPerSec))",
-                    color: diskColor
-                )
-                // Volume & brightness
-                menuMetricRow(
-                    icon: systemMonitor.currentVolume < 0.01 ? "speaker.slash.fill" : "speaker.wave.2.fill",
-                    label: "VOLUME",
-                    value: "\(Int((systemMonitor.currentVolume * 100).rounded()))%",
-                    color: Color(red: 1.0, green: 0.72, blue: 0.18)
-                )
-                menuMetricRow(
-                    icon: "sun.max.fill",
-                    label: "BRIGHTNESS",
-                    value: "\(Int((systemMonitor.currentBrightness * 100).rounded()))%",
-                    color: Color(red: 0.35, green: 0.72, blue: 1.0)
-                )
-            }
-            .padding(.vertical, 6)
-
-            Divider().overlay(Color(white: 1, opacity: 0.07))
-
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 6) {
-                    Text("FAN PROFILE").font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Color(white: 0.4)).cmKerning(1)
-                    Spacer()
-                    Text(fanController.mode.title)
-                        .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Color(red: 1.0, green: 0.72, blue: 0.18))
-                }
-
-                Menu {
-                    ForEach(FanControlMode.quickModes, id: \.self) { mode in
-                        Button(mode.title) { fanController.setMode(mode) }
-                    }
-                    Divider()
-                    Button("Reset To System Auto") {
-                        fanController.resetToSystemAutomatic()
-                        fanController.setMode(.automatic)
-                    }
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "fanblades.fill")
-                            .font(.system(size: 9, weight: .bold))
-                        Text("CHANGE PROFILE")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .cmKerning(0.8)
-                        Spacer()
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 8, weight: .bold))
-                    }
-                    .foregroundStyle(Color(white: 0.7))
-                    .padding(.horizontal, 10).padding(.vertical, 7)
-                    .background(Color(red: 0.13, green: 0.13, blue: 0.15))
-                    .clipShape(RoundedRectangle(cornerRadius: 5))
-                }
-                .menuStyle(.borderlessButton)
-                .menuIndicator(.hidden)
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, 14).padding(.vertical, 8)
-
-            Divider().overlay(Color(white: 1, opacity: 0.07))
-
-            // Actions
-            VStack(spacing: 0) {
-                menuActionButton(label: "Open Dashboard", icon: "gauge.medium") {
-                    openDashboardAction()
-                }
-                menuActionButton(label: "Restore System Auto", icon: "arrow.counterclockwise") {
-                    fanController.resetToSystemAutomatic()
-                }
-                menuActionButton(label: "Revert to App Touch Bar", icon: "rectangle.on.rectangle") {
-                    restoreAppTouchBarAction()
-                }
-                menuActionButton(label: "Revert to System Touch Bar", icon: "rectangle.3.group") {
-                    revertTouchBarAction()
-                }
-                if updater.updateAvailable != nil {
-                    menuActionButton(label: "View Update", icon: "arrow.down.circle", accent: Color(red: 0.35, green: 0.72, blue: 1.0)) {
-                        openDashboardAction()
-                    }
-                }
-                Divider().overlay(Color(white: 1, opacity: 0.05)).padding(.vertical, 2)
-                menuActionButton(label: "Quit Core Monitor", icon: "power", destructive: true) {
-                    NSApp.terminate(nil)
-                }
-            }
-            .padding(.vertical, 4)
+            headerStrip
+            mbDivider
+            metricsSection
+            mbDivider
+            fanSection
+            mbDivider
+            actionsSection
         }
-        .frame(maxWidth: .infinity, alignment: .top)
-        } // ScrollView
-        .frame(width: 310)
-        .background(Color(red: 0.07, green: 0.07, blue: 0.08))
+        .background(Color.mbBG)
+        .preferredColorScheme(.dark)
+        .frame(width: 320)
     }
 
-    private func menuMetricRow(icon: String, label: String, value: String, color: Color) -> some View {
+    // MARK: Header
+    private var headerStrip: some View {
         HStack(spacing: 10) {
-            Image(systemName: icon).font(.system(size: 11, weight: .medium)).foregroundStyle(color.opacity(0.7)).frame(width: 16)
-            Text(label).font(.system(size: 9, weight: .bold, design: .monospaced)).foregroundStyle(Color(white: 0.4)).cmKerning(0.8).frame(width: 72, alignment: .leading)
+            ZStack {
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(Color.mbAccent.opacity(0.18)).frame(width: 30, height: 30)
+                Image(systemName: "fanblades.fill").font(.system(size: 12, weight: .semibold)).foregroundStyle(Color.mbAccent)
+            }
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Core Monitor").font(.system(size: 13, weight: .semibold))
+                Text("System Monitor").font(.system(size: 10)).foregroundStyle(.secondary)
+            }
             Spacer()
-            Text(value).font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundStyle(color).monospacedDigit()
+            // SMC / update pill
+            if updater.updateAvailable != nil {
+                statusPill(dot: Color.mbAccent, label: "Update", tint: Color.mbAccent)
+            } else {
+                statusPill(dot: systemMonitor.hasSMCAccess ? .green : .red,
+                           label: systemMonitor.hasSMCAccess ? "SMC OK" : "No SMC",
+                           tint: nil)
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 11)
+    }
+
+    // MARK: Metrics
+    private var metricsSection: some View {
+        VStack(spacing: 0) {
+            metricRow(icon: "thermometer.medium", label: "CPU Temp",
+                      value: systemMonitor.cpuTemperature.map { "\(Int($0.rounded()))°C" } ?? "—",
+                      color: tempColor(systemMonitor.cpuTemperature))
+            metricRow(icon: "cpu.fill", label: "CPU Load",
+                      value: "\(Int(systemMonitor.cpuUsagePercent.rounded()))%",
+                      color: loadColor(systemMonitor.cpuUsagePercent))
+            metricRow(icon: "memorychip", label: "Memory",
+                      value: String(format: "%.1f / %.0f GB", systemMonitor.memoryUsedGB, systemMonitor.totalMemoryGB),
+                      color: .secondary)
+            if !systemMonitor.fanSpeeds.isEmpty {
+                metricRow(icon: "fanblades", label: "Fan",
+                          value: systemMonitor.fanSpeeds.map { "\($0)" }.joined(separator: " / ") + " RPM",
+                          color: .green)
+            }
+            if let w = systemMonitor.totalSystemWatts {
+                metricRow(icon: "bolt.fill", label: "Power", value: String(format: "%.1f W", abs(w)), color: Color.mbAccent)
+            }
+            if systemMonitor.batteryInfo.hasBattery, let pct = systemMonitor.batteryInfo.chargePercent {
+                metricRow(icon: systemMonitor.batteryInfo.isCharging ? "battery.100.bolt" : "battery.75",
+                          label: "Battery",
+                          value: "\(pct)%\(systemMonitor.batteryInfo.isCharging ? " ⚡" : "")",
+                          color: pct < 20 ? .red : pct < 40 ? .orange : .green)
+            }
+            metricRow(icon: "internaldrive", label: "Disk",
+                      value: "R \(fmtBytes(systemMonitor.diskReadBytesPerSec))  W \(fmtBytes(systemMonitor.diskWriteBytesPerSec))",
+                      color: diskColor)
+            metricRow(icon: systemMonitor.currentVolume < 0.01 ? "speaker.slash.fill" : "speaker.wave.2.fill",
+                      label: "Volume", value: "\(Int((systemMonitor.currentVolume * 100).rounded()))%", color: .yellow)
+            metricRow(icon: "sun.max.fill", label: "Brightness",
+                      value: "\(Int((systemMonitor.currentBrightness * 100).rounded()))%", color: Color.mbAccent)
+        }
+        .padding(.vertical, 4)
+    }
+
+    // MARK: Fan
+    private var fanSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Fan Profile").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                Spacer()
+                Text(fanController.mode.title).font(.system(size: 10, weight: .bold)).foregroundStyle(Color.mbAccent)
+            }
+            Menu {
+                ForEach(FanControlMode.quickModes, id: \.self) { mode in
+                    Button(mode.title) { fanController.setMode(mode) }
+                }
+                Divider()
+                Button("Reset to System Auto") { fanController.resetToSystemAutomatic(); fanController.setMode(.automatic) }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "fanblades.fill").font(.system(size: 10, weight: .semibold)).foregroundStyle(Color.mbAccent)
+                    Text("Change Profile").font(.system(size: 12, weight: .semibold))
+                    Spacer()
+                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 9, weight: .bold)).foregroundStyle(.secondary)
+                }
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 12).padding(.vertical, 8)
+                .background(Color.mbCard)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+            .menuStyle(.borderlessButton).menuIndicator(.hidden).buttonStyle(.plain)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+    }
+
+    // MARK: Actions
+    private var actionsSection: some View {
+        VStack(spacing: 0) {
+            actionRow("Open Dashboard",             icon: "gauge.medium")     { openDashboardAction() }
+            actionRow("Reset Fan to System Auto",   icon: "arrow.counterclockwise") { fanController.resetToSystemAutomatic() }
+            actionRow("Restore App Touch Bar",      icon: "rectangle.on.rectangle") { restoreAppTouchBarAction() }
+            actionRow("Revert to System Touch Bar", icon: "rectangle.3.group") { revertTouchBarAction() }
+            if updater.updateAvailable != nil {
+                actionRow("View Update", icon: "arrow.down.circle", tint: Color.mbAccent) { openDashboardAction() }
+            }
+            mbDivider.padding(.horizontal, 14).padding(.vertical, 2)
+            actionRow("Quit Core Monitor", icon: "power", tint: .red) { NSApp.terminate(nil) }
+        }
+        .padding(.vertical, 4)
+    }
+
+    // MARK: Reusable rows
+    private func metricRow(icon: String, label: String, value: String, color: Color) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon).font(.system(size: 12, weight: .medium)).foregroundStyle(color.opacity(0.85)).frame(width: 18)
+            Text(label).font(.system(size: 11, weight: .medium)).foregroundStyle(.secondary).frame(width: 72, alignment: .leading)
+            Spacer()
+            Text(value).font(.system(size: 12, weight: .bold, design: .monospaced)).foregroundStyle(color).monospacedDigit()
         }
         .padding(.horizontal, 14).padding(.vertical, 5)
     }
 
-    private func menuActionButton(label: String, icon: String, destructive: Bool = false, accent: Color? = nil, action: @escaping () -> Void) -> some View {
-        HoverActionButton(label: label, icon: icon, destructive: destructive, accent: accent, action: action)
+    private func actionRow(_ label: String, icon: String, tint: Color? = nil, action: @escaping () -> Void) -> some View {
+        MBActionButton(label: label, icon: icon, tint: tint, action: action)
     }
 
-    private func tempColor(_ temp: Double?) -> Color {
-        guard let temp else { return Color(white: 0.5) }
-        if temp > 90 { return .red }
-        if temp > 70 { return .orange }
-        return Color(red: 0.22, green: 0.92, blue: 0.55)
+    private var mbDivider: some View {
+        Rectangle().fill(Color.mbDiv).frame(height: 1)
     }
-    private func loadColor(_ load: Double) -> Color {
-        if load > 80 { return .red }
-        if load > 50 { return .orange }
-        return Color(red: 1.0, green: 0.72, blue: 0.18)
+
+    private func statusPill(dot: Color, label: String, tint: Color?) -> some View {
+        HStack(spacing: 4) {
+            Circle().fill(dot).frame(width: 5, height: 5)
+            Text(label).font(.system(size: 10, weight: .semibold)).foregroundStyle(tint ?? .secondary)
+        }
+        .padding(.horizontal, 8).padding(.vertical, 4)
+        .background(Color.mbCard).clipShape(Capsule())
     }
-    private func formatBytes(_ bps: Double) -> String {
+
+    // MARK: Helpers
+    private func tempColor(_ t: Double?) -> Color {
+        guard let t else { return .secondary }; return t > 90 ? .red : t > 70 ? .orange : .green
+    }
+    private func loadColor(_ l: Double) -> Color { l > 80 ? .red : l > 50 ? .orange : Color.mbAccent }
+    private func fmtBytes(_ bps: Double) -> String {
         if bps <= 0 { return "0" }
         if bps >= 1_000_000 { return String(format: "%.1fM", bps / 1_000_000) }
         if bps >= 1_000     { return String(format: "%.0fK", bps / 1_000) }
         return String(format: "%.0f", bps)
     }
-
     private var diskColor: Color {
-        if systemMonitor.diskReadBytesPerSec > 0 || systemMonitor.diskWriteBytesPerSec > 0 {
-            return Color(red: 1.0, green: 0.72, blue: 0.18)
-        }
-        return Color(white: 0.32)
+        systemMonitor.diskReadBytesPerSec > 0 || systemMonitor.diskWriteBytesPerSec > 0 ? .orange : .secondary
     }
-
 }
 
-// MARK: - Hover-highlighted action button
-private struct HoverActionButton: View {
-    let label: String
-    let icon: String
-    var destructive: Bool = false
-    var accent: Color? = nil
-    let action: () -> Void
-
+// MARK: - Hover action button
+private struct MBActionButton: View {
+    let label: String; let icon: String; var tint: Color? = nil; let action: () -> Void
     @State private var isHovered = false
-
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(destructive ? Color.red.opacity(0.8) : (accent ?? Color(white: isHovered ? 0.75 : 0.5)))
-                    .frame(width: 16)
-                Text(label)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(destructive ? Color.red : (accent ?? Color(white: isHovered ? 1.0 : 0.78)))
+            HStack(spacing: 10) {
+                Image(systemName: icon).font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(tint ?? (isHovered ? Color.primary : Color.secondary))
+                    .frame(width: 18)
+                Text(label).font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(tint ?? (isHovered ? Color.primary : Color.secondary))
                 Spacer()
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 14).padding(.vertical, 7)
+            .background(isHovered ? (tint ?? Color.primary).opacity(0.10) : Color.clear)
             .contentShape(Rectangle())
-            .background(
-                isHovered
-                    ? (destructive ? Color.red.opacity(0.12) : Color(white: 1, opacity: 0.07))
-                    : Color.clear
-            )
         }
         .buttonStyle(.plain)
         .onHover { isHovered = $0 }

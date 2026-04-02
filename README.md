@@ -1,20 +1,38 @@
 <p align="center">
+<<<<<<< HEAD
   <img src="./Core-Monitor/Assets.xcassets/AppIcon.appiconset/icon-512.png" width="128">
+=======
+  <img src="./Core-Monitor/Assets.xcassets/AppIcon.appiconset/icon-512.png" alt="Core-Monitor icon" width="180">
+>>>>>>> 53574b6 (commits.)
 </p>
 
 <h1 align="center">Core-Monitor</h1>
 
 <p align="center">
 <<<<<<< HEAD
+<<<<<<< HEAD
   macOS system monitor with fan control, menu bar stats, and Touch Bar support.
 =======
   Native macOS monitoring, fan control, benchmarking, menu bar stats, and Touch Bar utilities in one app.
+=======
+  Hardware monitoring, fan control, menu bar stats, sensor readouts, and Touch Bar utilities for macOS.
+>>>>>>> 53574b6 (commits.)
 </p>
 
 <p align="center">
-  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Download Latest Release</a>
+  Native Swift utility for Apple Silicon Macs with optional privileged fan control.
+</p>
+
+<p align="center">
+  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">
+    <img src="https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge" alt="Download latest release">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Latest release</a>
   ·
-  <a href="https://github.com/offyotto-sl3/Core-Monitor">GitHub</a>
+  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases">All releases</a>
   ·
   <a href="./LICENSE">License</a>
 >>>>>>> aa21a26 (Remove leftover unused CoreVisor files)
@@ -36,6 +54,7 @@
   <img src="https://img.shields.io/badge/macOS-12%2B-black?style=flat&logo=apple">
 </p>
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 ---
 
@@ -129,52 +148,50 @@ read <key>
 ### behavior
 =======
 ## About Core-Monitor
+=======
+## Overview
+>>>>>>> 53574b6 (commits.)
 
-Core-Monitor is a native Swift app for macOS that combines hardware monitoring, fan control, benchmarking, menu bar telemetry, and Touch Bar utilities into a single desktop tool.
+Core-Monitor is a native macOS utility written in Swift. The goal is simple: provide hardware monitoring, menu bar stats, Touch Bar integration, and optional fan control in one app.
 
-The project is aimed at users who want one app for everyday system visibility and machine tuning without juggling multiple utilities. Monitoring features work without elevated privileges. Fan write operations are separated behind a helper so they can be handled more safely.
+This repository currently targets direct distribution and local builds. Some features require elevated privileges, and some Touch Bar functionality uses macOS-specific implementation details that are not suitable for every release channel.
 
-## Key Features
+## Features
 
-- Live CPU, GPU, memory, battery, temperature, power, and voltage monitoring
-- Menu bar stats with quick-access system information
-- Fan speed monitoring and manual fan control support
-- Built-in benchmark tooling
+- CPU, GPU, memory, battery, temperature, power, and voltage monitoring
+- Menu bar stats and quick system readouts
+- Fan RPM monitoring
+- Manual fan control through a privileged helper
 - Touch Bar widgets and utility views
-- Native Swift macOS interface with no Electron or web wrapper
+- Native SwiftUI/AppKit macOS app
 
-## Download and Installation
+## Installation
 
-Core-Monitor can be installed either by downloading a release build or by building the project from source.
+### Download
 
-### Release Builds
-
-- Download the latest release from [Releases](https://github.com/offyotto-sl3/Core-Monitor/releases/latest)
+- Download the latest build from [Releases](https://github.com/offyotto-sl3/Core-Monitor/releases/latest)
 - Move the app to `/Applications`
-- Launch Core-Monitor from Applications, Spotlight, or Launchpad
+- Launch `Core-Monitor`
 
-### Build From Source
+### Build from Source
 
-- Clone the repository:
+Clone the repository:
 
 ```bash
 git clone https://github.com/offyotto-sl3/Core-Monitor.git
 ```
 
 - Open the project in Xcode
-- Build and run the `Core-Monitor` target
+- Select the `Core-Monitor` scheme
+- Build and run
 
-## Privileged Fan Control
+## Privileged Helper
 
-Monitoring, Touch Bar widgets, benchmark tooling, and menu bar features do not require administrator privileges.
+Monitoring, menu bar stats, and most UI features do not require administrator privileges.
 
-Fan write access is handled separately through the privileged `smc-helper`. When fan control needs elevated access, Core-Monitor installs the helper and communicates with it over XPC.
+Fan write access is handled by `smc-helper`, a privileged helper that talks to the Apple SMC over IOKit. The app installs and communicates with the helper over XPC when fan control needs elevated access.
 
-### What `smc-helper` Does
-
-The helper is used only for privileged SMC write operations.
-
-Supported commands:
+Supported helper commands:
 
 - `set <fanID> <rpm>` sets a fan target RPM
 - `auto <fanID>` returns a fan to automatic control
@@ -191,11 +208,12 @@ Internally, the helper:
 
 - macOS 12 or later
 - Apple Silicon is the primary target
-- Some features may behave differently on Intel Macs
-- Fan control availability depends on hardware support and helper installation
+- Intel support is partial and may differ by feature
+- Fan control depends on helper installation and hardware behavior
 
-## Project Status
+## Notes
 
+<<<<<<< HEAD
 Core-Monitor is currently best suited for direct distribution and local builds.
 
 Because some advanced functionality involves elevated system access and macOS-specific behavior, feature availability may vary by build type and signing setup.
@@ -204,6 +222,11 @@ Because some advanced functionality involves elevated system access and macOS-sp
 
 Core-Monitor was built as an all-in-one alternative for users who want system stats, menu bar access, Touch Bar utilities, and fan control in a single native macOS app.
 >>>>>>> aa21a26 (Remove leftover unused CoreVisor files)
+=======
+- This project is not currently positioned for the Mac App Store.
+- Signed and unsigned builds may expose different feature sets depending on distribution strategy.
+- Fan control and Touch Bar features should be treated separately when preparing public release builds.
+>>>>>>> 53574b6 (commits.)
 
 * `set` → enables manual mode and writes target rpm
 * `auto` → restores system control

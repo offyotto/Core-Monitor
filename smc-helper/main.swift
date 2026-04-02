@@ -382,39 +382,106 @@ private func validatedSMCKey(_ rawValue: String) throws -> String {
     return rawValue
 }
 
-let args = CommandLine.arguments
-guard args.count >= 2 else { printUsageAndExit() }
+private let helperMachServiceName = "ventaphobia.smc-helper"
 
-let command = args[1]
-private let controller = SMCController()
+private final class SMCHelperXPCService: NSObject, NSXPCListenerDelegate, SMCHelperXPCProtocol {
+    private let controller = SMCController()
 
-do {
-    try controller.open()
-
-    switch command {
-    case "set":
-        guard args.count == 4 else { printUsageAndExit() }
-        let fanID = try validatedFanID(args[2])
-        let rpm = try validatedRPM(args[3])
-        try controller.setFanManual(fanID, rpm: rpm)
-        print("ok")
-
-    case "auto":
-        guard args.count == 3 else { printUsageAndExit() }
-        let fanID = try validatedFanID(args[2])
-        try controller.setFanAuto(fanID)
-        print("ok")
-
-    case "read":
-        guard args.count == 3 else { printUsageAndExit() }
-        let key = try validatedSMCKey(args[2])
-        let value = try controller.readValue(key)
-        print(value)
-
-    default:
-        printUsageAndExit()
+    override init() {
+        super.init()
+        try? controller.open()
     }
-} catch {
-    FileHandle.standardError.write(Data((error.localizedDescription + "\n").utf8))
-    Foundation.exit(1)
+
+    func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
+        newConnection.exportedInterface = NSXPCInterface(with: SMCHelperXPCProtocol.self)
+        newConnection.exportedObject = self
+        newConnection.resume()
+        return true
+    }
+
+    func setFanManual(_ fanID: Int, rpm: Int, withReply reply: @escaping (NSString?) -> Void) {
+        do {
+            try controller.open()
+            try controller.setFanManual(fanID, rpm: rpm)
+            reply(nil)
+        } catch {
+            reply(error.localizedDescription as NSString)
+        }
+    }
+
+    func setFanAuto(_ fanID: Int, withReply reply: @escaping (NSString?) -> Void) {
+        do {
+            try controller.open()
+            try controller.setFanAuto(fanID)
+            reply(nil)
+        } catch {
+            reply(error.localizedDescription as NSString)
+        }
+    }
+
+    func readValue(_ key: String, withReply reply: @escaping (NSNumber?, NSString?) -> Void) {
+        do {
+            try controller.open()
+            let value = try controller.readValue(key)
+            reply(NSNumber(value: value), nil)
+        } catch {
+            reply(nil, error.localizedDescription as NSString)
+        }
+    }
+}
+
+private func runCommandLineMode(arguments: [String]) -> Never {
+    guard arguments.count >= 2 else { printUsageAndExit() }
+
+    let command = arguments[1]
+    let controller = SMCController()
+
+    do {
+        try controller.open()
+
+        switch command {
+        case "set":
+            guard arguments.count == 4 else { printUsageAndExit() }
+            let fanID = try validatedFanID(arguments[2])
+            let rpm = try validatedRPM(arguments[3])
+            try controller.setFanManual(fanID, rpm: rpm)
+            print("ok")
+
+        case "auto":
+            guard arguments.count == 3 else { printUsageAndExit() }
+            let fanID = try validatedFanID(arguments[2])
+            try controller.setFanAuto(fanID)
+            print("ok")
+
+        case "read":
+            guard arguments.count == 3 else { printUsageAndExit() }
+            let key = try validatedSMCKey(arguments[2])
+            let value = try controller.readValue(key)
+            print(value)
+
+        default:
+            printUsageAndExit()
+        }
+    } catch {
+        FileHandle.standardError.write(Data((error.localizedDescription + "\n").utf8))
+        Foundation.exit(1)
+    }
+
+    Foundation.exit(0)
+}
+
+private func runXPCServiceMode() -> Never {
+    let service = SMCHelperXPCService()
+    let listener = NSXPCListener(machServiceName: helperMachServiceName)
+    listener.delegate = service
+    listener.resume()
+    RunLoop.current.run()
+    Foundation.exit(0)
+}
+
+let args = CommandLine.arguments
+if args.count > 1 {
+    runCommandLineMode(arguments: args)
+} else {
+    runXPCServiceMode()
 }

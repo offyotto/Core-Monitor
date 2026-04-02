@@ -758,30 +758,63 @@ final class SystemMonitor: ObservableObject {
         if AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject),
                                       &addr, 0, nil, &sz, &dev) == noErr,
            dev != kAudioObjectUnknown {
-            var vol: Float32 = currentVolume
-            sz = UInt32(MemoryLayout<Float32>.size)
-            var volAddr = AudioObjectPropertyAddress(
-                mSelector: kAudioDevicePropertyVolumeScalar,
-                mScope:    kAudioObjectPropertyScopeOutput,
-                mElement:  kAudioObjectPropertyElementMain)
-            if AudioObjectGetPropertyData(dev, &volAddr, 0, nil, &sz, &vol) == noErr {
-                volume = vol
+            if let deviceVolume = readOutputVolume(for: dev) {
+                volume = deviceVolume
             }
         }
 
         // Brightness
-        var svc = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IODisplayConnect"))
-        if svc == 0 {
-            svc = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleBacklightDisplay"))
-        }
-        if svc != 0 {
-            var bri: Float = brightness
-            IODisplayGetFloatParameter(svc, 0, kIODisplayBrightnessKey as CFString, &bri)
-            brightness = bri
-            IOObjectRelease(svc)
+        if let displayServicesBrightness = DisplayServicesBrightnessBridge.getBrightness() {
+            brightness = displayServicesBrightness
+        } else {
+            var svc = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IODisplayConnect"))
+            if svc == 0 {
+                svc = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleBacklightDisplay"))
+            }
+            if svc != 0 {
+                var bri: Float = brightness
+                IODisplayGetFloatParameter(svc, 0, kIODisplayBrightnessKey as CFString, &bri)
+                brightness = bri
+                IOObjectRelease(svc)
+            }
         }
 
         return (volume, brightness)
+    }
+
+    private func readOutputVolume(for deviceID: AudioDeviceID) -> Float? {
+        if let main = readVolumeScalar(for: deviceID, element: kAudioObjectPropertyElementMain) {
+            return main
+        }
+
+        let left = readVolumeScalar(for: deviceID, element: 1)
+        let right = readVolumeScalar(for: deviceID, element: 2)
+
+        switch (left, right) {
+        case let (.some(l), .some(r)):
+            return (l + r) / 2
+        case let (.some(l), .none):
+            return l
+        case let (.none, .some(r)):
+            return r
+        case (.none, .none):
+            return nil
+        }
+    }
+
+    private func readVolumeScalar(for deviceID: AudioDeviceID, element: AudioObjectPropertyElement) -> Float? {
+        var vol: Float32 = currentVolume
+        var size = UInt32(MemoryLayout<Float32>.size)
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyVolumeScalar,
+            mScope: kAudioObjectPropertyScopeOutput,
+            mElement: element
+        )
+
+        guard AudioObjectHasProperty(deviceID, &address) else { return nil }
+        let status = AudioObjectGetPropertyData(deviceID, &address, 0, nil, &size, &vol)
+        guard status == noErr else { return nil }
+        return vol
     }
 
     private func readNetworkStats() -> (inbound: Double, outbound: Double) {

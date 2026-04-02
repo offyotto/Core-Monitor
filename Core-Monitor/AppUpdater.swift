@@ -347,7 +347,7 @@ struct UpdateBannerView: View {
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
                             .foregroundStyle(Color(red: 0.35, green: 0.72, blue: 1.0))
                             .cmKerning(0.6)
-                        Text("v\(updater.currentVersion) → \(info.tagName)  ·  \(info.publishedAt)")
+                        Text("\(updater.currentVersion) → \(info.tagName)  ·  \(info.publishedAt)")
                             .font(.system(size: 9, weight: .medium, design: .monospaced))
                             .foregroundStyle(Color(white: 0.45))
                     }

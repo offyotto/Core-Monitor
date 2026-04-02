@@ -3,19 +3,13 @@ import AppKit
 
 private struct WindowAccessor: NSViewRepresentable {
     let onResolve: (NSWindow?) -> Void
-
     func makeNSView(context: Context) -> NSView {
         let view = NSView()
-        DispatchQueue.main.async {
-            onResolve(view.window)
-        }
+        DispatchQueue.main.async { onResolve(view.window) }
         return view
     }
-
     func updateNSView(_ nsView: NSView, context: Context) {
-        DispatchQueue.main.async {
-            onResolve(nsView.window)
-        }
+        DispatchQueue.main.async { onResolve(nsView.window) }
     }
 }
 
@@ -24,7 +18,6 @@ struct Core_MonitorApp: App {
     @StateObject private var coordinator    = AppCoordinator()
     @StateObject private var startupManager = StartupManager()
 
-    // Holds the NSStatusItem + NSPopover for the menu bar panel
     @State private var menuBarController: MenuBarController?
     @State private var mainWindow: NSWindow?
 
@@ -36,8 +29,9 @@ struct Core_MonitorApp: App {
         WindowGroup {
             mainContent
                 .onAppear {
-                    // Spin up the menu bar controller once the coordinator is ready.
-                    // Guard against double-init on hot reloads.
+                    // Run as accessory so no Dock icon shows on launch
+                    NSApp.setActivationPolicy(.accessory)
+
                     if menuBarController == nil {
                         menuBarController = MenuBarController(
                             systemMonitor:    coordinator.systemMonitor,
@@ -48,8 +42,11 @@ struct Core_MonitorApp: App {
                             revertTouchBarAction: coordinator.revertToSystemTouchBar
                         )
                     }
+                    // Hide window on first launch — app lives in menu bar
+                    DispatchQueue.main.async { hideMainWindow() }
                 }
         }
+        .windowStyle(.hiddenTitleBar)
     }
 
     private var mainContent: some View {
@@ -59,24 +56,72 @@ struct Core_MonitorApp: App {
             startupManager:   startupManager,
             touchBarWidgetSettings: coordinator.touchBarWidgetSettings
         )
+        .frame(minWidth: 740, minHeight: 520)
         .background(
             WindowAccessor { window in
                 guard let window else { return }
                 mainWindow = window
+                window.minSize = NSSize(width: 740, height: 520)
+                if window.identifier == nil {
+                    window.identifier = NSUserInterfaceItemIdentifier("CoreMonitorMainWindow")
+                }
+                // Frameless look – no native titlebar chrome
+                window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
+                window.titlebarAppearsTransparent = true
+                window.titleVisibility = .hidden
+                window.titlebarSeparatorStyle = .none
+                window.isMovableByWindowBackground = true
+                window.isOpaque = false
+                window.backgroundColor = .clear
+                window.hasShadow = true
+                // Position traffic lights so they sit at the right spot over our custom header
+                positionTrafficLights(in: window)
             }
         )
     }
 
-    private func openDashboard() {
-        NSApp.activate(ignoringOtherApps: true)
-        NSApp.unhide(nil)
+    // MARK: Window management
 
-        if let mainWindow {
-            mainWindow.makeKeyAndOrderFront(nil)
-            mainWindow.orderFrontRegardless()
-        } else if let fallbackWindow = NSApp.windows.first(where: { $0.styleMask.contains(.titled) }) {
-            fallbackWindow.makeKeyAndOrderFront(nil)
-            fallbackWindow.orderFrontRegardless()
+    private func hideMainWindow() {
+        if let w = mainWindow {
+            w.orderOut(nil)
+        } else if let w = NSApp.windows.first(where: { $0.styleMask.contains(.titled) }) {
+            w.orderOut(nil)
+        }
+    }
+
+    func openDashboard() {
+        // Switch back to regular policy so the window can become key
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+
+        if let w = mainWindow {
+            w.makeKeyAndOrderFront(nil)
+            w.orderFrontRegardless()
+        } else if let w = NSApp.windows.first(where: { $0.styleMask.contains(.titled) }) {
+            w.makeKeyAndOrderFront(nil)
+            w.orderFrontRegardless()
+        }
+    }
+
+    // MARK: Traffic lights
+
+    private func positionTrafficLights(in window: NSWindow) {
+        guard
+            let close = window.standardWindowButton(.closeButton),
+            let mini  = window.standardWindowButton(.miniaturizeButton),
+            let zoom  = window.standardWindowButton(.zoomButton),
+            let container = close.superview
+        else { return }
+
+        let top: CGFloat    = 21
+        let left: CGFloat   = 20
+        let spacing: CGFloat = 12
+        let size = close.frame.size
+        let y    = container.bounds.height - size.height - top
+
+        for (i, btn) in [close, mini, zoom].enumerated() {
+            btn.setFrameOrigin(NSPoint(x: left + CGFloat(i) * (size.width + spacing), y: y))
         }
     }
 }

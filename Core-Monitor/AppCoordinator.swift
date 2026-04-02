@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Combine
 import SwiftUI
@@ -8,6 +9,7 @@ enum TouchBarWidgetPreset: String, CaseIterable, Identifiable {
     case volume
     case brightness
     case fanMode
+    case nowPlaying
 
     var id: String { rawValue }
 
@@ -18,6 +20,7 @@ enum TouchBarWidgetPreset: String, CaseIterable, Identifiable {
         case .volume: return "Volume"
         case .brightness: return "Brightness"
         case .fanMode: return "Fan Mode"
+        case .nowPlaying: return "Now Playing"
         }
     }
 }
@@ -33,8 +36,8 @@ final class TouchBarWidgetSettings: ObservableObject {
     private static let selectedPresetKey = "coremonitor.touchBarWidgetPreset"
 
     init() {
-        let rawValue = UserDefaults.standard.string(forKey: Self.selectedPresetKey)
-        selectedPreset = TouchBarWidgetPreset(rawValue: rawValue ?? "") ?? .battery
+        selectedPreset = .nowPlaying
+        UserDefaults.standard.set(TouchBarWidgetPreset.nowPlaying.rawValue, forKey: Self.selectedPresetKey)
     }
 }
 
@@ -53,6 +56,10 @@ final class AppCoordinator: ObservableObject {
     private var touchBarTimer: Timer?
     private var touchBarWidgetObserver: AnyCancellable?
     private let touchBarModeKey = "coremonitor.touchBarMode"
+    private let touchBarModeMigrationKey = "coremonitor.touchBarMode.pockMigrationV1"
+    private var launchObserver: NSObjectProtocol?
+    private var activationObserver: NSObjectProtocol?
+    private var bootstrapWorkItem: DispatchWorkItem?
 
     // Rolling histories (0–100 normalised)
     private var cpuUsageHistory: [Double] = []
@@ -74,6 +81,8 @@ final class AppCoordinator: ObservableObject {
 
     func start() {
         systemMonitor.startMonitoring()
+        normalizeTouchBarModePreference()
+        installTouchBarBootstrapObservers()
         applySavedTouchBarMode()
 
         touchBarWidgetObserver = touchBarWidgetSettings.$selectedPreset
@@ -85,6 +94,16 @@ final class AppCoordinator: ObservableObject {
     }
 
     func stop() {
+        bootstrapWorkItem?.cancel()
+        bootstrapWorkItem = nil
+        if let launchObserver {
+            NotificationCenter.default.removeObserver(launchObserver)
+            self.launchObserver = nil
+        }
+        if let activationObserver {
+            NotificationCenter.default.removeObserver(activationObserver)
+            self.activationObserver = nil
+        }
         stopAppTouchBar()
         systemMonitor.stopMonitoring()
         touchBarWidgetObserver?.cancel()
@@ -92,7 +111,9 @@ final class AppCoordinator: ObservableObject {
 
     func revertToSystemTouchBar() {
         saveTouchBarMode(.system)
-        stopAppTouchBar()
+        touchBarPresenter.dismissToSystemTouchBar()
+        touchBarTimer?.invalidate()
+        touchBarTimer = nil
     }
 
     func revertToAppTouchBar() {
@@ -132,7 +153,11 @@ final class AppCoordinator: ObservableObject {
             fanHistory:  fanHistory,
             customWidget: customWidget,
             volume:      systemMonitor.currentVolume,
-            brightness:  systemMonitor.currentBrightness
+            brightness:  systemMonitor.currentBrightness,
+            netBytesIn:  systemMonitor.netBytesInPerSec,
+            netBytesOut: systemMonitor.netBytesOutPerSec,
+            diskReadBPS: systemMonitor.diskReadBytesPerSec,
+            diskWriteBPS: systemMonitor.diskWriteBytesPerSec
         )
     }
 
@@ -154,36 +179,48 @@ final class AppCoordinator: ObservableObject {
             return TouchBarCustomWidget(
                 label: "BAT",
                 value: value,
+                secondaryValue: nil,
                 symbolName: systemMonitor.batteryInfo.isCharging ? "battery.100.bolt" : "battery.75",
                 color: color,
-                alerting: (batteryPercent ?? 100) < 15
+                alerting: (batteryPercent ?? 100) < 15,
+                style: .symbol,
+                artwork: nil
             )
         case .power:
             let watts = systemMonitor.totalSystemWatts.map { abs($0) }
             return TouchBarCustomWidget(
                 label: "PWR",
                 value: watts.map { String(format: "%.1f W", $0) } ?? "--",
+                secondaryValue: nil,
                 symbolName: "bolt.fill",
                 color: .systemBlue,
-                alerting: (watts ?? 0) > 90
+                alerting: (watts ?? 0) > 90,
+                style: .symbol,
+                artwork: nil
             )
         case .volume:
             let percent = Int((systemMonitor.currentVolume * 100).rounded())
             return TouchBarCustomWidget(
                 label: "VOL",
                 value: "\(percent)%",
+                secondaryValue: nil,
                 symbolName: percent == 0 ? "speaker.slash.fill" : "speaker.wave.2.fill",
                 color: .systemYellow,
-                alerting: false
+                alerting: false,
+                style: .volumeSlider,
+                artwork: nil
             )
         case .brightness:
             let percent = Int((systemMonitor.currentBrightness * 100).rounded())
             return TouchBarCustomWidget(
                 label: "BRT",
                 value: "\(percent)%",
+                secondaryValue: nil,
                 symbolName: "sun.max.fill",
                 color: .systemBlue,
-                alerting: false
+                alerting: false,
+                style: .symbol,
+                artwork: nil
             )
         case .fanMode:
             let color: NSColor = (fanController.mode == .manual || fanController.mode == .max)
@@ -192,9 +229,24 @@ final class AppCoordinator: ObservableObject {
             return TouchBarCustomWidget(
                 label: "MODE",
                 value: fanController.mode.shortTitle,
+                secondaryValue: nil,
                 symbolName: "fanblades.fill",
                 color: color,
-                alerting: fanController.mode == .manual || fanController.mode == .max
+                alerting: fanController.mode == .manual || fanController.mode == .max,
+                style: .symbol,
+                artwork: nil
+            )
+        case .nowPlaying:
+            let nowPlaying = SystemNowPlayingBridge.snapshot()
+            return TouchBarCustomWidget(
+                label: "NOW",
+                value: nowPlaying?.title ?? "Nothing Playing",
+                secondaryValue: nowPlaying?.subtitle,
+                symbolName: "music.note",
+                color: .white,
+                alerting: false,
+                style: .nowPlaying,
+                artwork: nowPlaying?.artwork
             )
         }
     }
@@ -206,16 +258,68 @@ final class AppCoordinator: ObservableObject {
         }
     }
 
+    private func normalizeTouchBarModePreference() {
+        let defaults = UserDefaults.standard
+        guard defaults.bool(forKey: touchBarModeMigrationKey) == false else { return }
+        if savedTouchBarMode == .system {
+            saveTouchBarMode(.app)
+        }
+        defaults.set(true, forKey: touchBarModeMigrationKey)
+    }
+
     private func applySavedTouchBarMode() {
         switch savedTouchBarMode {
         case .app:
-            startAppTouchBar()
+            scheduleTouchBarBootstrap()
         case .system:
             stopAppTouchBar()
         }
     }
 
+    private func installTouchBarBootstrapObservers() {
+        guard launchObserver == nil, activationObserver == nil else { return }
+
+        launchObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didFinishLaunchingNotification,
+            object: NSApp,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.scheduleTouchBarBootstrap()
+            }
+        }
+
+        activationObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: NSApp,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard self?.savedTouchBarMode == .app else { return }
+                self?.startAppTouchBar()
+            }
+        }
+    }
+
+    private func scheduleTouchBarBootstrap() {
+        bootstrapWorkItem?.cancel()
+
+        let workItem = DispatchWorkItem { [weak self] in
+            Task { @MainActor [weak self] in
+                guard self?.savedTouchBarMode == .app else { return }
+                self?.startAppTouchBar()
+            }
+        }
+        bootstrapWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: workItem)
+    }
+
     private func startAppTouchBar() {
+        if touchBarTimer != nil {
+            pushTouchBarUpdate()
+            return
+        }
+
         touchBarPresenter.present()
         pushTouchBarUpdate()
 

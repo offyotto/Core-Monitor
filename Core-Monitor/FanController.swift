@@ -2,6 +2,8 @@ import Foundation
 import Combine
 import AppKit
 
+// MARK: - Fan Control Modes
+
 enum FanControlMode: String, CaseIterable {
     case smart
     case silent
@@ -17,31 +19,33 @@ enum FanControlMode: String, CaseIterable {
 
     var title: String {
         switch self {
-        case .smart: return "SMART"
-        case .silent: return "SILENT"
-        case .balanced: return "BALANCED"
+        case .smart:       return "SMART"
+        case .silent:      return "SILENT"
+        case .balanced:    return "BALANCED"
         case .performance: return "PERFORMANCE"
-        case .max: return "MAX"
-        case .manual: return "MANUAL"
-        case .automatic: return "SYSTEM"
+        case .max:         return "MAX"
+        case .manual:      return "MANUAL"
+        case .automatic:   return "SYSTEM"
         }
     }
 
     var shortTitle: String {
         switch self {
-        case .smart: return "SMART"
-        case .silent: return "SILENT"
-        case .balanced: return "BAL"
+        case .smart:       return "SMART"
+        case .silent:      return "SILENT"
+        case .balanced:    return "BAL"
         case .performance: return "PERF"
-        case .max: return "MAX"
-        case .manual: return "MANUAL"
-        case .automatic: return "SYSTEM"
+        case .max:         return "MAX"
+        case .manual:      return "MANUAL"
+        case .automatic:   return "SYSTEM"
         }
     }
 
     var usesManualSlider: Bool { self == .manual }
     var isManagedProfile: Bool { self != .manual && self != .automatic }
 }
+
+// MARK: - Fan Controller
 
 @MainActor
 final class FanController: ObservableObject {
@@ -50,6 +54,7 @@ final class FanController: ObservableObject {
     @Published var autoAggressiveness: Double = 1.5
     @Published var autoMaxSpeed: Int = 6500
     @Published var statusMessage: String = "Idle"
+
     let minSpeed = 1000
     let maxSpeed = 6500
 
@@ -58,8 +63,10 @@ final class FanController: ObservableObject {
     private var lastAppliedSpeed: Int = 0
     private let helperManager = SMCHelperManager.shared
     private var workspaceObservers: [NSObjectProtocol] = []
+
     init(systemMonitor: SystemMonitor) {
         self.systemMonitor = systemMonitor
+        loadSettings()
         registerForWakeNotifications()
     }
 
@@ -71,36 +78,57 @@ final class FanController: ObservableObject {
         }
     }
 
+    // MARK: - Public API
+
     func setMode(_ mode: FanControlMode) {
         self.mode = mode
         lastAppliedSpeed = 0
+        saveSettings()
         applyCurrentMode(force: true)
     }
 
     func setManualSpeed(_ speed: Int) {
         manualSpeed = max(minSpeed, min(maxSpeed, speed))
+        saveSettings()
         guard mode == .manual else { return }
         applyFanSpeed(manualSpeed)
     }
 
     func setAutoAggressiveness(_ value: Double) {
         autoAggressiveness = max(0.0, min(3.0, value))
+        saveSettings()
         if mode == .smart {
             lastAppliedSpeed = 0
             updateManagedControl()
         }
     }
 
+    func setAutoMaxSpeed(_ speed: Int) {
+        autoMaxSpeed = max(minSpeed, min(maxSpeed, speed))
+        saveSettings()
+        if mode == .smart || mode == .automatic {
+            lastAppliedSpeed = 0
+            updateManagedControl()
+        }
+    }
+
     func resetToSystemAutomatic() {
-        guard let monitor = systemMonitor, monitor.numberOfFans > 0 else { return }
+        guard ensureHelperInstalledIfNeeded() else { return }
+        let fanCount = resolvedFanCount()
+        guard fanCount > 0 else {
+            statusMessage = helperUnavailableMessage()
+            return
+        }
         var allSuccess = true
-        for fanID in 0..<monitor.numberOfFans {
+        for fanID in 0..<fanCount {
             if !runSmcHelper(arguments: ["auto", "\(fanID)"]) {
                 allSuccess = false
             }
         }
         statusMessage = allSuccess ? "System automatic control restored" : "Failed to restore automatic control"
     }
+
+    // MARK: - Control Loop
 
     private func startControlLoop() {
         stopControlLoop()
@@ -113,6 +141,7 @@ final class FanController: ObservableObject {
         }
 
         if let controlTimer {
+            controlTimer.tolerance = 0.3
             RunLoop.current.add(controlTimer, forMode: .common)
         }
     }
@@ -122,9 +151,25 @@ final class FanController: ObservableObject {
         controlTimer = nil
     }
 
+    private func applyCurrentMode(force: Bool = false) {
+        if force { stopControlLoop() }
+
+        switch mode {
+        case .automatic:
+            resetToSystemAutomatic()
+            statusMessage = "System automatic control restored"
+        case .manual:
+            applyFanSpeed(manualSpeed)
+            lastAppliedSpeed = manualSpeed
+            statusMessage = "Manual: \(manualSpeed) RPM"
+            startControlLoop()
+        case .silent, .smart, .balanced, .performance, .max:
+            startControlLoop()
+        }
+    }
+
     private func updateManagedControl() {
-        guard let monitor = systemMonitor else { return }
-        guard mode.isManagedProfile || mode == .manual || mode == .silent else { return }
+        guard let _ = systemMonitor else { return }
 
         switch mode {
         case .manual:
@@ -133,43 +178,58 @@ final class FanController: ObservableObject {
                 lastAppliedSpeed = manualSpeed
             }
             statusMessage = "Manual: \(manualSpeed) RPM"
+
         case .automatic:
             break
+
         case .silent:
+            // Silent delegates entirely to the system SMC auto curve
             if lastAppliedSpeed != -1 {
                 resetToSystemAutomatic()
                 lastAppliedSpeed = -1
             }
             statusMessage = "Silent: system automatic"
+
         case .balanced:
             applyFixedPercentProfile(0.60, label: "Balanced")
+
         case .performance:
             applyFixedPercentProfile(0.85, label: "Performance")
+
         case .max:
             applyFixedPercentProfile(1.0, label: "Max")
+
         case .smart:
             updateSmartProfile()
         }
     }
 
+    // MARK: - Smart Profile (temperature + power aware)
+
     private func updateSmartProfile() {
         guard let monitor = systemMonitor else { return }
 
-        let cpuTemp  = monitor.cpuTemperature ?? 0
-        let gpuTemp  = monitor.gpuTemperature ?? 0
-        let maxTemp  = max(cpuTemp, gpuTemp)
+        let cpuTemp = monitor.cpuTemperature ?? 0
+        let gpuTemp = monitor.gpuTemperature ?? 0
+        let maxTemp = max(cpuTemp, gpuTemp)
         guard maxTemp > 0 else { return }
 
-        let systemWatts   = abs(monitor.totalSystemWatts ?? 0)
-        let wattBoost     = min(1.0, systemWatts / 40.0) * 8.0
+        // Boost target based on system power draw (ffan-style watts aware)
+        let systemWatts = abs(monitor.totalSystemWatts ?? 0)
+        let wattBoost   = min(1.0, systemWatts / 40.0) * 8.0
 
         let effectiveTemp = min(maxTemp + wattBoost, 105.0)
 
+        // Temperature curve: 35°C floor, 92°C ceiling
         let tempFloor   = 35.0
         let tempCeiling = 92.0
         let ratio = max(0.0, min(1.0, (effectiveTemp - tempFloor) / (tempCeiling - tempFloor)))
         let tempBasedSpeed = Double(minSpeed) + Double(autoMaxSpeed - minSpeed) * ratio
 
+        // ffan blending architecture:
+        //   aggressiveness 0.0 → always min speed
+        //   aggressiveness 1.5 → pure temperature-based
+        //   aggressiveness 3.0 → always max speed
         let response = autoAggressiveness
         let midpoint = 1.5
         let target: Double
@@ -193,9 +253,13 @@ final class FanController: ObservableObject {
         }
     }
 
+    // MARK: - Fixed Percent Profile
+
     private func applyFixedPercentProfile(_ percent: Double, label: String) {
-        guard let monitor = systemMonitor, monitor.numberOfFans > 0 else {
-            statusMessage = "No fan detected"
+        guard let monitor = systemMonitor else { return }
+        let fanCount = resolvedFanCount()
+        guard fanCount > 0 else {
+            statusMessage = helperUnavailableMessage()
             return
         }
 
@@ -208,32 +272,19 @@ final class FanController: ObservableObject {
         statusMessage = "\(label): \(target) RPM"
     }
 
-    private func applyCurrentMode(force: Bool = false) {
-        if force {
-            stopControlLoop()
-        }
-
-        switch mode {
-        case .automatic:
-            resetToSystemAutomatic()
-            statusMessage = "System automatic control restored"
-        case .manual:
-            applyFanSpeed(manualSpeed)
-            lastAppliedSpeed = manualSpeed
-            statusMessage = "Manual: \(manualSpeed) RPM"
-            startControlLoop()
-        case .silent, .smart, .balanced, .performance, .max:
-            startControlLoop()
-        }
-    }
+    // MARK: - Speed Application
 
     private func applyFanSpeed(_ speed: Int) {
-        guard let monitor = systemMonitor, monitor.numberOfFans > 0 else {
-            statusMessage = "No fan detected"
+        guard let monitor = systemMonitor else { return }
+        let fanCount = resolvedFanCount()
+        guard fanCount > 0 else {
+            statusMessage = helperUnavailableMessage()
             return
         }
+        guard ensureHelperInstalledIfNeeded() else { return }
+
         var allSuccess = true
-        for fanID in 0..<monitor.numberOfFans {
+        for fanID in 0..<fanCount {
             let perFanMin = fanID < monitor.fanMinSpeeds.count ? monitor.fanMinSpeeds[fanID] : minSpeed
             let perFanMax = fanID < monitor.fanMaxSpeeds.count ? monitor.fanMaxSpeeds[fanID] : maxSpeed
             let clamped = max(perFanMin, min(perFanMax, speed))
@@ -241,8 +292,63 @@ final class FanController: ObservableObject {
                 allSuccess = false
             }
         }
-        statusMessage = allSuccess ? "Applied \(speed) RPM" : "Failed to apply fan speed"
+
+        if allSuccess {
+            statusMessage = "Applied \(speed) RPM"
+        } else {
+            statusMessage = "Failed to apply fan speed"
+        }
     }
+
+    // MARK: - Helper Execution
+
+    private func runSmcHelper(arguments: [String]) -> Bool {
+        let ok = helperManager.execute(arguments: arguments)
+        if !ok, let message = helperManager.statusMessage {
+            statusMessage = message
+        }
+        return ok
+    }
+
+    private func ensureHelperInstalledIfNeeded() -> Bool {
+        let ok = helperManager.ensureInstalledIfNeeded()
+        if !ok, let message = helperManager.statusMessage {
+            statusMessage = message
+        }
+        return ok
+    }
+
+    private func resolvedFanCount() -> Int {
+        if let monitor = systemMonitor, monitor.numberOfFans > 0 {
+            return monitor.numberOfFans
+        }
+
+        if let directCount = helperManager.readValue(key: "FNum").map(Int.init), directCount > 0 {
+            return directCount
+        }
+
+        for fanID in 0..<12 {
+            let actualKey = String(format: "F%dAc", fanID)
+            let minKey = String(format: "F%dMn", fanID)
+            let maxKey = String(format: "F%dMx", fanID)
+            if helperManager.readValue(key: actualKey) != nil ||
+                helperManager.readValue(key: minKey) != nil ||
+                helperManager.readValue(key: maxKey) != nil {
+                return fanID + 1
+            }
+        }
+
+        return 0
+    }
+
+    private func helperUnavailableMessage() -> String {
+        if let monitor = systemMonitor, !monitor.hasSMCAccess {
+            return helperManager.statusMessage ?? monitor.lastError ?? "SMC access unavailable."
+        }
+        return helperManager.statusMessage ?? "No fan detected"
+    }
+
+    // MARK: - Wake Notifications
 
     private func registerForWakeNotifications() {
         let center = NSWorkspace.shared.notificationCenter
@@ -265,11 +371,37 @@ final class FanController: ObservableObject {
         workspaceObservers.append(wakeObserver)
     }
 
-    private func runSmcHelper(arguments: [String]) -> Bool {
-        let ok = helperManager.execute(arguments: arguments)
-        if !ok, let message = helperManager.statusMessage {
-            statusMessage = message
+    // MARK: - Settings Persistence
+
+    private func loadSettings() {
+        let defaults = UserDefaults.standard
+
+        if let raw = defaults.string(forKey: "fanControlMode"),
+           let savedMode = FanControlMode(rawValue: raw) {
+            mode = savedMode
         }
-        return ok
+
+        let savedSpeed = defaults.integer(forKey: "manualFanSpeed")
+        if savedSpeed >= minSpeed && savedSpeed <= maxSpeed {
+            manualSpeed = savedSpeed
+        }
+
+        let savedAggr = defaults.double(forKey: "autoAggressiveness")
+        if savedAggr >= 0.0 && savedAggr <= 3.0 {
+            autoAggressiveness = savedAggr
+        }
+
+        let savedMaxSpeed = defaults.integer(forKey: "autoMaxSpeed")
+        if savedMaxSpeed >= minSpeed && savedMaxSpeed <= maxSpeed {
+            autoMaxSpeed = savedMaxSpeed
+        }
+    }
+
+    private func saveSettings() {
+        let defaults = UserDefaults.standard
+        defaults.set(mode.rawValue, forKey: "fanControlMode")
+        defaults.set(manualSpeed, forKey: "manualFanSpeed")
+        defaults.set(autoAggressiveness, forKey: "autoAggressiveness")
+        defaults.set(autoMaxSpeed, forKey: "autoMaxSpeed")
     }
 }

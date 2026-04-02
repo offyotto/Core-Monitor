@@ -6,6 +6,16 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		35A1B0012F70000100C0DE01 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 353B02C92F640A0700A65F2C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 35F039AA2F64444D004CB9F8;
+			remoteInfo = "smc-helper";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		35F039A92F64444D004CB9F8 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -82,10 +92,12 @@
 				353B02CD2F640A0700A65F2C /* Sources */,
 				353B02CE2F640A0700A65F2C /* Frameworks */,
 				353B02CF2F640A0700A65F2C /* Resources */,
+				35A1B0022F70000100C0DE01 /* Embed Privileged Helper */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				35A1B0032F70000100C0DE01 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				353B02D32F640A0700A65F2C /* Core-Monitor */,
@@ -167,6 +179,27 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		35A1B0022F70000100C0DE01 /* Embed Privileged Helper */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed Privileged Helper";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nHELPER_SRC=${BUILT_PRODUCTS_DIR}/smc-helper\nHELPER_DST=${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Library/LaunchServices/ventaphobia.smc-helper\nmkdir -p $(dirname $HELPER_DST)\ncp -f $HELPER_SRC $HELPER_DST\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		353B02CD2F640A0700A65F2C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -183,6 +216,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		35A1B0032F70000100C0DE01 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 35F039AA2F64444D004CB9F8 /* smc-helper */;
+			targetProxy = 35A1B0012F70000100C0DE01 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		353B02F22F640A0800A65F2C /* Debug */ = {
@@ -317,13 +358,14 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6VDP675K4L;
-				ENABLE_APP_SANDBOX = NO;
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "App-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Core-Monitor";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -362,13 +404,14 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6VDP675K4L;
-				ENABLE_APP_SANDBOX = NO;
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "App-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Core-Monitor";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -400,8 +443,16 @@
 			buildSettings = {
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = NO;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6VDP675K4L;
 				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "smc-helper/Info.plist";
+				LD_QUOTE_LINKER_ARGUMENTS_FOR_COMPILER_DRIVER = NO;
+				OTHER_LDFLAGS = (
+					"$(inherited)\n-sectcreate\n__TEXT\n__info_plist\n$(SRCROOT)/$(INFOPLIST_FILE)\n-sectcreate\n__TEXT\n__launchd_plist\n$(SRCROOT)/smc-helper/Launchd.plist",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "ventaphobia.smc-helper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -415,8 +466,16 @@
 			buildSettings = {
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = NO;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6VDP675K4L;
 				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "smc-helper/Info.plist";
+				LD_QUOTE_LINKER_ARGUMENTS_FOR_COMPILER_DRIVER = NO;
+				OTHER_LDFLAGS = (
+					"$(inherited)\n-sectcreate\n__TEXT\n__info_plist\n$(SRCROOT)/$(INFOPLIST_FILE)\n-sectcreate\n__TEXT\n__launchd_plist\n$(SRCROOT)/smc-helper/Launchd.plist",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "ventaphobia.smc-helper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;

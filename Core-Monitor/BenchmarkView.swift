@@ -21,7 +21,6 @@ struct BenchmarkView: View {
     @State private var showLeaderboard = false
 
     private let engine = BenchmarkEngine()
-
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             switch state {
@@ -59,7 +58,7 @@ struct BenchmarkView: View {
             }
         }
         .padding(14)
-        .cmPanel(accent: .cmBlue)
+        .benchmarkPanel(accent: Color(red: 0.35, green: 0.72, blue: 1))
     }
 
     private var runningView: some View {
@@ -80,7 +79,7 @@ struct BenchmarkView: View {
                 .frame(height: 140)
         }
         .padding(14)
-        .cmPanel(accent: gaugeColor)
+        .benchmarkPanel(accent: gaugeColor)
     }
 
     private var completeView: some View {
@@ -101,7 +100,7 @@ struct BenchmarkView: View {
                     Spacer()
                     Text("\(result.rawScore)")
                         .font(.system(size: 32, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
                 }
                 HStack(spacing: 12) {
                     statCard("Peak", "\(Int(result.peakTemp.rounded()))°C")
@@ -123,7 +122,7 @@ struct BenchmarkView: View {
             }
         }
         .padding(14)
-        .cmPanel(accent: .cmGreen)
+        .benchmarkPanel(accent: .green)
     }
 
     private var benchmarkInfoCard: some View {
@@ -176,19 +175,51 @@ struct BenchmarkView: View {
         HStack {
             Text(label.uppercased()).font(.system(size: 9, weight: .bold, design: .monospaced)).foregroundStyle(.secondary)
             Spacer()
-            Text(value).font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundStyle(.white)
+            Text(value).font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundStyle(.primary)
         }
     }
 
     private func statCard(_ label: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label.uppercased()).font(.system(size: 8, weight: .bold, design: .monospaced)).foregroundStyle(.secondary)
-            Text(value).font(.system(size: 15, weight: .bold, design: .monospaced)).foregroundStyle(.white)
+            Text(value).font(.system(size: 15, weight: .bold, design: .monospaced)).foregroundStyle(.primary)
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.cmSurfaceRaised)
+        .background(Color.white.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.8)
+        )
+    }
+}
+
+private struct BenchmarkPanelModifier: ViewModifier {
+    let fill: Color
+    let stroke: Color
+    let accent: Color
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(fill)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(stroke, lineWidth: 0.8)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(accent.opacity(0.18), lineWidth: 1)
+            )
+    }
+}
+
+private extension View {
+    func benchmarkPanel(accent: Color) -> some View {
+        modifier(BenchmarkPanelModifier(fill: Color.white.opacity(0.08), stroke: Color.white.opacity(0.14), accent: accent))
     }
 }
 
