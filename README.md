@@ -22,8 +22,6 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/macOS-12%2B-black?style=flat&logo=apple">
-  <img src="https://img.shields.io/badge/Apple%20Silicon-Yes-black?style=flat&logo=apple">
-  <img src="https://img.shields.io/badge/Swift-Native-orange?style=flat&logo=swift">
 </p>
 
 ---
