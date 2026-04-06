@@ -2,6 +2,7 @@ import SwiftUI
 import Darwin
 import AVFoundation
 import Combine
+import AppKit
 
 // MARK: - App-wide mode state
 final class AppModeState: ObservableObject {
@@ -11,15 +12,175 @@ final class AppModeState: ObservableObject {
     init() { isBasicMode = UserDefaults.standard.bool(forKey: "basicMode") }
 }
 
+@MainActor
+final class AppAppearanceSettings: ObservableObject {
+    static let shared = AppAppearanceSettings()
+
+    @Published var surfaceOpacity: Double {
+        didSet {
+            UserDefaults.standard.set(surfaceOpacity, forKey: Self.surfaceOpacityKey)
+        }
+    }
+
+    private static let surfaceOpacityKey = "coremonitor.surfaceOpacity"
+
+    private init() {
+        let stored = UserDefaults.standard.object(forKey: Self.surfaceOpacityKey) as? Double ?? 0.0
+        surfaceOpacity = stored
+    }
+}
+
 // MARK: - Colours (BetterDisplay-matched dark palette)
-private extension Color {
-    // Window / pane backgrounds
-    static let bdSidebar  = Color.black.opacity(0.10)
-    static let bdContent  = Color.clear
-    static let bdCard     = Color.white.opacity(0.035)
-    static let bdDivider  = Color.white.opacity(0.06)                    // hairline between panels
-    static let bdAccent   = Color(red: 0.35,  green: 0.72,  blue: 1.00) // system blue
-    static let bdSelected = Color.white.opacity(0.10)
+extension Color {
+    static let bdSidebar = Color(red: 0.16, green: 0.17, blue: 0.22).opacity(0.90)
+    static let bdContent = Color.clear
+    static let bdCard = Color(red: 0.24, green: 0.25, blue: 0.31).opacity(0.78)
+    static let bdDivider = Color.white.opacity(0.08)
+    static let bdAccent = Color(red: 0.39, green: 0.66, blue: 1.00)
+    static let bdSelected = Color(red: 0.22, green: 0.40, blue: 0.90)
+    static let bdShellShadow = Color.black.opacity(0.14)
+    static let bdSidebarStroke = Color.white.opacity(0.16)
+    static let bdSidebarInner = Color.white.opacity(0.05)
+}
+
+struct CoreMonBackdrop: View {
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    Color(red: 0.31, green: 0.31, blue: 0.34),
+                    Color(red: 0.29, green: 0.29, blue: 0.32)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+        .ignoresSafeArea()
+    }
+}
+
+struct CoreMonWindowShell<Content: View>: View {
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 34, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.16, green: 0.10, blue: 0.53),
+                            Color(red: 0.11, green: 0.16, blue: 0.46)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+
+            RoundedRectangle(cornerRadius: 34, style: .continuous)
+                .stroke(Color.white.opacity(0.14), lineWidth: 1)
+
+            RoundedRectangle(cornerRadius: 34, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.24, green: 0.26, blue: 0.33).opacity(0.98),
+                            Color(red: 0.17, green: 0.19, blue: 0.27).opacity(0.99),
+                            Color(red: 0.12, green: 0.13, blue: 0.21)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .padding(1)
+
+            VStack(spacing: 0) {
+                LinearGradient(
+                    colors: [Color.white.opacity(0.08), Color.clear],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 1)
+                Spacer()
+            }
+
+            content()
+                .padding(24)
+        }
+        .shadow(color: .black.opacity(0.34), radius: 24, y: 14)
+    }
+}
+
+struct CoreMonGlassBackground: View {
+    @ObservedObject private var appearanceSettings = AppAppearanceSettings.shared
+    var cornerRadius: CGFloat = 24
+    var tintOpacity: Double = 0.18
+    var strokeOpacity: Double = 0.14
+    var shadowRadius: CGFloat = 10
+    var fillColor: Color = .bdCard
+
+    var body: some View {
+        ZStack {
+            VisualEffectView(
+                material: .underWindowBackground,
+                blendingMode: .behindWindow,
+                opacity: appearanceSettings.surfaceOpacity
+            )
+            fillColor.opacity((0.025 * appearanceSettings.surfaceOpacity) + (tintOpacity * 0.006 * appearanceSettings.surfaceOpacity))
+        }
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .stroke(Color.white.opacity(strokeOpacity * appearanceSettings.surfaceOpacity), lineWidth: 1)
+        )
+        .shadow(color: Color.bdShellShadow.opacity(appearanceSettings.surfaceOpacity), radius: shadowRadius, y: 8)
+    }
+}
+
+private struct SidebarShellBackground: View {
+    @ObservedObject private var appearanceSettings = AppAppearanceSettings.shared
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 27, style: .continuous)
+                .fill(Color.bdSidebar.opacity(0.03 * appearanceSettings.surfaceOpacity))
+
+            VisualEffectView(
+                material: .sidebar,
+                blendingMode: .behindWindow,
+                opacity: appearanceSettings.surfaceOpacity
+            )
+                .clipShape(RoundedRectangle(cornerRadius: 27, style: .continuous))
+
+            RoundedRectangle(cornerRadius: 27, style: .continuous)
+                .stroke(Color.white.opacity(0.05 * appearanceSettings.surfaceOpacity), lineWidth: 1)
+
+            RoundedRectangle(cornerRadius: 27, style: .continuous)
+                .stroke(Color.white.opacity(0.01 * appearanceSettings.surfaceOpacity), lineWidth: 1)
+                .padding(1)
+        }
+    }
+}
+
+struct CoreMonGlassPanel<Content: View>: View {
+    var cornerRadius: CGFloat = 28
+    var tintOpacity: Double = 0.18
+    var strokeOpacity: Double = 0.2
+    var shadowRadius: CGFloat = 18
+    var contentPadding: CGFloat = 18
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        ZStack {
+            CoreMonGlassBackground(
+                cornerRadius: cornerRadius,
+                tintOpacity: tintOpacity,
+                strokeOpacity: strokeOpacity,
+                shadowRadius: shadowRadius,
+                fillColor: cornerRadius > 24 ? .bdSidebar : .bdCard
+            )
+            content()
+                .padding(contentPadding)
+        }
+    }
 }
 
 // MARK: - Copy-on-click
@@ -29,17 +190,35 @@ private struct CopyOnTap: ViewModifier {
     func body(content: Content) -> some View {
         content
             .contentShape(Rectangle())
-            .opacity(flashed ? 0.45 : 1.0)
+            .overlay {
+                Rectangle()
+                    .fill(Color.white.opacity(flashed ? 0.045 : 0))
+                    .allowsHitTesting(false)
+            }
+            .animation(.easeOut(duration: 0.14), value: flashed)
             .onTapGesture {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(text, forType: .string)
                 flashed = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { flashed = false }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) { flashed = false }
             }
     }
 }
 private extension View {
     func copyOnTap(_ text: String) -> some View { modifier(CopyOnTap(text: text)) }
+}
+
+private struct SoftPressButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
+            .overlay {
+                Rectangle()
+                    .fill(Color.white.opacity(configuration.isPressed ? 0.05 : 0))
+                    .allowsHitTesting(false)
+            }
+            .animation(.interactiveSpring(response: 0.22, dampingFraction: 0.86), value: configuration.isPressed)
+    }
 }
 
 // MARK: - Dark card (BetterDisplay style)
@@ -49,8 +228,14 @@ private struct DarkCard<Content: View>: View {
     var body: some View {
         content()
             .padding(padding)
-            .background(Color.bdCard)
-            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .background(
+                CoreMonGlassBackground(
+                    cornerRadius: 18,
+                    tintOpacity: 0.11,
+                    strokeOpacity: 0.14,
+                    shadowRadius: 10
+                )
+            )
     }
 }
 
@@ -142,13 +327,13 @@ private struct MetricTile: View {
         .padding(.bottom, 14)
         .frame(minHeight: 132, alignment: .topLeading)
         .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.black.opacity(0.42))
+            CoreMonGlassBackground(
+                cornerRadius: 22,
+                tintOpacity: 0.14,
+                strokeOpacity: 0.18,
+                shadowRadius: 12
+            )
         )
-        .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
-        }
         .copyOnTap("\(value)\(unit)")
     }
 }
@@ -274,7 +459,7 @@ private struct FanControlPanel: View {
                             .overlay(Capsule().strokeBorder(
                                 fanController.mode == mode ? Color.bdAccent.opacity(0.5) : Color.clear, lineWidth: 1))
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(SoftPressButtonStyle())
                         .animation(.spring(duration: 0.2), value: fanController.mode)
                     }
                 }.padding(.horizontal, 1)
@@ -329,7 +514,7 @@ private struct FanControlPanel: View {
                     .frame(maxWidth: .infinity).padding(.vertical, 9)
                     .background(Color.white.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-            }.buttonStyle(.plain)
+            }.buttonStyle(SoftPressButtonStyle())
         }
     }
     private func modeIcon(_ mode: FanControlMode) -> String {
@@ -344,41 +529,61 @@ private struct FanControlPanel: View {
 // MARK: - Sidebar items
 private enum SidebarItem: String, CaseIterable, Identifiable {
     case overview="Overview", thermals="Thermals", memory="Memory", fans="Fans"
-    case battery="Battery", system="System"
+    case battery="Battery", system="System", about="About"
     var id: String { rawValue }
     var icon: String {
         switch self {
         case .overview: return "gauge.medium"; case .thermals: return "thermometer.medium"
         case .memory: return "memorychip"; case .fans: return "fanblades.fill"
-        case .battery: return "battery.75"; case .system: return "gearshape"
+        case .battery: return "battery.75"; case .system: return "gearshape"; case .about: return "info.circle"
         }
     }
 }
 
 // MARK: - Sidebar row
 private struct SidebarRow: View {
+    @ObservedObject private var appearanceSettings = AppAppearanceSettings.shared
     let item: SidebarItem; let isSelected: Bool
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: item.icon)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(isSelected ? Color.bdAccent : Color.secondary)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(isSelected ? Color.white.opacity(0.96) : Color.white.opacity(0.58))
                 .frame(width: 20, alignment: .center)
+                .scaleEffect(isSelected ? 1.04 : 1.0)
             Text(item.rawValue)
-                .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
-                .foregroundStyle(isSelected ? Color.primary : Color.secondary)
+                .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                .foregroundStyle(isSelected ? Color.white.opacity(0.98) : Color.white.opacity(0.72))
             Spacer()
         }
-        .padding(.horizontal, 10).padding(.vertical, 7)
-        .background(isSelected
-            ? RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Color.bdSelected)
-            : RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Color.clear))
-        .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+        .padding(.horizontal, 14).padding(.vertical, 9)
+        .offset(x: isSelected ? 2 : 0)
+        .background(backgroundFill)
+        .overlay {
+            if isSelected {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.white.opacity(0.03 * appearanceSettings.surfaceOpacity), lineWidth: 1)
+            }
+        }
+        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .animation(.interactiveSpring(response: 0.24, dampingFraction: 0.82), value: isSelected)
+    }
+
+    @ViewBuilder
+    private var backgroundFill: some View {
+        if isSelected {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.bdSelected.opacity(0.18 * appearanceSettings.surfaceOpacity))
+        } else {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.clear)
+        }
     }
 }
 
 // MARK: - Sidebar
 private struct Sidebar: View {
+    @ObservedObject private var appearanceSettings = AppAppearanceSettings.shared
     @Binding var selection: SidebarItem
     let hasBattery: Bool
     let modeState: AppModeState
@@ -388,59 +593,62 @@ private struct Sidebar: View {
         if hasBattery {
             items.append(.battery)
         }
-        items.append(.system)
+        items.append(contentsOf: [.system, .about])
         return items
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 2) {
+                VStack(spacing: 5) {
                     ForEach(visibleItems) { item in
                         Button {
-                            withAnimation(.spring(duration: 0.18)) { selection = item }
+                            selection = item
                         } label: {
                             SidebarRow(item: item, isSelected: selection == item)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(SoftPressButtonStyle())
                     }
                 }
-                .padding(.horizontal, 8)
-                .padding(.top, 18)
-                .padding(.bottom, 8)
+                .padding(.horizontal, 10)
+                .padding(.top, 34)
+                .padding(.bottom, 10)
             }
 
             Spacer()
 
-            // hairline
-            Rectangle().fill(Color.bdDivider).frame(height: 1)
+            Rectangle()
+                .fill(Color.white.opacity(0.03 * appearanceSettings.surfaceOpacity))
+                .frame(height: 1)
+                .padding(.horizontal, 10)
 
-            // ── Footer ───────────────────────────────────
             Button { modeState.isBasicMode = true } label: {
                 Label("Basic Mode", systemImage: "square.grid.2x2.fill")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.white.opacity(0.72))
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 10).padding(.vertical, 8)
-                    .background(Color.white.opacity(0.035))
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .padding(.horizontal, 14).padding(.vertical, 9)
             }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 10).padding(.vertical, 12)
+            .buttonStyle(SoftPressButtonStyle())
+            .padding(.horizontal, 10)
+            .padding(.vertical, 14)
         }
-        .frame(width: 220)
+        .frame(width: 228)
         .frame(maxHeight: .infinity)
-        .background(Color.bdSidebar)
-        // BetterDisplay-style right border: one thin white/8% line
-        .overlay(alignment: .trailing) {
-            Rectangle()
-                .fill(Color.bdDivider)
-                .frame(width: 1)
+        .background {
+            ZStack {
+                VisualEffectView(
+                    material: .underWindowBackground,
+                    blendingMode: .behindWindow,
+                    opacity: appearanceSettings.surfaceOpacity
+                )
+                Color.bdSidebar.opacity(0.015 * appearanceSettings.surfaceOpacity)
+            }
         }
     }
 }
 
-// MARK: - Detail pane
+// MARK: - why do i even mark stuff, looks like ai made it. eww.
 private struct DetailPane: View {
     let selection: SidebarItem
     let state: ContentView.DashboardState
@@ -450,20 +658,30 @@ private struct DetailPane: View {
     let benchmarkStore: BenchmarkStore; let updater: AppUpdater
     @Binding var showUpdateCheck: Bool
 
+    @ViewBuilder
+    private var selectedContent: some View {
+        switch selection {
+        case .overview:  overviewContent
+        case .thermals:  thermalsContent
+        case .memory:    memoryContent
+        case .fans:      fansContent
+        case .battery:   batteryContent
+        case .system:    systemContent
+        case .about:     aboutContent
+        }
+    }
+
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 18) {
-                switch selection {
-                case .overview:  overviewContent
-                case .thermals:  thermalsContent
-                case .memory:    memoryContent
-                case .fans:      fansContent
-                case .battery:   batteryContent
-                case .system:    systemContent
-                }
+                selectedContent
+                    .id(selection)
                 Spacer(minLength: 24)
             }
-            .padding(.top, 28).padding(.horizontal, 24).padding(.bottom, 24)
+            .padding(.top, 28)
+            .padding(.leading, 24)
+            .padding(.trailing, 24)
+            .padding(.bottom, 24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
@@ -486,7 +704,7 @@ private struct DetailPane: View {
                                 .padding(.horizontal, 14).padding(.vertical, 7)
                                 .background(Color.bdAccent.opacity(0.2)).clipShape(Capsule())
                                 .overlay(Capsule().strokeBorder(Color.bdAccent.opacity(0.4), lineWidth: 1))
-                        }.buttonStyle(.plain)
+                        }.buttonStyle(SoftPressButtonStyle())
                     }
                 }.transition(.move(edge: .top).combined(with: .opacity))
             }
@@ -665,6 +883,14 @@ private struct DetailPane: View {
         .onAppear { startupManager.refreshState() }
     }
 
+    private var aboutContent: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            header("About", subtitle: "App details and appearance")
+            BetterDisplayInspiredHero()
+            AboutDetailsPanel()
+        }
+    }
+
     // MARK: Sub-helpers
     private func header(_ title: String, subtitle: String = "") -> some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -689,7 +915,7 @@ private struct DetailPane: View {
     }
 
     private func levelRow(label: String, icon: String, fraction: Double, color: Color) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 0) {
             Image(systemName: icon).font(.system(size: 13, weight: .semibold)).foregroundStyle(color).frame(width: 20)
             VStack(alignment: .leading, spacing: 5) {
                 HStack {
@@ -733,6 +959,131 @@ private struct DetailPane: View {
     }
 }
 
+private struct AboutDetailsPanel: View {
+    @ObservedObject private var appearanceSettings = AppAppearanceSettings.shared
+
+    var body: some View {
+        DarkCard(padding: 18) {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("App details")
+                            .font(.system(size: 18, weight: .bold))
+                        Text("Version, identity and global surface appearance.")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text(AppVersion.current)
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        Text(Bundle.main.bundleIdentifier ?? "com.coremonitor.app")
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Label("Global Transparency", systemImage: "circle.lefthalf.filled")
+                            .font(.system(size: 12, weight: .semibold))
+                        Spacer()
+                        Text("\(Int((appearanceSettings.surfaceOpacity * 100).rounded()))%")
+                            .font(.system(size: 12, weight: .bold, design: .monospaced))
+                            .foregroundStyle(Color.bdAccent)
+                    }
+                    Slider(value: $appearanceSettings.surfaceOpacity, in: 0.0...1.0, step: 0.01)
+                        .tint(Color.bdAccent)
+                    Text("Changes dashboard and card translucency across the app.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+
+                HStack(spacing: 10) {
+                    aboutPill("Core Monitor")
+                    aboutPill("macOS Dashboard")
+                    aboutPill("Build \(AppVersion.current)")
+                }
+            }
+        }
+    }
+
+    private func aboutPill(_ title: String) -> some View {
+        Text(title)
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(Color.white.opacity(0.06))
+            .clipShape(Capsule())
+    }
+}
+
+private struct BetterDisplayInspiredHero: View {
+    @State private var revealBackdrop = false
+    @State private var showLogo = false
+    @State private var logoScale: CGFloat = 2.9
+    @State private var logoOffsetY: CGFloat = -34
+    @State private var logoBlur: CGFloat = 8
+    @State private var logoOpacity = 0.0
+
+    var body: some View {
+        CoreMonGlassPanel(cornerRadius: 26, tintOpacity: 0.12, strokeOpacity: 0.16, shadowRadius: 14, contentPadding: 28) {
+            VStack(spacing: 18) {
+                ZStack {
+                    if revealBackdrop {
+                        heroLogo
+                            .transition(.opacity)
+                    }
+                }
+                .frame(height: 360)
+
+                VStack(spacing: 6) {
+                    Text("Core Monitor")
+                        .font(.system(size: 22, weight: .bold))
+                    Text("Thermals, fans and live hardware telemetry.")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .task {
+            guard !showLogo else { return }
+            revealBackdrop = false
+            showLogo = false
+            logoScale = 2.9
+            logoOffsetY = -34
+            logoBlur = 8
+            logoOpacity = 0
+
+            try? await Task.sleep(nanoseconds: 120_000_000)
+            withAnimation(.easeOut(duration: 0.16)) {
+                revealBackdrop = true
+            }
+
+            showLogo = true
+            withAnimation(.interactiveSpring(response: 0.82, dampingFraction: 0.82, blendDuration: 0.16)) {
+                logoScale = 1
+                logoOffsetY = 0
+                logoBlur = 0
+                logoOpacity = 1
+            }
+        }
+    }
+
+    private var heroLogo: some View {
+        Image(nsImage: NSImage(named: "AppIcon") ?? NSApp.applicationIconImage)
+            .resizable()
+            .interpolation(.high)
+            .frame(width: 370, height: 370)
+            .shadow(color: .black.opacity(0.18), radius: 14, y: 10)
+        .scaleEffect(showLogo ? logoScale : 2.8)
+        .offset(y: showLogo ? logoOffsetY : -18)
+        .blur(radius: showLogo ? logoBlur : 12)
+        .opacity(showLogo ? logoOpacity : 0)
+    }
+}
+
 // MARK: - Basic mode
 struct BasicModeView: View {
     @ObservedObject var systemMonitor: SystemMonitor
@@ -740,14 +1091,20 @@ struct BasicModeView: View {
     @ObservedObject var modeState: AppModeState
 
     var body: some View {
-        ZStack {
-            Color.bdSidebar.ignoresSafeArea()
-            VStack(spacing: 0) {
-                basicHeader; Rectangle().fill(Color.bdDivider).frame(height: 1)
-                basicMetrics; Rectangle().fill(Color.bdDivider).frame(height: 1)
-                basicFans; Spacer(); basicFooter
-            }
+        VStack(spacing: 0) {
+            basicHeader; Rectangle().fill(Color.bdDivider).frame(height: 1)
+            basicMetrics; Rectangle().fill(Color.bdDivider).frame(height: 1)
+            basicFans; Spacer(); basicFooter
         }
+        .background {
+            VisualEffectView(material: .underWindowBackground, blendingMode: .behindWindow)
+                .ignoresSafeArea()
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 0, style: .continuous)
+                .stroke(Color.white.opacity(0.06), lineWidth: 0.5)
+                .ignoresSafeArea()
+            }
         .preferredColorScheme(.dark)
     }
 
@@ -760,7 +1117,7 @@ struct BasicModeView: View {
                 Text("Full UI").font(.system(size: 11, weight: .semibold))
                     .padding(.horizontal, 10).padding(.vertical, 4)
                     .background(Color.white.opacity(0.08)).clipShape(Capsule())
-            }.buttonStyle(.plain)
+            }.buttonStyle(SoftPressButtonStyle())
         }.padding(.horizontal, 16).padding(.vertical, 12)
     }
 
@@ -806,7 +1163,7 @@ struct BasicModeView: View {
                     .frame(maxWidth: .infinity).padding(.vertical, 8)
                     .background(fanController.mode == .smart ? Color.bdAccent.opacity(0.15) : Color.white.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-            }.buttonStyle(.plain).padding(.horizontal, 16).padding(.bottom, 12)
+            }.buttonStyle(SoftPressButtonStyle()).padding(.horizontal, 16).padding(.bottom, 12)
         }
     }
 
@@ -818,7 +1175,7 @@ struct BasicModeView: View {
             }.frame(maxWidth: .infinity).padding(.vertical, 14)
             .background(active ? Color.bdAccent.opacity(0.15) : Color.white.opacity(0.06))
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-        }.buttonStyle(.plain)
+        }.buttonStyle(SoftPressButtonStyle())
     }
 
     private var basicFooter: some View {
@@ -830,18 +1187,30 @@ struct BasicModeView: View {
     }
 }
 
-// MARK: - VisualEffectView (NSVisualEffectView wrapper)
+// MARK: - VisualEffectView (NSVisualEffectView wrapper) THIS ISNT AI SLOP BTW:/ btw this will STAY open source foEVAA
 struct VisualEffectView: NSViewRepresentable {
     let material: NSVisualEffectView.Material
     let blendingMode: NSVisualEffectView.BlendingMode
+    var opacity: Double = 1.0
     func makeNSView(context: Context) -> NSVisualEffectView {
-        let v = NSVisualEffectView(); v.material = material; v.blendingMode = blendingMode; v.state = .active; return v
+        let v = NSVisualEffectView()
+        v.material = material
+        v.blendingMode = blendingMode
+        v.state = .active
+        v.alphaValue = opacity
+        return v
     }
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.material = material
+        nsView.blendingMode = blendingMode
+        nsView.state = .active
+        nsView.alphaValue = opacity
+    }
 }
 
 // MARK: - ContentView
 struct ContentView: View {
+    @StateObject private var appearanceSettings = AppAppearanceSettings.shared
     struct DashboardState {
         var hasSMCAccess = false; var numberOfFans = 0
         var fanSpeeds: [Int] = []; var fanMinSpeeds: [Int] = []; var fanMaxSpeeds: [Int] = []
@@ -879,6 +1248,7 @@ struct ContentView: View {
             }
         }
         .cmHideWindowToolbarBackground()
+        .cmRemoveWindowToolbarTitle()
         .onReceive(NotificationCenter.default.publisher(for: .systemMonitorDidUpdate)) { _ in
             refreshDashboardState(); updateHistories()
         }
@@ -902,11 +1272,24 @@ struct ContentView: View {
                 benchmarkStore: benchmarkStore, updater: updater,
                 showUpdateCheck: $showUpdateCheck
             )
-            .background(Color.bdContent)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
+        .padding(.horizontal, 10)
+        .padding(.top, 0)
+        .padding(.bottom, 10)
+        .ignoresSafeArea(.container, edges: .top)
         .background {
-            VisualEffectView(material: .fullScreenUI, blendingMode: .behindWindow)
-                .ignoresSafeArea()
+            ZStack {
+                VisualEffectView(
+                    material: .underWindowBackground,
+                    blendingMode: .behindWindow,
+                    opacity: appearanceSettings.surfaceOpacity
+                )
+                    .ignoresSafeArea()
+                Color(red: 0.24, green: 0.25, blue: 0.31)
+                    .opacity(0.008 * appearanceSettings.surfaceOpacity)
+                    .ignoresSafeArea()
+            }
         }
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showUpdateCheck) { UpdateCheckSheet(updater: updater) }
@@ -942,14 +1325,14 @@ private struct UpdateCheckSheet: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         ZStack {
-            Color.bdSidebar.ignoresSafeArea()
+            CoreMonBackdrop()
             VStack(spacing: 20) {
                 HStack {
                     Text("App Updater").font(.system(size: 16, weight: .bold))
                     Spacer()
                     Button { dismiss() } label: {
                         Image(systemName: "xmark.circle.fill").font(.system(size: 18)).foregroundStyle(.secondary)
-                    }.buttonStyle(.plain).keyboardShortcut(.escape)
+                    }.buttonStyle(SoftPressButtonStyle()).keyboardShortcut(.escape)
                 }
                 if updater.updateAvailable != nil {
                     UpdateBannerView(updater: updater)
@@ -958,8 +1341,12 @@ private struct UpdateCheckSheet: View {
                         Image(systemName: "checkmark.circle.fill").font(.system(size: 36)).foregroundStyle(.green)
                         Text("You're up to date").font(.system(size: 15, weight: .semibold))
                         Text("Core Monitor \(updater.currentVersion)").font(.system(size: 11)).foregroundStyle(.secondary)
-                    }.frame(maxWidth: .infinity).padding(24).background(Color.bdCard)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(24)
+                    .background(
+                        CoreMonGlassBackground(cornerRadius: 18, tintOpacity: 0.12, strokeOpacity: 0.16, shadowRadius: 10)
+                    )
                     Button { Task { await updater.checkForUpdates() } } label: {
                         HStack(spacing: 6) {
                             if updater.isChecking { ProgressView().scaleEffect(0.7).frame(width: 12, height: 12) }
@@ -967,8 +1354,10 @@ private struct UpdateCheckSheet: View {
                             Text(updater.isChecking ? "Checking…" : "Check Now")
                         }.font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)
                         .padding(.horizontal, 16).padding(.vertical, 8)
-                        .background(Color.bdCard).clipShape(Capsule())
-                    }.buttonStyle(.plain).disabled(updater.isChecking)
+                        .background(
+                            CoreMonGlassBackground(cornerRadius: 999, tintOpacity: 0.10, strokeOpacity: 0.14, shadowRadius: 6)
+                        )
+                    }.buttonStyle(SoftPressButtonStyle()).disabled(updater.isChecking)
                 }
                 if let err = updater.checkError {
                     Text(err).font(.system(size: 11)).foregroundStyle(.red).multilineTextAlignment(.center)

@@ -11,8 +11,6 @@ import ServiceManagement
 //
 // Preferred execution path:
 //   1. Connect to a privileged Mach service installed via SMJobBless.
-// Debug fallback:
-//   2. Run a locally-built helper binary directly for Xcode development.
 
 @MainActor
 final class SMCHelperManager: ObservableObject {
@@ -34,28 +32,9 @@ final class SMCHelperManager: ObservableObject {
 
     // MARK: - Candidate Paths
 
-    /// All candidate paths in priority order.
+    /// The only accepted helper location.
     private var helperCandidates: [String] {
-        var candidates: [String] = []
-
-        // 1. Production privileged-helper location (SMCHelperManager primary)
-        candidates.append("/Library/PrivilegedHelperTools/\(helperLabel)")
-
-#if DEBUG
-        // 2. Derived-data build directory (Xcode debug builds)
-        let derivedHelper = URL(fileURLWithPath: Bundle.main.bundlePath)
-            .deletingLastPathComponent()
-            .appendingPathComponent("smc-helper")
-            .path
-        candidates.append(derivedHelper)
-
-        // 3. Workspace-relative build product
-        let workspaceHelper = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-            .appendingPathComponent("Core-Monitor/Products/smc-helper")
-            .path
-        candidates.append(workspaceHelper)
-#endif
-        return candidates
+        ["/Library/PrivilegedHelperTools/\(helperLabel)"]
     }
 
     // MARK: - Status
@@ -96,14 +75,6 @@ final class SMCHelperManager: ObservableObject {
         if executeViaBlessedXPC(arguments: arguments) {
             return true
         }
-
-#if DEBUG
-        if !fileManager.fileExists(atPath: "/Library/PrivilegedHelperTools/\(helperLabel)"),
-           let helperURL = helperCandidates.dropFirst().compactMap({ validatedHelperURL(atPath: $0) }).first,
-           runDirect(helperURL: helperURL, arguments: arguments) {
-            return true
-        }
-#endif
 
         if !fileManager.fileExists(atPath: "/Library/PrivilegedHelperTools/\(helperLabel)") {
             statusMessage = "Fan write access unavailable: privileged helper not installed."
@@ -272,26 +243,6 @@ final class SMCHelperManager: ObservableObject {
         return true
     }
 
-    private func runDirect(helperURL: URL, arguments: [String]) -> Bool {
-        let process = Process()
-        process.executableURL = helperURL
-        process.arguments = arguments
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError  = FileHandle.nullDevice
-
-        do {
-            try process.run()
-            process.waitUntilExit()
-            if process.terminationStatus == 0 {
-                statusMessage = nil
-                return true
-            }
-        } catch {
-            // binary may need root; fall through to sudo strategies
-        }
-        return false
-    }
-
     // MARK: - Helper Installation
 
     func installBundledHelper(completion: @escaping (Bool, String?) -> Void) {
@@ -349,32 +300,12 @@ final class SMCHelperManager: ObservableObject {
     }
 
     private func isPathAllowed(_ url: URL) -> Bool {
-        let privilegedHelper = "/Library/PrivilegedHelperTools/\(helperLabel)"
-        if url.path == privilegedHelper { return true }
-
-#if DEBUG
-        let derivedHelper = URL(fileURLWithPath: Bundle.main.bundlePath)
-            .deletingLastPathComponent()
-            .appendingPathComponent("smc-helper")
-            .standardizedFileURL
-        let workspaceHelper = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-            .appendingPathComponent("Core-Monitor/Products/smc-helper")
-            .standardizedFileURL
-        if url == derivedHelper || url == workspaceHelper { return true }
-#endif
-        return false
+        url.path == "/Library/PrivilegedHelperTools/\(helperLabel)"
     }
 
     private func isOwnershipValid(for url: URL, attributes: [FileAttributeKey: Any]) -> Bool {
         guard let owner = attributes[.ownerAccountID] as? NSNumber else { return false }
-
-#if DEBUG
-        // In debug, allow binaries owned by the current user (built locally)
-        if url.path != "/Library/PrivilegedHelperTools/\(helperLabel)" {
-            return owner.uint32Value == getuid() || owner.uint32Value == 0
-        }
-#endif
-        // Production: must be root-owned
+        _ = url
         return owner.uint32Value == 0
     }
 
@@ -386,12 +317,6 @@ final class SMCHelperManager: ObservableObject {
     }
 
     private func isCodeSignatureValid(for url: URL) -> Bool {
-#if DEBUG
-        // Skip signature check for locally-built debug helpers
-        if url.path != "/Library/PrivilegedHelperTools/\(helperLabel)" {
-            return true
-        }
-#endif
         var staticCode: SecStaticCode?
         let createStatus = SecStaticCodeCreateWithPath(url as CFURL, [], &staticCode)
         guard createStatus == errSecSuccess, let code = staticCode else { return false }

@@ -123,17 +123,18 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
         let hc = NSHostingController(rootView: contentView)
         // Allow the hosting controller to size itself naturally
         hc.view.translatesAutoresizingMaskIntoConstraints = true
+        hc.view.wantsLayer = true
+        hc.view.layer?.backgroundColor = NSColor.clear.cgColor
         self.hostingController = hc
 
         popover = NSPopover()
-        popover.contentSize       = NSSize(width: 310, height: 500)
+        popover.contentSize       = NSSize(width: 350, height: 520)
         popover.behavior          = .transient   // closes on outside click, no 2s timeout
         popover.animates          = true
         popover.contentViewController = hc
         popover.delegate          = self
 
-        // Use the system HUD appearance so it blends with the dark menu bar panel look
-        popover.appearance = NSAppearance(named: .vibrantDark)
+        popover.appearance = nil
     }
 
     // MARK: - Toggle
@@ -145,9 +146,12 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
             guard let button = statusItem.button else { return }
 
             // Recalculate natural content height before showing
-            let fittingSize = hostingController?.view.fittingSize ?? NSSize(width: 310, height: 500)
-            let height = min(max(fittingSize.height, 200), 700)
-            popover.contentSize = NSSize(width: 310, height: height)
+            hostingController?.view.layoutSubtreeIfNeeded()
+            let fittingSize = hostingController?.view.fittingSize ?? NSSize(width: 350, height: 520)
+            let screenHeight = button.window?.screen?.visibleFrame.height ?? 900
+            let maxHeight = max(360, min(620, screenHeight - 120))
+            let height = min(max(fittingSize.height, 360), maxHeight)
+            popover.contentSize = NSSize(width: 350, height: height)
 
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             popover.contentViewController?.view.window?.makeKey()
@@ -158,10 +162,22 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
 
     func popoverWillShow(_ notification: Notification) {
         statusItem.button?.isHighlighted = true
+        DispatchQueue.main.async { [weak self] in
+            self?.configurePopoverWindow()
+        }
     }
 
     func popoverDidClose(_ notification: Notification) {
         statusItem.button?.isHighlighted = false
+    }
+
+    private func configurePopoverWindow() {
+        guard let window = popover.contentViewController?.view.window else { return }
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer?.backgroundColor = NSColor.clear.cgColor
     }
 
     // MARK: - Metric helpers (mirrors MenuBarStatusLabel logic)

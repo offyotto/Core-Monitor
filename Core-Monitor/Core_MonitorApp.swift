@@ -46,7 +46,7 @@ struct Core_MonitorApp: App {
                     DispatchQueue.main.async { hideMainWindow() }
                 }
         }
-        .windowStyle(.hiddenTitleBar)
+        .windowToolbarStyle(.unifiedCompact(showsTitle: false))
     }
 
     private var mainContent: some View {
@@ -56,26 +56,24 @@ struct Core_MonitorApp: App {
             startupManager:   startupManager,
             touchBarWidgetSettings: coordinator.touchBarWidgetSettings
         )
-        .frame(minWidth: 740, minHeight: 520)
+        .frame(minWidth: 820, minHeight: 560)
         .background(
             WindowAccessor { window in
                 guard let window else { return }
                 mainWindow = window
-                window.minSize = NSSize(width: 740, height: 520)
+                window.minSize = NSSize(width: 820, height: 560)
+                if window.frame.size == .zero || window.frame.size.width < 820 || window.frame.size.height < 560 {
+                    window.setContentSize(NSSize(width: 980, height: 640))
+                }
                 if window.identifier == nil {
                     window.identifier = NSUserInterfaceItemIdentifier("CoreMonitorMainWindow")
                 }
-                // Frameless look – no native titlebar chrome
-                window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
-                window.titlebarAppearsTransparent = true
-                window.titleVisibility = .hidden
-                window.titlebarSeparatorStyle = .none
                 window.isMovableByWindowBackground = true
                 window.isOpaque = false
                 window.backgroundColor = .clear
                 window.hasShadow = true
-                // Position traffic lights so they sit at the right spot over our custom header
-                positionTrafficLights(in: window)
+                window.collectionBehavior = [.managed, .fullScreenPrimary]
+                coordinator.attachTouchBar(to: window)
             }
         )
     }
@@ -101,27 +99,6 @@ struct Core_MonitorApp: App {
         } else if let w = NSApp.windows.first(where: { $0.styleMask.contains(.titled) }) {
             w.makeKeyAndOrderFront(nil)
             w.orderFrontRegardless()
-        }
-    }
-
-    // MARK: Traffic lights
-
-    private func positionTrafficLights(in window: NSWindow) {
-        guard
-            let close = window.standardWindowButton(.closeButton),
-            let mini  = window.standardWindowButton(.miniaturizeButton),
-            let zoom  = window.standardWindowButton(.zoomButton),
-            let container = close.superview
-        else { return }
-
-        let top: CGFloat    = 21
-        let left: CGFloat   = 20
-        let spacing: CGFloat = 12
-        let size = close.frame.size
-        let y    = container.bounds.height - size.height - top
-
-        for (i, btn) in [close, mini, zoom].enumerated() {
-            btn.setFrameOrigin(NSPoint(x: left + CGFloat(i) * (size.width + spacing), y: y))
         }
     }
 }

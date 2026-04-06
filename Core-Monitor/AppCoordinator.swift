@@ -59,6 +59,7 @@ final class AppCoordinator: ObservableObject {
     private let touchBarModeMigrationKey = "coremonitor.touchBarMode.pockMigrationV1"
     private var launchObserver: NSObjectProtocol?
     private var activationObserver: NSObjectProtocol?
+    private var terminateObserver: NSObjectProtocol?
     private var bootstrapWorkItem: DispatchWorkItem?
 
     // Rolling histories (0–100 normalised)
@@ -104,6 +105,10 @@ final class AppCoordinator: ObservableObject {
             NotificationCenter.default.removeObserver(activationObserver)
             self.activationObserver = nil
         }
+        if let terminateObserver {
+            NotificationCenter.default.removeObserver(terminateObserver)
+            self.terminateObserver = nil
+        }
         stopAppTouchBar()
         systemMonitor.stopMonitoring()
         touchBarWidgetObserver?.cancel()
@@ -119,6 +124,15 @@ final class AppCoordinator: ObservableObject {
     func revertToAppTouchBar() {
         saveTouchBarMode(.app)
         startAppTouchBar()
+    }
+
+    func attachTouchBar(to window: NSWindow) {
+        touchBarPresenter.attach(to: window)
+        if savedTouchBarMode == .app {
+            startAppTouchBar()
+        } else {
+            stopAppTouchBar()
+        }
     }
 
     // MARK: - Push Touch Bar update
@@ -277,7 +291,7 @@ final class AppCoordinator: ObservableObject {
     }
 
     private func installTouchBarBootstrapObservers() {
-        guard launchObserver == nil, activationObserver == nil else { return }
+        guard launchObserver == nil, activationObserver == nil, terminateObserver == nil else { return }
 
         launchObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didFinishLaunchingNotification,
@@ -297,6 +311,18 @@ final class AppCoordinator: ObservableObject {
             Task { @MainActor [weak self] in
                 guard self?.savedTouchBarMode == .app else { return }
                 self?.startAppTouchBar()
+            }
+        }
+
+        terminateObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification,
+            object: NSApp,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.touchBarPresenter.dismissToSystemTouchBar()
+                self?.touchBarTimer?.invalidate()
+                self?.touchBarTimer = nil
             }
         }
     }
