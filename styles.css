@@ -178,7 +178,6 @@ section {
   display: grid;
   place-items: center;
   min-height: 0.95em;
-  text-shadow: 0 14px 34px rgba(4, 6, 14, 0.4);
 }
 
 .hero-title-fixed {
