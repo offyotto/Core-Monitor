@@ -57,6 +57,22 @@ This repository currently targets direct distribution and local builds. Some fea
 - Touch Bar widgets and utility views
 - Native SwiftUI/AppKit macOS app
 
+## Privacy
+
+Core-Monitor is built with a simple position: privacy is a fundamental human right.
+
+This project is open source so the code can be inspected directly. That matters for a system utility that reads hardware state, surfaces sensor data, and can optionally talk to a privileged helper for fan control.
+
+Privacy expectations for the project:
+
+- No telemetry
+- No analytics
+- No ad tech
+- No account requirement
+- No subscription gate for the core utility
+
+Core-Monitor is designed to run locally on your Mac and focus on monitoring, menu bar stats, Touch Bar tools, benchmarking, and fan control without collecting usage data about you.
+
 ## Installation
 
 ### Download
