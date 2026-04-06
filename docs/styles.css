@@ -76,8 +76,9 @@ code {
 .brand-logo {
   width: 38px;
   height: 38px;
-  border-radius: 12px;
+  border-radius: 7px;
   object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
 }
 
@@ -305,25 +306,29 @@ section {
 }
 
 .hero-shot::before {
-  inset: -42px -44px -54px;
+  inset: -72px -84px -92px;
   z-index: -2;
-  border-radius: 54px;
+  border-radius: 72px;
   background:
-    radial-gradient(circle at 14% 84%, rgba(255, 95, 138, 0.2), transparent 30%),
-    radial-gradient(circle at 78% 14%, rgba(125, 145, 255, 0.3), transparent 34%),
-    radial-gradient(circle at 52% 10%, rgba(169, 102, 255, 0.24), transparent 42%);
-  filter: blur(30px);
-  opacity: 0.95;
+    radial-gradient(circle at 8% 88%, rgba(255, 95, 138, 0.28), transparent 20%),
+    radial-gradient(circle at 24% 20%, rgba(122, 92, 255, 0.16), transparent 24%),
+    radial-gradient(circle at 50% 2%, rgba(168, 114, 255, 0.28), transparent 28%),
+    radial-gradient(circle at 80% 12%, rgba(128, 149, 255, 0.34), transparent 22%),
+    radial-gradient(circle at 95% 82%, rgba(119, 130, 255, 0.22), transparent 20%),
+    linear-gradient(90deg, rgba(116, 89, 255, 0.08), rgba(175, 116, 255, 0.14) 50%, rgba(112, 132, 255, 0.1));
+  filter: blur(36px);
+  opacity: 1;
 }
 
 .hero-shot::after {
-  inset: -10px;
+  inset: -18px;
   z-index: -1;
-  border-radius: 42px;
-  border: 1px solid rgba(156, 146, 255, 0.14);
+  border-radius: 52px;
+  border: 1px solid rgba(156, 146, 255, 0.16);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.03) inset,
-    0 0 34px rgba(112, 121, 255, 0.08);
+    0 0 50px rgba(112, 121, 255, 0.12),
+    0 0 84px rgba(156, 103, 255, 0.08);
 }
 
 .hero-shot img {
@@ -528,6 +533,16 @@ section {
     margin: 10px auto -8px;
     padding: 10px;
     border-radius: 24px;
+  }
+
+  .hero-shot::before {
+    inset: -18px -20px -24px;
+    filter: blur(18px);
+  }
+
+  .hero-shot::after {
+    inset: -8px;
+    border-radius: 30px;
   }
 
   .hero-copy-secondary {
