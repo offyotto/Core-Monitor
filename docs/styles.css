@@ -152,6 +152,10 @@ section {
 .hero-copy h1 {
   max-width: 13.5ch;
   font-size: clamp(3.5rem, 7.2vw, 6.2rem);
+  text-shadow:
+    0 0 18px rgba(8, 10, 18, 0.48),
+    0 10px 30px rgba(8, 10, 18, 0.72),
+    0 22px 54px rgba(8, 10, 18, 0.82);
 }
 
 .eyebrow,
@@ -196,7 +200,10 @@ section {
   font-size: clamp(1.5rem, 2.5vw, 2.45rem);
   line-height: 1.08;
   font-weight: 700;
-  text-shadow: 0 12px 34px rgba(0, 0, 0, 0.62);
+  text-shadow:
+    0 0 12px rgba(8, 10, 18, 0.4),
+    0 8px 22px rgba(8, 10, 18, 0.68),
+    0 18px 40px rgba(8, 10, 18, 0.8);
 }
 
 .hero-subline {
@@ -204,6 +211,9 @@ section {
   color: rgba(247, 248, 252, 0.78);
   font-size: 0.98rem;
   font-weight: 500;
+  text-shadow:
+    0 0 10px rgba(8, 10, 18, 0.34),
+    0 8px 20px rgba(8, 10, 18, 0.58);
 }
 
 .hero-actions,
