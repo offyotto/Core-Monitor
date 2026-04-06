@@ -51,9 +51,9 @@ code {
 }
 
 .page-shell {
-  width: min(1180px, calc(100% - 32px));
+  width: min(1240px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 18px 0 80px;
+  padding: 20px 0 80px;
 }
 
 .site-header {
@@ -63,13 +63,13 @@ code {
   align-items: center;
   justify-content: flex-start;
   gap: 28px;
-  padding: 12px 6px;
+  padding: 12px 0 6px;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   text-decoration: none;
 }
 
@@ -86,9 +86,9 @@ code {
 }
 
 .brand-logo {
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
   object-fit: cover;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
 }
@@ -101,29 +101,28 @@ code {
 }
 
 .brand-text {
-  font-size: 2.2rem;
+  font-size: 3rem;
   font-weight: 700;
   letter-spacing: -0.04em;
 }
 
 .site-nav {
   display: flex;
-  gap: 24px;
+  gap: 28px;
   color: rgba(247, 248, 252, 0.88);
 }
 
 .site-nav a {
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   font-weight: 600;
 }
 
 .nav-download {
   margin-left: auto;
-  padding: 12px 18px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text);
-  font-weight: 700;
+  padding: 0;
+  background: transparent;
+  color: rgba(247, 248, 252, 0.88);
+  font-weight: 600;
 }
 
 main {
@@ -144,7 +143,7 @@ section {
   position: relative;
   display: grid;
   gap: 30px;
-  padding: 34px 42px 42px;
+  padding: 42px 28px 18px;
   overflow: hidden;
   border: none;
   background: transparent;
@@ -161,8 +160,8 @@ section {
 }
 
 .hero-copy h1 {
-  max-width: 14ch;
-  font-size: clamp(3.5rem, 8vw, 6.7rem);
+  max-width: 12ch;
+  font-size: clamp(4rem, 8.8vw, 7.6rem);
 }
 
 .eyebrow,
@@ -197,13 +196,15 @@ section {
 }
 
 .hero-lead {
-  max-width: 28ch;
-  font-size: clamp(1.2rem, 2vw, 1.7rem);
-  line-height: 1.35;
+  max-width: 24ch;
+  color: var(--text);
+  font-size: clamp(2rem, 3vw, 3.15rem);
+  line-height: 1.05;
+  font-weight: 700;
 }
 
 .hero-subline {
-  margin: 22px 0 0;
+  margin: 12px 0 0;
   color: rgba(247, 248, 252, 0.78);
   font-size: 1rem;
   font-weight: 500;
@@ -215,15 +216,15 @@ section {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 28px;
+  margin-top: 22px;
 }
 
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 56px;
-  padding: 0 28px;
+  min-height: 58px;
+  padding: 0 34px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   font-weight: 700;
@@ -255,8 +256,8 @@ section {
 
 .hero-panel {
   position: relative;
-  min-height: 540px;
-  margin-top: -14px;
+  min-height: 580px;
+  margin-top: -44px;
   place-items: end center;
 }
 
@@ -278,41 +279,31 @@ section {
 }
 
 .hero-glow-left {
-  width: 420px;
-  height: 220px;
-  top: 26px;
-  left: 16%;
+  width: 520px;
+  height: 260px;
+  top: 48px;
+  left: 23%;
   background: radial-gradient(circle, rgba(172, 101, 255, 0.5), transparent 70%);
 }
 
 .hero-glow-right {
-  width: 440px;
-  height: 240px;
-  top: 48px;
-  right: 12%;
+  width: 520px;
+  height: 260px;
+  top: 40px;
+  right: 18%;
   background: radial-gradient(circle, rgba(109, 120, 255, 0.38), transparent 72%);
-}
-
-.hero-logo-float {
-  position: absolute;
-  top: 146px;
-  left: 10%;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.34);
 }
 
 .hero-shot {
   position: relative;
   z-index: 1;
-  width: min(920px, 100%);
+  width: min(980px, 100%);
   margin: 0;
-  padding: 14px;
+  padding: 18px;
   border-radius: 34px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.42);
-  transform: perspective(1800px) rotateX(14deg) rotateY(-8deg);
+  transform: perspective(1800px) rotateX(12deg) rotateY(-8deg);
   transform-origin: center top;
 }
 
@@ -320,7 +311,7 @@ section {
   width: 100%;
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  opacity: 0.76;
+  opacity: 0.6;
 }
 
 .section-heading {
@@ -449,12 +440,7 @@ section {
 
   .hero-panel {
     min-height: 0;
-    margin-top: 0;
-  }
-
-  .hero-logo-float {
-    left: 4%;
-    top: 34px;
+    margin-top: -8px;
   }
 
   .cta-band {
@@ -506,7 +492,7 @@ section {
   }
 
   .brand-text {
-    font-size: 1.8rem;
+    font-size: 2.2rem;
   }
 
   .hero-lead,
@@ -525,5 +511,10 @@ section {
   .hero-shot {
     padding: 10px;
     border-radius: 24px;
+  }
+
+  .hero-lead {
+    font-size: clamp(1.55rem, 6vw, 2.3rem);
+    line-height: 1.1;
   }
 }
