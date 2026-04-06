@@ -46,10 +46,59 @@ struct MenuBarStatusLabel: View {
 
 // MARK: - Colours (matches ContentView dark palette)
 private extension Color {
-    static let mbBG     = Color(red: 0.100, green: 0.100, blue: 0.110)  // popover background
-    static let mbCard   = Color(red: 0.160, green: 0.160, blue: 0.175)  // row / card bg
-    static let mbDiv    = Color.white.opacity(0.08)                      // dividers
-    static let mbAccent = Color(red: 0.35,  green: 0.72,  blue: 1.00)   // system blue
+    static let mbBG     = Color.clear
+    static let mbCard   = Color.white.opacity(0.06)
+    static let mbDiv    = Color.white.opacity(0.10)
+    static let mbAccent = Color.white.opacity(0.92)
+    static let mbTint   = Color(red: 0.66, green: 0.72, blue: 0.96)
+}
+
+private struct MenuPopoverSurface<Content: View>: View {
+    @ObservedObject private var appearanceSettings = AppAppearanceSettings.shared
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        ZStack {
+            VisualEffectView(
+                material: .underWindowBackground,
+                blendingMode: .behindWindow,
+                opacity: appearanceSettings.surfaceOpacity
+            )
+
+            LinearGradient(
+                colors: [
+                    Color(red: 0.22, green: 0.24, blue: 0.33).opacity(0.06 * appearanceSettings.surfaceOpacity),
+                    Color(red: 0.15, green: 0.17, blue: 0.25).opacity(0.05 * appearanceSettings.surfaceOpacity),
+                    Color(red: 0.11, green: 0.12, blue: 0.19).opacity(0.07 * appearanceSettings.surfaceOpacity)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottom
+            )
+
+            Ellipse()
+                .fill(Color.mbTint.opacity(0.02 * appearanceSettings.surfaceOpacity))
+                .frame(width: 360, height: 120)
+                .blur(radius: 34)
+                .offset(y: 150)
+
+            VStack(spacing: 0) {
+                LinearGradient(
+                    colors: [Color.white.opacity(0.03 * appearanceSettings.surfaceOpacity), Color.clear],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 1)
+                Spacer()
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(Color.white.opacity(0.05 * appearanceSettings.surfaceOpacity), lineWidth: 1)
+        )
+        .overlay(content())
+        .shadow(color: .black.opacity(0.10 * appearanceSettings.surfaceOpacity), radius: 18, y: 10)
+    }
 }
 
 // MARK: - Menu bar popover
@@ -62,31 +111,34 @@ struct MenuBarMenuView: View {
     var revertTouchBarAction:     () -> Void = {}
 
     var body: some View {
-        VStack(spacing: 0) {
-            headerStrip
-            mbDivider
-            metricsSection
-            mbDivider
-            fanSection
-            mbDivider
-            actionsSection
+        MenuPopoverSurface {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    headerStrip
+                    mbDivider
+                    metricsSection
+                    mbDivider
+                    fanSection
+                    mbDivider
+                    actionsSection
+                }
+            }
         }
-        .background(Color.mbBG)
         .preferredColorScheme(.dark)
-        .frame(width: 320)
+        .frame(width: 350)
     }
 
     // MARK: Header
     private var headerStrip: some View {
         HStack(spacing: 10) {
             ZStack {
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(Color.mbAccent.opacity(0.18)).frame(width: 30, height: 30)
-                Image(systemName: "fanblades.fill").font(.system(size: 12, weight: .semibold)).foregroundStyle(Color.mbAccent)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.white.opacity(0.07)).frame(width: 34, height: 34)
+                Image(systemName: "fanblades.fill").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.white.opacity(0.86))
             }
             VStack(alignment: .leading, spacing: 1) {
-                Text("Core Monitor").font(.system(size: 13, weight: .semibold))
-                Text("System Monitor").font(.system(size: 10)).foregroundStyle(.secondary)
+                Text("Core Monitor").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(.white.opacity(0.92))
+                Text("System summary").font(.system(size: 10, weight: .medium)).foregroundStyle(.white.opacity(0.58))
             }
             Spacer()
             // SMC / update pill
@@ -98,7 +150,8 @@ struct MenuBarMenuView: View {
                            tint: nil)
             }
         }
-        .padding(.horizontal, 14).padding(.vertical, 11)
+        .padding(.horizontal, 16).padding(.vertical, 14)
+        .background(Color.white.opacity(0.025))
     }
 
     // MARK: Metrics
@@ -144,7 +197,7 @@ struct MenuBarMenuView: View {
             HStack {
                 Text("Fan Profile").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
                 Spacer()
-                Text(fanController.mode.title).font(.system(size: 10, weight: .bold)).foregroundStyle(Color.mbAccent)
+                Text(fanController.mode.title).font(.system(size: 10, weight: .bold)).foregroundStyle(.white.opacity(0.86))
             }
             Menu {
                 ForEach(FanControlMode.quickModes, id: \.self) { mode in
@@ -154,15 +207,15 @@ struct MenuBarMenuView: View {
                 Button("Reset to System Auto") { fanController.resetToSystemAutomatic(); fanController.setMode(.automatic) }
             } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: "fanblades.fill").font(.system(size: 10, weight: .semibold)).foregroundStyle(Color.mbAccent)
+                    Image(systemName: "fanblades.fill").font(.system(size: 10, weight: .semibold)).foregroundStyle(.white.opacity(0.78))
                     Text("Change Profile").font(.system(size: 12, weight: .semibold))
                     Spacer()
                     Image(systemName: "chevron.up.chevron.down").font(.system(size: 9, weight: .bold)).foregroundStyle(.secondary)
                 }
-                .foregroundStyle(.primary)
+                .foregroundStyle(.white.opacity(0.88))
                 .padding(.horizontal, 12).padding(.vertical, 8)
-                .background(Color.mbCard)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .background(Color.white.opacity(0.06))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             .menuStyle(.borderlessButton).menuIndicator(.hidden).buttonStyle(.plain)
         }
@@ -189,7 +242,7 @@ struct MenuBarMenuView: View {
     private func metricRow(icon: String, label: String, value: String, color: Color) -> some View {
         HStack(spacing: 10) {
             Image(systemName: icon).font(.system(size: 12, weight: .medium)).foregroundStyle(color.opacity(0.85)).frame(width: 18)
-            Text(label).font(.system(size: 11, weight: .medium)).foregroundStyle(.secondary).frame(width: 72, alignment: .leading)
+            Text(label).font(.system(size: 11, weight: .medium)).foregroundStyle(.white.opacity(0.70)).frame(width: 72, alignment: .leading)
             Spacer()
             Text(value).font(.system(size: 12, weight: .bold, design: .monospaced)).foregroundStyle(color).monospacedDigit()
         }
@@ -207,10 +260,11 @@ struct MenuBarMenuView: View {
     private func statusPill(dot: Color, label: String, tint: Color?) -> some View {
         HStack(spacing: 4) {
             Circle().fill(dot).frame(width: 5, height: 5)
-            Text(label).font(.system(size: 10, weight: .semibold)).foregroundStyle(tint ?? .secondary)
+            Text(label).font(.system(size: 10, weight: .semibold)).foregroundStyle(tint ?? .white.opacity(0.76))
         }
         .padding(.horizontal, 8).padding(.vertical, 4)
-        .background(Color.mbCard).clipShape(Capsule())
+        .background(Color.white.opacity(0.06))
+        .clipShape(Capsule())
     }
 
     // MARK: Helpers
@@ -237,14 +291,15 @@ private struct MBActionButton: View {
         Button(action: action) {
             HStack(spacing: 10) {
                 Image(systemName: icon).font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(tint ?? (isHovered ? Color.primary : Color.secondary))
+                    .foregroundStyle(tint ?? (isHovered ? Color.white : Color.white.opacity(0.72)))
                     .frame(width: 18)
                 Text(label).font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(tint ?? (isHovered ? Color.primary : Color.secondary))
+                    .foregroundStyle(tint ?? (isHovered ? Color.white : Color.white.opacity(0.78)))
                 Spacer()
             }
             .padding(.horizontal, 14).padding(.vertical, 7)
-            .background(isHovered ? (tint ?? Color.primary).opacity(0.10) : Color.clear)
+            .background(isHovered ? Color.white.opacity(0.07) : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

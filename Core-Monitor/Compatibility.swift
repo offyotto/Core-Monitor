@@ -148,4 +148,13 @@ extension View {
             self
         }
     }
+
+    @ViewBuilder
+    func cmRemoveWindowToolbarTitle() -> some View {
+        if #available(macOS 15.0, *) {
+            toolbar(removing: .title)
+        } else {
+            self
+        }
+    }
 }

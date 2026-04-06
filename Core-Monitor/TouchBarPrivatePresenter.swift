@@ -6,7 +6,7 @@ import ObjectiveC.runtime
 import Darwin
 
 @MainActor
-final class TouchBarPrivatePresenter: NSObject {
+final class TouchBarPrivatePresenter: NSResponder {
 
     private enum ID {
         static let bar = NSTouchBar.CustomizationIdentifier("com.coremonitor.touchbar.v2")
@@ -32,79 +32,37 @@ final class TouchBarPrivatePresenter: NSObject {
         let diskWriteBPS: Double
     }
 
-    fileprivate static var activePresenter: TouchBarPrivatePresenter?
-
-    private let touchBarAgentBundleIdentifier = "com.apple.touchbar.agent" as CFString
-    private let touchBarPresentationModeKey = "PresentationModeGlobal" as CFString
-    private var touchBar: NSTouchBar?
+    private weak var window: NSWindow?
+    private var activeTouchBar: NSTouchBar?
     private weak var panel: IStatsTouchBarView?
-    private var modalPresentedTouchBar: NSTouchBar?
-    private var previousSystemPresentationModeRaw: String?
-    private var reassertionWorkItem: DispatchWorkItem?
-    private var presentationKeepAliveTimer: Timer?
     private var latestMetrics: MetricsSnapshot?
-    private var isRecoveringModalPresentation = false
-    private var isScreenLocked = false
-    private var hasEstablishedPresentation = false
-    private var screenLockObserver: NSObjectProtocol?
-    private var screenUnlockObserver: NSObjectProtocol?
+    private var isEnabled = true
+    private var windowObserverTokens: [NSObjectProtocol] = []
+    private var appObserverTokens: [NSObjectProtocol] = []
 
-    override init() {
-        super.init()
-        Self.activePresenter = self
+    func attach(to window: NSWindow) {
+        removeObservers()
+        self.window = window
+        installObservers(for: window)
+        refreshWindowTouchBar()
     }
 
     func present() {
-        Self.activePresenter = self
-        TouchBarHelper.swizzleFunctions()
-        installScreenLockObserversIfNeeded()
-        guard !isScreenLocked else { return }
-
-        if let modalPresentedTouchBar {
-            dismissSystemModalTouchBar(modalPresentedTouchBar)
-            self.modalPresentedTouchBar = nil
-        }
-        hasEstablishedPresentation = false
-        touchBar = nil
+        isEnabled = true
+        activeTouchBar = nil
         panel = nil
-
-        let bar = makeTouchBar()
-        touchBar = bar
-        presentSystemModalTouchBar(bar, aggressively: true)
-        scheduleReassertionBurst(for: bar)
+        refreshWindowTouchBar()
     }
 
     func dismiss() {
-        cancelReassertionBurst()
-        presentationKeepAliveTimer?.invalidate()
-        presentationKeepAliveTimer = nil
-        guard let barToDismiss = modalPresentedTouchBar ?? touchBar else { return }
-        modalPresentedTouchBar = nil
-        touchBar = nil
+        isEnabled = false
+        activeTouchBar = nil
         panel = nil
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-            self?.dismissSystemModalTouchBar(barToDismiss)
-            self?.restorePreviousSystemPresentationModeIfNeeded()
-        }
+        refreshWindowTouchBar()
     }
 
     func dismissToSystemTouchBar() {
-        cancelReassertionBurst()
-        presentationKeepAliveTimer?.invalidate()
-        presentationKeepAliveTimer = nil
-
-        let barToDismiss = modalPresentedTouchBar ?? touchBar
-        modalPresentedTouchBar = nil
-        touchBar = nil
-        panel = nil
-        hasEstablishedPresentation = false
-
-        if let barToDismiss {
-            dismissSystemModalTouchBar(barToDismiss)
-        }
-
-        previousSystemPresentationModeRaw = nil
-        TouchBarHelper.forcePresentationMode(.appWithControlStrip, reloadAgent: true)
+        dismiss()
     }
 
     func updateMetrics(
@@ -144,19 +102,26 @@ final class TouchBarPrivatePresenter: NSObject {
             diskWriteBPS: diskWriteBPS
         )
         latestMetrics = snapshot
-        guard let panel else { return }
-        apply(snapshot, to: panel)
+        if let panel {
+            apply(snapshot, to: panel)
+        } else if isEnabled {
+            activeTouchBar = nil
+            refreshWindowTouchBar()
+        }
     }
 
     func update(topText: String, graphText: String) {}
 
-    private func makeTouchBar() -> NSTouchBar {
+    override func makeTouchBar() -> NSTouchBar? {
+        guard isEnabled else { return nil }
+        if let activeTouchBar { return activeTouchBar }
         let bar = NSTouchBar()
         bar.customizationIdentifier = ID.bar
         bar.delegate = self
         bar.defaultItemIdentifiers = [.flexibleSpace, ID.panel]
         bar.customizationAllowedItemIdentifiers = [ID.panel]
         bar.customizationRequiredItemIdentifiers = [ID.panel]
+        activeTouchBar = bar
         return bar
     }
 
@@ -181,163 +146,87 @@ final class TouchBarPrivatePresenter: NSObject {
         )
     }
 
-    private func installScreenLockObserversIfNeeded() {
-        guard screenLockObserver == nil, screenUnlockObserver == nil else { return }
-
-        screenLockObserver = DistributedNotificationCenter.default().addObserver(
-            forName: Notification.Name("com.apple.screenIsLocked"),
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.handleScreenLockStateChanged(isLocked: true)
-            }
-        }
-
-        screenUnlockObserver = DistributedNotificationCenter.default().addObserver(
-            forName: Notification.Name("com.apple.screenIsUnlocked"),
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.handleScreenLockStateChanged(isLocked: false)
-            }
-        }
+    private func refreshWindowTouchBar() {
+        guard let window else { return }
+        touchBar = nil
+        window.touchBar = nil
+        guard shouldExposeTouchBar(on: window) else { return }
+        window.touchBar = makeTouchBar()
+        window.update()
     }
 
-    private func presentSystemModalTouchBar(_ bar: NSTouchBar, aggressively: Bool) {
-        let currentMode = TouchBarHelper.currentPresentationMode
-        if previousSystemPresentationModeRaw == nil {
-            previousSystemPresentationModeRaw = currentMode.rawValue
-        }
-        let shouldReloadAgent = aggressively && currentMode != .app && !hasEstablishedPresentation
-        TouchBarHelper.forcePresentationMode(.app, reloadAgent: shouldReloadAgent)
-        if modalPresentedTouchBar !== bar || !hasEstablishedPresentation {
-            TouchBarHelper.presentOnTop(bar)
-        }
-        modalPresentedTouchBar = bar
-        hasEstablishedPresentation = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-            TouchBarHelper.hideCloseButtonIfNeeded()
-            self?.scheduleBlankTouchBarRecoveryCheck(for: bar)
-        }
+    private func shouldExposeTouchBar(on window: NSWindow) -> Bool {
+        isEnabled && NSApp.isActive && (window.isKeyWindow || window.isMainWindow)
     }
 
-    private func dismissSystemModalTouchBar(_ bar: NSTouchBar) {
-        TouchBarHelper.dismissFromTop(bar)
-    }
-
-    private func restorePreviousSystemPresentationModeIfNeeded() {
-        guard let previousSystemPresentationModeRaw else { return }
-        self.previousSystemPresentationModeRaw = nil
-        let requestedMode = PresentationMode(rawValue: previousSystemPresentationModeRaw) ?? .appWithControlStrip
-        let restoredMode: PresentationMode = requestedMode == .app ? .appWithControlStrip : requestedMode
-        guard TouchBarHelper.currentPresentationMode != restoredMode else {
-            return
-        }
-        TouchBarHelper.forcePresentationMode(restoredMode, reloadAgent: true)
-    }
-
-    private func reassertSystemModalTouchBarIfNeeded() {
-        guard !isScreenLocked else { return }
-        guard let bar = touchBar ?? modalPresentedTouchBar else { return }
-        presentSystemModalTouchBar(bar, aggressively: false)
-        scheduleReassertionBurst(for: bar)
-    }
-
-    private func scheduleReassertionBurst(for touchBar: NSTouchBar, delays: [TimeInterval] = [0.45]) {
-        cancelReassertionBurst()
-        let workItem = DispatchWorkItem { [weak self] in
-            guard let self else { return }
-            for delay in delays {
-                DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
-                    guard let self,
-                          self.modalPresentedTouchBar === touchBar,
-                          self.panel == nil,
-                          !self.isScreenLocked else {
-                        return
-                    }
-                    self.presentSystemModalTouchBar(touchBar, aggressively: false)
-                    TouchBarHelper.hideCloseButtonIfNeeded()
+    private func installObservers(for window: NSWindow) {
+        let center = NotificationCenter.default
+        windowObserverTokens = [
+            center.addObserver(
+                forName: NSWindow.didBecomeKeyNotification,
+                object: window,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.refreshWindowTouchBar()
+                }
+            },
+            center.addObserver(
+                forName: NSWindow.didBecomeMainNotification,
+                object: window,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.refreshWindowTouchBar()
+                }
+            },
+            center.addObserver(
+                forName: NSWindow.didResignKeyNotification,
+                object: window,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.refreshWindowTouchBar()
+                }
+            },
+            center.addObserver(
+                forName: NSWindow.didResignMainNotification,
+                object: window,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.refreshWindowTouchBar()
                 }
             }
-        }
-        reassertionWorkItem = workItem
-        DispatchQueue.main.async(execute: workItem)
-    }
-
-    private func cancelReassertionBurst() {
-        reassertionWorkItem?.cancel()
-        reassertionWorkItem = nil
-    }
-
-    private func startPresentationKeepAlive() {
-        presentationKeepAliveTimer?.invalidate()
-        presentationKeepAliveTimer = nil
-    }
-
-    private func scheduleBlankTouchBarRecoveryCheck(for touchBar: NSTouchBar) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
-            guard let self,
-                  self.modalPresentedTouchBar === touchBar,
-                  self.panel == nil else {
-                return
-            }
-            self.recoverModalPresentation(for: touchBar)
-        }
-    }
-
-    private func recoverModalPresentation(for touchBar: NSTouchBar) {
-        guard !isRecoveringModalPresentation else { return }
-        isRecoveringModalPresentation = true
-
-        TouchBarHelper.reloadTouchBarAgent { [weak self] success in
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                guard success else {
-                    self.isRecoveringModalPresentation = false
-                    return
+        ]
+        appObserverTokens = [
+            center.addObserver(
+                forName: NSApplication.didBecomeActiveNotification,
+                object: NSApp,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.refreshWindowTouchBar()
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                    self.isRecoveringModalPresentation = false
-                    guard self.touchBar === touchBar || self.modalPresentedTouchBar === touchBar else { return }
-                    self.hasEstablishedPresentation = false
-                    self.presentSystemModalTouchBar(touchBar, aggressively: true)
-                    self.scheduleReassertionBurst(for: touchBar)
+            },
+            center.addObserver(
+                forName: NSApplication.didResignActiveNotification,
+                object: NSApp,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.refreshWindowTouchBar()
                 }
             }
-        }
+        ]
     }
 
-    func handleFunctionRowDimmedStateChanged(_ dimmed: Bool) {
-        if dimmed {
-            guard let touchBar = modalPresentedTouchBar else { return }
-            dismissSystemModalTouchBar(touchBar)
-            modalPresentedTouchBar = nil
-            hasEstablishedPresentation = false
-        } else {
-            reassertSystemModalTouchBarIfNeeded()
-        }
-    }
-
-    func hideCloseButtonIfNeeded() {
-        TouchBarHelper.hideCloseButtonIfNeeded()
-    }
-
-    private func handleScreenLockStateChanged(isLocked: Bool) {
-        isScreenLocked = isLocked
-        if isLocked {
-            cancelReassertionBurst()
-            presentationKeepAliveTimer?.invalidate()
-            presentationKeepAliveTimer = nil
-            if let touchBar = modalPresentedTouchBar {
-                dismissSystemModalTouchBar(touchBar)
-                modalPresentedTouchBar = nil
-            }
-            hasEstablishedPresentation = false
-        } else {
-            reassertSystemModalTouchBarIfNeeded()
-        }
+    private func removeObservers() {
+        let center = NotificationCenter.default
+        windowObserverTokens.forEach(center.removeObserver)
+        appObserverTokens.forEach(center.removeObserver)
+        windowObserverTokens.removeAll()
+        appObserverTokens.removeAll()
     }
 }
 
@@ -1953,205 +1842,5 @@ private extension NSBezierPath {
     func fill(with color: NSColor) {
         color.setFill()
         fill()
-    }
-}
-
-public enum PresentationMode: String, CaseIterable {
-    case undefined
-    case app
-    case appWithControlStrip
-    case fullControlStrip
-    case functionKeys
-    case workflows
-    case workflowsWithControlStrip
-    case spaces
-    case spacesWithControlStrip
-
-    public var hasControlStrip: Bool {
-        switch self {
-        case .appWithControlStrip, .workflowsWithControlStrip, .spacesWithControlStrip:
-            return true
-        default:
-            return false
-        }
-    }
-}
-
-public final class TouchBarHelper: NSObject {
-    private static let kPresentationModeGlobal = "PresentationModeGlobal" as CFString
-    private static let kTouchBarAgentIdentifier = "com.apple.touchbar.agent" as CFString
-
-    public static var currentPresentationMode: PresentationMode {
-        guard let value = (CFPreferencesCopyAppValue(kPresentationModeGlobal, kTouchBarAgentIdentifier) as? NSObject)?.copy(),
-              let mode = value as? String else {
-            return .appWithControlStrip
-        }
-        return PresentationMode(rawValue: mode) ?? .appWithControlStrip
-    }
-
-    @discardableResult
-    static func setPresentationMode(to mode: PresentationMode) -> Bool {
-        guard currentPresentationMode != mode else { return false }
-        CFPreferencesSetAppValue(kPresentationModeGlobal, mode.rawValue as CFString, kTouchBarAgentIdentifier)
-        let result = CFPreferencesAppSynchronize(kTouchBarAgentIdentifier)
-        reloadTouchBarAgent()
-        return result
-    }
-
-    static func forcePresentationMode(_ mode: PresentationMode, reloadAgent: Bool) {
-        CFPreferencesSetAppValue(kPresentationModeGlobal, mode.rawValue as CFString, kTouchBarAgentIdentifier)
-        _ = CFPreferencesAppSynchronize(kTouchBarAgentIdentifier)
-        _ = runProcess(
-            executablePath: "/usr/bin/defaults",
-            arguments: ["write", "com.apple.touchbar.agent", "PresentationModeGlobal", "-string", mode.rawValue]
-        )
-        if reloadAgent {
-            reloadTouchBarAgent()
-        }
-    }
-
-    @objc
-    static func presentOnTop(_ touchBar: NSTouchBar?) {
-        guard let touchBar else { return }
-        let cls: AnyObject = NSTouchBar.self
-        let modernSelector = NSSelectorFromString("presentSystemModalTouchBar:placement:systemTrayItemIdentifier:")
-        if let method = class_getClassMethod(NSTouchBar.self, modernSelector) {
-            typealias Function = @convention(c) (AnyObject, Selector, NSTouchBar, Int64, NSString?) -> Void
-            unsafeBitCast(method_getImplementation(method), to: Function.self)(cls, modernSelector, touchBar, 1, nil)
-            return
-        }
-        let legacySelector = NSSelectorFromString("presentSystemModalFunctionBar:placement:systemTrayItemIdentifier:")
-        if let method = class_getClassMethod(NSTouchBar.self, legacySelector) {
-            typealias Function = @convention(c) (AnyObject, Selector, NSTouchBar, Int64, NSString?) -> Void
-            unsafeBitCast(method_getImplementation(method), to: Function.self)(cls, legacySelector, touchBar, 1, nil)
-        }
-    }
-
-    @objc
-    static func dismissFromTop(_ touchBar: NSTouchBar?) {
-        guard let touchBar else { return }
-        let modernSelector = NSSelectorFromString("dismissSystemModalTouchBar:")
-        if let method = class_getClassMethod(NSTouchBar.self, modernSelector) {
-            typealias Function = @convention(c) (AnyObject, Selector, NSTouchBar) -> Void
-            unsafeBitCast(method_getImplementation(method), to: Function.self)(NSTouchBar.self, modernSelector, touchBar)
-            return
-        }
-        let legacySelector = NSSelectorFromString("dismissSystemModalFunctionBar:")
-        if let method = class_getClassMethod(NSTouchBar.self, legacySelector) {
-            typealias Function = @convention(c) (AnyObject, Selector, NSTouchBar) -> Void
-            unsafeBitCast(method_getImplementation(method), to: Function.self)(NSTouchBar.self, legacySelector, touchBar)
-        }
-    }
-
-    @objc
-    static func hideCloseButtonIfNeeded() {
-        guard let backgroundView = topLevelFunctionRowViews().first(where: {
-            NSStringFromClass(type(of: $0)).contains("FunctionRowBackgroundColorView")
-        }) else {
-            return
-        }
-        guard let stackView = backgroundView.subviews.first(where: { $0 is NSStackView }) as? NSStackView,
-              let closeButton = stackView.subviews.first(where: { $0 is NSButton }) else {
-            return
-        }
-        closeButton.isHidden = true
-    }
-
-    @objc
-    static func reloadTouchBarAgent(_ completion: ((Bool) -> Void)? = nil) {
-        DispatchQueue.global(qos: .utility).async {
-            let success = runProcess(executablePath: "/usr/bin/pkill", arguments: ["ControlStrip"])
-            completion?(success)
-        }
-    }
-
-    @objc
-    static func swizzleFunctions() {
-        TouchBarSwizzleBridge.install()
-    }
-
-    private static func topLevelFunctionRowViews() -> [NSView] {
-        let selectors = [
-            NSSelectorFromString("_topLevelViews"),
-            NSSelectorFromString("_topLevelFunctionRowViews")
-        ]
-        guard let functionRowClass = NSClassFromString("NSFunctionRow") as? NSObject.Type else {
-            return []
-        }
-        for selector in selectors where functionRowClass.responds(to: selector) {
-            guard let unmanaged = functionRowClass.perform(selector),
-                  let views = unmanaged.takeUnretainedValue() as? [NSView] else {
-                continue
-            }
-            return views
-        }
-        return []
-    }
-
-    fileprivate static func runProcess(executablePath: String, arguments: [String]) -> Bool {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: executablePath)
-        task.arguments = arguments
-        do {
-            try task.run()
-            task.waitUntilExit()
-            return task.terminationStatus == 0
-        } catch {
-            return false
-        }
-    }
-}
-
-private final class TouchBarSwizzleBridge: NSObject {
-    private static var didInstall = false
-    private static var originalEscapePaddingIMP: IMP?
-
-    static func install() {
-        guard !didInstall else { return }
-        didInstall = true
-        swizzleMarkActiveFunctionRows()
-        swizzleCloseButtonPadding()
-    }
-
-    @objc
-    class func pock_markActiveFunctionRowsAsDimmed(_ dimmed: Bool) {
-        Task { @MainActor in
-            TouchBarPrivatePresenter.activePresenter?.handleFunctionRowDimmedStateChanged(dimmed)
-        }
-    }
-
-    @objc
-    func pock_escapeKeyPaddingForCloseButton(_ isForCloseButton: Bool) -> Double {
-        let originalPadding: Double
-        if let originalEscapePaddingIMP = Self.originalEscapePaddingIMP {
-            typealias EscapePaddingFunction = @convention(c) (AnyObject, Selector, Bool) -> Double
-            let function = unsafeBitCast(originalEscapePaddingIMP, to: EscapePaddingFunction.self)
-            originalPadding = function(self, #selector(pock_escapeKeyPaddingForCloseButton(_:)), isForCloseButton)
-        } else {
-            originalPadding = 0
-        }
-        Task { @MainActor in
-            TouchBarHelper.hideCloseButtonIfNeeded()
-        }
-        return isForCloseButton ? 0 : originalPadding
-    }
-
-    private static func swizzleMarkActiveFunctionRows() {
-        guard let functionRowClass = NSClassFromString("NSFunctionRow"),
-              let originalMethod = class_getClassMethod(functionRowClass, NSSelectorFromString("markActiveFunctionRowsAsDimmed:")),
-              let swizzledMethod = class_getClassMethod(TouchBarSwizzleBridge.self, #selector(pock_markActiveFunctionRowsAsDimmed(_:))) else {
-            return
-        }
-        method_exchangeImplementations(originalMethod, swizzledMethod)
-    }
-
-    private static func swizzleCloseButtonPadding() {
-        guard let functionRowClass = NSClassFromString("_NSFunctionRow"),
-              let originalMethod = class_getInstanceMethod(functionRowClass, NSSelectorFromString("escapeKeyPaddingForCloseButton:")),
-              let swizzledMethod = class_getInstanceMethod(TouchBarSwizzleBridge.self, #selector(pock_escapeKeyPaddingForCloseButton(_:))) else {
-            return
-        }
-        originalEscapePaddingIMP = method_getImplementation(originalMethod)
-        method_exchangeImplementations(originalMethod, swizzledMethod)
     }
 }
