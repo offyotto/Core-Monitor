@@ -289,11 +289,41 @@ section {
   width: min(1040px, 97vw);
   margin: -122px auto -176px;
   padding: 16px;
+  isolation: isolate;
   border-radius: 34px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
   box-shadow: 0 40px 80px rgba(0, 0, 0, 0.46);
   transform: perspective(1800px) rotateX(12deg) rotateY(-8deg) rotateZ(-4deg);
   transform-origin: center top;
+}
+
+.hero-shot::before,
+.hero-shot::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.hero-shot::before {
+  inset: -42px -44px -54px;
+  z-index: -2;
+  border-radius: 54px;
+  background:
+    radial-gradient(circle at 14% 84%, rgba(255, 95, 138, 0.2), transparent 30%),
+    radial-gradient(circle at 78% 14%, rgba(125, 145, 255, 0.3), transparent 34%),
+    radial-gradient(circle at 52% 10%, rgba(169, 102, 255, 0.24), transparent 42%);
+  filter: blur(30px);
+  opacity: 0.95;
+}
+
+.hero-shot::after {
+  inset: -10px;
+  z-index: -1;
+  border-radius: 42px;
+  border: 1px solid rgba(156, 146, 255, 0.14);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 0 34px rgba(112, 121, 255, 0.08);
 }
 
 .hero-shot img {
