@@ -312,13 +312,13 @@ section {
   z-index: -2;
   border-radius: 72px;
   background:
-    radial-gradient(circle at 8% 88%, rgba(255, 95, 138, 0.28), transparent 20%),
-    radial-gradient(circle at 24% 20%, rgba(122, 92, 255, 0.16), transparent 24%),
-    radial-gradient(circle at 50% 2%, rgba(168, 114, 255, 0.28), transparent 28%),
-    radial-gradient(circle at 80% 12%, rgba(128, 149, 255, 0.34), transparent 22%),
-    radial-gradient(circle at 95% 82%, rgba(119, 130, 255, 0.22), transparent 20%),
-    linear-gradient(90deg, rgba(116, 89, 255, 0.08), rgba(175, 116, 255, 0.14) 50%, rgba(112, 132, 255, 0.1));
-  filter: blur(36px);
+    radial-gradient(circle at 4% 86%, rgba(255, 102, 160, 0.34), transparent 18%),
+    radial-gradient(circle at 10% 18%, rgba(133, 98, 255, 0.28), transparent 20%),
+    radial-gradient(circle at 52% 0%, rgba(180, 120, 255, 0.34), transparent 24%),
+    radial-gradient(circle at 88% 12%, rgba(126, 152, 255, 0.4), transparent 20%),
+    radial-gradient(circle at 97% 84%, rgba(115, 130, 255, 0.3), transparent 18%),
+    linear-gradient(90deg, rgba(108, 84, 255, 0.12), rgba(179, 118, 255, 0.2) 50%, rgba(106, 132, 255, 0.14));
+  filter: blur(42px);
   opacity: 1;
 }
 
@@ -329,8 +329,8 @@ section {
   border: 1px solid rgba(156, 146, 255, 0.16);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.03) inset,
-    0 0 50px rgba(112, 121, 255, 0.12),
-    0 0 84px rgba(156, 103, 255, 0.08);
+    0 0 56px rgba(112, 121, 255, 0.16),
+    0 0 110px rgba(156, 103, 255, 0.12);
 }
 
 .hero-shot img {
@@ -339,7 +339,13 @@ section {
   border: 1px solid rgba(255, 255, 255, 0.14);
   opacity: 0.98;
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
-  filter: brightness(0.68) saturate(0.98) contrast(0.97);
+  filter:
+    brightness(0.72)
+    saturate(1)
+    contrast(0.98)
+    drop-shadow(0 0 24px rgba(134, 108, 255, 0.18))
+    drop-shadow(0 0 64px rgba(134, 108, 255, 0.14))
+    drop-shadow(0 0 110px rgba(164, 108, 255, 0.1));
 }
 
 .section-heading {
@@ -540,7 +546,7 @@ section {
 
   .hero-shot::before {
     inset: -18px -20px -24px;
-    filter: blur(18px);
+    filter: blur(20px);
   }
 
   .hero-shot::after {
@@ -557,3 +563,11 @@ section {
     line-height: 1.1;
   }
 }
+  .hero-shot img {
+    filter:
+      brightness(0.72)
+      saturate(1)
+      contrast(0.98)
+      drop-shadow(0 0 14px rgba(134, 108, 255, 0.16))
+      drop-shadow(0 0 30px rgba(164, 108, 255, 0.1));
+  }
