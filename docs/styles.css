@@ -153,9 +153,10 @@ section {
   max-width: 13.5ch;
   font-size: clamp(3.5rem, 7.2vw, 6.2rem);
   text-shadow:
-    0 0 18px rgba(8, 10, 18, 0.48),
-    0 10px 30px rgba(8, 10, 18, 0.72),
-    0 22px 54px rgba(8, 10, 18, 0.82);
+    0 3px 0 rgba(8, 10, 18, 0.34),
+    0 9px 0 rgba(8, 10, 18, 0.24),
+    0 18px 24px rgba(8, 10, 18, 0.62),
+    0 30px 56px rgba(8, 10, 18, 0.82);
 }
 
 .eyebrow,
@@ -201,9 +202,10 @@ section {
   line-height: 1.08;
   font-weight: 700;
   text-shadow:
-    0 0 12px rgba(8, 10, 18, 0.4),
-    0 8px 22px rgba(8, 10, 18, 0.68),
-    0 18px 40px rgba(8, 10, 18, 0.8);
+    0 2px 0 rgba(8, 10, 18, 0.28),
+    0 7px 0 rgba(8, 10, 18, 0.18),
+    0 14px 22px rgba(8, 10, 18, 0.58),
+    0 24px 40px rgba(8, 10, 18, 0.78);
 }
 
 .hero-subline {
@@ -212,8 +214,8 @@ section {
   font-size: 0.98rem;
   font-weight: 500;
   text-shadow:
-    0 0 10px rgba(8, 10, 18, 0.34),
-    0 8px 20px rgba(8, 10, 18, 0.58);
+    0 2px 0 rgba(8, 10, 18, 0.24),
+    0 10px 18px rgba(8, 10, 18, 0.56);
 }
 
 .hero-actions,
