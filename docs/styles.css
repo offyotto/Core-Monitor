@@ -292,8 +292,10 @@ section {
   padding: 16px;
   isolation: isolate;
   border-radius: 34px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
-  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.46);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
+  box-shadow:
+    0 44px 86px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
   transform: perspective(1800px) rotateX(12deg) rotateY(-8deg) rotateZ(-4deg);
   transform-origin: center top;
 }
@@ -334,9 +336,10 @@ section {
 .hero-shot img {
   width: 100%;
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  opacity: 0.92;
-  filter: brightness(0.52) saturate(0.92) contrast(0.92);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  opacity: 0.98;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+  filter: brightness(0.68) saturate(0.98) contrast(0.97);
 }
 
 .section-heading {
