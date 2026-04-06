@@ -70,13 +70,8 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
         let label = compactMetric()
         let color  = metricNSColor()
 
-        let fanImage = NSImage(systemSymbolName: "fanblades.fill", accessibilityDescription: nil)
-        let imageAttachment = NSTextAttachment()
-        imageAttachment.image = fanImage
-
         let full = NSMutableAttributedString()
 
-        // Use a proper NSImage for the icon on the button itself
         let labelAttr = NSAttributedString(
             string: " \(label)",
             attributes: [
@@ -88,13 +83,10 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
 
         button.attributedTitle = full
 
-        // Fan icon as the button image (left side)
-        if let img = NSImage(systemSymbolName: "fanblades.fill", accessibilityDescription: nil) {
-            img.isTemplate = false
-            let tinted = img.tinted(with: fanNSColor())
-            button.image = tinted
-            button.imagePosition = .imageLeft
-        }
+        let mark = statusBarMarkImage()
+        mark.isTemplate = true
+        button.image = mark
+        button.imagePosition = .imageLeft
     }
 
     private func setupPopover() {
@@ -197,23 +189,30 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
         return NSColor(red: 1.0, green: 0.72, blue: 0.18, alpha: 1)
     }
 
-    private func fanNSColor() -> NSColor {
-        let load = systemMonitor.cpuUsagePercent
-        if load > 80 { return .systemRed    }
-        if load > 50 { return .systemOrange }
-        return NSColor(red: 1.0, green: 0.72, blue: 0.18, alpha: 1)
-    }
-}
+    private func statusBarMarkImage() -> NSImage {
+        let size = NSSize(width: 14, height: 14)
+        let image = NSImage(size: size, flipped: false) { _ in
+            NSColor.black.setFill()
 
-// MARK: - NSImage tint helper
-private extension NSImage {
-    func tinted(with color: NSColor) -> NSImage {
-        let copy = self.copy() as! NSImage
-        copy.lockFocus()
-        color.set()
-        NSRect(origin: .zero, size: copy.size).fill(using: .sourceAtop)
-        copy.unlockFocus()
-        copy.isTemplate = false
-        return copy
+            NSBezierPath(roundedRect: NSRect(x: 1.8, y: 3.0, width: 2.2, height: 5.2), xRadius: 1.1, yRadius: 1.1).fill()
+            NSBezierPath(roundedRect: NSRect(x: 5.1, y: 3.0, width: 2.2, height: 7.1), xRadius: 1.1, yRadius: 1.1).fill()
+            NSBezierPath(roundedRect: NSRect(x: 8.4, y: 3.0, width: 2.2, height: 9.4), xRadius: 1.1, yRadius: 1.1).fill()
+
+            let line = NSBezierPath()
+            line.move(to: NSPoint(x: 1.5, y: 4.7))
+            line.line(to: NSPoint(x: 4.2, y: 6.0))
+            line.line(to: NSPoint(x: 6.5, y: 5.2))
+            line.line(to: NSPoint(x: 9.2, y: 9.8))
+            line.line(to: NSPoint(x: 12.0, y: 8.4))
+            line.lineWidth = 1.5
+            line.lineJoinStyle = .round
+            line.lineCapStyle = .round
+            line.stroke()
+
+            return true
+        }
+
+        image.isTemplate = true
+        return image
     }
 }

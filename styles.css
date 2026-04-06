@@ -29,9 +29,9 @@ body {
   color: var(--text);
   font-family: "Space Grotesk", sans-serif;
   background:
-    radial-gradient(circle at 50% 10%, rgba(161, 106, 255, 0.38), transparent 26%),
-    radial-gradient(circle at 62% 16%, rgba(102, 151, 255, 0.24), transparent 22%),
-    linear-gradient(180deg, #04060d 0%, #080b14 44%, #06070d 100%);
+    radial-gradient(circle at 52% 14%, rgba(165, 111, 255, 0.34), transparent 20%),
+    radial-gradient(circle at 58% 16%, rgba(93, 139, 255, 0.2), transparent 20%),
+    linear-gradient(180deg, #05070d 0%, #050810 36%, #06070d 100%);
   min-height: 100vh;
 }
 
@@ -51,9 +51,9 @@ code {
 }
 
 .page-shell {
-  width: min(1240px, calc(100% - 40px));
+  width: min(1260px, calc(100% - 48px));
   margin: 0 auto;
-  padding: 20px 0 80px;
+  padding: 18px 0 80px;
 }
 
 .site-header {
@@ -71,18 +71,6 @@ code {
   align-items: center;
   gap: 14px;
   text-decoration: none;
-}
-
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: #1e1300;
-  font-family: "IBM Plex Mono", monospace;
-  font-weight: 600;
 }
 
 .brand-logo {
@@ -134,7 +122,7 @@ main {
 section {
   border: 1px solid var(--line);
   border-radius: var(--radius-xl);
-  background: linear-gradient(180deg, rgba(12, 15, 27, 0.74), rgba(9, 11, 19, 0.88));
+  background: linear-gradient(180deg, rgba(11, 14, 25, 0.84), rgba(8, 10, 18, 0.95));
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
 }
@@ -142,8 +130,9 @@ section {
 .hero {
   position: relative;
   display: grid;
-  gap: 30px;
-  padding: 42px 28px 18px;
+  gap: 0;
+  min-height: min(980px, calc(100vh - 84px));
+  padding: 72px 28px 56px;
   overflow: hidden;
   border: none;
   background: transparent;
@@ -160,8 +149,8 @@ section {
 }
 
 .hero-copy h1 {
-  max-width: 12ch;
-  font-size: clamp(4rem, 8.8vw, 7.6rem);
+  max-width: 11ch;
+  font-size: clamp(4rem, 8vw, 7rem);
 }
 
 .eyebrow,
@@ -189,22 +178,28 @@ section {
 
 .hero-copy {
   position: relative;
-  z-index: 2;
+  z-index: 4;
   display: grid;
   justify-items: center;
   text-align: center;
 }
 
+.hero-copy-secondary {
+  z-index: 3;
+  margin-top: -24px;
+}
+
 .hero-lead {
-  max-width: 24ch;
+  max-width: 18ch;
   color: var(--text);
-  font-size: clamp(2rem, 3vw, 3.15rem);
-  line-height: 1.05;
+  font-size: clamp(1.85rem, 3.2vw, 3.1rem);
+  line-height: 1.06;
   font-weight: 700;
+  text-shadow: 0 12px 34px rgba(0, 0, 0, 0.62);
 }
 
 .hero-subline {
-  margin: 12px 0 0;
+  margin: 16px 0 0;
   color: rgba(247, 248, 252, 0.78);
   font-size: 1rem;
   font-weight: 500;
@@ -254,13 +249,6 @@ section {
   gap: 16px;
 }
 
-.hero-panel {
-  position: relative;
-  min-height: 580px;
-  margin-top: -44px;
-  place-items: end center;
-}
-
 .hero-card,
 .install-card,
 .feature-card,
@@ -275,35 +263,36 @@ section {
 .hero-glow {
   position: absolute;
   pointer-events: none;
-  filter: blur(18px);
+  z-index: 1;
+  filter: blur(24px);
 }
 
 .hero-glow-left {
-  width: 520px;
+  width: 540px;
   height: 260px;
-  top: 48px;
-  left: 23%;
-  background: radial-gradient(circle, rgba(172, 101, 255, 0.5), transparent 70%);
+  top: 148px;
+  left: 26%;
+  background: radial-gradient(circle, rgba(182, 99, 255, 0.52), transparent 72%);
 }
 
 .hero-glow-right {
   width: 520px;
   height: 260px;
-  top: 40px;
+  top: 124px;
   right: 18%;
-  background: radial-gradient(circle, rgba(109, 120, 255, 0.38), transparent 72%);
+  background: radial-gradient(circle, rgba(109, 120, 255, 0.34), transparent 72%);
 }
 
 .hero-shot {
   position: relative;
-  z-index: 1;
-  width: min(980px, 100%);
-  margin: 0;
+  z-index: 2;
+  width: min(980px, 94vw);
+  margin: -54px auto -88px;
   padding: 18px;
   border-radius: 34px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.42);
-  transform: perspective(1800px) rotateX(12deg) rotateY(-8deg);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.46);
+  transform: perspective(1800px) rotateX(16deg) rotateY(-10deg) rotateZ(-5deg);
   transform-origin: center top;
 }
 
@@ -311,7 +300,8 @@ section {
   width: 100%;
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  opacity: 0.6;
+  opacity: 0.82;
+  filter: brightness(0.42) saturate(0.9) contrast(0.9);
 }
 
 .section-heading {
@@ -421,7 +411,6 @@ section {
     justify-content: center;
   }
 
-  .hero,
   .showcase-grid,
   .video-layout,
   .install-grid,
@@ -435,12 +424,8 @@ section {
   }
 
   .hero-shot {
+    margin: -20px auto -32px;
     transform: none;
-  }
-
-  .hero-panel {
-    min-height: 0;
-    margin-top: -8px;
   }
 
   .cta-band {
@@ -483,6 +468,7 @@ section {
   .hero {
     padding-top: 28px;
     padding-bottom: 28px;
+    min-height: auto;
   }
 
   .hero-copy h1,
@@ -509,6 +495,7 @@ section {
   }
 
   .hero-shot {
+    margin: 8px auto 0;
     padding: 10px;
     border-radius: 24px;
   }
