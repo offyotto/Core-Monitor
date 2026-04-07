@@ -12,6 +12,20 @@ final class AppModeState: ObservableObject {
     init() { isBasicMode = UserDefaults.standard.bool(forKey: "basicMode") }
 }
 
+final class AppDebugSettings: ObservableObject {
+    static let shared = AppDebugSettings()
+
+    @Published var isEnabled: Bool {
+        didSet { UserDefaults.standard.set(isEnabled, forKey: Self.debugModeKey) }
+    }
+
+    private static let debugModeKey = "coremonitor.debugMode"
+
+    private init() {
+        isEnabled = UserDefaults.standard.bool(forKey: Self.debugModeKey)
+    }
+}
+
 @MainActor
 final class AppAppearanceSettings: ObservableObject {
     static let shared = AppAppearanceSettings()
@@ -529,13 +543,16 @@ private struct FanControlPanel: View {
 // MARK: - Sidebar items
 private enum SidebarItem: String, CaseIterable, Identifiable {
     case overview="Overview", thermals="Thermals", memory="Memory", fans="Fans"
-    case battery="Battery", system="System", about="About"
+    case battery="Battery", network="Network", disk="Disk I/O", benchmark="Benchmark", corevisor="CoreVisor"
+    case system="System", about="About"
     var id: String { rawValue }
     var icon: String {
         switch self {
         case .overview: return "gauge.medium"; case .thermals: return "thermometer.medium"
         case .memory: return "memorychip"; case .fans: return "fanblades.fill"
-        case .battery: return "battery.75"; case .system: return "gearshape"; case .about: return "info.circle"
+        case .battery: return "battery.75"; case .network: return "network"
+        case .disk: return "internaldrive"; case .benchmark: return "speedometer"
+        case .corevisor: return "server.rack"; case .system: return "gearshape"; case .about: return "info.circle"
         }
     }
 }
@@ -584,6 +601,7 @@ private struct SidebarRow: View {
 // MARK: - Sidebar
 private struct Sidebar: View {
     @ObservedObject private var appearanceSettings = AppAppearanceSettings.shared
+    @ObservedObject private var debugSettings = AppDebugSettings.shared
     @Binding var selection: SidebarItem
     let hasBattery: Bool
     let modeState: AppModeState
@@ -592,6 +610,9 @@ private struct Sidebar: View {
         var items: [SidebarItem] = [.overview, .thermals, .memory, .fans]
         if hasBattery {
             items.append(.battery)
+        }
+        if debugSettings.isEnabled {
+            items.append(contentsOf: [.network, .disk, .benchmark, .corevisor])
         }
         items.append(contentsOf: [.system, .about])
         return items
@@ -666,6 +687,10 @@ private struct DetailPane: View {
         case .memory:    memoryContent
         case .fans:      fansContent
         case .battery:   batteryContent
+        case .network:   networkContent
+        case .disk:      diskContent
+        case .benchmark: benchmarkContent
+        case .corevisor: corevisorContent
         case .system:    systemContent
         case .about:     aboutContent
         }
@@ -837,6 +862,72 @@ private struct DetailPane: View {
         }
     }
 
+    private var corevisorContent: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            header("CoreVisor", subtitle: "Removed VM stack, debug-only and intentionally unstable")
+            DarkCard(padding: 16) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(.orange)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Bug Frenzy Mode")
+                                .font(.system(size: 17, weight: .bold))
+                            Text("CoreVisor was removed from the production app. This debug surface brings the old entry point back as an unstable graveyard panel, but the embedded QEMU runtime and VM manager are not restored here.")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    Divider().overlay(Color.bdDivider)
+                    VStack(alignment: .leading, spacing: 8) {
+                        debugStatusRow("CoreVisor UI", value: "Debug placeholder restored", color: .orange)
+                        debugStatusRow("Embedded QEMU bundle", value: "Removed from current repo", color: .red)
+                        debugStatusRow("VM manager/runtime", value: "Not wired in production build", color: .red)
+                        debugStatusRow("Fan VM boost", value: "Disabled with CoreVisor removal", color: .secondary)
+                    }
+                }
+            }
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                debugFeatureCard(
+                    title: "Benchmarking",
+                    subtitle: "Restored in sidebar",
+                    icon: "speedometer",
+                    color: Color.bdAccent
+                )
+                debugFeatureCard(
+                    title: "Network",
+                    subtitle: "Old throughput panel",
+                    icon: "network",
+                    color: .green
+                )
+                debugFeatureCard(
+                    title: "Disk I/O",
+                    subtitle: "Old read/write panel",
+                    icon: "internaldrive",
+                    color: .orange
+                )
+                debugFeatureCard(
+                    title: "CoreVisor",
+                    subtitle: "Broken on purpose",
+                    icon: "server.rack",
+                    color: .red
+                )
+            }
+            DarkCard(padding: 16) {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Why this is not a normal feature")
+                        .font(.system(size: 14, weight: .bold))
+                    Text("The old CoreVisor path depended on a removed virtualization stack and embedded QEMU binaries. Re-adding those blindly would make the app larger, less stable, and harder to ship. Debug Mode exposes the old experimental surface without pretending it is safe.")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+
     private var systemContent: some View {
         VStack(alignment: .leading, spacing: 18) {
             header("System", subtitle: "Controls and startup")
@@ -936,6 +1027,39 @@ private struct DetailPane: View {
         .copyOnTap("\(label): \(Int((fraction * 100).rounded()))%")
     }
 
+    private func debugStatusRow(_ label: String, value: String, color: Color) -> some View {
+        HStack(spacing: 10) {
+            Circle().fill(color).frame(width: 7, height: 7)
+            Text(label)
+                .font(.system(size: 12, weight: .medium))
+            Spacer()
+            Text(value)
+                .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                .foregroundStyle(color)
+        }
+    }
+
+    private func debugFeatureCard(title: String, subtitle: String, icon: String, color: Color) -> some View {
+        DarkCard(padding: 14) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(color)
+                    .frame(width: 36, height: 36)
+                    .background(color.opacity(0.14))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title)
+                        .font(.system(size: 13, weight: .bold))
+                    Text(subtitle)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+        }
+    }
+
     // MARK: Colour helpers
     private var cpuColor: Color   { state.cpuUsagePercent > 80 ? .red : state.cpuUsagePercent > 50 ? .orange : .green }
     private var memColor: Color   { switch state.memoryPressure { case .green: return .green; case .yellow: return .orange; case .red: return .red } }
@@ -961,6 +1085,7 @@ private struct DetailPane: View {
 
 private struct AboutDetailsPanel: View {
     @ObservedObject private var appearanceSettings = AppAppearanceSettings.shared
+    @ObservedObject private var debugSettings = AppDebugSettings.shared
 
     var body: some View {
         DarkCard(padding: 18) {
@@ -997,6 +1122,24 @@ private struct AboutDetailsPanel: View {
                     Text("Changes dashboard and card translucency across the app.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
+                }
+
+                Divider().overlay(Color.bdDivider)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Toggle(isOn: $debugSettings.isEnabled) {
+                        Label("Debug Mode: Bug Frenzy", systemImage: "ladybug.fill")
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+                    .toggleStyle(.switch)
+                    .tint(.orange)
+
+                    Text(debugSettings.isEnabled
+                         ? "Unstable old panels are visible again: Benchmark, Network, Disk I/O, and the broken CoreVisor debug surface."
+                         : "Keep this off unless you want removed, unstable, and unsupported feature surfaces back in the sidebar.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(debugSettings.isEnabled ? .orange : .secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 HStack(spacing: 10) {
