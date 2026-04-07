@@ -7,6 +7,7 @@ xcuserdata/
 # Build output
 build/
 DerivedData/
+.deriveddata/
 *.app
 *.dSYM
 
@@ -14,4 +15,3 @@ DerivedData/
 *.zip
 Archive*/
 Core-Monitor 20*/
-
