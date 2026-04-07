@@ -132,10 +132,6 @@ Supported value formats include:
 - Fan control and Touch Bar features should be treated separately when preparing public release builds.
 - Feature availability may vary by build type and signing setup.
 
-## Why This Exists
-
-Core-Monitor was built as an all-in-one alternative for users who want system stats, menu bar access, Touch Bar utilities, benchmarking, and fan control in a single native macOS app.
-
 ## License
 
 GPL-3.0
