@@ -23,8 +23,8 @@ concurrency:
 jobs:
   analyze-swift:
     name: Analyze Swift
-    runs-on: macos-15
-    timeout-minutes: 45
+    runs-on: macos-15-intel
+    timeout-minutes: 60
 
     steps:
       - name: Checkout repository
@@ -40,9 +40,25 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: swift
+          build-mode: manual
 
-      - name: Autobuild for CodeQL
-        uses: github/codeql-action/autobuild@v4
+      - name: Build Core-Monitor for CodeQL
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project Core-Monitor.xcodeproj \
+            -scheme Core-Monitor \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY= \
+            SWIFT_ENABLE_EXPLICIT_MODULES=NO \
+            CLANG_ENABLE_EXPLICIT_MODULES=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            ONLY_ACTIVE_ARCH=YES \
+            -showBuildTimingSummary \
+            build
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
