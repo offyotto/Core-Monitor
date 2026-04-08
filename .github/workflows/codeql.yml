@@ -38,7 +38,6 @@ jobs:
 
       - name: Build Core-Monitor for CodeQL
         env:
-          BUILD_LOG_PATH: ${{ runner.temp }}/codeql-xcodebuild.log
           RUNNER_DERIVED_DATA: ${{ runner.temp }}/DerivedData
         run: |
           set -euo pipefail
@@ -47,9 +46,7 @@ jobs:
           import pathlib
           import subprocess
           import sys
-          import time
 
-          build_log = os.environ["BUILD_LOG_PATH"]
           derived_data = os.environ["RUNNER_DERIVED_DATA"]
           pathlib.Path(derived_data).mkdir(parents=True, exist_ok=True)
 
@@ -69,44 +66,13 @@ jobs:
               "build",
           ]
 
-          start = time.monotonic()
-          timed_out = False
-
-          with open(build_log, "w", buffering=1) as log_file:
-              process = subprocess.Popen(
-                  cmd,
-                  stdout=subprocess.PIPE,
-                  stderr=subprocess.STDOUT,
-                  text=True,
-                  bufsize=1,
-              )
-              assert process.stdout is not None
-
-              for line in process.stdout:
-                  log_file.write(line)
-                  sys.stdout.write(line)
-                  sys.stdout.flush()
-                  if time.monotonic() - start > 1200:
-                      timed_out = True
-                      process.kill()
-                      break
-
-              if timed_out:
-                  return_code = 124
-              else:
-                  return_code = process.wait()
-
-          with open(build_log, "r", errors="replace") as log_file:
-              lines = log_file.readlines()[-200:]
-
-          if return_code != 0:
-              print("\\n--- Last 200 xcodebuild log lines ---")
-              sys.stdout.writelines(lines)
-
-          if return_code == 124:
+          try:
+              completed = subprocess.run(cmd, check=False, timeout=1200)
+          except subprocess.TimeoutExpired:
               print("xcodebuild timed out after 20 minutes", file=sys.stderr)
+              sys.exit(124)
 
-          sys.exit(return_code)
+          sys.exit(completed.returncode)
           PY
 
       - name: Perform CodeQL Analysis
