@@ -226,6 +226,7 @@ struct MenuBarMenuView: View {
     private var actionsSection: some View {
         VStack(spacing: 0) {
             actionRow("Open Dashboard",             icon: "gauge.medium")     { openDashboardAction() }
+            actionRow("Check for Updates",         icon: "arrow.clockwise.circle") { Task { await updater.checkForUpdates() } }
             actionRow("Reset Fan to System Auto",   icon: "arrow.counterclockwise") { fanController.resetToSystemAutomatic() }
             actionRow("Restore App Touch Bar",      icon: "rectangle.on.rectangle") { restoreAppTouchBarAction() }
             actionRow("Revert to System Touch Bar", icon: "rectangle.3.group") { revertTouchBarAction() }

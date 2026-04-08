@@ -719,24 +719,30 @@ private struct DetailPane: View {
     private var overviewContent: some View {
         VStack(alignment: .leading, spacing: 18) {
             header("Overview", subtitle: hostModelName())
-            if let update = updater.updateAvailable {
-                DarkCard(padding: 14) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "arrow.down.circle.fill").font(.system(size: 22)).foregroundStyle(Color.bdAccent)
-                        VStack(alignment: .leading, spacing: 2) {
+            DarkCard(padding: 14) {
+                HStack(spacing: 12) {
+                    Image(systemName: updater.updateAvailable == nil ? "arrow.clockwise.circle.fill" : "arrow.down.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundStyle(Color.bdAccent)
+                    VStack(alignment: .leading, spacing: 2) {
+                        if let update = updater.updateAvailable {
                             Text("Update Available: \(update.displayName)").font(.system(size: 13, weight: .semibold))
-                            Text("Tap to view release notes").font(.system(size: 11)).foregroundStyle(.secondary)
+                            Text("Open the updater to install this release").font(.system(size: 11)).foregroundStyle(.secondary)
+                        } else {
+                            Text("Check for Updates").font(.system(size: 13, weight: .semibold))
+                            Text("Open the updater and ask Sparkle to check now").font(.system(size: 11)).foregroundStyle(.secondary)
                         }
-                        Spacer()
-                        Button { showUpdateCheck = true } label: {
-                            Text("Update").font(.system(size: 12, weight: .semibold))
-                                .padding(.horizontal, 14).padding(.vertical, 7)
-                                .background(Color.bdAccent.opacity(0.2)).clipShape(Capsule())
-                                .overlay(Capsule().strokeBorder(Color.bdAccent.opacity(0.4), lineWidth: 1))
-                        }.buttonStyle(SoftPressButtonStyle())
                     }
-                }.transition(.move(edge: .top).combined(with: .opacity))
-            }
+                    Spacer()
+                    Button { showUpdateCheck = true } label: {
+                        Text(updater.updateAvailable == nil ? "Open Updater" : "Update")
+                            .font(.system(size: 12, weight: .semibold))
+                            .padding(.horizontal, 14).padding(.vertical, 7)
+                            .background(Color.bdAccent.opacity(0.2)).clipShape(Capsule())
+                            .overlay(Capsule().strokeBorder(Color.bdAccent.opacity(0.4), lineWidth: 1))
+                    }.buttonStyle(SoftPressButtonStyle())
+                }
+            }.transition(.move(edge: .top).combined(with: .opacity))
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 MetricTile(label: "CPU Load",  value: "\(Int(state.cpuUsagePercent.rounded()))", unit: "%",
                            color: cpuColor, gauge: state.cpuUsagePercent / 100, history: cpuHistory)
