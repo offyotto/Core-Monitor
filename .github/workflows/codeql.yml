@@ -37,17 +37,55 @@ jobs:
           build-mode: manual
 
       - name: Build Core-Monitor for CodeQL
+        env:
+          BUILD_LOG_PATH: ${{ runner.temp }}/codeql-xcodebuild.log
+          RUNNER_DERIVED_DATA: ${{ runner.temp }}/DerivedData
         run: |
           set -euo pipefail
-          xcodebuild \
-            -project "Core-Monitor.xcodeproj" \
-            -scheme "Core-Monitor" \
-            -configuration Debug \
-            -destination "platform=macOS" \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            build
+          python3 - <<'PY'
+          import os
+          import pathlib
+          import subprocess
+          import sys
+
+          build_log = os.environ["BUILD_LOG_PATH"]
+          derived_data = os.environ["RUNNER_DERIVED_DATA"]
+          pathlib.Path(derived_data).mkdir(parents=True, exist_ok=True)
+
+          cmd = [
+              "xcodebuild",
+              "-project", "Core-Monitor.xcodeproj",
+              "-scheme", "Core-Monitor",
+              "-configuration", "Debug",
+              "-destination", "platform=macOS",
+              "-derivedDataPath", derived_data,
+              "CODE_SIGNING_ALLOWED=NO",
+              "CODE_SIGNING_REQUIRED=NO",
+              "CODE_SIGN_IDENTITY=",
+              "COMPILER_INDEX_STORE_ENABLE=NO",
+              "ONLY_ACTIVE_ARCH=YES",
+              "-quiet",
+              "build",
+          ]
+
+          with open(build_log, "w") as log_file:
+              process = subprocess.Popen(cmd, stdout=log_file, stderr=subprocess.STDOUT)
+              try:
+                  return_code = process.wait(timeout=1200)
+              except subprocess.TimeoutExpired:
+                  process.kill()
+                  return_code = 124
+
+          with open(build_log, "r", errors="replace") as log_file:
+              lines = log_file.readlines()[-200:]
+
+          sys.stdout.writelines(lines)
+
+          if return_code == 124:
+              print("xcodebuild timed out after 20 minutes", file=sys.stderr)
+
+          sys.exit(return_code)
+          PY
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
