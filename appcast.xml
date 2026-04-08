@@ -3,19 +3,29 @@
     <channel>
         <title>Core-Monitor</title>
         <item>
+            <title>11.22</title>
+            <pubDate>Wed, 08 Apr 2026 21:00:03 +0500</pubDate>
+            <link>https://offyotto-sl3.github.io/Core-Monitor/</link>
+            <sparkle:version>11220</sparkle:version>
+            <sparkle:shortVersionString>11.22</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[## Core-Monitor 11.22
+
+- Test Sparkle release to verify the in-app update path end to end
+- Published as the newest feed item above 11.2.1
+]]></description>
+            <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor-11.22.zip" length="3598219" type="application/octet-stream" sparkle:edSignature="fYsEZD8w1dn6/cfVJwogOAMxPNNwKbisKyyXaOBQ8SHn4pyakGUv51JRl6QQTgA2dzzs1MU1ZarYOedXhyxMDg=="/>
+            <sparkle:deltas>
+                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11220-11201.delta" sparkle:deltaFrom="11201" length="21202" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="CHG5Wcnlj8jwxqkkVUuwnQSYZx+ifeacSlFRoXCfUykLAHgA2Zh0zh8UViUnZcDx/1Ncw6ESVzqcHlo0LuTTAA=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>11.2.1</title>
             <pubDate>Wed, 08 Apr 2026 19:52:00 +0500</pubDate>
             <link>https://offyotto-sl3.github.io/Core-Monitor/</link>
             <sparkle:version>11201</sparkle:version>
             <sparkle:shortVersionString>11.2.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[## Core-Monitor 11.2.1
-
-- UI refresh and layout refinements
-- Updated website screenshots and release presentation
-- Fixed default window surface opacity so first launch starts fully readable
-- Sparkle version metadata corrected for future updates
-]]></description>
             <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor-11.2.1.zip" length="3598204" type="application/octet-stream" sparkle:edSignature="qchjK4aeBS1MAbaTH17eQ0Z0JCMW+6HelPVcMle2imkxSb62WuT/rz4pBH5HXuqpncYojdiVraWegl8LZlqgAw=="/>
         </item>
     </channel>
