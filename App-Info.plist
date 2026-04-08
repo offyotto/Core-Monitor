@@ -26,7 +26,7 @@
 		<string>identifier "ventaphobia.smc-helper" and anchor apple generic and certificate leaf[subject.OU] = "6VDP675K4L"</string>
 	</dict>
 	<key>SUEnableInstallerLauncherService</key>
-	<true/>
+	<false/>
 	<key>SUFeedURL</key>
 	<string>https://offyotto-sl3.github.io/Core-Monitor/appcast.xml</string>
 	<key>SUPublicEDKey</key>
