@@ -5,7 +5,7 @@
 <h1 align="center">Core-Monitor</h1>
 
 <p align="center">
-  Core-Monitor helps you keep an eye on your Mac’s hardware. It can show live system stats in the menu bar and, if you want, it can also control your fans.
+  Core-Monitor is a free, open source macOS system monitor.
 </p>
 
 <p align="center">
