@@ -23,17 +23,17 @@ concurrency:
 jobs:
   analyze-swift:
     name: Analyze Swift
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 45
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Select Xcode 15.4
+      - name: Select Xcode 16.4
         run: |
           set -euo pipefail
-          sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+          sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
           xcodebuild -version
 
       - name: Initialize CodeQL
