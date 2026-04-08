@@ -112,8 +112,26 @@ final class AppUpdater: NSObject, ObservableObject {
         } else if nsError.domain == SUSparkleErrorDomain, nsError.code == installationCanceledCode {
             checkError = nil
         } else {
-            checkError = nsError.localizedDescription
+            checkError = friendlySparkleErrorMessage(for: nsError) ?? nsError.localizedDescription
         }
+    }
+
+    private func friendlySparkleErrorMessage(for error: NSError) -> String? {
+        let message = error.localizedDescription.lowercased()
+
+        let locationHints = [
+            "can't be updated if it’s running from the location it is in",
+            "can't be updated if it's running from the location it is in",
+            "read-only volume",
+            "app translocation",
+            "running from the location"
+        ]
+
+        if locationHints.contains(where: message.contains) {
+            return "Move Core-Monitor to /Applications, launch it from there, then try the update again."
+        }
+
+        return nil
     }
     #endif
 }

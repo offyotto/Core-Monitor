@@ -3,19 +3,19 @@
     <channel>
         <title>Core-Monitor</title>
         <item>
-            <title>11.2.7</title>
-            <pubDate>Wed, 08 Apr 2026 23:25:20 +0500</pubDate>
+            <title>11.2.8</title>
+            <pubDate>Wed, 08 Apr 2026 23:36:57 +0500</pubDate>
             <link>https://offyotto-sl3.github.io/Core-Monitor/</link>
-            <sparkle:version>11270</sparkle:version>
-            <sparkle:shortVersionString>11.2.7</sparkle:shortVersionString>
+            <sparkle:version>11280</sparkle:version>
+            <sparkle:shortVersionString>11.2.8</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
-            <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor-11.2.7.zip" length="3546218" type="application/octet-stream" sparkle:edSignature="yLLSLjPdLu6yktnZHtA52xEPtyJOrwojq0sjKyvDNhjwjvxo6Ft+lj89A1FuJv3s7x+5v4IMpOmNg8YAIpQfDQ=="/>
+            <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor-11.2.8.zip" length="3551500" type="application/octet-stream" sparkle:edSignature="qasb6/9ak3sSUZcrHYPfejZHeID/w9XwSRrm362PH5anBw832C37WlVIp8qCcoFUa/D1dZyBnUXZRPCesNsTAw=="/>
             <sparkle:deltas>
-                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11270-11260.delta" sparkle:deltaFrom="11260" length="132602" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="fEr5UbM6wTRUlqi3/1boRq6MYq3U6Iuoy+G1jV47Yu0bQW6mdHxxpp0rPrf+qKPmFd7yDP3pReJqCyezG2fFDA=="/>
-                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11270-11250.delta" sparkle:deltaFrom="11250" length="152810" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="pqhXyBM6Y6dTPC4NitguyWUbh8qzez8NoXtEYBlbJSuy1qGsn9PAS25wOQ+zOp1CLfN7/isBuy88dQe14dOOCQ=="/>
-                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11270-11240.delta" sparkle:deltaFrom="11240" length="153750" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="M+3b2E80mvaFBSCWNZ+Y149sO+kE8xXpxJxNjPAdWUS8+9fWtU5xPoCIyTJhZPL0vy9Ts2RwhkgaKST5mnowBg=="/>
-                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11270-11230.delta" sparkle:deltaFrom="11230" length="249094" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="zGUGZOLWsRstbJsJB3B+2NyuErnvvzLFaNi5x4KX9wN3Amft1i/wsi4z4/o1bOyU8/zfkrjF1rMxgvVTjA3NBg=="/>
-                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11270-11220.delta" sparkle:deltaFrom="11220" length="247742" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="H87JOe2r5b2kKKkryWL1o0l+GY55FoqV9SWzeWFR9Y1cgTKlYfSMwjXSwxK/DUj17DTbXSGAvrdwMWGT8p5uCw=="/>
+                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11280-11270.delta" sparkle:deltaFrom="11270" length="139794" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="IdBFFBGCdQT2MnsKp4BEMlD1PeCvP43T+uY2JJfShIQpHJ3G7ni1XBc7Q/Blghm2VZuG4sA4/iv1m6PtMxBtAA=="/>
+                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11280-11260.delta" sparkle:deltaFrom="11260" length="169726" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="rv8DwMqyEKNZ4YIk+5s6jaW0Wha0LDrOheOWbuVeZ9zHolIvKJj1xG6c2wVVSy64tyV8b2ImB2H6pP9mTjXRAw=="/>
+                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11280-11250.delta" sparkle:deltaFrom="11250" length="179838" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="k6cqrRlGpr/BcYc6hXHfx0k53w0+5Eeo+YEl/i1U38xohpNwRp+QNGQz5J9zA3UFuAEXIAh7+O5Hv+SGNYTIAg=="/>
+                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11280-11240.delta" sparkle:deltaFrom="11240" length="179770" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="jkjqBBw3aGWXecodbR/RMpvFL8nxBuS2vGNEvfPm/36LwrDGRgKhhhjY9XJx6xmYFJKfn8Kg0RPi3WafRnB4Cw=="/>
+                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11280-11230.delta" sparkle:deltaFrom="11230" length="258378" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="M73KrTM62Pkq/azXFLRtDqHMyx8D8+LOjmzVwOmYrHkBhhVqCFLw08GZ3DefRaCyLzSnbs75M2HS0FVFzJtZBw=="/>
             </sparkle:deltas>
         </item>
     </channel>

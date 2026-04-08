@@ -1532,12 +1532,31 @@ private struct UpdateCheckSheet: View {
                     }.buttonStyle(SoftPressButtonStyle()).disabled(updater.isChecking)
                 }
                 if let err = updater.checkError {
-                    Text(err).font(.system(size: 11)).foregroundStyle(.red).multilineTextAlignment(.center)
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(.red)
+
+                        Text(err)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.red)
+                            .multilineTextAlignment(.leading)
+                            .lineLimit(nil)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Spacer(minLength: 0)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(14)
+                    .background(
+                        CoreMonGlassBackground(cornerRadius: 16, tintOpacity: 0.08, strokeOpacity: 0.14, shadowRadius: 8)
+                    )
                 }
                 Spacer()
             }.padding(24)
         }
         .preferredColorScheme(.dark)
-        .frame(width: 400, height: 300)
+        .frame(width: 420)
+        .frame(minHeight: updater.checkError == nil ? 300 : 360)
     }
 }
