@@ -76,8 +76,6 @@ final class AppCoordinator: ObservableObject {
         start()
     }
 
-    nonisolated deinit { }
-
     // MARK: - Lifecycle
 
     func start() {
