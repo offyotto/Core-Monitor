@@ -5,11 +5,11 @@
 <h1 align="center">Core-Monitor</h1>
 
 <p align="center">
-  Hardware monitoring, fan control, menu bar stats, sensor readouts, and Touch Bar utilities for macOS.
+  Core-Monitor helps you keep an eye on your Mac’s hardware. It can show live system stats in the menu bar and, if you want, it can also control your fans.
 </p>
 
 <p align="center">
-  Native Swift utility for Apple Silicon Macs with optional privileged fan control.
+  Core-Monitor is built for Apple Silicon Macs and written in Swift.
 </p>
 
 <p align="center">
@@ -28,58 +28,59 @@
 
 <p align="center">
   <a href="https://offyotto-sl3.github.io/Core-Monitor/">
-    <img src="https://img.shields.io/badge/Website-Core--Monitor-8A2BE2?style=flat">
+    <img src="https://img.shields.io/badge/Website-Core--Monitor-8A2BE2?style=flat" alt="Website">
   </a>
   <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">
-    <img src="https://img.shields.io/badge/Download-latest-brightgreen?style=flat">
+    <img src="https://img.shields.io/badge/Download-latest-brightgreen?style=flat" alt="Download latest">
   </a>
   <a href="./LICENSE">
-    <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=flat">
+    <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=flat" alt="GPL-3.0 license">
   </a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/macOS-12%2B-black?style=flat&logo=apple">
+  <img src="https://img.shields.io/badge/macOS-12%2B-black?style=flat&logo=apple" alt="macOS 12+">
 </p>
 
 ## Overview
 
-Core-Monitor is a native macOS utility written in Swift. It combines hardware monitoring, menu bar stats, Touch Bar support, benchmarking, and optional fan control in one app.
-
-This repository currently targets direct distribution and local builds. Some features require elevated privileges, and some Touch Bar functionality uses macOS-specific implementation details that are not suitable for every release channel.
+Core-Monitor is a macOS utility for hardware monitoring, menu bar stats, and optional fan control. It is built in Swift and designed primarily for Apple Silicon Macs.
 
 ## Features
 
-- CPU, GPU, memory, battery, temperature, power, and voltage monitoring
-- Menu bar stats and quick system readouts
-- Fan RPM monitoring
-- Manual fan control through a privileged helper
-- Touch Bar widgets and utility views
-- Native SwiftUI/AppKit macOS app
+- Live CPU monitoring
+- GPU monitoring
+- Memory usage monitoring
+- Battery status monitoring
+- Temperature monitoring
+- Power usage monitoring
+- Voltage monitoring
+- Fan speed monitoring
+- Optional fan control
+- Menu bar stats
+- Touch Bar support
 
 ## Privacy
 
-Core-Monitor is built with a simple position: privacy is a fundamental human right.
+Your privacy matters.
 
-This project is open source so the code can be inspected directly. That matters for a system utility that reads hardware state, surfaces sensor data, and can optionally talk to a privileged helper for fan control.
+Core-Monitor is open source, which means you can inspect the code yourself and see how it works.
 
-Privacy expectations for the project:
+Core-Monitor does not:
 
-- No telemetry
-- No analytics
-- No ad tech
-- No account requirement
-- No subscription gate for the core utility
-
-Core-Monitor is designed to run locally on your Mac and focus on monitoring, menu bar stats, Touch Bar tools, benchmarking, and fan control without collecting usage data about you.
+- collect your data
+- send usage data anywhere
+- show ads
+- require an account
+- require a subscription for the core utility
 
 ## Installation
 
 ### Download
 
-- Download the latest build from [Releases](https://github.com/offyotto-sl3/Core-Monitor/releases/latest)
-- Move the app to `/Applications`
-- Launch `Core-Monitor`
+- Download Core-Monitor from [Releases](https://github.com/offyotto-sl3/Core-Monitor/releases/latest)
+- Move the app to your `/Applications` folder
+- Open Core-Monitor
 
 ### Build from Source
 
@@ -89,28 +90,21 @@ git clone https://github.com/offyotto-sl3/Core-Monitor.git
 
 - Open the project in Xcode
 - Select the `Core-Monitor` scheme
-- Build and run
+- Build and run the app
 
 ## Privileged Helper
 
-Monitoring, menu bar stats, and most UI features do not require administrator privileges.
+Core-Monitor can optionally control your fans, but that requires a privileged helper.
 
-Fan write access is handled by `smc-helper`, a privileged helper that talks to the Apple SMC over IOKit. The app installs and communicates with the helper over XPC when fan control needs elevated access.
+The helper is called `smc-helper`. It communicates with the Apple SMC through IOKit.
 
 Supported helper commands:
 
-- `set <fanID> <rpm>` sets a fan target RPM
+- `set <fanID> <rpm>` sets a fan speed
 - `auto <fanID>` returns a fan to automatic control
 - `read <key>` reads a 4-character SMC key
 
-Internally, the helper:
-
-- opens the `AppleSMC` service
-- communicates with the SMC keyspace through IOKit
-- switches fan mode between automatic and manual when required
-- reads common sensor and fan-related SMC values
-
-Supported value formats include:
+The helper can read common fan and sensor values in these formats:
 
 - `sp78`
 - `fpe2`
@@ -122,16 +116,16 @@ Supported value formats include:
 
 - macOS 12 or later
 - Apple Silicon is the primary target
-- Intel support is partial and may differ by feature
-- Fan control depends on helper installation and hardware behavior
+- Intel Macs may work, but support is not guaranteed
+- Fan control depends on the helper and your Mac’s hardware
 
 ## Notes
 
-- This project is not currently positioned for the Mac App Store.
-- Signed and unsigned builds may expose different feature sets depending on distribution strategy.
-- Fan control and Touch Bar features should be treated separately when preparing public release builds.
-- Feature availability may vary by build type and signing setup.
+- Core-Monitor is not currently available on the Mac App Store
+- Signed and unsigned builds may expose different features
+- Fan control and Touch Bar support may vary between builds
+- Feature availability may depend on signing and distribution setup
 
 ## License
 
-GPL-3.0
+Core-Monitor is licensed under the GPL-3.0 license.
