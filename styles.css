@@ -435,16 +435,24 @@ section {
 
 .showcase-grid {
   display: grid;
-  grid-template-columns: 1.4fr 0.9fr;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(260px, 0.78fr);
   gap: 18px;
+  align-items: start;
 }
 
 .showcase-card {
   overflow: hidden;
   padding: 16px;
+  height: 100%;
+}
+
+.showcase-portrait {
+  align-self: start;
 }
 
 .showcase-card img {
+  display: block;
+  width: 100%;
   border-radius: 18px;
   border: 1px solid var(--line);
 }

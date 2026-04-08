@@ -41,6 +41,20 @@ Core Monitor reads sensor data directly from the Apple SMC and surfaces it in yo
 
 It is written in Swift, built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. No daemons, no background services, no network connections. The only exception is the fan control helper, which is optional and described below.
 
+## UI Preview
+
+<p align="center">
+  <img src="./docs/images/ui/overview-2026.png" alt="Core-Monitor overview screen showing CPU, memory, temperature, and power cards." width="900">
+</p>
+
+<p align="center">
+  <img src="./docs/images/ui/thermals-2026.png" alt="Core-Monitor thermals screen showing CPU and GPU temperature cards with SMC sensor details." width="900">
+</p>
+
+<p align="center">
+  <img src="./docs/images/ui/menu-bar-2026.png" alt="Core-Monitor menu bar panel showing quick system summary stats and SMC status." width="520">
+</p>
+
 ## What it monitors
 
 **CPU** — total load, and on Apple Silicon, P-core and E-core utilization independently, read via `host_processor_info` per logical core.
