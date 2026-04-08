@@ -15,6 +15,7 @@ final class AppUpdater: NSObject, ObservableObject {
     static let shared = AppUpdater()
 
     @Published private(set) var updateAvailable: AppUpdateInfo?
+    @Published private(set) var isUpToDate = false
     @Published private(set) var isChecking = false
     @Published private(set) var lastChecked: Date?
     @Published private(set) var checkError: String?
@@ -39,6 +40,8 @@ final class AppUpdater: NSObject, ObservableObject {
     }
 
     func checkForUpdates(silent: Bool = false) async {
+        updateAvailable = nil
+        isUpToDate = false
         checkError = nil
         lastChecked = Date()
         isChecking = true
@@ -50,6 +53,8 @@ final class AppUpdater: NSObject, ObservableObject {
             runInteractiveSparkleCheck()
         }
         #else
+        updateAvailable = nil
+        isUpToDate = false
         isChecking = false
         checkError = "Sparkle is not linked yet. Add the Sparkle Swift Package to enable app updates."
         #endif
@@ -61,20 +66,28 @@ final class AppUpdater: NSObject, ObservableObject {
 
     func openReleasePage() {
         #if canImport(Sparkle)
+        updateAvailable = nil
+        isUpToDate = false
         isChecking = true
         checkError = nil
         runInteractiveSparkleCheck()
         #else
+        updateAvailable = nil
+        isUpToDate = false
         checkError = "Sparkle is not linked yet. Add the Sparkle Swift Package to enable app updates."
         #endif
     }
 
     func downloadAndInstall() async {
         #if canImport(Sparkle)
+        updateAvailable = nil
+        isUpToDate = false
         isChecking = true
         checkError = nil
         runInteractiveSparkleCheck()
         #else
+        updateAvailable = nil
+        isUpToDate = false
         checkError = "Sparkle is not linked yet. Add the Sparkle Swift Package to enable app updates."
         #endif
     }
@@ -84,6 +97,8 @@ final class AppUpdater: NSObject, ObservableObject {
         prepareForSparkleUI()
 
         guard updaterController.updater.canCheckForUpdates else {
+            updateAvailable = nil
+            isUpToDate = false
             isChecking = false
             checkError = "The updater is busy right now. Try again in a moment."
             return
@@ -108,10 +123,16 @@ final class AppUpdater: NSObject, ObservableObject {
         let installationCanceledCode = 4007
 
         if nsError.domain == SUSparkleErrorDomain, nsError.code == noUpdateCode {
+            updateAvailable = nil
+            isUpToDate = true
             checkError = nil
         } else if nsError.domain == SUSparkleErrorDomain, nsError.code == installationCanceledCode {
+            updateAvailable = nil
+            isUpToDate = false
             checkError = nil
         } else {
+            updateAvailable = nil
+            isUpToDate = false
             checkError = friendlySparkleErrorMessage(for: nsError) ?? nsError.localizedDescription
         }
     }
@@ -144,12 +165,14 @@ extension AppUpdater: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
 
     func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
         isChecking = false
+        isUpToDate = false
         checkError = nil
         updateAvailable = AppUpdateInfo(displayName: item.displayVersionString)
     }
 
     func updaterDidNotFindUpdate(_ updater: SPUUpdater) {
         isChecking = false
+        isUpToDate = true
         checkError = nil
         updateAvailable = nil
     }
@@ -162,6 +185,7 @@ extension AppUpdater: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
 
     func updater(_ updater: SPUUpdater, didAbortWithError error: Error) {
         isChecking = false
+        updateAvailable = nil
         handleSparkleError(error)
     }
 }

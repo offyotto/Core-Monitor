@@ -3,6 +3,22 @@
     <channel>
         <title>Core-Monitor</title>
         <item>
+            <title>11.2.10</title>
+            <pubDate>Thu, 09 Apr 2026 00:01:21 +0500</pubDate>
+            <link>https://offyotto-sl3.github.io/Core-Monitor/</link>
+            <sparkle:version>112100</sparkle:version>
+            <sparkle:shortVersionString>11.2.10</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor-11.2.10.zip" length="3564202" type="application/octet-stream" sparkle:edSignature="VxvLKRVDi0+p5jMk2JbmdjEGyXAVCN2QJidyQLON/+NID0PkbV2dZdUPB46cP4B7MPytyenx1qKgJDCCt2rvAQ=="/>
+            <sparkle:deltas>
+                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor112100-11290.delta" sparkle:deltaFrom="11290" length="167638" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="D7DpepfUX7QgWsLwWbKBRWg5f/wTzScw6v/RZ03x/No6FmPuQMp3kvHRlMT2V0hmdnMXni4oIaXt1nZB5XIHBQ=="/>
+                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor112100-11280.delta" sparkle:deltaFrom="11280" length="168038" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="IK1shCDU9kEjV3emy3ZxIsS7Pd5q90XDtuXOhojBMU7zrqVDky0SqxMqc+eyrEwl7E2GyKs1p2xbIWo05QCJCA=="/>
+                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor112100-11270.delta" sparkle:deltaFrom="11270" length="190250" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="+Pk7vU1LtQJvTplNk/SntwvHjGrlzsN+I6HsUxT36p8eB4XxR+eS4BuFjfddCxuoPBzc6yrJFp1wNutEW2z4AQ=="/>
+                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor112100-11260.delta" sparkle:deltaFrom="11260" length="197530" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="ntFvbYD6RIqPNLUmPsIS/Rvp7NSlItirpSeFSeDdLXdOqj76K1NyNmiefEkdJ8n/Yns3oj7tIN36u2NMpkWcBA=="/>
+                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor112100-11250.delta" sparkle:deltaFrom="11250" length="203642" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="H0k0D9NDri+PFGB+qxpOHKn7QF5xu1/gTO/NW0i16EbGt+OA5lcT5g39FnKAU4A2zfvhfCyqQOLRiqS7l6AtAA=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>11.2.9</title>
             <pubDate>Wed, 08 Apr 2026 23:48:17 +0500</pubDate>
             <link>https://offyotto-sl3.github.io/Core-Monitor/</link>

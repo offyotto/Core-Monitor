@@ -23,6 +23,8 @@ struct MenuBarStatusLabel: View {
                 .frame(minWidth: 46, alignment: .leading)
             if updater.updateAvailable != nil {
                 Circle().fill(Color(red: 0.35, green: 0.72, blue: 1)).frame(width: 5, height: 5)
+            } else if updater.checkError != nil {
+                Circle().fill(.red).frame(width: 5, height: 5)
             }
         }
     }
@@ -144,6 +146,8 @@ struct MenuBarMenuView: View {
             // SMC / update pill
             if updater.updateAvailable != nil {
                 statusPill(dot: Color.mbAccent, label: "Update", tint: Color.mbAccent)
+            } else if updater.checkError != nil {
+                statusPill(dot: .red, label: "Updater Error", tint: .red)
             } else {
                 statusPill(dot: systemMonitor.hasSMCAccess ? .green : .red,
                            label: systemMonitor.hasSMCAccess ? "SMC OK" : "No SMC",

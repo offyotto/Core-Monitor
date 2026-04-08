@@ -721,13 +721,19 @@ private struct DetailPane: View {
             header("Overview", subtitle: hostModelName())
             DarkCard(padding: 14) {
                 HStack(spacing: 12) {
-                    Image(systemName: updater.updateAvailable == nil ? "arrow.clockwise.circle.fill" : "arrow.down.circle.fill")
+                    Image(systemName: overviewUpdaterIconName)
                         .font(.system(size: 22))
-                        .foregroundStyle(Color.bdAccent)
+                        .foregroundStyle(overviewUpdaterIconColor)
                     VStack(alignment: .leading, spacing: 2) {
                         if let update = updater.updateAvailable {
                             Text("Update Available: \(update.displayName)").font(.system(size: 13, weight: .semibold))
                             Text("Open the updater to install this release").font(.system(size: 11)).foregroundStyle(.secondary)
+                        } else if updater.checkError != nil {
+                            Text("Updater needs attention").font(.system(size: 13, weight: .semibold))
+                            Text("Open the updater to see the latest error").font(.system(size: 11)).foregroundStyle(.secondary)
+                        } else if updater.isUpToDate {
+                            Text("You're up to date").font(.system(size: 13, weight: .semibold))
+                            Text("The latest Sparkle check completed successfully").font(.system(size: 11)).foregroundStyle(.secondary)
                         } else {
                             Text("Check for Updates").font(.system(size: 13, weight: .semibold))
                             Text("Open the updater and ask Sparkle to check now").font(.system(size: 11)).foregroundStyle(.secondary)
@@ -1090,6 +1096,20 @@ private struct DetailPane: View {
         if bps >= 1_000_000 { return String(format: "%.1f MB/s", bps / 1_000_000) }
         if bps >= 1_000     { return String(format: "%.0f KB/s", bps / 1_000) }
         return String(format: "%.0f B/s", bps)
+    }
+
+    private var overviewUpdaterIconName: String {
+        if updater.updateAvailable != nil { return "arrow.down.circle.fill" }
+        if updater.checkError != nil { return "exclamationmark.triangle.fill" }
+        if updater.isUpToDate { return "checkmark.circle.fill" }
+        return "arrow.clockwise.circle.fill"
+    }
+
+    private var overviewUpdaterIconColor: Color {
+        if updater.updateAvailable != nil { return Color.bdAccent }
+        if updater.checkError != nil { return .red }
+        if updater.isUpToDate { return .green }
+        return Color.bdAccent
     }
 }
 
@@ -1504,11 +1524,43 @@ private struct UpdateCheckSheet: View {
                             await updater.downloadAndInstall()
                         }
                     }
-                } else {
+                } else if updater.isUpToDate && updater.checkError == nil {
                     VStack(spacing: 10) {
                         Image(systemName: "checkmark.circle.fill").font(.system(size: 36)).foregroundStyle(.green)
                         Text("You're up to date").font(.system(size: 15, weight: .semibold))
                         Text("Core Monitor \(updater.currentVersion)").font(.system(size: 11)).foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(24)
+                    .background(
+                        CoreMonGlassBackground(cornerRadius: 18, tintOpacity: 0.12, strokeOpacity: 0.16, shadowRadius: 10)
+                    )
+                    Button {
+                        dismissAndRun {
+                            await updater.checkForUpdates()
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            if updater.isChecking { ProgressView().scaleEffect(0.7).frame(width: 12, height: 12) }
+                            else { Image(systemName: "arrow.clockwise") }
+                            Text(updater.isChecking ? "Checking…" : "Check Now")
+                        }.font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)
+                        .padding(.horizontal, 16).padding(.vertical, 8)
+                        .background(
+                            CoreMonGlassBackground(cornerRadius: 999, tintOpacity: 0.10, strokeOpacity: 0.14, shadowRadius: 6)
+                        )
+                    }.buttonStyle(SoftPressButtonStyle()).disabled(updater.isChecking)
+                } else {
+                    VStack(spacing: 10) {
+                        Image(systemName: updater.checkError == nil ? "arrow.clockwise.circle.fill" : "exclamationmark.triangle.fill")
+                            .font(.system(size: 36))
+                            .foregroundStyle(updater.checkError == nil ? Color.bdAccent : .red)
+                        Text(updater.isChecking ? "Checking for updates…" : "Check for Updates")
+                            .font(.system(size: 15, weight: .semibold))
+                        Text(updater.checkError == nil ? "Ask Sparkle to look for a newer release." : "The previous update check failed. Try again after reviewing the error below.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(24)
