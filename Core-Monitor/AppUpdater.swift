@@ -151,6 +151,8 @@ extension AppUpdater: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
 
 struct UpdateBannerView: View {
     @ObservedObject var updater: AppUpdater
+    var actionTitle: String = "Check With Sparkle"
+    var action: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -171,9 +173,9 @@ struct UpdateBannerView: View {
             }
 
             Button {
-                updater.openReleasePage()
+                action()
             } label: {
-                Text("Check With Sparkle")
+                Text(actionTitle)
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)

@@ -1470,6 +1470,14 @@ struct ContentView: View {
 private struct UpdateCheckSheet: View {
     @ObservedObject var updater: AppUpdater
     @Environment(\.dismiss) private var dismiss
+
+    private func dismissAndRun(_ operation: @escaping @MainActor () async -> Void) {
+        dismiss()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            Task { await operation() }
+        }
+    }
+
     var body: some View {
         ZStack {
             CoreMonBackdrop()
@@ -1482,7 +1490,14 @@ private struct UpdateCheckSheet: View {
                     }.buttonStyle(SoftPressButtonStyle()).keyboardShortcut(.escape)
                 }
                 if updater.updateAvailable != nil {
-                    UpdateBannerView(updater: updater)
+                    UpdateBannerView(
+                        updater: updater,
+                        actionTitle: "Install With Sparkle"
+                    ) {
+                        dismissAndRun {
+                            await updater.downloadAndInstall()
+                        }
+                    }
                 } else {
                     VStack(spacing: 10) {
                         Image(systemName: "checkmark.circle.fill").font(.system(size: 36)).foregroundStyle(.green)
@@ -1494,7 +1509,11 @@ private struct UpdateCheckSheet: View {
                     .background(
                         CoreMonGlassBackground(cornerRadius: 18, tintOpacity: 0.12, strokeOpacity: 0.16, shadowRadius: 10)
                     )
-                    Button { Task { await updater.checkForUpdates() } } label: {
+                    Button {
+                        dismissAndRun {
+                            await updater.checkForUpdates()
+                        }
+                    } label: {
                         HStack(spacing: 6) {
                             if updater.isChecking { ProgressView().scaleEffect(0.7).frame(width: 12, height: 12) }
                             else { Image(systemName: "arrow.clockwise") }
