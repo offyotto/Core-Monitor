@@ -43,18 +43,11 @@ jobs:
           build-mode: manual
 
       - name: Build Core-Monitor for CodeQL
-        env:
-          RUNNER_DERIVED_DATA: ${{ runner.temp }}/DerivedData
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import os
-          import pathlib
           import subprocess
           import sys
-
-          derived_data = os.environ["RUNNER_DERIVED_DATA"]
-          pathlib.Path(derived_data).mkdir(parents=True, exist_ok=True)
 
           cmd = [
               "xcodebuild",
@@ -62,7 +55,6 @@ jobs:
               "-scheme", "Core-Monitor",
               "-configuration", "Debug",
               "-destination", "platform=macOS",
-              "-derivedDataPath", derived_data,
               "CODE_SIGNING_ALLOWED=NO",
               "CODE_SIGNING_REQUIRED=NO",
               "CODE_SIGN_IDENTITY=",
