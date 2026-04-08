@@ -29,6 +29,7 @@ final class AppDebugSettings: ObservableObject {
 @MainActor
 final class AppAppearanceSettings: ObservableObject {
     static let shared = AppAppearanceSettings()
+    private static let defaultSurfaceOpacity = 1.0
 
     @Published var surfaceOpacity: Double {
         didSet {
@@ -39,8 +40,11 @@ final class AppAppearanceSettings: ObservableObject {
     private static let surfaceOpacityKey = "coremonitor.surfaceOpacity"
 
     private init() {
-        let stored = UserDefaults.standard.object(forKey: Self.surfaceOpacityKey) as? Double ?? 0.0
-        surfaceOpacity = stored
+        if let stored = UserDefaults.standard.object(forKey: Self.surfaceOpacityKey) as? Double {
+            surfaceOpacity = min(max(stored, 0.0), 1.0)
+        } else {
+            surfaceOpacity = Self.defaultSurfaceOpacity
+        }
     }
 }
 
