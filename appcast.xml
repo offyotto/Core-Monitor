@@ -3,18 +3,33 @@
     <channel>
         <title>Core-Monitor</title>
         <item>
+            <title>11.2.5</title>
+            <pubDate>Wed, 08 Apr 2026 22:41:39 +0500</pubDate>
+            <link>https://offyotto-sl3.github.io/Core-Monitor/</link>
+            <sparkle:version>11250</sparkle:version>
+            <sparkle:shortVersionString>11.2.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[## Core-Monitor 11.2.5
+
+- Publish a follow-up Sparkle test release from the fixed updater client
+- Keep the Sparkle-driven update path as the primary in-app update flow
+- Validate that builds newer than 11.2.4 are discovered correctly by Sparkle
+]]></description>
+            <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor-11.2.5.zip" length="3541609" type="application/octet-stream" sparkle:edSignature="vQz/OuIguo5XzzZlOq8YxSITSrJJ0xa2Y8ekkR4BG34TAxvWghYXTidS7n3+7aPi/0iNho8VloadeoujpiWPBw=="/>
+            <sparkle:deltas>
+                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11250-11240.delta" sparkle:deltaFrom="11240" length="4662" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="IbMt6KsGFj8cCGLeWoml5PiumDpbRrXrHW9XwHVsHetIAdXIjzbAbEX2+7DtHVt8tOwAigxS7oFpsuG6qOJGDA=="/>
+                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11250-11230.delta" sparkle:deltaFrom="11230" length="226718" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="eS91YM22R+fKcdFmY2WtCHn1Nvc35RADBl23FKo2o2CUem3lQ1uX/dHHzZ4HlFoEEP041NpOCuz83etyw2vTBg=="/>
+                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11250-11220.delta" sparkle:deltaFrom="11220" length="225902" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="a5ReybJiA6FrdxsHL5X2gyAWOt2cZQpw/5YzjcV6SIZ1r2rzDSU93kv+pXLtQIZrBGSZBNwKwlbAA031xQtdDQ=="/>
+                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11250-11201.delta" sparkle:deltaFrom="11201" length="225770" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="ZcuTZ+b8pmEZT9CyhB7jUSdgdqkcUjQPei1+NNy0GYgtPi5ws6nEoR7CxqgF7LcN+9oWIKOyb4wH38WLWSYiAg=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>11.2.4</title>
             <pubDate>Wed, 08 Apr 2026 22:26:46 +0500</pubDate>
             <link>https://offyotto-sl3.github.io/Core-Monitor/</link>
             <sparkle:version>11240</sparkle:version>
             <sparkle:shortVersionString>11.2.4</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[## Core-Monitor 11.2.4
-
-- Fix Sparkle update checks for the menu bar accessory app flow
-- Bring the app to the foreground before manual update checks so Sparkle UI can appear reliably
-- Attach updater delegates so update-found, no-update, and error states are tracked correctly
-]]></description>
             <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor-11.2.4.zip" length="3541610" type="application/octet-stream" sparkle:edSignature="jV4FAYK4NzRSiSwp19EPrY1T9Djw0VEua48T/iw2lrzlgYglMkwbK2CabUN78gHqj6RE4Qa+8U47hEor1dluCw=="/>
         </item>
         <item>
@@ -28,18 +43,6 @@
             <sparkle:deltas>
                 <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11230-11220.delta" sparkle:deltaFrom="11220" length="63414" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="XvwdoJwhRNc9IN0rdjjLSfyaIMl0RgEbMkT5KokI2DEsxV+H8/av3wT3E24kNOtU+Owau+/E1cDBmjiuVInYCQ=="/>
                 <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11230-11201.delta" sparkle:deltaFrom="11201" length="47510" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="LaWukbGlLtzGHdL8nQZ7wTphVMFRzW5iva4kNRmLUp8K3bi6uxC130tR45GOOlV6PFQNLr2SvDC0YFse9MpOCQ=="/>
-            </sparkle:deltas>
-        </item>
-        <item>
-            <title>11.22</title>
-            <pubDate>Wed, 08 Apr 2026 21:00:03 +0500</pubDate>
-            <link>https://offyotto-sl3.github.io/Core-Monitor/</link>
-            <sparkle:version>11220</sparkle:version>
-            <sparkle:shortVersionString>11.22</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
-            <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor-11.22.zip" length="3598219" type="application/octet-stream" sparkle:edSignature="fYsEZD8w1dn6/cfVJwogOAMxPNNwKbisKyyXaOBQ8SHn4pyakGUv51JRl6QQTgA2dzzs1MU1ZarYOedXhyxMDg=="/>
-            <sparkle:deltas>
-                <enclosure url="https://offyotto-sl3.github.io/Core-Monitor/downloads/Core-Monitor11220-11201.delta" sparkle:deltaFrom="11201" length="21202" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977824" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="CHG5Wcnlj8jwxqkkVUuwnQSYZx+ifeacSlFRoXCfUykLAHgA2Zh0zh8UViUnZcDx/1Ncw6ESVzqcHlo0LuTTAA=="/>
             </sparkle:deltas>
         </item>
     </channel>
