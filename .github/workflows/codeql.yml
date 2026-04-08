@@ -40,40 +40,9 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: swift
-          build-mode: manual
 
-      - name: Build Core-Monitor for CodeQL
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import subprocess
-          import sys
-
-          cmd = [
-              "xcodebuild",
-              "-project", "Core-Monitor.xcodeproj",
-              "-scheme", "Core-Monitor",
-              "-configuration", "Debug",
-              "-destination", "platform=macOS",
-              "CODE_SIGNING_ALLOWED=NO",
-              "CODE_SIGNING_REQUIRED=NO",
-              "CODE_SIGN_IDENTITY=",
-              "SWIFT_ENABLE_EXPLICIT_MODULES=NO",
-              "CLANG_ENABLE_EXPLICIT_MODULES=NO",
-              "COMPILER_INDEX_STORE_ENABLE=NO",
-              "ONLY_ACTIVE_ARCH=YES",
-              "-showBuildTimingSummary",
-              "build",
-          ]
-
-          try:
-              completed = subprocess.run(cmd, check=False, timeout=1200)
-          except subprocess.TimeoutExpired:
-              print("xcodebuild timed out after 20 minutes", file=sys.stderr)
-              sys.exit(124)
-
-          sys.exit(completed.returncode)
-          PY
+      - name: Autobuild for CodeQL
+        uses: github/codeql-action/autobuild@v4
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
