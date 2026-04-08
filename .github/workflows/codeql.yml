@@ -13,6 +13,9 @@ permissions:
   contents: read
   security-events: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 concurrency:
   group: codeql-${{ github.ref }}
   cancel-in-progress: true
@@ -40,7 +43,7 @@ jobs:
             -project "Core-Monitor.xcodeproj" \
             -scheme "Core-Monitor" \
             -configuration Debug \
-            -destination "platform=macOS,arch=arm64" \
+            -destination "platform=macOS" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
