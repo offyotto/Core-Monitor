@@ -15,6 +15,10 @@
 </p>
 
 <p align="center">
+  <strong>Core-Monitor v12 is officially notarized by Apple.</strong>
+</p>
+
+<p align="center">
   <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Latest release</a>
   ·
   <a href="https://github.com/offyotto-sl3/Core-Monitor/releases">All releases</a>
@@ -40,6 +44,8 @@
 Core Monitor reads sensor data directly from the Apple SMC and surfaces it in your menu bar and dashboard. CPU, GPU, memory, battery, temperatures, power draw, fan speeds, network throughput, and disk I/O — all updated every second via IOKit.
 
 It is written in Swift, built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. No daemons, no background services, no network connections. The only exception is the fan control helper, which is optional and described below.
+
+Version 12 is the officially notarized release. The distributed app is signed and notarized for macOS Gatekeeper, so the standard download-and-run experience is as smooth as possible on supported systems.
 
 ## UI Preview
 
@@ -101,6 +107,8 @@ Supported SMC value types: `sp78`, `fpe2`, `flt`, `ui8`, `ui16`.
 
 **Download:** Get the latest build from [Releases](https://github.com/offyotto-sl3/Core-Monitor/releases/latest) and move it to `/Applications`.
 
+The v12 release is officially notarized, so it should open normally on supported macOS versions without extra Gatekeeper friction.
+
 **Build from source:**
 
 ```bash
@@ -114,6 +122,7 @@ Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc
 - macOS 12 or later
 - Apple Silicon is the primary target; Intel Macs are not tested
 - Fan control requires macOS 13+ (XPC with code-signing requirements)
+- v12 is officially notarized by Apple
 - Core Monitor is not available on the Mac App Store
 
 ## Privacy
