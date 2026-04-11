@@ -10,7 +10,6 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
 
     private let systemMonitor:    SystemMonitor
     private let fanController:    FanController
-    private let updater:          AppUpdater
     private let openDashboardAction: () -> Void
     private let restoreAppTouchBarAction: () -> Void
     private let revertTouchBarAction: () -> Void
@@ -24,14 +23,12 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
     init(
         systemMonitor:    SystemMonitor,
         fanController:    FanController,
-        updater:          AppUpdater,
         openDashboardAction: @escaping () -> Void,
         restoreAppTouchBarAction: @escaping () -> Void,
         revertTouchBarAction: @escaping () -> Void
     ) {
         self.systemMonitor    = systemMonitor
         self.fanController    = fanController
-        self.updater          = updater
         self.openDashboardAction = openDashboardAction
         self.restoreAppTouchBarAction = restoreAppTouchBarAction
         self.revertTouchBarAction = revertTouchBarAction
@@ -93,7 +90,6 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
         let contentView = MenuBarMenuView(
             systemMonitor:    systemMonitor,
             fanController:    fanController,
-            updater:          updater,
             openDashboardAction: { [weak self] in
                 self?.popover.performClose(nil)
                 self?.openDashboardAction()

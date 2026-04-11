@@ -2,7 +2,6 @@ import Foundation
 import Combine
 import IOKit
 import IOKit.ps
-import IOKit.storage
 import Darwin
 import CoreAudio
 
@@ -12,6 +11,8 @@ extension Notification.Name {
 
 struct CPUStats {
     let usagePercent: Double
+    let performanceCoreUsagePercent: Double?
+    let efficiencyCoreUsagePercent: Double?
 }
 
 enum MemoryPressureLevel {
@@ -95,27 +96,16 @@ final class SystemMonitor: ObservableObject {
         let fanMinSpeeds: [Int]
         let fanMaxSpeeds: [Int]
         let cpuUsagePercent: Double
+        let performanceCoreUsagePercent: Double?
+        let efficiencyCoreUsagePercent: Double?
         let memoryUsagePercent: Double
         let memoryUsedGB: Double
         let totalMemoryGB: Double
         let memoryPressure: MemoryPressureLevel
         let batteryInfo: BatteryInfo
         let totalSystemWatts: Double?
-        let netBytesInPerSec: Double
-        let netBytesOutPerSec: Double
-        let diskReadBytesPerSec: Double
-        let diskWriteBytesPerSec: Double
         let currentVolume: Float
         let currentBrightness: Float
-    }
-
-    private enum BenchmarkKeys {
-        static let allTemperatureKeys = [
-            "TC0P", "Tp09", "TCXC", "TC0E", "TC0F", "TC0D",
-            "TC1C", "TC2C", "TC3C", "TC4C",
-            "Tg0e", "Tg0f", "Tg0m", "Tg0n",
-            "Tp01", "Tp05", "Tp0D", "Tp0b"
-        ]
     }
 
     var cpuTemperature: Double?
@@ -125,6 +115,8 @@ final class SystemMonitor: ObservableObject {
     var fanMaxSpeeds: [Int] = []
     @Published var numberOfFans: Int = 0
     var cpuUsagePercent: Double = 0
+    var performanceCoreUsagePercent: Double?
+    var efficiencyCoreUsagePercent: Double?
     @Published var hasSMCAccess: Bool = false
     @Published var lastError: String?
 
@@ -134,15 +126,6 @@ final class SystemMonitor: ObservableObject {
     var memoryUsedGB: Double = 0
     var totalMemoryGB: Double = 0
     var memoryPressure: MemoryPressureLevel = .green
-
-    // Network throughput (bytes/sec)
-    var netBytesInPerSec: Double  = 0
-    var netBytesOutPerSec: Double = 0
-
-    /// Disk read throughput in bytes/sec (all physical disks, excl. RAM disk).
-    var diskReadBytesPerSec:  Double = 0
-    /// Disk write throughput in bytes/sec.
-    var diskWriteBytesPerSec: Double = 0
 
     // System volume and display brightness (0–1), polled each cycle
     var currentVolume:     Float = 0.5
@@ -216,15 +199,8 @@ final class SystemMonitor: ObservableObject {
 
     private var previousCPULoadInfo = host_cpu_load_info_data_t()
     private var hasPreviousCPUInfo = false
-
-    // Network sampling
-    private var previousNetBytesIn:  UInt64 = 0
-    private var previousNetBytesOut: UInt64 = 0
-    private var hasPreviousNetStats  = false
-
-    private var previousDiskRead:    UInt64 = 0
-    private var previousDiskWrite:   UInt64 = 0
-    private var hasPreviousDiskStats = false
+    private var previousProcessorLoadInfo: [integer_t] = []
+    private var hasPreviousProcessorInfo = false
 
     private let cpuTempKeys = [
         "TC0P", "TCXC", "TC0E", "TC0F", "TC0D", "TC1C", "TC2C", "TC3C", "TC4C",
@@ -275,25 +251,6 @@ final class SystemMonitor: ObservableObject {
     func stopMonitoring() {
         timer?.invalidate()
         timer = nil
-    }
-
-    func benchmarkTemperatureReadings() -> [String: Double] {
-        var readings: [String: Double] = [:]
-
-        for key in BenchmarkKeys.allTemperatureKeys {
-            guard let value = readSMCValue(key: key), value > 0, value < 150 else { continue }
-            readings[key] = value
-        }
-
-        if let packageTemp = readings["TC0P"] ?? readings["Tp09"] ?? cpuTemperature {
-            readings["package"] = packageTemp
-        }
-
-        if let gpuTemp = gpuTemperature {
-            readings["gpu"] = gpuTemp
-        }
-
-        return readings
     }
 
     private func openSMCConnection() -> Bool {
@@ -351,11 +308,9 @@ final class SystemMonitor: ObservableObject {
             let cpuTemperature = self.readCPUTemperature()
             let gpuTemperature = self.readGPUTemperature()
             let fanReadings = self.readFanReadings()
-            let cpuUsagePercent = self.readCPUUsage().usagePercent
+            let cpuStats = self.readCPUUsage()
             let memoryStats = self.readMemoryStats()
             let batteryInfo = self.readBatteryInfo()
-            let networkStats = self.readNetworkStats()
-            let diskStats = self.readDiskStats()
             let systemControls = self.readSystemControls()
 
             let snapshot = SystemSnapshot(
@@ -364,17 +319,15 @@ final class SystemMonitor: ObservableObject {
                 fanSpeeds: fanReadings.speeds,
                 fanMinSpeeds: fanReadings.mins,
                 fanMaxSpeeds: fanReadings.maxs,
-                cpuUsagePercent: cpuUsagePercent,
+                cpuUsagePercent: cpuStats.usagePercent,
+                performanceCoreUsagePercent: cpuStats.performanceCoreUsagePercent,
+                efficiencyCoreUsagePercent: cpuStats.efficiencyCoreUsagePercent,
                 memoryUsagePercent: memoryStats.usagePercent,
                 memoryUsedGB: memoryStats.usedGB,
                 totalMemoryGB: memoryStats.totalGB,
                 memoryPressure: memoryStats.pressure,
                 batteryInfo: batteryInfo,
                 totalSystemWatts: batteryInfo.powerWatts,
-                netBytesInPerSec: networkStats.inbound,
-                netBytesOutPerSec: networkStats.outbound,
-                diskReadBytesPerSec: diskStats.read,
-                diskWriteBytesPerSec: diskStats.write,
                 currentVolume: systemControls.volume,
                 currentBrightness: systemControls.brightness
             )
@@ -388,16 +341,14 @@ final class SystemMonitor: ObservableObject {
                 self.fanMinSpeeds = snapshot.fanMinSpeeds
                 self.fanMaxSpeeds = snapshot.fanMaxSpeeds
                 self.cpuUsagePercent = snapshot.cpuUsagePercent
+                self.performanceCoreUsagePercent = snapshot.performanceCoreUsagePercent
+                self.efficiencyCoreUsagePercent = snapshot.efficiencyCoreUsagePercent
                 self.memoryUsagePercent = snapshot.memoryUsagePercent
                 self.memoryUsedGB = snapshot.memoryUsedGB
                 self.totalMemoryGB = snapshot.totalMemoryGB
                 self.memoryPressure = snapshot.memoryPressure
                 self.batteryInfo = snapshot.batteryInfo
                 self.totalSystemWatts = snapshot.totalSystemWatts
-                self.netBytesInPerSec = snapshot.netBytesInPerSec
-                self.netBytesOutPerSec = snapshot.netBytesOutPerSec
-                self.diskReadBytesPerSec = snapshot.diskReadBytesPerSec
-                self.diskWriteBytesPerSec = snapshot.diskWriteBytesPerSec
                 self.currentVolume = snapshot.currentVolume
                 self.currentBrightness = snapshot.currentBrightness
                 self.isSampling = false
@@ -461,13 +412,21 @@ final class SystemMonitor: ObservableObject {
         }
 
         guard result == KERN_SUCCESS else {
-            return CPUStats(usagePercent: cpuUsagePercent)
+            return CPUStats(
+                usagePercent: cpuUsagePercent,
+                performanceCoreUsagePercent: performanceCoreUsagePercent,
+                efficiencyCoreUsagePercent: efficiencyCoreUsagePercent
+            )
         }
 
         if !hasPreviousCPUInfo {
             previousCPULoadInfo = loadInfo
             hasPreviousCPUInfo = true
-            return CPUStats(usagePercent: cpuUsagePercent)
+            return CPUStats(
+                usagePercent: cpuUsagePercent,
+                performanceCoreUsagePercent: performanceCoreUsagePercent,
+                efficiencyCoreUsagePercent: efficiencyCoreUsagePercent
+            )
         }
 
         let user = Double(loadInfo.cpu_ticks.0 - previousCPULoadInfo.cpu_ticks.0)
@@ -479,11 +438,97 @@ final class SystemMonitor: ObservableObject {
 
         let total = user + system + idle + nice
         guard total > 0 else {
-            return CPUStats(usagePercent: cpuUsagePercent)
+            return CPUStats(
+                usagePercent: cpuUsagePercent,
+                performanceCoreUsagePercent: performanceCoreUsagePercent,
+                efficiencyCoreUsagePercent: efficiencyCoreUsagePercent
+            )
         }
 
         let used = user + system + nice
-        return CPUStats(usagePercent: max(0, min(100, (used / total) * 100)))
+        let perClusterUsage = readCPUClusterUsage()
+        return CPUStats(
+            usagePercent: max(0, min(100, (used / total) * 100)),
+            performanceCoreUsagePercent: perClusterUsage.performance,
+            efficiencyCoreUsagePercent: perClusterUsage.efficiency
+        )
+    }
+
+    private func readCPUClusterUsage() -> (performance: Double?, efficiency: Double?) {
+        var processorInfo: processor_info_array_t?
+        var processorInfoCount: mach_msg_type_number_t = 0
+        var processorCount: natural_t = 0
+
+        let result = host_processor_info(
+            mach_host_self(),
+            processor_flavor_t(PROCESSOR_CPU_LOAD_INFO),
+            &processorCount,
+            &processorInfo,
+            &processorInfoCount
+        )
+
+        guard result == KERN_SUCCESS, let processorInfo else {
+            return (performanceCoreUsagePercent, efficiencyCoreUsagePercent)
+        }
+
+        defer {
+            let byteCount = vm_size_t(Int(processorInfoCount) * MemoryLayout<integer_t>.stride)
+            vm_deallocate(mach_task_self_, vm_address_t(bitPattern: processorInfo), byteCount)
+        }
+
+        let sample = Array(UnsafeBufferPointer(start: processorInfo, count: Int(processorInfoCount)))
+        let cpuCount = Int(processorCount)
+        guard cpuCount > 0, sample.count >= cpuCount * Int(CPU_STATE_MAX) else {
+            return (performanceCoreUsagePercent, efficiencyCoreUsagePercent)
+        }
+
+        if !hasPreviousProcessorInfo || previousProcessorLoadInfo.count != sample.count {
+            previousProcessorLoadInfo = sample
+            hasPreviousProcessorInfo = true
+            return (performanceCoreUsagePercent, efficiencyCoreUsagePercent)
+        }
+
+        defer { previousProcessorLoadInfo = sample }
+
+        let pCoreCount = min(SystemMonitor.performanceCoreCount(), cpuCount)
+        let eCoreCount = min(SystemMonitor.efficiencyCoreCount(), max(0, cpuCount - pCoreCount))
+        guard pCoreCount > 0, pCoreCount + eCoreCount <= cpuCount else {
+            return (performanceCoreUsagePercent, efficiencyCoreUsagePercent)
+        }
+
+        let performanceUsage = usageForProcessorRange(0..<pCoreCount, current: sample, previous: previousProcessorLoadInfo)
+        let efficiencyUsage: Double?
+        if eCoreCount > 0 {
+            efficiencyUsage = usageForProcessorRange(pCoreCount..<(pCoreCount + eCoreCount), current: sample, previous: previousProcessorLoadInfo)
+        } else {
+            efficiencyUsage = nil
+        }
+
+        return (performanceUsage, efficiencyUsage)
+    }
+
+    private func usageForProcessorRange(
+        _ range: Range<Int>,
+        current: [integer_t],
+        previous: [integer_t]
+    ) -> Double? {
+        var used: Double = 0
+        var total: Double = 0
+        let stride = Int(CPU_STATE_MAX)
+
+        for processor in range {
+            let base = processor * stride
+            let user = max(0, Int(current[base + Int(CPU_STATE_USER)] - previous[base + Int(CPU_STATE_USER)]))
+            let system = max(0, Int(current[base + Int(CPU_STATE_SYSTEM)] - previous[base + Int(CPU_STATE_SYSTEM)]))
+            let idle = max(0, Int(current[base + Int(CPU_STATE_IDLE)] - previous[base + Int(CPU_STATE_IDLE)]))
+            let nice = max(0, Int(current[base + Int(CPU_STATE_NICE)] - previous[base + Int(CPU_STATE_NICE)]))
+
+            used += Double(user + system + nice)
+            total += Double(user + system + idle + nice)
+        }
+
+        guard total > 0 else { return nil }
+        return max(0, min(100, (used / total) * 100))
     }
 
     private func readMemoryStats() -> MemoryStats {
@@ -764,19 +809,15 @@ final class SystemMonitor: ObservableObject {
         }
 
         // Brightness
-        if let displayServicesBrightness = DisplayServicesBrightnessBridge.getBrightness() {
-            brightness = displayServicesBrightness
-        } else {
-            var svc = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IODisplayConnect"))
-            if svc == 0 {
-                svc = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleBacklightDisplay"))
-            }
-            if svc != 0 {
-                var bri: Float = brightness
-                IODisplayGetFloatParameter(svc, 0, kIODisplayBrightnessKey as CFString, &bri)
-                brightness = bri
-                IOObjectRelease(svc)
-            }
+        var svc = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IODisplayConnect"))
+        if svc == 0 {
+            svc = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleBacklightDisplay"))
+        }
+        if svc != 0 {
+            var bri: Float = brightness
+            IODisplayGetFloatParameter(svc, 0, kIODisplayBrightnessKey as CFString, &bri)
+            brightness = bri
+            IOObjectRelease(svc)
         }
 
         return (volume, brightness)
@@ -817,80 +858,6 @@ final class SystemMonitor: ObservableObject {
         return vol
     }
 
-    private func readNetworkStats() -> (inbound: Double, outbound: Double) {
-        var ifaddrsPtr: UnsafeMutablePointer<ifaddrs>?
-        guard getifaddrs(&ifaddrsPtr) == 0, let firstAddr = ifaddrsPtr else {
-            return (netBytesInPerSec, netBytesOutPerSec)
-        }
-        defer { freeifaddrs(ifaddrsPtr) }
-
-        var totalIn:  UInt64 = 0
-        var totalOut: UInt64 = 0
-
-        var cursor: UnsafeMutablePointer<ifaddrs>? = firstAddr
-        while let current = cursor {
-            let addr = current.pointee
-            let flags = Int32(addr.ifa_flags)
-            // AF_LINK = 18 on macOS, IFF_LOOPBACK = 0x8
-            if addr.ifa_addr?.pointee.sa_family == UInt8(AF_LINK),
-               (flags & IFF_LOOPBACK) == 0,
-               let data = addr.ifa_data?.assumingMemoryBound(to: if_data.self) {
-                totalIn  += UInt64(data.pointee.ifi_ibytes)
-                totalOut += UInt64(data.pointee.ifi_obytes)
-            }
-            cursor = addr.ifa_next
-        }
-
-        var inbound = netBytesInPerSec
-        var outbound = netBytesOutPerSec
-        if hasPreviousNetStats {
-            let interval = monitoringInterval
-            inbound = max(0, Double(totalIn  &- previousNetBytesIn)  / interval)
-            outbound = max(0, Double(totalOut &- previousNetBytesOut) / interval)
-        }
-
-        previousNetBytesIn  = totalIn
-        previousNetBytesOut = totalOut
-        hasPreviousNetStats = true
-        return (inbound, outbound)
-    }
-
-    private func readDiskStats() -> (read: Double, write: Double) {
-        var totalRead:  UInt64 = 0
-        var totalWrite: UInt64 = 0
-
-        let matchingDict = IOServiceMatching(kIOMediaClass) as NSMutableDictionary
-        matchingDict[kIOMediaWholeKey] = true
-
-        var iter: io_iterator_t = 0
-        guard IOServiceGetMatchingServices(kIOMainPortDefault, matchingDict, &iter) == KERN_SUCCESS else {
-            return (diskReadBytesPerSec, diskWriteBytesPerSec)
-        }
-        defer { IOObjectRelease(iter) }
-
-        var service = IOIteratorNext(iter)
-        while service != 0 {
-            defer { IOObjectRelease(service); service = IOIteratorNext(iter) }
-            var props: Unmanaged<CFMutableDictionary>?
-            guard IORegistryEntryCreateCFProperties(service, &props, kCFAllocatorDefault, 0) == KERN_SUCCESS,
-                  let dict = props?.takeRetainedValue() as? [String: Any],
-                  let stats = dict["Statistics"] as? [String: Any] else { continue }
-            if let r = (stats["Bytes (Read)"]  as? NSNumber)?.uint64Value { totalRead  += r }
-            if let w = (stats["Bytes (Write)"] as? NSNumber)?.uint64Value { totalWrite += w }
-        }
-
-        var readPerSec = diskReadBytesPerSec
-        var writePerSec = diskWriteBytesPerSec
-        if hasPreviousDiskStats {
-            let interval = monitoringInterval
-            readPerSec = max(0, Double(totalRead  &- previousDiskRead)  / interval)
-            writePerSec = max(0, Double(totalWrite &- previousDiskWrite) / interval)
-        }
-        previousDiskRead    = totalRead
-        previousDiskWrite   = totalWrite
-        hasPreviousDiskStats = true
-        return (readPerSec, writePerSec)
-    }
 }
 
 func fourCharCodeFrom(_ string: String) -> UInt32 {

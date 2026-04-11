@@ -12,20 +12,6 @@ final class AppModeState: ObservableObject {
     init() { isBasicMode = UserDefaults.standard.bool(forKey: "basicMode") }
 }
 
-final class AppDebugSettings: ObservableObject {
-    static let shared = AppDebugSettings()
-
-    @Published var isEnabled: Bool {
-        didSet { UserDefaults.standard.set(isEnabled, forKey: Self.debugModeKey) }
-    }
-
-    private static let debugModeKey = "coremonitor.debugMode"
-
-    private init() {
-        isEnabled = UserDefaults.standard.bool(forKey: Self.debugModeKey)
-    }
-}
-
 @MainActor
 final class AppAppearanceSettings: ObservableObject {
     static let shared = AppAppearanceSettings()
@@ -533,6 +519,37 @@ private struct FanControlPanel: View {
                     .background(Color.white.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
             }.buttonStyle(SoftPressButtonStyle())
+
+            Button { fanController.calibrateFanControl() } label: {
+                HStack(spacing: 8) {
+                    if fanController.isCalibrating {
+                        ProgressView()
+                            .scaleEffect(0.62)
+                            .frame(width: 12, height: 12)
+                    } else {
+                        Image(systemName: "wrench.and.screwdriver.fill")
+                    }
+                    Text(fanController.isCalibrating ? fanController.calibrationStatus : "Calibrate Fan Control")
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(fanController.isCalibrating ? Color.bdAccent : .secondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 9)
+                .background(Color.white.opacity(0.06))
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            }
+            .buttonStyle(SoftPressButtonStyle())
+            .disabled(fanController.isCalibrating)
+
+            if !fanController.calibrationStatus.isEmpty, fanController.calibrationStatus != "Not calibrated" {
+                Text(fanController.calibrationStatus)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
     }
     private func modeIcon(_ mode: FanControlMode) -> String {
@@ -547,16 +564,16 @@ private struct FanControlPanel: View {
 // MARK: - Sidebar items
 private enum SidebarItem: String, CaseIterable, Identifiable {
     case overview="Overview", thermals="Thermals", memory="Memory", fans="Fans"
-    case battery="Battery", network="Network", disk="Disk I/O", benchmark="Benchmark", corevisor="CoreVisor"
-    case system="System", about="About"
+    case battery="Battery"
+    case system="System", touchBar="Touch Bar", about="About"
     var id: String { rawValue }
     var icon: String {
         switch self {
         case .overview: return "gauge.medium"; case .thermals: return "thermometer.medium"
         case .memory: return "memorychip"; case .fans: return "fanblades.fill"
-        case .battery: return "battery.75"; case .network: return "network"
-        case .disk: return "internaldrive"; case .benchmark: return "speedometer"
-        case .corevisor: return "server.rack"; case .system: return "gearshape"; case .about: return "info.circle"
+        case .battery: return "battery.75"; case .system: return "gearshape"
+        case .touchBar: return "rectangle.3.group"
+        case .about: return "info.circle"
         }
     }
 }
@@ -605,7 +622,6 @@ private struct SidebarRow: View {
 // MARK: - Sidebar
 private struct Sidebar: View {
     @ObservedObject private var appearanceSettings = AppAppearanceSettings.shared
-    @ObservedObject private var debugSettings = AppDebugSettings.shared
     @Binding var selection: SidebarItem
     let hasBattery: Bool
     let modeState: AppModeState
@@ -615,10 +631,7 @@ private struct Sidebar: View {
         if hasBattery {
             items.append(.battery)
         }
-        if debugSettings.isEnabled {
-            items.append(contentsOf: [.network, .disk, .benchmark, .corevisor])
-        }
-        items.append(contentsOf: [.system, .about])
+        items.append(contentsOf: [.system, .touchBar, .about])
         return items
     }
 
@@ -679,9 +692,7 @@ private struct DetailPane: View {
     let state: ContentView.DashboardState
     let cpuHistory: [Double]; let memHistory: [Double]; let cpuTempHistory: [Double]
     let fanController: FanController; let systemMonitor: SystemMonitor
-    let startupManager: StartupManager; let touchBarWidgetSettings: TouchBarWidgetSettings
-    let benchmarkStore: BenchmarkStore; let updater: AppUpdater
-    @Binding var showUpdateCheck: Bool
+    let startupManager: StartupManager
 
     @ViewBuilder
     private var selectedContent: some View {
@@ -691,11 +702,8 @@ private struct DetailPane: View {
         case .memory:    memoryContent
         case .fans:      fansContent
         case .battery:   batteryContent
-        case .network:   networkContent
-        case .disk:      diskContent
-        case .benchmark: benchmarkContent
-        case .corevisor: corevisorContent
         case .system:    systemContent
+        case .touchBar:  touchBarContent
         case .about:     aboutContent
         }
     }
@@ -719,39 +727,19 @@ private struct DetailPane: View {
     private var overviewContent: some View {
         VStack(alignment: .leading, spacing: 18) {
             header("Overview", subtitle: hostModelName())
-            DarkCard(padding: 14) {
-                HStack(spacing: 12) {
-                    Image(systemName: overviewUpdaterIconName)
-                        .font(.system(size: 22))
-                        .foregroundStyle(overviewUpdaterIconColor)
-                    VStack(alignment: .leading, spacing: 2) {
-                        if let update = updater.updateAvailable {
-                            Text("Update Available: \(update.displayName)").font(.system(size: 13, weight: .semibold))
-                            Text("Open the updater to install this release").font(.system(size: 11)).foregroundStyle(.secondary)
-                        } else if updater.checkError != nil {
-                            Text("Updater needs attention").font(.system(size: 13, weight: .semibold))
-                            Text("Open the updater to see the latest error").font(.system(size: 11)).foregroundStyle(.secondary)
-                        } else if updater.isUpToDate {
-                            Text("You're up to date").font(.system(size: 13, weight: .semibold))
-                            Text("The latest Sparkle check completed successfully").font(.system(size: 11)).foregroundStyle(.secondary)
-                        } else {
-                            Text("Check for Updates").font(.system(size: 13, weight: .semibold))
-                            Text("Open the updater and ask Sparkle to check now").font(.system(size: 11)).foregroundStyle(.secondary)
-                        }
-                    }
-                    Spacer()
-                    Button { showUpdateCheck = true } label: {
-                        Text(updater.updateAvailable == nil ? "Open Updater" : "Update")
-                            .font(.system(size: 12, weight: .semibold))
-                            .padding(.horizontal, 14).padding(.vertical, 7)
-                            .background(Color.bdAccent.opacity(0.2)).clipShape(Capsule())
-                            .overlay(Capsule().strokeBorder(Color.bdAccent.opacity(0.4), lineWidth: 1))
-                    }.buttonStyle(SoftPressButtonStyle())
-                }
-            }.transition(.move(edge: .top).combined(with: .opacity))
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 MetricTile(label: "CPU Load",  value: "\(Int(state.cpuUsagePercent.rounded()))", unit: "%",
                            color: cpuColor, gauge: state.cpuUsagePercent / 100, history: cpuHistory)
+                if let pUsage = state.performanceCoreUsagePercent {
+                    MetricTile(label: "P-Core Load (\(state.performanceCoreCount) cores)",
+                               value: "\(Int(pUsage.rounded()))", unit: "%",
+                               color: loadColor(pUsage), gauge: pUsage / 100)
+                }
+                if let eUsage = state.efficiencyCoreUsagePercent {
+                    MetricTile(label: "E-Core Load (\(state.efficiencyCoreCount) cores)",
+                               value: "\(Int(eUsage.rounded()))", unit: "%",
+                               color: loadColor(eUsage), gauge: eUsage / 100)
+                }
                 MetricTile(label: "Memory",    value: "\(Int(state.memoryUsagePercent.rounded()))", unit: "%",
                            color: memColor, gauge: state.memoryUsagePercent / 100, history: memHistory)
                 if let t = state.cpuTemperature {
@@ -824,29 +812,6 @@ private struct DetailPane: View {
         }
     }
 
-    private var networkContent: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            header("Network", subtitle: "Real-time throughput")
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                MetricTile(label: "Download", value: fmtBytes(state.netBytesInPerSec),  unit: "", color: .green)
-                MetricTile(label: "Upload",   value: fmtBytes(state.netBytesOutPerSec), unit: "", color: Color.bdAccent)
-            }
-        }
-    }
-
-    private var diskContent: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            header("Disk I/O", subtitle: "Read and write throughput")
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                MetricTile(label: "Read",  value: fmtBytes(state.diskReadBytesPerSec),  unit: "", color: .orange)
-                MetricTile(label: "Write", value: fmtBytes(state.diskWriteBytesPerSec), unit: "", color: .purple)
-            }
-            if state.diskReadBytesPerSec == 0 && state.diskWriteBytesPerSec == 0 {
-                emptyState(icon: "internaldrive", message: "No disk activity detected.")
-            }
-        }
-    }
-
     private var batteryContent: some View {
         VStack(alignment: .leading, spacing: 18) {
             header("Battery", subtitle: "Power and health information")
@@ -866,79 +831,6 @@ private struct DetailPane: View {
                         rowDivider
                         CompactRow(icon: "bolt.fill", label: "Power", value: String(format: "%.1f W", abs(w)), color: .yellow)
                     }
-                }
-            }
-        }
-    }
-
-    private var benchmarkContent: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            header("Benchmark", subtitle: "CPU performance scoring")
-            BenchmarkView(systemMonitor: systemMonitor, store: benchmarkStore)
-        }
-    }
-
-    private var corevisorContent: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            header("CoreVisor", subtitle: "Removed VM stack, debug-only and intentionally unstable")
-            DarkCard(padding: 16) {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(alignment: .top, spacing: 12) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 24, weight: .semibold))
-                            .foregroundStyle(.orange)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Bug Frenzy Mode")
-                                .font(.system(size: 17, weight: .bold))
-                            Text("CoreVisor was removed from the production app. This debug surface brings the old entry point back as an unstable graveyard panel, but the embedded QEMU runtime and VM manager are not restored here.")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    Divider().overlay(Color.bdDivider)
-                    VStack(alignment: .leading, spacing: 8) {
-                        debugStatusRow("CoreVisor UI", value: "Debug placeholder restored", color: .orange)
-                        debugStatusRow("Embedded QEMU bundle", value: "Removed from current repo", color: .red)
-                        debugStatusRow("VM manager/runtime", value: "Not wired in production build", color: .red)
-                        debugStatusRow("Fan VM boost", value: "Disabled with CoreVisor removal", color: .secondary)
-                    }
-                }
-            }
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                debugFeatureCard(
-                    title: "Benchmarking",
-                    subtitle: "Restored in sidebar",
-                    icon: "speedometer",
-                    color: Color.bdAccent
-                )
-                debugFeatureCard(
-                    title: "Network",
-                    subtitle: "Old throughput panel",
-                    icon: "network",
-                    color: .green
-                )
-                debugFeatureCard(
-                    title: "Disk I/O",
-                    subtitle: "Old read/write panel",
-                    icon: "internaldrive",
-                    color: .orange
-                )
-                debugFeatureCard(
-                    title: "CoreVisor",
-                    subtitle: "Broken on purpose",
-                    icon: "server.rack",
-                    color: .red
-                )
-            }
-            DarkCard(padding: 16) {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Why this is not a normal feature")
-                        .font(.system(size: 14, weight: .bold))
-                    Text("The old CoreVisor path depended on a removed virtualization stack and embedded QEMU binaries. Re-adding those blindly would make the app larger, less stable, and harder to ship. Debug Mode exposes the old experimental surface without pretending it is safe.")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
@@ -988,6 +880,13 @@ private struct DetailPane: View {
             }
         }
         .onAppear { startupManager.refreshState() }
+    }
+
+    private var touchBarContent: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            header("Touch Bar", subtitle: "iStat-style widgets and layout control")
+            TouchBarCustomizationPanel()
+        }
     }
 
     private var aboutContent: some View {
@@ -1043,39 +942,6 @@ private struct DetailPane: View {
         .copyOnTap("\(label): \(Int((fraction * 100).rounded()))%")
     }
 
-    private func debugStatusRow(_ label: String, value: String, color: Color) -> some View {
-        HStack(spacing: 10) {
-            Circle().fill(color).frame(width: 7, height: 7)
-            Text(label)
-                .font(.system(size: 12, weight: .medium))
-            Spacer()
-            Text(value)
-                .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                .foregroundStyle(color)
-        }
-    }
-
-    private func debugFeatureCard(title: String, subtitle: String, icon: String, color: Color) -> some View {
-        DarkCard(padding: 14) {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(color)
-                    .frame(width: 36, height: 36)
-                    .background(color.opacity(0.14))
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(title)
-                        .font(.system(size: 13, weight: .bold))
-                    Text(subtitle)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-            }
-        }
-    }
-
     // MARK: Colour helpers
     private var cpuColor: Color   { state.cpuUsagePercent > 80 ? .red : state.cpuUsagePercent > 50 ? .orange : .green }
     private var memColor: Color   { switch state.memoryPressure { case .green: return .green; case .yellow: return .orange; case .red: return .red } }
@@ -1086,36 +952,17 @@ private struct DetailPane: View {
         let p = state.batteryInfo.chargePercent ?? 100
         return p < 20 ? .red : p < 40 ? .orange : state.batteryInfo.isCharging ? Color.bdAccent : .green
     }
+    private func loadColor(_ usage: Double) -> Color { usage > 80 ? .red : usage > 50 ? .orange : .green }
     private func tempColor(_ t: Double) -> Color { t > 90 ? .red : t > 70 ? .orange : .green }
     private func hostModelName() -> String {
         var size = 0; sysctlbyname("hw.model", nil, &size, nil, 0)
         var m = [CChar](repeating: 0, count: size); sysctlbyname("hw.model", &m, &size, nil, 0)
         return String(cString: m)
     }
-    private func fmtBytes(_ bps: Double) -> String {
-        if bps >= 1_000_000 { return String(format: "%.1f MB/s", bps / 1_000_000) }
-        if bps >= 1_000     { return String(format: "%.0f KB/s", bps / 1_000) }
-        return String(format: "%.0f B/s", bps)
-    }
-
-    private var overviewUpdaterIconName: String {
-        if updater.updateAvailable != nil { return "arrow.down.circle.fill" }
-        if updater.checkError != nil { return "exclamationmark.triangle.fill" }
-        if updater.isUpToDate { return "checkmark.circle.fill" }
-        return "arrow.clockwise.circle.fill"
-    }
-
-    private var overviewUpdaterIconColor: Color {
-        if updater.updateAvailable != nil { return Color.bdAccent }
-        if updater.checkError != nil { return .red }
-        if updater.isUpToDate { return .green }
-        return Color.bdAccent
-    }
 }
 
 private struct AboutDetailsPanel: View {
     @ObservedObject private var appearanceSettings = AppAppearanceSettings.shared
-    @ObservedObject private var debugSettings = AppDebugSettings.shared
 
     var body: some View {
         DarkCard(padding: 18) {
@@ -1154,24 +1001,6 @@ private struct AboutDetailsPanel: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Divider().overlay(Color.bdDivider)
-
-                VStack(alignment: .leading, spacing: 10) {
-                    Toggle(isOn: $debugSettings.isEnabled) {
-                        Label("Debug Mode: Bug Frenzy", systemImage: "ladybug.fill")
-                            .font(.system(size: 12, weight: .semibold))
-                    }
-                    .toggleStyle(.switch)
-                    .tint(.orange)
-
-                    Text(debugSettings.isEnabled
-                         ? "Unstable old panels are visible again: Benchmark, Network, Disk I/O, and the broken CoreVisor debug surface."
-                         : "Keep this off unless you want removed, unstable, and unsupported feature surfaces back in the sidebar.")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(debugSettings.isEnabled ? .orange : .secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
                 HStack(spacing: 10) {
                     aboutPill("Core Monitor")
                     aboutPill("macOS Dashboard")
@@ -1189,6 +1018,326 @@ private struct AboutDetailsPanel: View {
             .padding(.vertical, 5)
             .background(Color.white.opacity(0.06))
             .clipShape(Capsule())
+    }
+}
+
+private struct TouchBarPreviewStrip: View {
+    @ObservedObject private var settings = TouchBarCustomizationSettings.shared
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: TB.groupGap) {
+                ForEach(settings.widgets) { kind in
+                    TouchBarWidgetPreview(kind: kind, theme: settings.theme)
+                        .frame(width: kind.estimatedWidth, height: TB.stripH)
+                        .id("\(kind.id)-\(settings.theme.id)")
+                }
+            }
+            .padding(.horizontal, 2)
+            .padding(.vertical, 2)
+        }
+        .frame(height: TB.stripH + 6)
+        .background(Color.black.opacity(0.94))
+        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+    }
+}
+
+private struct TouchBarWidgetPreview: View {
+    let kind: TouchBarWidgetKind
+    let theme: TouchBarTheme
+
+    var body: some View {
+        Image(nsImage: renderPreview())
+            .interpolation(.none)
+            .antialiased(true)
+            .frame(width: kind.estimatedWidth, height: TB.stripH)
+    }
+
+    private func renderPreview() -> NSImage {
+        let snapshot = TouchBarPreviewFixture.snapshot
+        let weatherState = WeatherState.loaded(TouchBarPreviewFixture.weather)
+
+        if let item = PKWidgetTouchBarItem(widget: kind.widgetInfo),
+           let widget = item.widget {
+            PKCoreMonWidgetState.apply(
+                theme: theme,
+                weatherState: weatherState,
+                snapshot: snapshot,
+                clockTitle: TouchBarPreviewFixture.clockTitle,
+                clockSubtitle: TouchBarPreviewFixture.clockSubtitle,
+                to: widget
+            )
+
+            let view = item.view
+            let renderBounds = NSRect(x: 0, y: 0, width: kind.estimatedWidth, height: TB.stripH)
+            view.frame = renderBounds
+
+            guard let bitmap = view.bitmapImageRepForCachingDisplay(in: renderBounds) else {
+                return NSImage(size: renderBounds.size)
+            }
+
+            view.cacheDisplay(in: renderBounds, to: bitmap)
+            let image = NSImage(size: renderBounds.size)
+            image.addRepresentation(bitmap)
+            return image
+        }
+
+        return NSImage(size: NSSize(width: kind.estimatedWidth, height: TB.stripH))
+    }
+}
+
+private enum TouchBarPreviewFixture {
+    static let weather = WeatherSnapshot(
+        locationName: "Karachi",
+        symbolName: "cloud.bolt.rain.fill",
+        temperature: 22,
+        condition: "Partly Cloudy",
+        high: 26,
+        low: 18,
+        feelsLike: 21,
+        humidity: 63,
+        updatedAt: Date()
+    )
+
+    static let snapshot = TouchBarSystemSnapshot(
+        memPct: 13,
+        ssdPct: 27,
+        cpuPct: 45,
+        cpuTempC: 45,
+        batPct: 62,
+        batCharging: false,
+        netUpKBs: 13,
+        netDownMBs: 1.6,
+        fps: 0,
+        wifiName: "",
+        detailedClockTitle: "9:20",
+        detailedClockSubtitle: "Apr 11th"
+    )
+
+    static let clockTitle = "9:20"
+    static let clockSubtitle = "Apr 11th"
+}
+
+private struct TouchBarWidgetRow: View {
+    @ObservedObject private var settings = TouchBarCustomizationSettings.shared
+    let kind: TouchBarWidgetKind
+
+    var isEnabled: Bool { settings.contains(kind) }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button {
+                settings.toggle(kind)
+            } label: {
+                Image(systemName: isEnabled ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(isEnabled ? Color.bdAccent : .secondary)
+            }
+            .buttonStyle(SoftPressButtonStyle())
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(kind.title)
+                    .font(.system(size: 13, weight: .semibold))
+                Text(kind.subtitle)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Text("\(Int(kind.estimatedWidth)) pt")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundStyle(.secondary)
+
+            if isEnabled {
+                HStack(spacing: 6) {
+                    Button {
+                        settings.moveUp(kind)
+                    } label: {
+                        Image(systemName: "arrow.up")
+                            .font(.system(size: 11, weight: .bold))
+                            .frame(width: 28, height: 28)
+                    }
+                    .buttonStyle(SoftPressButtonStyle())
+                    .background(Color.white.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+                    Button {
+                        settings.moveDown(kind)
+                    } label: {
+                        Image(systemName: "arrow.down")
+                            .font(.system(size: 11, weight: .bold))
+                            .frame(width: 28, height: 28)
+                    }
+                    .buttonStyle(SoftPressButtonStyle())
+                    .background(Color.white.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+private struct TouchBarCustomizationPanel: View {
+    @StateObject private var settings = TouchBarCustomizationSettings.shared
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var weatherAttribution: WeatherAttributionSnapshot?
+    @State private var weatherAttributionError: String?
+
+    private var widthFraction: Double {
+        min(max(settings.estimatedWidth / TouchBarCustomizationSettings.recommendedTouchBarWidth, 0), 1)
+    }
+
+    private var widthColor: Color {
+        settings.widthOverflow > 0 ? .orange : .green
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            DarkCard(padding: 16) {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Live layout preview")
+                        .font(.system(size: 14, weight: .bold))
+                    TouchBarPreviewStrip()
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text("Estimated width")
+                                .font(.system(size: 12, weight: .semibold))
+                            Spacer()
+                            Text("\(Int(settings.estimatedWidth.rounded())) / \(Int(TouchBarCustomizationSettings.recommendedTouchBarWidth)) pt")
+                                .font(.system(size: 12, weight: .bold, design: .monospaced))
+                                .foregroundStyle(widthColor)
+                        }
+
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(Color.white.opacity(0.08))
+                                Capsule().fill(widthColor)
+                                    .frame(width: geo.size.width * widthFraction)
+                            }
+                        }
+                        .frame(height: 8)
+
+                        if settings.widthOverflow > 0 {
+                            Text("The active widget stack is wider than a full Touch Bar. Trim or reorder widgets to avoid clipping.")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.orange)
+                        }
+                    }
+                }
+            }
+
+            DarkCard(padding: 16) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Presets")
+                        .font(.system(size: 14, weight: .bold))
+                    ForEach(TouchBarPreset.all) { preset in
+                        Button {
+                            settings.applyPreset(preset)
+                        } label: {
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(preset.title)
+                                        .font(.system(size: 13, weight: .semibold))
+                                    Text(preset.subtitle)
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Text(preset.theme.displayName)
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.white.opacity(0.06))
+                                    .clipShape(Capsule())
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 6)
+                        }
+                        .buttonStyle(SoftPressButtonStyle())
+                    }
+                }
+            }
+
+            DarkCard(padding: 16) {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Theme")
+                        .font(.system(size: 14, weight: .bold))
+                    Picker("Theme", selection: $settings.theme) {
+                        ForEach(TouchBarTheme.allCases) { theme in
+                            Text(theme.displayName).tag(theme)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    Text("Weather uses Apple WeatherKit. Location permission and the WeatherKit capability must both be present for the live weather widget.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+
+                    if let attribution = weatherAttribution {
+                        VStack(alignment: .leading, spacing: 10) {
+                            AsyncImage(url: attribution.markURL) { image in
+                                image
+                                    .resizable()
+                                    .interpolation(.high)
+                                    .scaledToFit()
+                            } placeholder: {
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(Color.white.opacity(0.06))
+                                    .overlay(
+                                        ProgressView()
+                                            .scaleEffect(0.7)
+                                    )
+                            }
+                            .frame(maxWidth: 164, minHeight: 24, maxHeight: 26, alignment: .leading)
+
+                            if let legalText = attribution.legalText, !legalText.isEmpty {
+                                Text(legalText)
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Link(destination: attribution.legalPageURL) {
+                                Label("Open \(attribution.serviceName) legal attribution", systemImage: "arrow.up.right.square")
+                                    .font(.system(size: 11, weight: .semibold))
+                            }
+                        }
+                    } else if let weatherAttributionError {
+                        Text(weatherAttributionError)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            DarkCard(padding: 16) {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Widgets")
+                        .font(.system(size: 14, weight: .bold))
+                    ForEach(TouchBarWidgetKind.allCases) { kind in
+                        TouchBarWidgetRow(kind: kind)
+                        if kind != TouchBarWidgetKind.allCases.last {
+                            Rectangle()
+                                .fill(Color.bdDivider)
+                                .frame(height: 1)
+                        }
+                    }
+                }
+            }
+        }
+        .task(id: colorScheme) {
+            guard #available(macOS 13.0, *) else { return }
+            do {
+                weatherAttribution = try await loadWeatherAttribution(isDarkAppearance: colorScheme == .dark)
+                weatherAttributionError = nil
+            } catch {
+                weatherAttribution = nil
+                weatherAttributionError = "Weather attribution is unavailable until WeatherKit is enabled for the signed app."
+            }
+        }
     }
 }
 
@@ -1298,6 +1447,16 @@ struct BasicModeView: View {
         HStack(spacing: 0) {
             basicCell("CPU", "\(Int(systemMonitor.cpuUsagePercent.rounded()))%",
                       systemMonitor.cpuTemperature.map { String(format: "%.0f°C", $0) })
+            if let pUsage = systemMonitor.performanceCoreUsagePercent {
+                Rectangle().fill(Color.bdDivider).frame(width: 1)
+                basicCell("P", "\(Int(pUsage.rounded()))%",
+                          "\(SystemMonitor.performanceCoreCount()) cores")
+            }
+            if let eUsage = systemMonitor.efficiencyCoreUsagePercent {
+                Rectangle().fill(Color.bdDivider).frame(width: 1)
+                basicCell("E", "\(Int(eUsage.rounded()))%",
+                          "\(SystemMonitor.efficiencyCoreCount()) cores")
+            }
             Rectangle().fill(Color.bdDivider).frame(width: 1)
             basicCell("MEM", "\(Int(systemMonitor.memoryUsagePercent.rounded()))%",
                       String(format: "%.1f/%.0f GB", systemMonitor.memoryUsedGB, systemMonitor.totalMemoryGB))
@@ -1388,29 +1547,26 @@ struct ContentView: View {
         var hasSMCAccess = false; var numberOfFans = 0
         var fanSpeeds: [Int] = []; var fanMinSpeeds: [Int] = []; var fanMaxSpeeds: [Int] = []
         var cpuUsagePercent: Double = 0; var cpuTemperature: Double?; var gpuTemperature: Double?
+        var performanceCoreUsagePercent: Double?; var efficiencyCoreUsagePercent: Double?
+        var performanceCoreCount: Int = SystemMonitor.performanceCoreCount()
+        var efficiencyCoreCount: Int = SystemMonitor.efficiencyCoreCount()
         var memoryUsagePercent: Double = 0; var memoryUsedGB: Double = 0; var totalMemoryGB: Double = 0
         var memoryPressure: MemoryPressureLevel = .green
         var batteryInfo = BatteryInfo(); var totalSystemWatts: Double?
-        var diskReadBytesPerSec: Double = 0; var diskWriteBytesPerSec: Double = 0
-        var netBytesInPerSec: Double = 0; var netBytesOutPerSec: Double = 0
         var currentVolume: Float = 0.5; var currentBrightness: Float = 1.0
     }
 
     let systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
     @ObservedObject var startupManager: StartupManager
-    @ObservedObject var touchBarWidgetSettings: TouchBarWidgetSettings
 
-    @StateObject private var updater        = AppUpdater.shared
     @StateObject private var modeState      = AppModeState()
-    @StateObject private var benchmarkStore = BenchmarkStore()
 
     @State private var cpuHistory:     [Double] = Array(repeating: 0, count: 60)
     @State private var memHistory:     [Double] = Array(repeating: 0, count: 60)
     @State private var cpuTempHistory: [Double] = Array(repeating: 0, count: 60)
     @State private var sidebarSelection: SidebarItem = .overview
     @State private var dashboardState = DashboardState()
-    @State private var showUpdateCheck = false
 
     var body: some View {
         Group {
@@ -1441,9 +1597,7 @@ struct ContentView: View {
                 state: dashboardState,
                 cpuHistory: cpuHistory, memHistory: memHistory, cpuTempHistory: cpuTempHistory,
                 fanController: fanController, systemMonitor: systemMonitor,
-                startupManager: startupManager, touchBarWidgetSettings: touchBarWidgetSettings,
-                benchmarkStore: benchmarkStore, updater: updater,
-                showUpdateCheck: $showUpdateCheck
+                startupManager: startupManager
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
@@ -1465,7 +1619,6 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(.dark)
-        .sheet(isPresented: $showUpdateCheck) { UpdateCheckSheet(updater: updater) }
         .welcomeGuide()
     }
 
@@ -1482,133 +1635,14 @@ struct ContentView: View {
             fanSpeeds: systemMonitor.fanSpeeds, fanMinSpeeds: systemMonitor.fanMinSpeeds,
             fanMaxSpeeds: systemMonitor.fanMaxSpeeds, cpuUsagePercent: systemMonitor.cpuUsagePercent,
             cpuTemperature: systemMonitor.cpuTemperature, gpuTemperature: systemMonitor.gpuTemperature,
+            performanceCoreUsagePercent: systemMonitor.performanceCoreUsagePercent,
+            efficiencyCoreUsagePercent: systemMonitor.efficiencyCoreUsagePercent,
+            performanceCoreCount: SystemMonitor.performanceCoreCount(),
+            efficiencyCoreCount: SystemMonitor.efficiencyCoreCount(),
             memoryUsagePercent: systemMonitor.memoryUsagePercent, memoryUsedGB: systemMonitor.memoryUsedGB,
             totalMemoryGB: systemMonitor.totalMemoryGB, memoryPressure: systemMonitor.memoryPressure,
             batteryInfo: systemMonitor.batteryInfo, totalSystemWatts: systemMonitor.totalSystemWatts,
-            diskReadBytesPerSec: systemMonitor.diskReadBytesPerSec, diskWriteBytesPerSec: systemMonitor.diskWriteBytesPerSec,
-            netBytesInPerSec: systemMonitor.netBytesInPerSec, netBytesOutPerSec: systemMonitor.netBytesOutPerSec,
             currentVolume: systemMonitor.currentVolume, currentBrightness: systemMonitor.currentBrightness
         )
-    }
-}
-
-// MARK: - Update sheet
-private struct UpdateCheckSheet: View {
-    @ObservedObject var updater: AppUpdater
-    @Environment(\.dismiss) private var dismiss
-
-    private func dismissAndRun(_ operation: @escaping @MainActor () async -> Void) {
-        dismiss()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            Task { await operation() }
-        }
-    }
-
-    var body: some View {
-        ZStack {
-            CoreMonBackdrop()
-            VStack(spacing: 20) {
-                HStack {
-                    Text("App Updater").font(.system(size: 16, weight: .bold))
-                    Spacer()
-                    Button { dismiss() } label: {
-                        Image(systemName: "xmark.circle.fill").font(.system(size: 18)).foregroundStyle(.secondary)
-                    }.buttonStyle(SoftPressButtonStyle()).keyboardShortcut(.escape)
-                }
-                if updater.updateAvailable != nil {
-                    UpdateBannerView(
-                        updater: updater,
-                        actionTitle: "Install With Sparkle"
-                    ) {
-                        dismissAndRun {
-                            await updater.downloadAndInstall()
-                        }
-                    }
-                } else if updater.isUpToDate && updater.checkError == nil {
-                    VStack(spacing: 10) {
-                        Image(systemName: "checkmark.circle.fill").font(.system(size: 36)).foregroundStyle(.green)
-                        Text("You're up to date").font(.system(size: 15, weight: .semibold))
-                        Text("Core Monitor \(updater.currentVersion)").font(.system(size: 11)).foregroundStyle(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(24)
-                    .background(
-                        CoreMonGlassBackground(cornerRadius: 18, tintOpacity: 0.12, strokeOpacity: 0.16, shadowRadius: 10)
-                    )
-                    Button {
-                        dismissAndRun {
-                            await updater.checkForUpdates()
-                        }
-                    } label: {
-                        HStack(spacing: 6) {
-                            if updater.isChecking { ProgressView().scaleEffect(0.7).frame(width: 12, height: 12) }
-                            else { Image(systemName: "arrow.clockwise") }
-                            Text(updater.isChecking ? "Checking…" : "Check Now")
-                        }.font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)
-                        .padding(.horizontal, 16).padding(.vertical, 8)
-                        .background(
-                            CoreMonGlassBackground(cornerRadius: 999, tintOpacity: 0.10, strokeOpacity: 0.14, shadowRadius: 6)
-                        )
-                    }.buttonStyle(SoftPressButtonStyle()).disabled(updater.isChecking)
-                } else {
-                    VStack(spacing: 10) {
-                        Image(systemName: updater.checkError == nil ? "arrow.clockwise.circle.fill" : "exclamationmark.triangle.fill")
-                            .font(.system(size: 36))
-                            .foregroundStyle(updater.checkError == nil ? Color.bdAccent : .red)
-                        Text(updater.isChecking ? "Checking for updates…" : "Check for Updates")
-                            .font(.system(size: 15, weight: .semibold))
-                        Text(updater.checkError == nil ? "Ask Sparkle to look for a newer release." : "The previous update check failed. Try again after reviewing the error below.")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(24)
-                    .background(
-                        CoreMonGlassBackground(cornerRadius: 18, tintOpacity: 0.12, strokeOpacity: 0.16, shadowRadius: 10)
-                    )
-                    Button {
-                        dismissAndRun {
-                            await updater.checkForUpdates()
-                        }
-                    } label: {
-                        HStack(spacing: 6) {
-                            if updater.isChecking { ProgressView().scaleEffect(0.7).frame(width: 12, height: 12) }
-                            else { Image(systemName: "arrow.clockwise") }
-                            Text(updater.isChecking ? "Checking…" : "Check Now")
-                        }.font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)
-                        .padding(.horizontal, 16).padding(.vertical, 8)
-                        .background(
-                            CoreMonGlassBackground(cornerRadius: 999, tintOpacity: 0.10, strokeOpacity: 0.14, shadowRadius: 6)
-                        )
-                    }.buttonStyle(SoftPressButtonStyle()).disabled(updater.isChecking)
-                }
-                if let err = updater.checkError {
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(.red)
-
-                        Text(err)
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.red)
-                            .multilineTextAlignment(.leading)
-                            .lineLimit(nil)
-                            .fixedSize(horizontal: false, vertical: true)
-
-                        Spacer(minLength: 0)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(14)
-                    .background(
-                        CoreMonGlassBackground(cornerRadius: 16, tintOpacity: 0.08, strokeOpacity: 0.14, shadowRadius: 8)
-                    )
-                }
-                Spacer()
-            }.padding(24)
-        }
-        .preferredColorScheme(.dark)
-        .frame(width: 420)
-        .frame(minHeight: updater.checkError == nil ? 300 : 360)
     }
 }

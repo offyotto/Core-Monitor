@@ -1,0 +1,5 @@
+.codex-recovery/broken-working-tree-20260410-194115.patch
+.codex-recovery/untracked-20260410-194115.txt
+Core-Monitor/AppWindowOverlaySettings.swift
+Core-Monitor/WeatherKitProvider.swift
+XCODE_CLOUD.md

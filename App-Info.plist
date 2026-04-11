@@ -20,16 +20,12 @@
     <string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Core Monitor uses your location to show local weather in the Touch Bar.</string>
 	<key>SMPrivilegedExecutables</key>
 	<dict>
 		<key>ventaphobia.smc-helper</key>
 		<string>identifier "ventaphobia.smc-helper" and anchor apple generic and certificate leaf[subject.OU] = "6VDP675K4L"</string>
 	</dict>
-	<key>SUEnableInstallerLauncherService</key>
-	<false/>
-	<key>SUFeedURL</key>
-	<string>https://offyotto-sl3.github.io/Core-Monitor/appcast.xml</string>
-	<key>SUPublicEDKey</key>
-	<string>h5D1NUvcoOlpfx57ZIiWUFI7ZQb8T9qYMQXc5xN9U+s=</string>
 </dict>
 </plist>

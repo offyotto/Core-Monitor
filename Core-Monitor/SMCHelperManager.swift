@@ -1,7 +1,6 @@
 import Foundation
 import Combine
 import Security
-import AppKit
 import ServiceManagement
 
 // MARK: - SMC Helper Manager
@@ -30,19 +29,14 @@ final class SMCHelperManager: ObservableObject {
         refreshStatus()
     }
 
-    // MARK: - Candidate Paths
-
-    /// The only accepted helper location.
-    private var helperCandidates: [String] {
-        ["/Library/PrivilegedHelperTools/\(helperLabel)"]
+    private var installedHelperPath: String {
+        "/Library/PrivilegedHelperTools/\(helperLabel)"
     }
 
     // MARK: - Status
 
     func refreshStatus() {
-        isInstalled = helperCandidates.contains { path in
-            fileManager.fileExists(atPath: path)
-        }
+        isInstalled = fileManager.fileExists(atPath: installedHelperPath)
         if isInstalled,
            statusMessage == "Fan write access unavailable: no installed helper found." {
             statusMessage = nil
@@ -53,14 +47,13 @@ final class SMCHelperManager: ObservableObject {
 
     func ensureInstalledIfNeeded() -> Bool {
         refreshStatus()
-        let installedPath = "/Library/PrivilegedHelperTools/\(helperLabel)"
-        guard !fileManager.fileExists(atPath: installedPath) else { return true }
+        guard !fileManager.fileExists(atPath: installedHelperPath) else { return true }
         guard !hasAttemptedBlessInstall else { return false }
 
         hasAttemptedBlessInstall = true
         let didInstall = attemptPrivilegedInstall()
         refreshStatus()
-        if didInstall && fileManager.fileExists(atPath: installedPath) {
+        if didInstall && fileManager.fileExists(atPath: installedHelperPath) {
             hasAttemptedBlessInstall = false
             return true
         }
@@ -76,7 +69,7 @@ final class SMCHelperManager: ObservableObject {
             return true
         }
 
-        if !fileManager.fileExists(atPath: "/Library/PrivilegedHelperTools/\(helperLabel)") {
+        if !fileManager.fileExists(atPath: installedHelperPath) {
             statusMessage = "Fan write access unavailable: privileged helper not installed."
         } else {
             statusMessage = "Fan write access unavailable: could not connect to privileged helper."
@@ -87,8 +80,7 @@ final class SMCHelperManager: ObservableObject {
     func readValue(key: String) -> Double? {
         refreshStatus()
 
-        let installedPath = "/Library/PrivilegedHelperTools/\(helperLabel)"
-        if !fileManager.fileExists(atPath: installedPath), !ensureInstalledIfNeeded() {
+        if !fileManager.fileExists(atPath: installedHelperPath), !ensureInstalledIfNeeded() {
             return nil
         }
 
@@ -246,25 +238,22 @@ final class SMCHelperManager: ObservableObject {
     // MARK: - Helper Installation
 
     func installBundledHelper(completion: @escaping (Bool, String?) -> Void) {
+        let flags: AuthorizationFlags = [.interactionAllowed, .extendRights, .preAuthorize]
+
         var authRef: AuthorizationRef?
-        let authStatus = AuthorizationCreate(nil, nil, [], &authRef)
+        let authStatus: OSStatus = kSMRightBlessPrivilegedHelper.withCString { rightName in
+            var authItem = AuthorizationItem(name: rightName, valueLength: 0, value: nil, flags: 0)
+            return withUnsafeMutablePointer(to: &authItem) { itemPointer in
+                var authRights = AuthorizationRights(count: 1, items: itemPointer)
+                return AuthorizationCreate(&authRights, nil, flags, &authRef)
+            }
+        }
+
         guard authStatus == errAuthorizationSuccess, let authRef else {
             completion(false, "Failed to create authorization reference.")
             return
         }
-
-        let flags: AuthorizationFlags = [.interactionAllowed, .extendRights, .preAuthorize]
-        let copyStatus: OSStatus = kSMRightBlessPrivilegedHelper.withCString { rightName in
-            var items = [AuthorizationItem(name: rightName, valueLength: 0, value: nil, flags: 0)]
-            return items.withUnsafeMutableBufferPointer { buffer in
-                var rights = AuthorizationRights(count: 1, items: buffer.baseAddress)
-                return AuthorizationCopyRights(authRef, &rights, nil, flags, nil)
-            }
-        }
-        guard copyStatus == errAuthorizationSuccess else {
-            completion(false, "Authorization was denied.")
-            return
-        }
+        defer { AuthorizationFree(authRef, []) }
 
         var blessError: Unmanaged<CFError>?
         let blessed = SMJobBless(kSMDomainSystemLaunchd, helperLabel as CFString, authRef, &blessError)
@@ -275,51 +264,5 @@ final class SMCHelperManager: ObservableObject {
             let message = (blessError?.takeRetainedValue().localizedDescription) ?? "SMJobBless failed."
             completion(false, message)
         }
-    }
-
-    // MARK: - Path Validation
-
-    private func validatedHelperURL(atPath path: String) -> URL? {
-        let url = URL(fileURLWithPath: path).standardizedFileURL
-
-        guard isPathAllowed(url) else { return nil }
-
-        guard let values = try? url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey]),
-              values.isRegularFile == true,
-              values.isSymbolicLink != true else { return nil }
-
-        guard let attributes = try? fileManager.attributesOfItem(atPath: url.path) else {
-            return nil
-        }
-
-        guard isOwnershipValid(for: url, attributes: attributes),
-              isPermissionsValid(attributes: attributes),
-              isCodeSignatureValid(for: url) else { return nil }
-
-        return url
-    }
-
-    private func isPathAllowed(_ url: URL) -> Bool {
-        url.path == "/Library/PrivilegedHelperTools/\(helperLabel)"
-    }
-
-    private func isOwnershipValid(for url: URL, attributes: [FileAttributeKey: Any]) -> Bool {
-        guard let owner = attributes[.ownerAccountID] as? NSNumber else { return false }
-        _ = url
-        return owner.uint32Value == 0
-    }
-
-    private func isPermissionsValid(attributes: [FileAttributeKey: Any]) -> Bool {
-        guard let permissions = attributes[.posixPermissions] as? NSNumber else { return false }
-        let mode = permissions.uint16Value
-        // Reject world-writable or group-writable bits
-        return (mode & 0o022) == 0
-    }
-
-    private func isCodeSignatureValid(for url: URL) -> Bool {
-        var staticCode: SecStaticCode?
-        let createStatus = SecStaticCodeCreateWithPath(url as CFURL, [], &staticCode)
-        guard createStatus == errSecSuccess, let code = staticCode else { return false }
-        return SecStaticCodeCheckValidity(code, [], nil) == errSecSuccess
     }
 }
