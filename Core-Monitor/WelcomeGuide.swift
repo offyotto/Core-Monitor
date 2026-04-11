@@ -69,12 +69,12 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgAmber,
         headline: "Welcome to Core Monitor",
         subheadline: "Your M-series Mac, fully visible.",
-        body: "Core Monitor gives you deep, real-time insight into your Apple Silicon Mac — thermals, memory pressure, fan behavior, power draw, and a programmable Touch Bar.",
+        body: "Core Monitor gives you deep, real-time insight into your Apple Silicon Mac: thermals, memory pressure, fan behavior, power draw, and a customizable Touch Bar surface.",
         bullets: [
             ("thermometer.medium",    .wgAmber,  "Live CPU, GPU & memory telemetry"),
             ("fan.fill",              .wgBlue,   "Intelligent fan speed control"),
-            ("waveform.path.ecg",     .wgGreen,  "Touch Bar metrics & sparklines"),
-            ("bolt.fill",             .wgPurple, "Power, battery, brightness and disk activity"),
+            ("rectangle.on.rectangle", .wgGreen, "Configurable iStat-style Touch Bar widgets"),
+            ("bolt.fill",             .wgPurple, "Power, battery, brightness and system controls"),
         ]
     ),
     GuideStep(
@@ -97,12 +97,12 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgBlue,
         headline: "Fan Control",
         subheadline: "Quiet when idle. Aggressive when it counts.",
-        body: "The fan controller supports Smart, Silent, Balanced, Performance, Max, Manual, and System Auto modes. It can re-apply active profiles after wake and only sends write commands through an already-installed helper.",
+        body: "The fan controller supports Smart, Silent, Balanced, Performance, Max, Manual, and System Auto modes. It can re-apply active profiles after wake and sends write commands through the blessed helper.",
         bullets: [
             ("bolt.fill",             .wgAmber,  "Smart mode ramps earlier under sustained load"),
             ("fanblades.fill",        .wgBlue,   "Balanced / Performance / Max quick profiles"),
             ("arrow.clockwise",       .wgPurple, "Wake re-apply for active fan profiles"),
-            ("lock.shield.fill",      .wgGreen,  "No in-app admin prompts or self-install"),
+            ("lock.shield.fill",      .wgGreen,  "Helper install uses the macOS authorization sheet"),
         ]
     ),
     GuideStep(
@@ -111,12 +111,12 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgPurple,
         headline: "Touch Bar",
         subheadline: "OLED space should look intentional.",
-        body: "Core Monitor can replace the system Touch Bar with a dense OLED dashboard for CPU, memory, fan, and one configurable custom widget.",
+        body: "Core Monitor can replace the system Touch Bar with a full-width widget strip, including clocks, weather, network, combined stats, and hardware glyphs.",
         bullets: [
-            ("battery.100",           .wgGreen,  "Custom widget can show battery, power, fan mode, volume or brightness"),
-            ("rectangle.3.group",     .wgBlue,   "Switch back to the system Touch Bar any time"),
-            ("circle.grid.2x2.fill",  .wgAmber,  "OLED-black chip styling for better contrast"),
-            ("waveform.path.ecg",     .wgPurple, "Live metrics update every second"),
+            ("rectangle.on.rectangle", .wgGreen, "Light and dark widget themes"),
+            ("rectangle.3.group",     .wgBlue,   "Reorder or disable widgets in-app"),
+            ("cloud.sun.rain.fill",   .wgAmber,  "Weather uses Apple's WeatherKit path"),
+            ("wrench.and.screwdriver", .wgPurple, "Pock modal presentation stays isolated"),
         ]
     ),
     GuideStep(
@@ -125,11 +125,11 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgGreen,
         headline: "You're all set.",
         subheadline: "Dive in whenever you're ready.",
-        body: "The dashboard is live and already collecting data. Explore the thermal, power, fan, and benchmark panels, or switch to Basic Mode if you want the lightest possible UI.",
+        body: "The dashboard is live and already collecting data. Explore the thermal, power, and fan panels, or switch to Basic Mode if you want the lightest possible UI.",
         bullets: [
             ("sidebar.left",          .wgAmber,  "Dashboard sections collapse with a click"),
             ("fan.fill",              .wgBlue,   "Fan Control — scroll down on dashboard"),
-            ("lock.shield",           .wgPurple, "Fan writes require an already-installed helper"),
+            ("lock.shield",           .wgPurple, "Fan writes require the blessed helper"),
             ("questionmark.circle",   .wgGreen,  "This guide lives in Help → Show Guide"),
         ]
     ),

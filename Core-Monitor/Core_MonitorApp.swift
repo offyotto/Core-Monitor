@@ -13,6 +13,7 @@ private struct WindowAccessor: NSViewRepresentable {
     }
 }
 
+@available(macOS 13.0, *)
 @main
 struct Core_MonitorApp: App {
     @StateObject private var coordinator    = AppCoordinator()
@@ -36,7 +37,6 @@ struct Core_MonitorApp: App {
                         menuBarController = MenuBarController(
                             systemMonitor:    coordinator.systemMonitor,
                             fanController:    coordinator.fanController,
-                            updater:          AppUpdater.shared,
                             openDashboardAction: openDashboard,
                             restoreAppTouchBarAction: coordinator.revertToAppTouchBar,
                             revertTouchBarAction: coordinator.revertToSystemTouchBar
@@ -53,8 +53,7 @@ struct Core_MonitorApp: App {
         ContentView(
             systemMonitor:    coordinator.systemMonitor,
             fanController:    coordinator.fanController,
-            startupManager:   startupManager,
-            touchBarWidgetSettings: coordinator.touchBarWidgetSettings
+            startupManager:   startupManager
         )
         .frame(minWidth: 820, minHeight: 560)
         .background(

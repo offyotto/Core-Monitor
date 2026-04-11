@@ -54,6 +54,8 @@ final class FanController: ObservableObject {
     @Published var autoAggressiveness: Double = 1.5
     @Published var autoMaxSpeed: Int = 6500
     @Published var statusMessage: String = "Idle"
+    @Published var calibrationStatus: String = "Not calibrated"
+    @Published var isCalibrating: Bool = false
 
     let minSpeed = 1000
     let maxSpeed = 6500
@@ -126,6 +128,42 @@ final class FanController: ObservableObject {
             }
         }
         statusMessage = allSuccess ? "System automatic control restored" : "Failed to restore automatic control"
+    }
+
+    func calibrateFanControl() {
+        guard !isCalibrating else { return }
+        guard ensureHelperInstalledIfNeeded() else {
+            calibrationStatus = helperUnavailableMessage()
+            return
+        }
+
+        let keys = fanCalibrationCandidateKeys()
+        isCalibrating = true
+        calibrationStatus = "Calibrating fan SMC keys 0/\(keys.count)"
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            var responsiveKeys: [String] = []
+
+            for (index, key) in keys.enumerated() {
+                if helperManager.readValue(key: key) != nil {
+                    responsiveKeys.append(key)
+                }
+
+                let completed = index + 1
+                calibrationStatus = "Calibrating fan SMC keys \(completed)/\(keys.count) - \(responsiveKeys.count) responsive"
+                if completed % 8 == 0 {
+                    await Task.yield()
+                }
+            }
+
+            let preview = responsiveKeys.prefix(10).joined(separator: ", ")
+            calibrationStatus = responsiveKeys.isEmpty
+                ? "Fan calibration finished: 0/\(keys.count) keys responded"
+                : "Fan calibration finished: \(responsiveKeys.count)/\(keys.count) keys responded - \(preview)"
+            statusMessage = calibrationStatus
+            isCalibrating = false
+        }
     }
 
     // MARK: - Control Loop
@@ -346,6 +384,26 @@ final class FanController: ObservableObject {
             return helperManager.statusMessage ?? monitor.lastError ?? "SMC access unavailable."
         }
         return helperManager.statusMessage ?? "No fan detected"
+    }
+
+    private func fanCalibrationCandidateKeys() -> [String] {
+        let fanSuffixes = [
+            "Ac", "Mn", "Mx", "Tg", "Md", "Mt", "ID",
+            "Sf", "Ss", "Fl", "Fc", "Fn", "F0", "F1",
+            "F2", "F3", "F4", "F5", "F6", "F7", "F8",
+            "F9", "S0", "S1", "S2", "S3", "M0", "M1"
+        ]
+
+        let fanKeys = (0..<10).flatMap { fanID in
+            fanSuffixes.map { "F\(fanID)\($0)" }
+        }
+
+        let globalKeys = [
+            "FNum", "FS! ", "FSW0", "FSW1", "FAdj", "FSts", "FSys",
+            "FDrv", "FCal", "FSpd", "FMde", "FSet", "FTgt", "FMin"
+        ]
+
+        return fanKeys + globalKeys
     }
 
     // MARK: - Wake Notifications
