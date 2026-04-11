@@ -59,3 +59,7 @@ Use the smallest check that covers the change:
 ## When in doubt
 
 Prefer the least invasive fix that makes the app correct and keeps the build green.
+
+## NO LLM SLOP
+
+DO NOT use ai to contribute to the project. Please. I dont think theres anything else to say.
