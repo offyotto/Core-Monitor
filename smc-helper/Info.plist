@@ -14,13 +14,6 @@
     <string>BNDL</string>
     <key>CFBundleVersion</key>
     <string>$(CURRENT_PROJECT_VERSION)</string>
-    <key>Label</key>
-    <string>ventaphobia.smc-helper</string>
-    <key>MachServices</key>
-    <dict>
-        <key>ventaphobia.smc-helper</key>
-        <true/>
-    </dict>
     <key>SMAuthorizedClients</key>
     <array>
         <string>identifier "CoreTools.Core-Monitor" and anchor apple generic and certificate leaf[subject.OU] = "6VDP675K4L"</string>

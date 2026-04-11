@@ -41,9 +41,9 @@
 
 ---
 
-Core Monitor reads sensor data directly from the Apple SMC and surfaces it in your menu bar and dashboard. CPU, GPU, memory, battery, temperatures, power draw, fan speeds, network throughput, and disk I/O — all updated every second via IOKit.
+Core Monitor reads sensor data directly from the Apple SMC and surfaces it in your menu bar and dashboard. CPU, GPU, memory, battery, temperatures, power draw, and fan speeds update every second via IOKit.
 
-It is written in Swift, built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. No daemons, no background services, no network connections. The only exception is the fan control helper, which is optional and described below.
+It is written in Swift, built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. No updater, no telemetry, and no network or disk throughput polling. The only extra process is the fan control helper, which is optional and described below.
 
 Version 12 is the officially notarized release. The distributed app is signed and notarized for macOS Gatekeeper, so the standard download-and-run experience is as smooth as possible on supported systems.
 
@@ -73,15 +73,11 @@ Version 12 is the officially notarized release. The distributed app is signed an
 
 **Thermals** — CPU die temperature from `TC0P`, `Tp09`, `TCXC`, and fallbacks, GPU from `Tg0e`/`Tg0f`. You can also browse all readable SMC keys from the sensor explorer.
 
-**Network** — inbound and outbound throughput per second via `getifaddrs`, excluding loopback.
-
-**Disk** — read and write throughput from IOKit's `kIOMediaClass` statistics.
-
 ## Fan control
 
 Fan control is optional and requires a privileged helper called `smc-helper`. If you don't need it, you don't need the helper — everything else works without it.
 
-The helper is installed to `/Library/PrivilegedHelperTools/ventaphobia.smc-helper` via `SMJobBless` and runs as a persistent XPC service. The main app connects over a Mach service with a code-signing requirement; it validates the helper's path, ownership, permissions, and `SecStaticCode` signature before connecting.
+The helper is bundled at `Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper`, installed to `/Library/PrivilegedHelperTools/ventaphobia.smc-helper` via `SMJobBless`, and registered as a launchd XPC service. The app owns the helper through `SMPrivilegedExecutables`; the helper authorizes the app through its embedded `SMAuthorizedClients` requirement.
 
 **Fan modes:**
 
@@ -127,7 +123,7 @@ Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc
 
 ## Privacy
 
-Core Monitor makes no network connections except to check for updates via Sparkle, which you can trigger manually. No telemetry, no analytics, no account. All sensor reads are local IOKit calls. The source is here if you want to read it.
+Core Monitor does not ship with updater frameworks, telemetry, analytics, or accounts. Sensor reads are local IOKit calls, and the optional fan helper only talks to the local privileged XPC service.
 
 ## License
 

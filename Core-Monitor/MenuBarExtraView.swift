@@ -3,7 +3,6 @@ import SwiftUI
 // MARK: - Menu bar status label
 struct MenuBarStatusLabel: View {
     @ObservedObject var systemMonitor: SystemMonitor
-    @ObservedObject var updater: AppUpdater
     @State private var angle: Double = 0
 
     var body: some View {
@@ -21,11 +20,6 @@ struct MenuBarStatusLabel: View {
                 .monospacedDigit()
                 .foregroundStyle(metricColor)
                 .frame(minWidth: 46, alignment: .leading)
-            if updater.updateAvailable != nil {
-                Circle().fill(Color(red: 0.35, green: 0.72, blue: 1)).frame(width: 5, height: 5)
-            } else if updater.checkError != nil {
-                Circle().fill(.red).frame(width: 5, height: 5)
-            }
         }
     }
 
@@ -107,7 +101,6 @@ private struct MenuPopoverSurface<Content: View>: View {
 struct MenuBarMenuView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
-    @ObservedObject var updater: AppUpdater
     var openDashboardAction:      () -> Void = {}
     var restoreAppTouchBarAction: () -> Void = {}
     var revertTouchBarAction:     () -> Void = {}
@@ -143,16 +136,9 @@ struct MenuBarMenuView: View {
                 Text("System summary").font(.system(size: 10, weight: .medium)).foregroundStyle(.white.opacity(0.58))
             }
             Spacer()
-            // SMC / update pill
-            if updater.updateAvailable != nil {
-                statusPill(dot: Color.mbAccent, label: "Update", tint: Color.mbAccent)
-            } else if updater.checkError != nil {
-                statusPill(dot: .red, label: "Updater Error", tint: .red)
-            } else {
-                statusPill(dot: systemMonitor.hasSMCAccess ? .green : .red,
-                           label: systemMonitor.hasSMCAccess ? "SMC OK" : "No SMC",
-                           tint: nil)
-            }
+            statusPill(dot: systemMonitor.hasSMCAccess ? .green : .red,
+                       label: systemMonitor.hasSMCAccess ? "SMC OK" : "No SMC",
+                       tint: nil)
         }
         .padding(.horizontal, 16).padding(.vertical, 14)
         .background(Color.white.opacity(0.025))
@@ -167,6 +153,16 @@ struct MenuBarMenuView: View {
             metricRow(icon: "cpu.fill", label: "CPU Load",
                       value: "\(Int(systemMonitor.cpuUsagePercent.rounded()))%",
                       color: loadColor(systemMonitor.cpuUsagePercent))
+            if let pUsage = systemMonitor.performanceCoreUsagePercent {
+                metricRow(icon: "bolt.fill", label: "P-Cores",
+                          value: "\(Int(pUsage.rounded()))% / \(SystemMonitor.performanceCoreCount())",
+                          color: loadColor(pUsage))
+            }
+            if let eUsage = systemMonitor.efficiencyCoreUsagePercent {
+                metricRow(icon: "leaf.fill", label: "E-Cores",
+                          value: "\(Int(eUsage.rounded()))% / \(SystemMonitor.efficiencyCoreCount())",
+                          color: loadColor(eUsage))
+            }
             metricRow(icon: "memorychip", label: "Memory",
                       value: String(format: "%.1f / %.0f GB", systemMonitor.memoryUsedGB, systemMonitor.totalMemoryGB),
                       color: .secondary)
@@ -184,9 +180,6 @@ struct MenuBarMenuView: View {
                           value: "\(pct)%\(systemMonitor.batteryInfo.isCharging ? " ⚡" : "")",
                           color: pct < 20 ? .red : pct < 40 ? .orange : .green)
             }
-            metricRow(icon: "internaldrive", label: "Disk",
-                      value: "R \(fmtBytes(systemMonitor.diskReadBytesPerSec))  W \(fmtBytes(systemMonitor.diskWriteBytesPerSec))",
-                      color: diskColor)
             metricRow(icon: systemMonitor.currentVolume < 0.01 ? "speaker.slash.fill" : "speaker.wave.2.fill",
                       label: "Volume", value: "\(Int((systemMonitor.currentVolume * 100).rounded()))%", color: .yellow)
             metricRow(icon: "sun.max.fill", label: "Brightness",
@@ -230,13 +223,9 @@ struct MenuBarMenuView: View {
     private var actionsSection: some View {
         VStack(spacing: 0) {
             actionRow("Open Dashboard",             icon: "gauge.medium")     { openDashboardAction() }
-            actionRow("Check for Updates",         icon: "arrow.clockwise.circle") { Task { await updater.checkForUpdates() } }
             actionRow("Reset Fan to System Auto",   icon: "arrow.counterclockwise") { fanController.resetToSystemAutomatic() }
             actionRow("Restore App Touch Bar",      icon: "rectangle.on.rectangle") { restoreAppTouchBarAction() }
             actionRow("Revert to System Touch Bar", icon: "rectangle.3.group") { revertTouchBarAction() }
-            if updater.updateAvailable != nil {
-                actionRow("View Update", icon: "arrow.down.circle", tint: Color.mbAccent) { openDashboardAction() }
-            }
             mbDivider.padding(.horizontal, 14).padding(.vertical, 2)
             actionRow("Quit Core Monitor", icon: "power", tint: .red) { NSApp.terminate(nil) }
         }
@@ -277,15 +266,6 @@ struct MenuBarMenuView: View {
         guard let t else { return .secondary }; return t > 90 ? .red : t > 70 ? .orange : .green
     }
     private func loadColor(_ l: Double) -> Color { l > 80 ? .red : l > 50 ? .orange : Color.mbAccent }
-    private func fmtBytes(_ bps: Double) -> String {
-        if bps <= 0 { return "0" }
-        if bps >= 1_000_000 { return String(format: "%.1fM", bps / 1_000_000) }
-        if bps >= 1_000     { return String(format: "%.0fK", bps / 1_000) }
-        return String(format: "%.0f", bps)
-    }
-    private var diskColor: Color {
-        systemMonitor.diskReadBytesPerSec > 0 || systemMonitor.diskWriteBytesPerSec > 0 ? .orange : .secondary
-    }
 }
 
 // MARK: - Hover action button
