@@ -29,8 +29,4 @@ General crashes, UI bugs, feature requests, and unsupported hardware behavior sh
 
 ## Supported Versions
 
-Only the latest public release and the current `main` branch are actively considered for security fixes.
-
-## Privacy
-
-Core-Monitor is open source and is designed to run locally without telemetry, analytics, ad tech, or account tracking.
+Only the latest public release and the current `main` branch are actively considered for security fixes. 
