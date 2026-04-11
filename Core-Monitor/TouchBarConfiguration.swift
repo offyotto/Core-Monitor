@@ -98,6 +98,9 @@ enum TouchBarTheme: String, CaseIterable, Codable, Identifiable {
 enum TouchBarWidgetKind: String, CaseIterable, Codable, Identifiable {
     case worldClocks
     case weather
+    case controlCenter
+    case dock
+    case cpu
     case stats
     case detailedStats
     case combined
@@ -110,6 +113,9 @@ enum TouchBarWidgetKind: String, CaseIterable, Codable, Identifiable {
         switch self {
         case .worldClocks: return "Status"
         case .weather: return "Weather"
+        case .controlCenter: return "Control Center"
+        case .dock: return "Dock"
+        case .cpu: return "CPU"
         case .stats: return "Stats"
         case .detailedStats: return "Stats + Clocks"
         case .combined: return "Combined"
@@ -120,8 +126,11 @@ enum TouchBarWidgetKind: String, CaseIterable, Codable, Identifiable {
 
     var subtitle: String {
         switch self {
-        case .worldClocks: return "Language, Wi-Fi, battery and clock"
-        case .weather: return "Pock weather view powered by WeatherKit"
+        case .worldClocks: return "Wi-Fi, battery and clock"
+        case .weather: return "Weather widget powered by WeatherKit"
+        case .controlCenter: return "Sleep, lock, screensaver and DND"
+        case .dock: return "Running apps and persistent items"
+        case .cpu: return "CPU temperature and usage"
         case .stats: return "Time, MEM, SSD, CPU"
         case .detailedStats: return "Compact stats with local date"
         case .combined: return "Network, MEM, CPU, BAT, SSD, graph, time"
@@ -136,8 +145,11 @@ enum TouchBarWidgetKind: String, CaseIterable, Codable, Identifiable {
 
     var estimatedWidth: CGFloat {
         switch self {
-        case .worldClocks: return 228
+        case .worldClocks: return 182
         case .weather: return 194
+        case .controlCenter: return 214
+        case .dock: return 340
+        case .cpu: return 208
         case .stats: return 314
         case .detailedStats: return 348
         case .combined: return 628
@@ -157,9 +169,9 @@ struct TouchBarPreset: Identifiable, Equatable {
     static let classic = TouchBarPreset(
         id: "classic",
         title: "Classic",
-        subtitle: "Status, weather and system stats",
+        subtitle: "Status, weather and CPU",
         theme: .dark,
-        widgets: [.worldClocks, .weather, .stats]
+        widgets: [.worldClocks, .weather, .controlCenter, .dock, .cpu]
     )
 
     static let detailed = TouchBarPreset(
@@ -167,15 +179,15 @@ struct TouchBarPreset: Identifiable, Equatable {
         title: "Detailed",
         subtitle: "Detailed stats with clock expansion",
         theme: .light,
-        widgets: [.detailedStats, .worldClocks, .weather]
+        widgets: [.worldClocks, .weather, .controlCenter, .detailedStats]
     )
 
     static let combined = TouchBarPreset(
         id: "combined",
         title: "Combined",
-        subtitle: "The dense iStat-style combined strip",
+        subtitle: "The dense combined strip",
         theme: .dark,
-        widgets: [.network, .combined, .weather, .hardware]
+        widgets: [.worldClocks, .weather, .controlCenter, .dock, .cpu, .stats]
     )
 
     static let compact = TouchBarPreset(
@@ -183,7 +195,7 @@ struct TouchBarPreset: Identifiable, Equatable {
         title: "Compact",
         subtitle: "Network, combined metrics and weather",
         theme: .light,
-        widgets: [.network, .combined, .weather]
+        widgets: [.worldClocks, .weather, .controlCenter, .dock, .cpu, .stats]
     )
 
     static let all: [TouchBarPreset] = [.classic, .detailed, .combined, .compact]

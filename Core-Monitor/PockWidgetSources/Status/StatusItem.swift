@@ -2,7 +2,7 @@
 //  StatusItem.swift
 //  Status
 //
-//  Adapted from Pock's status-widget sources for Core Monitor.
+//  Status widget source for Core Monitor.
 //
 
 import AppKit

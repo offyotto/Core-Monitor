@@ -14,7 +14,9 @@ final class CoreMonTouchBarController: NSObject {
     private static let defaultWidgetIdentifiers: [NSTouchBarItem.Identifier] = [
         TouchBarWidgetKind.worldClocks.identifier,
         TouchBarWidgetKind.weather.identifier,
-        TouchBarWidgetKind.stats.identifier
+        TouchBarWidgetKind.controlCenter.identifier,
+        TouchBarWidgetKind.dock.identifier,
+        TouchBarWidgetKind.cpu.identifier,
     ]
 
     private let systemMonitor: SystemMonitor
@@ -35,7 +37,7 @@ final class CoreMonTouchBarController: NSObject {
 
         widgets = PKCoreMonWidgetCatalog.allWidgets()
         touchBar.delegate = self
-        touchBar.customizationIdentifier = NSTouchBar.CustomizationIdentifier("com.coremonitor.touchbar.istat")
+        touchBar.customizationIdentifier = NSTouchBar.CustomizationIdentifier("com.coremonitor.touchbar.main")
 
         bindWeather()
         bindSystem()
@@ -113,6 +115,7 @@ final class CoreMonTouchBarController: NSObject {
     private func applyCustomization() {
         let customization = loadCustomization()
         widgets = PKCoreMonWidgetCatalog.allWidgets()
+        cachedItems.removeAll()
         touchBar.customizationAllowedItemIdentifiers = TouchBarWidgetKind.allCases.map(\.identifier)
         touchBar.defaultItemIdentifiers = customization.widgets
         touchBar.principalItemIdentifier = nil
@@ -321,7 +324,11 @@ final class CoreMonTouchBarController: NSObject {
             .map { NSTouchBarItem.Identifier($0) }
             .filter { validIdentifiers.contains($0) }
 
-        return (theme, widgets?.isEmpty == false ? widgets ?? Self.defaultWidgetIdentifiers : Self.defaultWidgetIdentifiers)
+        let resolved = widgets?.isEmpty == false ? widgets ?? Self.defaultWidgetIdentifiers : Self.defaultWidgetIdentifiers
+        if resolved.contains(TouchBarWidgetKind.dock.identifier) == false {
+            return (theme, resolved + [TouchBarWidgetKind.dock.identifier])
+        }
+        return (theme, resolved)
     }
 }
 

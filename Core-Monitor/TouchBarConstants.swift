@@ -1,6 +1,6 @@
 // TouchBarConstants.swift
 // CoreMonitor — single source of truth for every visual token.
-// All values reverse-engineered from iStat Menus reference screenshots.
+// All values tuned from reference screenshots.
 
 import AppKit
 

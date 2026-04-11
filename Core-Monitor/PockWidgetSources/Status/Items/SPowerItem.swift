@@ -1,8 +1,6 @@
 //
 //  SPowerItem.swift
-//  Pock
-//
-//  Adapted from Pock's status-widget sources for Core Monitor.
+//  Status widget item for Core Monitor.
 //
 
 import AppKit
@@ -21,7 +19,7 @@ final class SPowerItem: StatusItem {
     private var currentTheme: TouchBarTheme = .dark
 
     private let stackView = NSStackView(frame: .zero)
-    private let iconView = NSImageView(frame: NSRect(x: 0, y: 0, width: 26, height: 26))
+    private let iconView = NSImageView(frame: NSRect(x: 0, y: 0, width: 24, height: 24))
     private let bodyView = NSView(frame: NSRect(x: 2, y: 2, width: 21, height: 8))
     private let valueLabel = NSTextField(labelWithString: "-%")
 
@@ -40,6 +38,7 @@ final class SPowerItem: StatusItem {
         bodyView.layer?.cornerRadius = 1
         configureValueLabel()
         configureStackView()
+        stackView.wantsLayer = false
         reload()
         refreshTimer = Timer.scheduledTimer(timeInterval: 30, target: self, repeats: true) { [weak self] in
             self?.reload()
@@ -67,7 +66,7 @@ final class SPowerItem: StatusItem {
         stackView.orientation = .horizontal
         stackView.alignment = .centerY
         stackView.distribution = .fillProportionally
-        stackView.spacing = 2
+        stackView.spacing = 4
         if stackView.arrangedSubviews.isEmpty {
             stackView.addArrangedSubview(valueLabel)
             stackView.addArrangedSubview(iconView)

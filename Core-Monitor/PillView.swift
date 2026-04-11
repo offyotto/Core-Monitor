@@ -1,7 +1,7 @@
 // PillView.swift
 // CoreMonitor — reusable dark rounded-rect group container.
 //
-// Every iStat group sits in one of these pills:
+// Widget groups sit in these pills:
 //   ┌────────────────────┐  ← TB.pillH tall (24pt), TB.pillRadius corner
 //   │  [content views]   │
 //   └────────────────────┘

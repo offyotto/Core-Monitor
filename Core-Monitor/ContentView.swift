@@ -884,7 +884,7 @@ private struct DetailPane: View {
 
     private var touchBarContent: some View {
         VStack(alignment: .leading, spacing: 18) {
-            header("Touch Bar", subtitle: "iStat-style widgets and layout control")
+            header("Touch Bar", subtitle: "Widgets and layout control")
             TouchBarCustomizationPanel()
         }
     }
@@ -1092,6 +1092,7 @@ private enum TouchBarPreviewFixture {
         symbolName: "cloud.bolt.rain.fill",
         temperature: 22,
         condition: "Partly Cloudy",
+        nextRainSummary: "Rain likely at 4:00 PM (40%)",
         high: 26,
         low: 18,
         feelsLike: 21,
@@ -1273,7 +1274,7 @@ private struct TouchBarCustomizationPanel: View {
                     }
                     .pickerStyle(.segmented)
 
-                    Text("Weather uses Apple WeatherKit. Location permission and the WeatherKit capability must both be present for the live weather widget.")
+                    Text("Weather uses Apple WeatherKit. Allow location access for Core Monitor so the live weather widget can show accurate conditions and rain timing.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
 
@@ -1579,10 +1580,18 @@ struct ContentView: View {
         .cmHideWindowToolbarBackground()
         .cmRemoveWindowToolbarTitle()
         .onReceive(NotificationCenter.default.publisher(for: .systemMonitorDidUpdate)) { _ in
-            refreshDashboardState(); updateHistories()
+            DispatchQueue.main.async {
+                refreshDashboardState()
+                updateHistories()
+            }
         }
         .onChange(of: modeState.isBasicMode) { systemMonitor.setBasicMode($0) }
-        .onAppear { systemMonitor.setBasicMode(modeState.isBasicMode); refreshDashboardState() }
+        .onAppear {
+            DispatchQueue.main.async {
+                systemMonitor.setBasicMode(modeState.isBasicMode)
+                refreshDashboardState()
+            }
+        }
     }
 
     private var fullDashboard: some View {

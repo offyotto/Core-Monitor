@@ -1,8 +1,6 @@
 //
 //  SClockItem.swift
-//  Pock
-//
-//  Adapted from Pock's status-widget sources for Core Monitor.
+//  Status widget item for Core Monitor.
 //
 
 import AppKit

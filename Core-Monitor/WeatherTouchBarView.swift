@@ -1,7 +1,7 @@
 // WeatherTouchBarView.swift
 // Core-Monitor
 //
-// Renders the iStat-style weather group:
+// Renders the weather group:
 //
 //   ┌─────────────────────────────────────────────┐  h=30pt
 //   │  [SF Symbol 18pt]  [22.4°]  [Mon 3:03]      │

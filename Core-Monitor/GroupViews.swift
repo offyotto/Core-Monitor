@@ -479,6 +479,83 @@ final class SystemStatsGroupView: NSView, TouchBarThemable {
     }
 }
 
+final class CPUGroupView: NSView, TouchBarThemable {
+    var theme: TouchBarTheme = .dark {
+        didSet { applyTheme() }
+    }
+
+    private let titleLabel = NSTextField(labelWithString: "CPU")
+    private let tempLabel = NSTextField(labelWithString: "—")
+    private let usageBar = UsageBarView()
+    private let usageLabel = NSTextField(labelWithString: "0%")
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        setup()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+
+    private func setup() {
+        [titleLabel, tempLabel, usageLabel].forEach {
+            $0.font = $0 == titleLabel ? TB.fontKey : NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .semibold)
+            $0.lineBreakMode = .byClipping
+        }
+
+        usageBar.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            usageBar.widthAnchor.constraint(equalToConstant: TB.barW),
+            usageBar.heightAnchor.constraint(equalToConstant: TB.barH)
+        ])
+
+        let leftStack = NSStackView(views: [titleLabel, tempLabel])
+        leftStack.orientation = .vertical
+        leftStack.spacing = 1
+        leftStack.alignment = .leading
+
+        let rightStack = NSStackView(views: [usageLabel, usageBar])
+        rightStack.orientation = .vertical
+        rightStack.spacing = 2
+        rightStack.alignment = .centerX
+
+        let stack = NSStackView(views: [leftStack, rightStack])
+        stack.orientation = .horizontal
+        stack.spacing = 12
+        stack.alignment = .centerY
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: trailingAnchor),
+            stack.centerYAnchor.constraint(equalTo: centerYAnchor)
+        ])
+
+        applyTheme()
+    }
+
+    func update(snap: TouchBarSystemSnapshot) {
+        titleLabel.stringValue = snap.cpuTempC.isFinite && snap.cpuTempC > 0 ? "CPU \(Int(snap.cpuTempC.rounded()))°" : "CPU"
+        tempLabel.stringValue = "\(Int(snap.cpuPct.rounded()))% load"
+        usageBar.fraction = CGFloat(snap.cpuPct / 100)
+        usageBar.fillColor = theme.accentBlue
+        usageBar.theme = theme
+        usageLabel.stringValue = "\(Int(snap.cpuPct.rounded()))%"
+    }
+
+    private func applyTheme() {
+        let primary = theme.primaryTextColor
+        let secondary = theme.secondaryTextColor
+        titleLabel.textColor = primary
+        tempLabel.textColor = secondary
+        usageLabel.textColor = primary
+        usageBar.theme = theme
+    }
+}
+
 final class NetworkGroupView: NSView, TouchBarThemable {
     var theme: TouchBarTheme = .dark {
         didSet { applyTheme() }
@@ -548,7 +625,6 @@ final class CombinedGroupView: NSView, TouchBarThemable {
     private let batteryGlyph = VerticalMeterGlyphView()
     private let ssdGlyph = VerticalMeterGlyphView()
     private let graphGlyph = MiniHistogramGlyphView()
-    private let timeLabel = NSTextField(labelWithString: "Mon 3:03")
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -611,8 +687,7 @@ final class CombinedGroupView: NSView, TouchBarThemable {
             cpuStack,
             batteryStack,
             ssdStack,
-            graphStack,
-            timeLabel
+            graphStack
         ])
         stack.orientation = .horizontal
         stack.spacing = 18
@@ -644,16 +719,12 @@ final class CombinedGroupView: NSView, TouchBarThemable {
         ssdGlyph.fillColor = theme.primaryTextColor
         graphGlyph.normalizedLevel = CGFloat(snap.cpuPct / 100)
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEE H:mm"
-        timeLabel.stringValue = formatter.string(from: Date())
     }
 
     private func applyTheme() {
-        [upLabel, downLabel, memLabel, cpuLabel, batLabel, ssdLabel, cpuGraphLabel, timeLabel].forEach {
+        [upLabel, downLabel, memLabel, cpuLabel, batLabel, ssdLabel, cpuGraphLabel].forEach {
             $0.textColor = theme.primaryTextColor
         }
-        timeLabel.font = NSFont.systemFont(ofSize: 14, weight: .bold)
         batteryGlyph.theme = theme
         ssdGlyph.theme = theme
         graphGlyph.theme = theme
@@ -752,4 +823,3 @@ final class HardwareIconsGroupView: NSView, TouchBarThemable {
         graph.theme = theme
     }
 }
-

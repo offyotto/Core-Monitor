@@ -1,8 +1,6 @@
 //
 //  SWifiItem.swift
-//  Pock
-//
-//  Adapted from Pock's status-widget sources for Core Monitor.
+//  Status widget item for Core Monitor.
 //
 
 import AppKit
@@ -11,7 +9,7 @@ import Foundation
 
 final class SWifiItem: StatusItem {
     private let wifiClient = CWWiFiClient.shared()
-    private let iconView = NSImageView(frame: NSRect(x: 0, y: 0, width: 26, height: 26))
+    private let iconView = NSImageView(frame: NSRect(x: 0, y: 0, width: 22, height: 22))
 
     init() {
         didLoad()
@@ -26,7 +24,7 @@ final class SWifiItem: StatusItem {
     func didLoad() {
         wifiClient.delegate = self
         iconView.imageScaling = .scaleProportionallyUpOrDown
-        iconView.frame.size = NSSize(width: 18, height: 18)
+        iconView.frame.size = NSSize(width: 20, height: 20)
         reload()
         try? wifiClient.startMonitoringEvent(with: .linkDidChange)
         try? wifiClient.startMonitoringEvent(with: .ssidDidChange)
@@ -54,7 +52,7 @@ final class SWifiItem: StatusItem {
         } else {
             let fallbackName = interface?.powerOn() == true ? "wifi" : "wifi.slash"
             let symbol = NSImage(systemSymbolName: fallbackName, accessibilityDescription: nil)?
-                .withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 13, weight: .regular))
+                .withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 15, weight: .regular))
             symbol?.isTemplate = true
             iconView.image = symbol
         }

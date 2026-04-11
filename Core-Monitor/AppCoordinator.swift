@@ -18,7 +18,7 @@ final class AppCoordinator: ObservableObject {
     private let coreMonTouchBarController: CoreMonTouchBarController
 
     private let touchBarModeKey = "coremonitor.touchBarMode"
-    private let touchBarModeMigrationKey = "coremonitor.touchBarMode.pockBlankBarV1"
+    private let touchBarModeMigrationKey = "coremonitor.touchBarMode.blankBarV1"
     private var launchObserver: NSObjectProtocol?
     private var activationObserver: NSObjectProtocol?
     private var terminateObserver: NSObjectProtocol?
@@ -166,7 +166,7 @@ final class AppCoordinator: ObservableObject {
             }
         }
         bootstrapWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: workItem)
+        DispatchQueue.main.async(execute: workItem)
     }
 
     private func startAppTouchBar() {
