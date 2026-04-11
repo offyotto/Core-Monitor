@@ -123,7 +123,10 @@ Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc
 
 ## Privacy
 
-Core Monitor does not ship with updater frameworks, telemetry, analytics, or accounts. Sensor reads are local IOKit calls, and the optional fan helper only talks to the local privileged XPC service.
+Core Monitor does not ship with updater frameworks, telemetry, analytics, or accounts. Sensor reads are local IOKit calls, and the optional fan helper only talks to the local privileged XPC service. 
+
+## WeatherKit 
+Core-Monitor communicates with Apple's weatherkit to show you the weather. For best results, we recommend turning on location for the app.
 
 ## License
 
