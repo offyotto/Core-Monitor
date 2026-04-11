@@ -2,12 +2,13 @@
 //  SLangItem.swift
 //  Status
 //
-//  Adapted from Pock's status-widget sources for Core Monitor.
+//  Status widget item for Core Monitor.
 //
 
 import AppKit
 import Carbon
 import Foundation
+import UniformTypeIdentifiers
 
 final class SLangItem: StatusItem {
     private var tisInputSource: TISInputSource?
@@ -72,8 +73,21 @@ final class SLangItem: StatusItem {
             }
         }
 
-        if iconImage == nil, let iconRef = inputSource.iconRef {
-            iconImage = NSImage(iconRef: iconRef)
+        if iconImage == nil {
+            // Try a reasonable named image fallback first
+            if let named = NSImage(systemSymbolName: "keyboard", accessibilityDescription: nil)?
+                .withSymbolConfiguration(.init(pointSize: 15, weight: .regular)) {
+                iconImage = named
+            } else {
+                // Fall back to a generic content type icon from NSWorkspace
+                // Use UTType.data as a neutral, universally available type
+                if #available(macOS 12.0, *) {
+                    iconImage = NSWorkspace.shared.icon(for: .data)
+                } else {
+                    // Fallback for older macOS versions
+                    iconImage = NSWorkspace.shared.icon(forFileType: "public.data")
+                }
+            }
         }
 
         if let resolvedImage = iconImage, shouldTintInputSource(resolvedImage) {

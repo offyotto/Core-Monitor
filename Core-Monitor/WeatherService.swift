@@ -14,6 +14,7 @@ struct WeatherSnapshot: Sendable {
     let symbolName: String      // SF Symbol name
     let temperature: Double     // Celsius
     let condition: String       // Short label e.g. "Partly Cloudy"
+    let nextRainSummary: String
     let high: Double
     let low: Double
     let feelsLike: Double
@@ -46,12 +47,14 @@ final class LiveWeatherService: WeatherProviding {
         let weather = try await service.weather(for: location)
         let current = weather.currentWeather
         let locationName = await Self.locationName(for: location)
+        let nextRainSummary = Self.nextRainSummary(from: weather)
 
         return WeatherSnapshot(
             locationName: locationName,
             symbolName:  current.symbolName,
             temperature: current.temperature.converted(to: .celsius).value,
             condition:   current.condition.description,
+            nextRainSummary: nextRainSummary,
             high:        weather.dailyForecast.first?.highTemperature.converted(to: .celsius).value
                              ?? current.temperature.converted(to: .celsius).value,
             low:         weather.dailyForecast.first?.lowTemperature.converted(to: .celsius).value
@@ -60,6 +63,43 @@ final class LiveWeatherService: WeatherProviding {
             humidity:    Int((current.humidity * 100).rounded()),
             updatedAt:   Date()
         )
+    }
+
+    private nonisolated static func nextRainSummary(from weather: Weather) -> String {
+        let now = Date()
+
+        if let currentHour = weather.hourlyForecast.forecast.first(where: { $0.date >= now }),
+           isRainy(currentHour.condition) {
+            return "Raining now"
+        }
+
+        if let nextRain = weather.hourlyForecast.forecast.first(where: { hour in
+            hour.date >= now && isRainy(hour.condition)
+        }) {
+            let formatter = DateFormatter()
+            formatter.locale = Locale.current
+            formatter.timeStyle = .short
+            formatter.dateStyle = .none
+            return "Next rain at \(formatter.string(from: nextRain.date))"
+        }
+
+        if let nextPrecip = weather.hourlyForecast.forecast.first(where: { hour in
+            hour.date >= now && hour.precipitationChance >= 0.35
+        }) {
+            let formatter = DateFormatter()
+            formatter.locale = Locale.current
+            formatter.timeStyle = .short
+            formatter.dateStyle = .none
+            let pct = Int((nextPrecip.precipitationChance * 100).rounded())
+            return "Rain likely at \(formatter.string(from: nextPrecip.date)) (\(pct)%)"
+        }
+
+        return "No rain expected soon"
+    }
+
+    private nonisolated static func isRainy(_ condition: WeatherCondition) -> Bool {
+        let raw = String(describing: condition).lowercased()
+        return raw.contains("rain") || raw.contains("drizzle") || raw.contains("thunder")
     }
 
     private nonisolated static func locationName(for location: CLLocation) async -> String {
@@ -90,6 +130,7 @@ final class MockWeatherService: WeatherProviding {
             symbolName:  "cloud.sun.rain.fill",
             temperature: 22.4,
             condition:   "Partly Cloudy",
+            nextRainSummary: "Rain likely at 4:00 PM (40%)",
             high:        26.0,
             low:         18.5,
             feelsLike:   21.0,

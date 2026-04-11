@@ -21,6 +21,9 @@ struct Core_MonitorApp: App {
 
     @State private var menuBarController: MenuBarController?
     @State private var mainWindow: NSWindow?
+    @State private var hasShownFirstLaunchDashboard = UserDefaults.standard.bool(forKey: Self.firstLaunchDashboardKey)
+
+    private static let firstLaunchDashboardKey = "coremonitor.didShowFirstLaunchDashboard"
 
     init() {
         NSWindow.allowsAutomaticWindowTabbing = false
@@ -30,9 +33,6 @@ struct Core_MonitorApp: App {
         WindowGroup {
             mainContent
                 .onAppear {
-                    // Run as accessory so no Dock icon shows on launch
-                    NSApp.setActivationPolicy(.accessory)
-
                     if menuBarController == nil {
                         menuBarController = MenuBarController(
                             systemMonitor:    coordinator.systemMonitor,
@@ -42,8 +42,16 @@ struct Core_MonitorApp: App {
                             revertTouchBarAction: coordinator.revertToSystemTouchBar
                         )
                     }
-                    // Hide window on first launch — app lives in menu bar
-                    DispatchQueue.main.async { hideMainWindow() }
+                    DispatchQueue.main.async {
+                        if hasShownFirstLaunchDashboard == false {
+                            hasShownFirstLaunchDashboard = true
+                            UserDefaults.standard.set(true, forKey: Self.firstLaunchDashboardKey)
+                            openDashboard()
+                        } else {
+                            NSApp.setActivationPolicy(.accessory)
+                            hideMainWindow()
+                        }
+                    }
                 }
         }
         .windowToolbarStyle(.unifiedCompact(showsTitle: false))

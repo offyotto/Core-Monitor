@@ -2,7 +2,7 @@
 //  StatusWidget.swift
 //  Status
 //
-//  Adapted from Pock's status-widget sources for Core Monitor.
+//  Status widget source for Core Monitor.
 //
 
 import AppKit
@@ -33,7 +33,7 @@ final class StatusWidget: NSStackView, TouchBarThemable {
         orientation = .horizontal
         alignment = .centerY
         distribution = .fill
-        spacing = 8
+        spacing = 12
         translatesAutoresizingMaskIntoConstraints = false
         loadStatusElements()
     }
@@ -61,7 +61,6 @@ final class StatusWidget: NSStackView, TouchBarThemable {
         clearItems()
 
         let items: [StatusItem] = [
-            SLangItem(),
             SWifiItem(),
             SPowerItem(),
             SClockItem()
@@ -70,7 +69,9 @@ final class StatusWidget: NSStackView, TouchBarThemable {
         loadedItems = items
         for item in items {
             item.apply(theme: theme)
-            addArrangedSubview(item.view)
+            let view = item.view
+            view.translatesAutoresizingMaskIntoConstraints = false
+            addArrangedSubview(view)
         }
     }
 

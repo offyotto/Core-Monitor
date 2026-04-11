@@ -1,5 +1,5 @@
 // NetworkGraphView.swift
-// CoreMonitor — scrolling bar-graph of network throughput, iStat style.
+// CoreMonitor — scrolling bar-graph of network throughput.
 //
 //  60×20pt view containing ~20 vertical bars.
 //  Bars are cyan (#00D0FF) on black, newest bar on the right.

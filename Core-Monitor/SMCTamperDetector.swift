@@ -80,7 +80,7 @@ final class SMCTamperDetector: ObservableObject {
         let names = [
             "Macs Fan Control",
             "TG Pro",
-            "iStat Menus",
+            "System Monitor",
             "smcFanControl",
             "Stats"
         ]

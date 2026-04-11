@@ -73,7 +73,7 @@ private let guideSteps: [GuideStep] = [
         bullets: [
             ("thermometer.medium",    .wgAmber,  "Live CPU, GPU & memory telemetry"),
             ("fan.fill",              .wgBlue,   "Intelligent fan speed control"),
-            ("rectangle.on.rectangle", .wgGreen, "Configurable iStat-style Touch Bar widgets"),
+            ("rectangle.on.rectangle", .wgGreen, "Configurable Touch Bar widgets"),
             ("bolt.fill",             .wgPurple, "Power, battery, brightness and system controls"),
         ]
     ),
@@ -116,7 +116,9 @@ private let guideSteps: [GuideStep] = [
             ("rectangle.on.rectangle", .wgGreen, "Light and dark widget themes"),
             ("rectangle.3.group",     .wgBlue,   "Reorder or disable widgets in-app"),
             ("cloud.sun.rain.fill",   .wgAmber,  "Weather uses Apple's WeatherKit path"),
-            ("wrench.and.screwdriver", .wgPurple, "Pock modal presentation stays isolated"),
+            ("location.fill",         .wgGreen,  "Allow location for accurate weather"),
+            ("hand.tap",              .wgPurple, "On MacBook Touch Bar models, tap Weather for rain details"),
+            ("wrench.and.screwdriver", .wgPurple, "Touch Bar presentation stays isolated"),
         ]
     ),
     GuideStep(
