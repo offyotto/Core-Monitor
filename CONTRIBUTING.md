@@ -62,4 +62,4 @@ Prefer the least invasive fix that makes the app correct and keeps the build gre
 
 ## NO LLM SLOP
 
-DO NOT use ai to contribute to the project. Please. I dont think theres anything else to say.
+DO NOT use AI to contribute to the project. Please. I dont think theres anything else to say.
