@@ -244,6 +244,10 @@ section {
   text-shadow: 0 14px 34px rgba(4, 6, 14, 0.4);
 }
 
+.hero-title-fixed .hero-title-accent {
+  color: #ff73b8;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
