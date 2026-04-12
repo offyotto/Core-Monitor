@@ -1,16 +1,16 @@
 :root {
-  --bg: #060812;
-  --bg-soft: rgba(11, 14, 25, 0.78);
-  --panel: rgba(15, 18, 31, 0.82);
-  --panel-strong: #111524;
-  --line: rgba(255, 255, 255, 0.08);
+  --bg: #05070e;
+  --bg-soft: rgba(12, 15, 28, 0.7);
+  --panel: rgba(17, 21, 36, 0.56);
+  --panel-strong: rgba(15, 18, 31, 0.92);
+  --line: rgba(255, 255, 255, 0.12);
   --text: #f7f8fc;
-  --muted: #b8bdd0;
-  --accent: #ff5f8a;
-  --accent-strong: #ff8c47;
-  --blue: #6d78ff;
-  --violet: #a264ff;
-  --shadow: 0 30px 100px rgba(0, 0, 0, 0.42);
+  --muted: #c1c6d8;
+  --accent: #b9d5ff;
+  --accent-strong: #ffffff;
+  --blue: #8ea2ff;
+  --violet: #b68aff;
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
   --radius-xl: 30px;
   --radius-lg: 22px;
   --radius-md: 18px;
@@ -29,9 +29,10 @@ body {
   color: var(--text);
   font-family: "Space Grotesk", sans-serif;
   background:
-    radial-gradient(circle at 52% 14%, rgba(165, 111, 255, 0.34), transparent 20%),
-    radial-gradient(circle at 58% 16%, rgba(93, 139, 255, 0.2), transparent 20%),
-    linear-gradient(180deg, #05070d 0%, #050810 36%, #06070d 100%);
+    radial-gradient(circle at 50% 0%, rgba(96, 229, 197, 0.18), transparent 18%),
+    radial-gradient(circle at 60% 8%, rgba(114, 140, 255, 0.24), transparent 22%),
+    radial-gradient(circle at 38% 22%, rgba(195, 126, 255, 0.12), transparent 20%),
+    linear-gradient(180deg, #05070d 0%, #050810 48%, #06070d 100%);
   min-height: 100vh;
 }
 
@@ -176,11 +177,14 @@ main {
 }
 
 section {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-xl);
-  background: linear-gradient(180deg, rgba(11, 14, 25, 0.84), rgba(8, 10, 18, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 34px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    linear-gradient(180deg, rgba(15, 18, 31, 0.74), rgba(8, 10, 18, 0.9));
   box-shadow: var(--shadow);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
 }
 
 .hero {
@@ -207,7 +211,7 @@ section {
 .hero-copy h1 {
   max-width: none;
   font-size: clamp(3.5rem, 7.2vw, 6.2rem);
-  text-shadow: none;
+  text-shadow: 0 14px 34px rgba(4, 6, 14, 0.26);
 }
 
 .hero-title {
@@ -294,12 +298,12 @@ section {
   font-size: clamp(1.5rem, 2.5vw, 2.45rem);
   line-height: 1.08;
   font-weight: 700;
-  text-shadow: 0 10px 24px rgba(4, 6, 14, 0.34);
+  text-shadow: 0 10px 24px rgba(4, 6, 14, 0.28);
 }
 
 .hero-subline {
   margin: 14px 0 0;
-  color: rgba(247, 248, 252, 0.78);
+  color: rgba(247, 248, 252, 0.72);
   font-size: 0.98rem;
   font-weight: 500;
   text-shadow: 0 8px 18px rgba(4, 6, 14, 0.26);
@@ -320,25 +324,29 @@ section {
   justify-content: center;
   min-height: 58px;
   padding: 0 34px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
   font-weight: 700;
-  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.24);
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .button.primary {
-  background: linear-gradient(180deg, #ff4d7d, #d93a69);
-  color: #fff;
-  border-color: transparent;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(236, 238, 246, 0.88));
+  color: #161824;
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .button.secondary {
-  background: linear-gradient(180deg, #6874ff, #5863dc);
+  background:
+    linear-gradient(180deg, rgba(145, 168, 255, 0.34), rgba(102, 120, 255, 0.2));
   color: #fff;
 }
 
 .button.ghost {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .hero-panel,
@@ -355,9 +363,13 @@ section {
 .detail-card,
 .showcase-card {
   padding: 22px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
+    rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
 }
 
 .hero-glow {
@@ -391,7 +403,9 @@ section {
   padding: 16px;
   isolation: isolate;
   border-radius: 34px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04)),
+    rgba(255, 255, 255, 0.02);
   box-shadow:
     0 44px 86px rgba(0, 0, 0, 0.46),
     0 0 0 1px rgba(255, 255, 255, 0.06) inset;
@@ -411,13 +425,13 @@ section {
   z-index: -2;
   border-radius: 72px;
   background:
-    radial-gradient(circle at 4% 86%, rgba(255, 102, 160, 0.34), transparent 18%),
-    radial-gradient(circle at 10% 18%, rgba(133, 98, 255, 0.28), transparent 20%),
-    radial-gradient(circle at 52% 0%, rgba(180, 120, 255, 0.34), transparent 24%),
-    radial-gradient(circle at 88% 12%, rgba(126, 152, 255, 0.4), transparent 20%),
-    radial-gradient(circle at 97% 84%, rgba(115, 130, 255, 0.3), transparent 18%),
-    linear-gradient(90deg, rgba(108, 84, 255, 0.12), rgba(179, 118, 255, 0.2) 50%, rgba(106, 132, 255, 0.14));
-  filter: blur(42px);
+    radial-gradient(circle at 4% 86%, rgba(121, 240, 214, 0.24), transparent 18%),
+    radial-gradient(circle at 10% 18%, rgba(133, 98, 255, 0.2), transparent 20%),
+    radial-gradient(circle at 52% 0%, rgba(180, 120, 255, 0.22), transparent 24%),
+    radial-gradient(circle at 88% 12%, rgba(126, 152, 255, 0.24), transparent 20%),
+    radial-gradient(circle at 97% 84%, rgba(115, 130, 255, 0.18), transparent 18%),
+    linear-gradient(90deg, rgba(108, 84, 255, 0.08), rgba(179, 118, 255, 0.12) 50%, rgba(106, 132, 255, 0.1));
+  filter: blur(50px);
   opacity: 1;
 }
 
@@ -425,26 +439,26 @@ section {
   inset: -18px;
   z-index: -1;
   border-radius: 52px;
-  border: 1px solid rgba(156, 146, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.03) inset,
-    0 0 56px rgba(112, 121, 255, 0.16),
-    0 0 110px rgba(156, 103, 255, 0.12);
+    0 0 56px rgba(112, 121, 255, 0.12),
+    0 0 110px rgba(156, 103, 255, 0.08);
 }
 
 .hero-shot img {
   width: 100%;
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   opacity: 1;
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
   filter:
-    brightness(0.84)
+    brightness(0.9)
     saturate(1.02)
     contrast(1)
-    drop-shadow(0 0 24px rgba(134, 108, 255, 0.18))
-    drop-shadow(0 0 64px rgba(134, 108, 255, 0.14))
-    drop-shadow(0 0 110px rgba(164, 108, 255, 0.1));
+    drop-shadow(0 0 24px rgba(134, 108, 255, 0.12))
+    drop-shadow(0 0 64px rgba(134, 108, 255, 0.1))
+    drop-shadow(0 0 110px rgba(164, 108, 255, 0.08));
 }
 
 .section-heading {
@@ -479,12 +493,12 @@ section {
 
 .install-card-main {
   background:
-    radial-gradient(circle at top left, rgba(255, 95, 138, 0.18), transparent 55%),
-    rgba(255, 255, 255, 0.04);
+    radial-gradient(circle at top left, rgba(167, 231, 255, 0.2), transparent 55%),
+    rgba(255, 255, 255, 0.03);
 }
 
 .text-link {
-  color: #ff8d73;
+  color: #d6e4ff;
   font-weight: 700;
 }
 
@@ -509,7 +523,7 @@ section {
   display: block;
   width: 100%;
   border-radius: 18px;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .showcase-card figcaption {
@@ -541,8 +555,9 @@ section {
   width: 100%;
   min-height: 320px;
   border-radius: 22px;
-  border: 1px solid var(--line);
-  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
 }
 
 .cta-band {
@@ -552,8 +567,12 @@ section {
   gap: 24px;
   padding: 30px 34px;
   background:
-    linear-gradient(135deg, rgba(255, 95, 138, 0.18), rgba(109, 120, 255, 0.16)),
-    rgba(18, 18, 24, 0.96);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(109, 120, 255, 0.08)),
+    linear-gradient(180deg, rgba(18, 18, 24, 0.92), rgba(10, 12, 20, 0.96));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 34px;
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
 }
 
 @media (max-width: 1080px) {
