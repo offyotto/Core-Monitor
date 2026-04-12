@@ -5,6 +5,7 @@ struct TouchBarSystemSnapshot {
     let ssdPct: Double
     let cpuPct: Double
     let cpuTempC: Double
+    let brightness: Float
     let batPct: Int
     let batCharging: Bool
     let netUpKBs: Double
@@ -486,8 +487,6 @@ final class CPUGroupView: NSView, TouchBarThemable {
 
     private let titleLabel = NSTextField(labelWithString: "CPU")
     private let tempLabel = NSTextField(labelWithString: "—")
-    private let usageBar = UsageBarView()
-    private let usageLabel = NSTextField(labelWithString: "0%")
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -500,38 +499,23 @@ final class CPUGroupView: NSView, TouchBarThemable {
     }
 
     private func setup() {
-        [titleLabel, tempLabel, usageLabel].forEach {
+        [titleLabel, tempLabel].forEach {
             $0.font = $0 == titleLabel ? TB.fontKey : NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .semibold)
             $0.lineBreakMode = .byClipping
         }
-
-        usageBar.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            usageBar.widthAnchor.constraint(equalToConstant: TB.barW),
-            usageBar.heightAnchor.constraint(equalToConstant: TB.barH)
-        ])
 
         let leftStack = NSStackView(views: [titleLabel, tempLabel])
         leftStack.orientation = .vertical
         leftStack.spacing = 1
         leftStack.alignment = .leading
 
-        let rightStack = NSStackView(views: [usageLabel, usageBar])
-        rightStack.orientation = .vertical
-        rightStack.spacing = 2
-        rightStack.alignment = .centerX
-
-        let stack = NSStackView(views: [leftStack, rightStack])
-        stack.orientation = .horizontal
-        stack.spacing = 12
-        stack.alignment = .centerY
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(stack)
+        addSubview(leftStack)
+        leftStack.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: leadingAnchor),
-            stack.trailingAnchor.constraint(equalTo: trailingAnchor),
-            stack.centerYAnchor.constraint(equalTo: centerYAnchor)
+            leftStack.leadingAnchor.constraint(equalTo: leadingAnchor),
+            leftStack.trailingAnchor.constraint(equalTo: trailingAnchor),
+            leftStack.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
 
         applyTheme()
@@ -540,10 +524,6 @@ final class CPUGroupView: NSView, TouchBarThemable {
     func update(snap: TouchBarSystemSnapshot) {
         titleLabel.stringValue = snap.cpuTempC.isFinite && snap.cpuTempC > 0 ? "CPU \(Int(snap.cpuTempC.rounded()))°" : "CPU"
         tempLabel.stringValue = "\(Int(snap.cpuPct.rounded()))% load"
-        usageBar.fraction = CGFloat(snap.cpuPct / 100)
-        usageBar.fillColor = theme.accentBlue
-        usageBar.theme = theme
-        usageLabel.stringValue = "\(Int(snap.cpuPct.rounded()))%"
     }
 
     private func applyTheme() {
@@ -551,8 +531,6 @@ final class CPUGroupView: NSView, TouchBarThemable {
         let secondary = theme.secondaryTextColor
         titleLabel.textColor = primary
         tempLabel.textColor = secondary
-        usageLabel.textColor = primary
-        usageBar.theme = theme
     }
 }
 

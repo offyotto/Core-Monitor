@@ -9,11 +9,15 @@ internal final class PKWidgetTouchBarItem: NSCustomTouchBarItem {
     }
 
     convenience init?(widget: PKWidgetInfo) {
+        self.init(widget: widget, identifier: NSTouchBarItem.Identifier(widget.bundleIdentifier))
+    }
+
+    convenience init?(widget: PKWidgetInfo, identifier: NSTouchBarItem.Identifier) {
         guard let clss = widget.principalClass as? PKWidget.Type else {
             return nil
         }
 
-        self.init(identifier: NSTouchBarItem.Identifier(widget.bundleIdentifier))
+        self.init(identifier: identifier)
         self.widget = clss.init()
         self.widget?.customizationLabel = widget.name
         viewController = PKWidgetViewController(item: self)

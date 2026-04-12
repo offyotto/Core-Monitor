@@ -1027,10 +1027,10 @@ private struct TouchBarPreviewStrip: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: TB.groupGap) {
-                ForEach(settings.widgets) { kind in
-                    TouchBarWidgetPreview(kind: kind, theme: settings.theme)
-                        .frame(width: kind.estimatedWidth, height: TB.stripH)
-                        .id("\(kind.id)-\(settings.theme.id)")
+                ForEach(settings.items) { item in
+                    TouchBarWidgetPreview(item: item, theme: settings.theme)
+                        .frame(width: item.estimatedWidth, height: TB.stripH)
+                        .id("\(item.id)-\(settings.theme.id)")
                 }
             }
             .padding(.horizontal, 2)
@@ -1043,17 +1043,67 @@ private struct TouchBarPreviewStrip: View {
 }
 
 private struct TouchBarWidgetPreview: View {
-    let kind: TouchBarWidgetKind
+    let item: TouchBarItemConfiguration
     let theme: TouchBarTheme
 
     var body: some View {
-        Image(nsImage: renderPreview())
-            .interpolation(.none)
-            .antialiased(true)
-            .frame(width: kind.estimatedWidth, height: TB.stripH)
+        Group {
+            if item.isBuiltIn {
+                Image(nsImage: renderBuiltInPreview())
+                    .interpolation(.none)
+                    .antialiased(true)
+            } else {
+                customPreview
+            }
+        }
+        .frame(width: item.estimatedWidth, height: TB.stripH)
     }
 
-    private func renderPreview() -> NSImage {
+    @ViewBuilder
+    private var customPreview: some View {
+        switch item {
+        case .pinnedApp(let app):
+            iconPreview(path: app.filePath)
+        case .pinnedFolder(let folder):
+            iconPreview(path: folder.folderPath)
+        case .customWidget(let widget):
+            HStack(spacing: 6) {
+                Image(systemName: widget.symbolName)
+                    .font(.system(size: 11, weight: .semibold))
+                Text(widget.title)
+                    .font(.system(size: 11, weight: .semibold))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(Color(nsColor: theme.primaryTextColor))
+            .padding(.horizontal, 10)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color(nsColor: theme.pillBackgroundColor))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(Color(nsColor: theme.pillBorderColor), lineWidth: 1)
+                    )
+            )
+        default:
+            EmptyView()
+        }
+    }
+
+    private func iconPreview(path: String) -> some View {
+        let image = NSWorkspace.shared.icon(forFile: path)
+        image.size = NSSize(width: 22, height: 22)
+        return AnyView(
+            Image(nsImage: image)
+                .interpolation(.high)
+                .frame(width: item.estimatedWidth, height: TB.stripH)
+        )
+    }
+
+    private func renderBuiltInPreview() -> NSImage {
+        guard case .builtIn(let kind) = item else {
+            return NSImage(size: NSSize(width: item.estimatedWidth, height: TB.stripH))
+        }
         let snapshot = TouchBarPreviewFixture.snapshot
         let weatherState = WeatherState.loaded(TouchBarPreviewFixture.weather)
 
@@ -1105,6 +1155,7 @@ private enum TouchBarPreviewFixture {
         ssdPct: 27,
         cpuPct: 45,
         cpuTempC: 45,
+        brightness: 0.72,
         batPct: 62,
         batCharging: false,
         netUpKBs: 13,
@@ -1149,34 +1200,86 @@ private struct TouchBarWidgetRow: View {
             Text("\(Int(kind.estimatedWidth)) pt")
                 .font(.system(size: 11, weight: .bold, design: .monospaced))
                 .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 4)
+    }
+}
 
-            if isEnabled {
-                HStack(spacing: 6) {
-                    Button {
-                        settings.moveUp(kind)
-                    } label: {
-                        Image(systemName: "arrow.up")
-                            .font(.system(size: 11, weight: .bold))
-                            .frame(width: 28, height: 28)
-                    }
-                    .buttonStyle(SoftPressButtonStyle())
-                    .background(Color.white.opacity(0.06))
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+private struct TouchBarConfiguredItemRow: View {
+    @ObservedObject private var settings = TouchBarCustomizationSettings.shared
+    let item: TouchBarItemConfiguration
 
-                    Button {
-                        settings.moveDown(kind)
-                    } label: {
-                        Image(systemName: "arrow.down")
-                            .font(.system(size: 11, weight: .bold))
-                            .frame(width: 28, height: 28)
-                    }
-                    .buttonStyle(SoftPressButtonStyle())
-                    .background(Color.white.opacity(0.06))
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: leadingSymbol)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Color.bdAccent)
+                .frame(width: 18)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(item.title)
+                    .font(.system(size: 13, weight: .semibold))
+                Text(item.subtitle)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            Text("\(Int(item.estimatedWidth)) pt")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 6) {
+                Button {
+                    settings.moveUp(item)
+                } label: {
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 11, weight: .bold))
+                        .frame(width: 28, height: 28)
                 }
+                .buttonStyle(SoftPressButtonStyle())
+                .background(Color.white.opacity(0.06))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+                Button {
+                    settings.moveDown(item)
+                } label: {
+                    Image(systemName: "arrow.down")
+                        .font(.system(size: 11, weight: .bold))
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(SoftPressButtonStyle())
+                .background(Color.white.opacity(0.06))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+                Button {
+                    settings.remove(item)
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.system(size: 11, weight: .bold))
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(SoftPressButtonStyle())
+                .background(Color.red.opacity(0.14))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private var leadingSymbol: String {
+        switch item {
+        case .builtIn:
+            return "square.grid.2x2"
+        case .pinnedApp:
+            return "app.fill"
+        case .pinnedFolder:
+            return "folder.fill"
+        case .customWidget:
+            return "terminal.fill"
+        }
     }
 }
 
@@ -1185,6 +1288,9 @@ private struct TouchBarCustomizationPanel: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var weatherAttribution: WeatherAttributionSnapshot?
     @State private var weatherAttributionError: String?
+    @State private var customTitle = ""
+    @State private var customSymbol = "terminal.fill"
+    @State private var customCommand = ""
 
     private var widthFraction: Double {
         min(max(settings.estimatedWidth / TouchBarCustomizationSettings.recommendedTouchBarWidth, 0), 1)
@@ -1225,6 +1331,21 @@ private struct TouchBarCustomizationPanel: View {
                             Text("The active widget stack is wider than a full Touch Bar. Trim or reorder widgets to avoid clipping.")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(.orange)
+                        }
+                    }
+                }
+            }
+
+            DarkCard(padding: 16) {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Active Items")
+                        .font(.system(size: 14, weight: .bold))
+                    ForEach(settings.items) { item in
+                        TouchBarConfiguredItemRow(item: item)
+                        if item.id != settings.items.last?.id {
+                            Rectangle()
+                                .fill(Color.bdDivider)
+                                .frame(height: 1)
                         }
                     }
                 }
@@ -1315,8 +1436,62 @@ private struct TouchBarCustomizationPanel: View {
             }
 
             DarkCard(padding: 16) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Pinned Items")
+                        .font(.system(size: 14, weight: .bold))
+
+                    HStack(spacing: 10) {
+                        Button("Pin Applications") {
+                            let panel = NSOpenPanel()
+                            panel.title = "Choose Applications"
+                            panel.allowedContentTypes = [.application]
+                            panel.allowsMultipleSelection = true
+                            panel.canChooseDirectories = false
+                            panel.canChooseFiles = true
+                            if panel.runModal() == .OK {
+                                settings.addPinnedApps(urls: panel.urls)
+                            }
+                        }
+                        .buttonStyle(SoftPressButtonStyle())
+
+                        Button("Pin Folders") {
+                            let panel = NSOpenPanel()
+                            panel.title = "Choose Folders"
+                            panel.allowsMultipleSelection = true
+                            panel.canChooseDirectories = true
+                            panel.canChooseFiles = false
+                            if panel.runModal() == .OK {
+                                settings.addPinnedFolders(urls: panel.urls)
+                            }
+                        }
+                        .buttonStyle(SoftPressButtonStyle())
+                    }
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Custom Widget")
+                            .font(.system(size: 12, weight: .semibold))
+
+                        TextField("Title", text: $customTitle)
+                            .textFieldStyle(.roundedBorder)
+                        TextField("SF Symbol", text: $customSymbol)
+                            .textFieldStyle(.roundedBorder)
+                        TextField("Shell Command", text: $customCommand)
+                            .textFieldStyle(.roundedBorder)
+
+                        Button("Add Custom Widget") {
+                            settings.addCustomWidget(title: customTitle, symbolName: customSymbol, command: customCommand)
+                            customTitle = ""
+                            customSymbol = "terminal.fill"
+                            customCommand = ""
+                        }
+                        .buttonStyle(SoftPressButtonStyle())
+                    }
+                }
+            }
+
+            DarkCard(padding: 16) {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Widgets")
+                    Text("Built-In Widgets")
                         .font(.system(size: 14, weight: .bold))
                     ForEach(TouchBarWidgetKind.allCases) { kind in
                         TouchBarWidgetRow(kind: kind)
