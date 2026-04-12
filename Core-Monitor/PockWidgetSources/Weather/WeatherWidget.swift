@@ -225,30 +225,17 @@ final class WeatherWidget: NSView, TouchBarThemable {
     }
 
     private func estimatedWidth() -> CGFloat {
+        let visibleStack = displayMode == .expanded ? expandedStack : compactStack
+        let measuredWidth = ceil(visibleStack.fittingSize.width)
+
         switch currentState {
         case .idle:
-            return 56
-        case .loading:
-            return 80
-        case .loaded(let snapshot):
-            let tempStr = "\(Int(snapshot.temperature.rounded()))°"
-            let detailStr = snapshot.nextRainSummary
-            let timeStr = timeString()
-            let tempW = tempStr.size(withAttributes: [.font: NSFont.systemFont(ofSize: 13, weight: .medium)]).width
-            let timeW = timeStr.size(withAttributes: [.font: NSFont.systemFont(ofSize: 11, weight: .regular)]).width
-            let detailW = detailStr.size(withAttributes: [.font: NSFont.systemFont(ofSize: 10, weight: .medium)]).width
-            let compactW = 8 * 2 + 16 + 5 + tempW + 5 + timeW + 4
-            let expandedW = 8 * 2 + 16 + 5 + max(tempW, timeW, detailW) + 10
-            return displayMode == .expanded ? expandedW : compactW
-        case .error:
-            return 80
+            return max(56, measuredWidth)
+        case .loading, .error:
+            return max(80, measuredWidth)
+        case .loaded:
+            return measuredWidth
         }
-    }
-
-    private func timeString() -> String {
-        let fmt = DateFormatter()
-        fmt.dateFormat = "EEE H:mm"
-        return fmt.string(from: Date())
     }
 
     private func defaultImage() -> NSImage {

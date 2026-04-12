@@ -10,27 +10,20 @@ final class ControlCenterTouchBarWidget: NSStackView, TouchBarThemable {
     }
 
     private enum ActionTag: Int {
-        case sleep = 1
-        case lock = 2
-        case screensaver = 3
-        case doNotDisturb = 4
-        case volumeDown = 5
-        case volumeToggle = 6
-        case volumeUp = 7
+        case brightnessDown = 1
+        case brightnessUp = 2
+        case volumeDown = 3
+        case volumeUp = 4
     }
 
     private let buttons: [NSButton]
-    private let volumeMeter = MeterControl()
 
     override init(frame frameRect: NSRect) {
         buttons = [
-            Self.makeButton(symbol: "moon.zzz.fill", tag: .sleep),
-            Self.makeButton(symbol: "lock.fill", tag: .lock),
-            Self.makeButton(symbol: "display", tag: .screensaver),
-            Self.makeButton(symbol: "moon.fill", tag: .doNotDisturb),
-            Self.makeButton(symbol: "minus", tag: .volumeDown),
-            Self.makeButton(symbol: "speaker.wave.2.fill", tag: .volumeToggle),
-            Self.makeButton(symbol: "plus", tag: .volumeUp)
+            Self.makeButton(symbol: "sun.min.fill", tag: .brightnessDown),
+            Self.makeButton(symbol: "sun.max.fill", tag: .brightnessUp),
+            Self.makeButton(symbol: "speaker.fill", tag: .volumeDown),
+            Self.makeButton(symbol: "speaker.wave.3.fill", tag: .volumeUp),
         ]
         super.init(frame: frameRect)
         setup()
@@ -45,25 +38,15 @@ final class ControlCenterTouchBarWidget: NSStackView, TouchBarThemable {
     private func setup() {
         orientation = .horizontal
         alignment = .centerY
-        spacing = 6
+        distribution = .fill
+        spacing = 14
         translatesAutoresizingMaskIntoConstraints = false
 
-        let grouped: [[NSView]] = [
-            Array(buttons[0...3]),
-            [volumeMeter, buttons[4], buttons[5], buttons[6]]
-        ]
-
-        for (index, group) in grouped.enumerated() {
-            for view in group {
-                addArrangedSubview(view)
-            }
-            if index < grouped.count - 1 {
-                addArrangedSubview(Self.spacer())
-            }
+        buttons.forEach { button in
+            addArrangedSubview(button)
         }
 
         applyTheme()
-        refreshState()
     }
 
     private static func makeButton(symbol: String, tag: ActionTag) -> NSButton {
@@ -73,78 +56,41 @@ final class ControlCenterTouchBarWidget: NSStackView, TouchBarThemable {
         button.isBordered = false
         button.bezelStyle = .shadowlessSquare
         button.setButtonType(.momentaryChange)
+        button.isContinuous = true
+        (button.cell as? NSButtonCell)?.setPeriodicDelay(0.35, interval: 0.08)
         button.focusRingType = .none
         button.translatesAutoresizingMaskIntoConstraints = false
         button.wantsLayer = true
         button.layer?.cornerRadius = 0
         button.layer?.masksToBounds = true
         button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
-            .withSymbolConfiguration(.init(pointSize: 11, weight: .medium))
+            .withSymbolConfiguration(.init(pointSize: 13, weight: .medium))
         NSLayoutConstraint.activate([
-            button.widthAnchor.constraint(equalToConstant: 20),
-            button.heightAnchor.constraint(equalToConstant: 18)
+            button.widthAnchor.constraint(equalToConstant: 24),
+            button.heightAnchor.constraint(equalToConstant: 22)
         ])
         return button
-    }
-
-    private static func spacer() -> NSView {
-        let v = NSView(frame: NSRect(x: 0, y: 0, width: 4, height: 18))
-        v.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            v.widthAnchor.constraint(equalToConstant: 4)
-        ])
-        return v
     }
 
     @objc private func invokeAction(_ sender: NSButton) {
         guard let tag = ActionTag(rawValue: sender.tag) else { return }
 
         switch tag {
-        case .sleep:
-            runCommand("/usr/bin/pmset", ["sleepnow"])
-        case .lock:
-            runCommand(
-                "/System/Library/CoreServices/Menu Extras/User.menu/Contents/Resources/CGSession",
-                ["-suspend"]
-            )
-            runAppleScript(#"tell application "System Events" to keystroke "q" using {control down, command down}"#)
-        case .screensaver:
-            runCommand("/usr/bin/open", ["-a", "ScreenSaverEngine"])
-            runAppleScript(#"tell application "ScreenSaverEngine" to activate"#)
-        case .doNotDisturb:
-            runCommand("/usr/bin/open", ["x-apple.systempreferences:com.apple.Focus-Settings.extension"])
+        case .brightnessDown:
+            SystemBrightness.adjust(by: -0.0625)
+        case .brightnessUp:
+            SystemBrightness.adjust(by: 0.0625)
         case .volumeDown:
             adjustVolume(by: -0.07)
-        case .volumeToggle:
-            showVolumeSlider()
         case .volumeUp:
             adjustVolume(by: 0.07)
         }
     }
 
-    private func runCommand(_ path: String, _ arguments: [String]) {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: path)
-        process.arguments = arguments
-        try? process.run()
-    }
-
-    private func runAppleScript(_ source: String) {
-        NSAppleScript(source: source)?.executeAndReturnError(nil)
-    }
-
-    private func showVolumeSlider() {
-        let current = SystemVolume.current
-        volumeMeter.set(value: current)
-    }
-
     private func adjustVolume(by delta: Float) {
-        let next = clamp01(SystemVolume.current + delta)
+        let next = min(max(SystemVolume.current + delta, 0), 1)
         SystemVolume.set(next)
-        volumeMeter.set(value: SystemVolume.current)
     }
-
-    private func clamp01(_ value: Float) -> Float { min(max(value, 0), 1) }
 
     private func applyTheme() {
         let tint = theme.primaryTextColor
@@ -155,12 +101,6 @@ final class ControlCenterTouchBarWidget: NSStackView, TouchBarThemable {
             $0.layer?.borderWidth = 0
             $0.layer?.borderColor = nil
         }
-        volumeMeter.theme = theme
-        refreshState()
-    }
-
-    private func refreshState() {
-        volumeMeter.set(value: SystemVolume.current)
     }
 }
 
@@ -210,6 +150,224 @@ enum SystemVolume {
         guard AudioObjectHasProperty(dev, &volAddr) else { return }
         let _ = AudioObjectSetPropertyData(dev, &volAddr, 0, nil, UInt32(MemoryLayout<Float32>.size), &volume)
     }
+
+    static var symbolName: String {
+        switch current {
+        case ..<0.01:
+            return "speaker.slash.fill"
+        case ..<0.34:
+            return "speaker.wave.1.fill"
+        case ..<0.68:
+            return "speaker.wave.2.fill"
+        default:
+            return "speaker.wave.3.fill"
+        }
+    }
+}
+
+enum SystemBrightness {
+    static var current: Float {
+        min(max(CMCurrentBrightness(), 0), 1)
+    }
+
+    static func set(_ value: Float) {
+        CMSetBrightness(min(max(value, 0), 1))
+    }
+
+    static func adjust(by delta: Float) {
+        if delta > 0 {
+            CMIncreaseBrightness()
+        } else if delta < 0 {
+            CMDecreaseBrightness()
+        }
+    }
+}
+
+@available(macOS 13.0, *)
+final class ControlCenterSliderPresenter: NSObject, NSTouchBarDelegate {
+    enum SliderKind {
+        case brightness
+        case volume
+
+        var title: String {
+            switch self {
+            case .brightness: return "Brightness"
+            case .volume: return "Volume"
+            }
+        }
+
+        var leftSymbol: String {
+            switch self {
+            case .brightness: return "sun.min.fill"
+            case .volume: return "speaker.wave.1.fill"
+            }
+        }
+
+        var rightSymbol: String {
+            switch self {
+            case .brightness: return "sun.max.fill"
+            case .volume: return "speaker.wave.3.fill"
+            }
+        }
+    }
+
+    static let shared = ControlCenterSliderPresenter()
+
+    private let itemIdentifier = NSTouchBarItem.Identifier("com.coremonitor.touchbar.controlCenter.slider")
+    private var presenter = TouchBarPrivatePresenter()
+    private var activeKind: SliderKind?
+    private var activeButton: NSButton?
+    private var theme: TouchBarTheme = .dark
+    private weak var sliderView: ControlCenterSliderView?
+
+    func present(kind: SliderKind, theme: TouchBarTheme, sourceButton: NSButton) {
+        if activeKind == kind {
+            dismiss()
+            return
+        }
+
+        self.theme = theme
+        activeKind = kind
+        activeButton = sourceButton
+        sourceButton.layer?.backgroundColor = theme.pillBorderColor.cgColor
+
+        let touchBar = NSTouchBar()
+        touchBar.delegate = self
+        touchBar.defaultItemIdentifiers = [itemIdentifier]
+        presenter.present(touchBar: touchBar)
+    }
+
+    func dismiss() {
+        activeButton?.layer?.backgroundColor = NSColor.clear.cgColor
+        activeButton = nil
+        activeKind = nil
+        sliderView = nil
+        presenter.dismiss()
+    }
+
+    func touchBar(_ touchBar: NSTouchBar, makeItemForIdentifier identifier: NSTouchBarItem.Identifier) -> NSTouchBarItem? {
+        guard identifier == itemIdentifier, let activeKind else { return nil }
+        let item = NSCustomTouchBarItem(identifier: identifier)
+        let sliderView = ControlCenterSliderView(kind: activeKind, theme: theme) { [weak self] in
+            self?.dismiss()
+        }
+        self.sliderView = sliderView
+        item.view = sliderView
+        return item
+    }
+}
+
+@available(macOS 13.0, *)
+final class ControlCenterSliderView: NSStackView, TouchBarThemable {
+    var theme: TouchBarTheme {
+        didSet { applyTheme() }
+    }
+
+    private let kind: ControlCenterSliderPresenter.SliderKind
+    private let leftButton = NSButton(title: "", target: nil, action: nil)
+    private let rightButton = NSButton(title: "", target: nil, action: nil)
+    private let closeButton = NSButton(title: "", target: nil, action: nil)
+    private let slider = NSSlider(value: 0, minValue: 0, maxValue: 1, target: nil, action: nil)
+    private let onClose: () -> Void
+
+    init(kind: ControlCenterSliderPresenter.SliderKind, theme: TouchBarTheme, onClose: @escaping () -> Void) {
+        self.kind = kind
+        self.theme = theme
+        self.onClose = onClose
+        super.init(frame: .zero)
+        setup()
+    }
+
+    required init?(coder: NSCoder) {
+        return nil
+    }
+
+    private func setup() {
+        orientation = .horizontal
+        alignment = .centerY
+        spacing = 8
+        translatesAutoresizingMaskIntoConstraints = false
+
+        configureButton(leftButton, symbol: kind.leftSymbol, action: #selector(stepDown))
+        configureButton(rightButton, symbol: kind.rightSymbol, action: #selector(stepUp))
+        configureButton(closeButton, symbol: "xmark", action: #selector(closePressed))
+
+        slider.target = self
+        slider.action = #selector(sliderChanged(_:))
+        slider.isContinuous = true
+        slider.controlSize = .small
+        slider.translatesAutoresizingMaskIntoConstraints = false
+        slider.doubleValue = Double(currentValue())
+        slider.widthAnchor.constraint(equalToConstant: 180).isActive = true
+
+        addArrangedSubview(leftButton)
+        addArrangedSubview(slider)
+        addArrangedSubview(rightButton)
+        addArrangedSubview(closeButton)
+
+        applyTheme()
+    }
+
+    private func configureButton(_ button: NSButton, symbol: String, action: Selector) {
+        button.target = self
+        button.action = action
+        button.isBordered = false
+        button.bezelStyle = .shadowlessSquare
+        button.focusRingType = .none
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
+            .withSymbolConfiguration(.init(pointSize: 12, weight: .medium))
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: 20),
+            button.heightAnchor.constraint(equalToConstant: 20)
+        ])
+    }
+
+    private func currentValue() -> Float {
+        switch kind {
+        case .brightness:
+            return SystemBrightness.current
+        case .volume:
+            return SystemVolume.current
+        }
+    }
+
+    private func setValue(_ value: Float) {
+        switch kind {
+        case .brightness:
+            SystemBrightness.set(value)
+        case .volume:
+            SystemVolume.set(value)
+        }
+        slider.doubleValue = Double(value)
+    }
+
+    private func applyTheme() {
+        wantsLayer = true
+        layer?.cornerRadius = 8
+        layer?.backgroundColor = theme.pillBackgroundColor.cgColor
+        layer?.borderWidth = 1
+        layer?.borderColor = theme.pillBorderColor.cgColor
+        [leftButton, rightButton, closeButton].forEach { $0.contentTintColor = theme.primaryTextColor }
+    }
+
+    @objc private func stepDown() {
+        let delta: Float = kind == .brightness ? -0.0625 : -0.07
+        setValue(min(max(currentValue() + delta, 0), 1))
+    }
+
+    @objc private func stepUp() {
+        let delta: Float = kind == .brightness ? 0.0625 : 0.07
+        setValue(min(max(currentValue() + delta, 0), 1))
+    }
+
+    @objc private func sliderChanged(_ sender: NSSlider) {
+        setValue(Float(sender.doubleValue))
+    }
+
+    @objc private func closePressed() {
+        onClose()
+    }
 }
 
 final class MeterControl: NSView, TouchBarThemable {
@@ -230,7 +388,7 @@ final class MeterControl: NSView, TouchBarThemable {
         layer?.addSublayer(fill)
         layer?.addSublayer(knob)
         NSLayoutConstraint.activate([
-            widthAnchor.constraint(equalToConstant: 26),
+            widthAnchor.constraint(equalToConstant: 40),
             heightAnchor.constraint(equalToConstant: 18)
         ])
     }
@@ -267,9 +425,8 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
         didSet { applyTheme() }
     }
 
-    private let appsStack = NSStackView()
-    private let persistentStack = NSStackView()
-    private let separator = NSView(frame: .zero)
+    private let scrollView = NSScrollView()
+    private let contentStack = NSStackView()
     private var refreshTimer: Timer?
     private var dockItems: [DockTouchBarItem] = []
     private var persistentItems: [DockTouchBarItem] = []
@@ -287,26 +444,31 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
     private func setup() {
         orientation = .horizontal
         alignment = .centerY
-        spacing = 4
+        spacing = 0
         translatesAutoresizingMaskIntoConstraints = false
         wantsLayer = true
 
-        appsStack.orientation = .horizontal
-        appsStack.alignment = .centerY
-        appsStack.spacing = 4
+        contentStack.orientation = .horizontal
+        contentStack.alignment = .centerY
+        contentStack.spacing = 4
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
 
-        persistentStack.orientation = .horizontal
-        persistentStack.alignment = .centerY
-        persistentStack.spacing = 4
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.drawsBackground = false
+        scrollView.borderType = .noBorder
+        scrollView.hasHorizontalScroller = false
+        scrollView.hasVerticalScroller = false
+        scrollView.autohidesScrollers = true
+        scrollView.horizontalScrollElasticity = .allowed
+        scrollView.verticalScrollElasticity = .none
+        scrollView.documentView = contentStack
+        addArrangedSubview(scrollView)
 
-        separator.wantsLayer = true
-        separator.translatesAutoresizingMaskIntoConstraints = false
-        separator.widthAnchor.constraint(equalToConstant: 1).isActive = true
-        separator.heightAnchor.constraint(equalToConstant: 18).isActive = true
-
-        addArrangedSubview(appsStack)
-        addArrangedSubview(separator)
-        addArrangedSubview(persistentStack)
+        NSLayoutConstraint.activate([
+            scrollView.widthAnchor.constraint(equalToConstant: 92),
+            scrollView.heightAnchor.constraint(equalToConstant: 24),
+            contentStack.heightAnchor.constraint(equalTo: scrollView.heightAnchor)
+        ])
 
         reload()
         startRefreshing()
@@ -315,15 +477,13 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
     func reload() {
         dockItems = loadDockItems()
         persistentItems = loadPersistentItems()
-        rebuildStack(appsStack, with: dockItems)
-        rebuildStack(persistentStack, with: persistentItems)
-        separator.isHidden = persistentItems.isEmpty
+        rebuildStack(contentStack, with: mergedItems())
         applyTheme()
     }
 
     private func applyTheme() {
         layer?.backgroundColor = NSColor.clear.cgColor
-        separator.layer?.backgroundColor = theme.barOutlineColor.withAlphaComponent(0.35).cgColor
+        scrollView.contentView.backgroundColor = .clear
     }
 
     private func startRefreshing() {
@@ -339,7 +499,7 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
             $0.removeFromSuperview()
         }
 
-        for item in items.prefix(8) {
+        for item in items {
             let button = NSButton(title: "", target: self, action: #selector(launchItem(_:)))
             button.tag = item.index
             button.bezelStyle = .shadowlessSquare
@@ -359,6 +519,19 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
         }
     }
 
+    private func mergedItems() -> [DockTouchBarItem] {
+        var seen = Set<String>()
+        var merged: [DockTouchBarItem] = []
+
+        for item in dockItems + persistentItems {
+            let key = item.bundleIdentifier ?? item.url?.absoluteString ?? item.name
+            guard seen.insert(key).inserted else { continue }
+            merged.append(item)
+        }
+
+        return merged
+    }
+
     @objc private func launchItem(_ sender: NSButton) {
         guard let item = (dockItems + persistentItems).first(where: { $0.index == sender.tag }) else { return }
         if let bundleIdentifier = item.bundleIdentifier {
@@ -375,7 +548,6 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
         let running = NSWorkspace.shared.runningApplications
             .filter { $0.activationPolicy == .regular }
             .filter { $0.bundleIdentifier != "com.apple.dock" }
-            .prefix(8)
         return running.enumerated().compactMap { index, app in
             DockTouchBarItem(
                 index: index,

@@ -99,6 +99,141 @@ smc-helper auto <fanID>        # return fan to firmware
 smc-helper read <key>          # read any 4-character SMC key
 Supported SMC value types: `sp78`, `fpe2`, `flt`, `ui8`, `ui16`.
 
+## Touch Bar customization
+
+Core Monitor includes a full Touch Bar layout editor in the app's **Touch Bar** section. The editor is no longer limited to toggling a fixed set of built-in widgets. A layout can now mix:
+
+- built-in widgets such as Status, Weather, CPU, Dock, Stats, and Network
+- pinned applications
+- pinned folders
+- custom command widgets
+
+Every item in the active layout is stored in order and rendered live in the Touch Bar preview before you apply or rearrange anything else.
+
+### Built-in widgets
+
+Built-in widgets are the existing Core Monitor Touch Bar modules. You can enable or disable them from the built-in widget list and then reorder them from the **Active Items** section.
+
+These built-ins keep their normal live behavior:
+
+- Weather continues to use WeatherKit
+- Status continues to show Wi-Fi, battery, and clock data
+- CPU/Stats widgets continue to use the current system snapshot
+- Dock continues to reflect the compact launcher strip
+
+### Pinning applications
+
+Use **Pin Applications** in the Touch Bar customization panel to add one or more `.app` bundles directly to the Touch Bar.
+
+How it works:
+
+- the picker accepts macOS application bundles
+- each selected app is stored by path, display name, and bundle identifier when available
+- pinned apps render as compact icon launchers in the Touch Bar
+- tapping a pinned app opens that application through `NSWorkspace`
+
+Practical notes:
+
+- pinned apps are meant to be fast launch targets, not full live widgets
+- app icons are pulled from the app bundle on disk each time the item is rebuilt
+- if you move or rename a pinned app after saving it, the stored path may go stale and that launcher may stop working until you re-pin it
+- if you pin many apps, the estimated width meter in the customization panel will warn when your layout is wider than a full Touch Bar
+
+### Pinning folders
+
+Use **Pin Folders** to add Finder locations to the Touch Bar.
+
+How it works:
+
+- the picker accepts directories only
+- each selected folder is stored by path and display name
+- pinned folders render as compact launcher buttons just like pinned apps
+- tapping a pinned folder opens it in Finder through `NSWorkspace`
+
+Good use cases:
+
+- a project root you open repeatedly
+- Downloads, Screenshots, or a working assets folder
+- a scripts/tools directory used during development
+
+Folder pinning follows the same persistence rules as app pinning: if the path changes, re-pin it.
+
+### Custom command widgets
+
+The **Custom Widget** form lets you create a simple Touch Bar action backed by your own shell command.
+
+Each custom widget stores:
+
+- a visible title
+- an SF Symbol name
+- a shell command
+- a target width
+
+Current behavior:
+
+- the widget renders as a compact labeled button in the Touch Bar
+- tapping it launches `/bin/zsh -lc "<your command>"`
+- this is designed for quick actions, scripts, and automations rather than long-running UI
+
+Examples:
+
+```bash
+open -a Terminal
+```
+
+```bash
+open ~/Downloads
+```
+
+```bash
+shortcuts run "Build Project"
+```
+
+```bash
+osascript -e 'display notification "Build complete" with title "Core Monitor"'
+```
+
+Important caveats:
+
+- commands run with the app's user permissions
+- command output is not embedded back into the Touch Bar
+- if a command depends on shell setup files, test it directly in `zsh -lc` form first
+- keep commands short and deterministic; the current implementation is an action launcher, not a terminal emulator
+
+### Rearranging the layout
+
+The **Active Items** list is the source of truth for Touch Bar order.
+
+From that list you can:
+
+- move any item up
+- move any item down
+- remove any item
+
+This applies equally to:
+
+- built-in widgets
+- pinned apps
+- pinned folders
+- custom command widgets
+
+The live preview strip above the editor reflects the current order and item widths immediately.
+
+### Presets and persistence
+
+Presets still exist, but they now apply as structured item layouts instead of the older widget-only stack.
+
+Your Touch Bar layout is persisted in user defaults and now migrates older widget-only configurations forward into the richer item model automatically. Existing users should keep their built-in widget layouts, and then add pinned apps, folders, or custom widgets on top.
+
+### Current limits
+
+The new customization system is intentionally practical rather than unlimited. Right now:
+
+- reordering is button-driven, not drag-and-drop
+- pinned apps and folders are launcher buttons, not live mini-views
+- custom widgets launch commands but do not yet show dynamic script output
+- very wide layouts can still exceed the physical Touch Bar width, so use the width meter as the guardrail
+
 ## Installation
 
 **Download:** Get the latest build from [Releases](https://github.com/offyotto-sl3/Core-Monitor/releases/latest) and move it to `/Applications`.

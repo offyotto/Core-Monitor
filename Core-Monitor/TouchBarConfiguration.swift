@@ -128,7 +128,7 @@ enum TouchBarWidgetKind: String, CaseIterable, Codable, Identifiable {
         switch self {
         case .worldClocks: return "Wi-Fi, battery and clock"
         case .weather: return "Weather widget powered by WeatherKit"
-        case .controlCenter: return "Sleep, lock, screensaver and DND"
+        case .controlCenter: return "Brightness and volume controls"
         case .dock: return "Running apps and persistent items"
         case .cpu: return "CPU temperature and usage"
         case .stats: return "Time, MEM, SSD, CPU"
@@ -147,9 +147,9 @@ enum TouchBarWidgetKind: String, CaseIterable, Codable, Identifiable {
         switch self {
         case .worldClocks: return 182
         case .weather: return 194
-        case .controlCenter: return 214
-        case .dock: return 340
-        case .cpu: return 208
+        case .controlCenter: return 144
+        case .dock: return 96
+        case .cpu: return 92
         case .stats: return 314
         case .detailedStats: return 348
         case .combined: return 628
@@ -159,19 +159,163 @@ enum TouchBarWidgetKind: String, CaseIterable, Codable, Identifiable {
     }
 }
 
+struct TouchBarPinnedApp: Codable, Identifiable, Equatable {
+    let id: String
+    var displayName: String
+    var filePath: String
+    var bundleIdentifier: String?
+}
+
+struct TouchBarPinnedFolder: Codable, Identifiable, Equatable {
+    let id: String
+    var displayName: String
+    var folderPath: String
+}
+
+struct TouchBarCustomWidget: Codable, Identifiable, Equatable {
+    let id: String
+    var title: String
+    var symbolName: String
+    var command: String
+    var width: CGFloat
+}
+
+enum TouchBarItemConfiguration: Codable, Identifiable, Equatable {
+    case builtIn(TouchBarWidgetKind)
+    case pinnedApp(TouchBarPinnedApp)
+    case pinnedFolder(TouchBarPinnedFolder)
+    case customWidget(TouchBarCustomWidget)
+
+    var id: String {
+        switch self {
+        case .builtIn(let kind):
+            return "builtin.\(kind.rawValue)"
+        case .pinnedApp(let app):
+            return "app.\(app.id)"
+        case .pinnedFolder(let folder):
+            return "folder.\(folder.id)"
+        case .customWidget(let widget):
+            return "custom.\(widget.id)"
+        }
+    }
+
+    var touchBarIdentifier: NSTouchBarItem.Identifier {
+        NSTouchBarItem.Identifier("com.coremonitor.touchbar.item.\(id)")
+    }
+
+    var title: String {
+        switch self {
+        case .builtIn(let kind):
+            return kind.title
+        case .pinnedApp(let app):
+            return app.displayName
+        case .pinnedFolder(let folder):
+            return folder.displayName
+        case .customWidget(let widget):
+            return widget.title
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .builtIn(let kind):
+            return kind.subtitle
+        case .pinnedApp:
+            return "Pinned application launcher"
+        case .pinnedFolder:
+            return "Pinned folder shortcut"
+        case .customWidget(let widget):
+            return widget.command
+        }
+    }
+
+    var estimatedWidth: CGFloat {
+        switch self {
+        case .builtIn(let kind):
+            return kind.estimatedWidth
+        case .pinnedApp, .pinnedFolder:
+            return 32
+        case .customWidget(let widget):
+            return max(widget.width, 72)
+        }
+    }
+
+    var isBuiltIn: Bool {
+        if case .builtIn = self {
+            return true
+        }
+        return false
+    }
+
+    var builtInKind: TouchBarWidgetKind? {
+        if case .builtIn(let kind) = self {
+            return kind
+        }
+        return nil
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case kind
+        case builtInKind
+        case pinnedApp
+        case pinnedFolder
+        case customWidget
+    }
+
+    private enum Discriminator: String, Codable {
+        case builtIn
+        case pinnedApp
+        case pinnedFolder
+        case customWidget
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let discriminator = try container.decode(Discriminator.self, forKey: .kind)
+        switch discriminator {
+        case .builtIn:
+            self = .builtIn(try container.decode(TouchBarWidgetKind.self, forKey: .builtInKind))
+        case .pinnedApp:
+            self = .pinnedApp(try container.decode(TouchBarPinnedApp.self, forKey: .pinnedApp))
+        case .pinnedFolder:
+            self = .pinnedFolder(try container.decode(TouchBarPinnedFolder.self, forKey: .pinnedFolder))
+        case .customWidget:
+            self = .customWidget(try container.decode(TouchBarCustomWidget.self, forKey: .customWidget))
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .builtIn(let kind):
+            try container.encode(Discriminator.builtIn, forKey: .kind)
+            try container.encode(kind, forKey: .builtInKind)
+        case .pinnedApp(let app):
+            try container.encode(Discriminator.pinnedApp, forKey: .kind)
+            try container.encode(app, forKey: .pinnedApp)
+        case .pinnedFolder(let folder):
+            try container.encode(Discriminator.pinnedFolder, forKey: .kind)
+            try container.encode(folder, forKey: .pinnedFolder)
+        case .customWidget(let widget):
+            try container.encode(Discriminator.customWidget, forKey: .kind)
+            try container.encode(widget, forKey: .customWidget)
+        }
+    }
+}
+
 struct TouchBarPreset: Identifiable, Equatable {
     let id: String
     let title: String
     let subtitle: String
     let theme: TouchBarTheme
-    let widgets: [TouchBarWidgetKind]
+    let items: [TouchBarItemConfiguration]
 
     static let classic = TouchBarPreset(
         id: "classic",
         title: "Classic",
         subtitle: "Status, weather and CPU",
         theme: .dark,
-        widgets: [.worldClocks, .weather, .controlCenter, .dock, .cpu]
+        items: [.builtIn(.worldClocks), .builtIn(.weather), .builtIn(.controlCenter), .builtIn(.dock), .builtIn(.cpu)]
     )
 
     static let detailed = TouchBarPreset(
@@ -179,7 +323,7 @@ struct TouchBarPreset: Identifiable, Equatable {
         title: "Detailed",
         subtitle: "Detailed stats with clock expansion",
         theme: .light,
-        widgets: [.worldClocks, .weather, .controlCenter, .detailedStats]
+        items: [.builtIn(.worldClocks), .builtIn(.weather), .builtIn(.controlCenter), .builtIn(.detailedStats)]
     )
 
     static let combined = TouchBarPreset(
@@ -187,7 +331,7 @@ struct TouchBarPreset: Identifiable, Equatable {
         title: "Combined",
         subtitle: "The dense combined strip",
         theme: .dark,
-        widgets: [.worldClocks, .weather, .controlCenter, .dock, .cpu, .stats]
+        items: [.builtIn(.worldClocks), .builtIn(.weather), .builtIn(.controlCenter), .builtIn(.dock), .builtIn(.cpu), .builtIn(.stats)]
     )
 
     static let compact = TouchBarPreset(
@@ -195,13 +339,18 @@ struct TouchBarPreset: Identifiable, Equatable {
         title: "Compact",
         subtitle: "Network, combined metrics and weather",
         theme: .light,
-        widgets: [.worldClocks, .weather, .controlCenter, .dock, .cpu, .stats]
+        items: [.builtIn(.worldClocks), .builtIn(.weather), .builtIn(.controlCenter), .builtIn(.dock), .builtIn(.cpu), .builtIn(.stats)]
     )
 
     static let all: [TouchBarPreset] = [.classic, .detailed, .combined, .compact]
 }
 
 private struct PersistedTouchBarConfiguration: Codable {
+    var theme: TouchBarTheme
+    var items: [TouchBarItemConfiguration]
+}
+
+private struct LegacyPersistedTouchBarConfiguration: Codable {
     var theme: TouchBarTheme
     var widgets: [TouchBarWidgetKind]
 }
@@ -215,10 +364,10 @@ final class TouchBarCustomizationSettings: ObservableObject {
         didSet { persistAndNotify() }
     }
 
-    @Published var widgets: [TouchBarWidgetKind] {
+    @Published var items: [TouchBarItemConfiguration] {
         didSet {
-            if widgets.isEmpty {
-                widgets = TouchBarPreset.classic.widgets
+            if items.isEmpty {
+                items = TouchBarPreset.classic.items
                 return
             }
             persistAndNotify()
@@ -226,57 +375,111 @@ final class TouchBarCustomizationSettings: ObservableObject {
     }
 
     var estimatedWidth: CGFloat {
-        let gaps = max(CGFloat(widgets.count - 1), 0) * TB.groupGap
-        return widgets.reduce(0) { $0 + $1.estimatedWidth } + gaps
+        let gaps = max(CGFloat(items.count - 1), 0) * TB.groupGap
+        return items.reduce(0) { $0 + $1.estimatedWidth } + gaps
     }
 
     var widthOverflow: CGFloat {
         max(0, estimatedWidth - Self.recommendedTouchBarWidth)
     }
 
-    private let defaultsKey = "coremonitor.touchBarConfiguration.v4"
+    private let defaultsKey = "coremonitor.touchBarConfiguration.v5"
+    private let legacyDefaultsKey = "coremonitor.touchBarConfiguration.v4"
 
     private init() {
         if let data = UserDefaults.standard.data(forKey: defaultsKey),
            let decoded = try? JSONDecoder().decode(PersistedTouchBarConfiguration.self, from: data) {
             self.theme = decoded.theme
-            self.widgets = decoded.widgets.isEmpty ? TouchBarPreset.classic.widgets : decoded.widgets
+            self.items = decoded.items.isEmpty ? TouchBarPreset.classic.items : decoded.items
+        } else if let data = UserDefaults.standard.data(forKey: legacyDefaultsKey),
+                  let decoded = try? JSONDecoder().decode(LegacyPersistedTouchBarConfiguration.self, from: data) {
+            self.theme = decoded.theme
+            self.items = decoded.widgets.isEmpty ? TouchBarPreset.classic.items : decoded.widgets.map(TouchBarItemConfiguration.builtIn)
         } else {
             self.theme = TouchBarPreset.classic.theme
-            self.widgets = TouchBarPreset.classic.widgets
+            self.items = TouchBarPreset.classic.items
         }
     }
 
     func applyPreset(_ preset: TouchBarPreset) {
         theme = preset.theme
-        widgets = preset.widgets
+        items = preset.items
     }
 
     func contains(_ kind: TouchBarWidgetKind) -> Bool {
-        widgets.contains(kind)
+        items.contains(where: { $0.builtInKind == kind })
     }
 
     func toggle(_ kind: TouchBarWidgetKind) {
-        if let index = widgets.firstIndex(of: kind) {
-            guard widgets.count > 1 else { return }
-            widgets.remove(at: index)
+        if let index = items.firstIndex(where: { $0.builtInKind == kind }) {
+            guard items.count > 1 else { return }
+            items.remove(at: index)
         } else {
-            widgets.append(kind)
+            items.append(.builtIn(kind))
         }
     }
 
-    func moveUp(_ kind: TouchBarWidgetKind) {
-        guard let index = widgets.firstIndex(of: kind), index > 0 else { return }
-        widgets.swapAt(index, index - 1)
+    func moveUp(_ item: TouchBarItemConfiguration) {
+        guard let index = items.firstIndex(of: item), index > 0 else { return }
+        items.swapAt(index, index - 1)
     }
 
-    func moveDown(_ kind: TouchBarWidgetKind) {
-        guard let index = widgets.firstIndex(of: kind), index < widgets.count - 1 else { return }
-        widgets.swapAt(index, index + 1)
+    func moveDown(_ item: TouchBarItemConfiguration) {
+        guard let index = items.firstIndex(of: item), index < items.count - 1 else { return }
+        items.swapAt(index, index + 1)
+    }
+
+    func remove(_ item: TouchBarItemConfiguration) {
+        guard let index = items.firstIndex(of: item), items.count > 1 else { return }
+        items.remove(at: index)
+    }
+
+    func addPinnedApps(urls: [URL]) {
+        let newItems = urls.map { url in
+            TouchBarItemConfiguration.pinnedApp(
+                TouchBarPinnedApp(
+                    id: UUID().uuidString,
+                    displayName: FileManager.default.displayName(atPath: url.path),
+                    filePath: url.path,
+                    bundleIdentifier: Bundle(url: url)?.bundleIdentifier
+                )
+            )
+        }
+        items.append(contentsOf: newItems)
+    }
+
+    func addPinnedFolders(urls: [URL]) {
+        let newItems = urls.map { url in
+            TouchBarItemConfiguration.pinnedFolder(
+                TouchBarPinnedFolder(
+                    id: UUID().uuidString,
+                    displayName: FileManager.default.displayName(atPath: url.path),
+                    folderPath: url.path
+                )
+            )
+        }
+        items.append(contentsOf: newItems)
+    }
+
+    func addCustomWidget(title: String, symbolName: String, command: String, width: CGFloat = 96) {
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedCommand = command.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTitle.isEmpty, !trimmedCommand.isEmpty else { return }
+        items.append(
+            .customWidget(
+                TouchBarCustomWidget(
+                    id: UUID().uuidString,
+                    title: trimmedTitle,
+                    symbolName: symbolName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "terminal.fill" : symbolName,
+                    command: trimmedCommand,
+                    width: width
+                )
+            )
+        )
     }
 
     private func persistAndNotify() {
-        let payload = PersistedTouchBarConfiguration(theme: theme, widgets: widgets)
+        let payload = PersistedTouchBarConfiguration(theme: theme, items: items)
         if let data = try? JSONEncoder().encode(payload) {
             UserDefaults.standard.set(data, forKey: defaultsKey)
         }

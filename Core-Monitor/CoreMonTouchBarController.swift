@@ -9,15 +9,6 @@ final class CoreMonTouchBarController: NSObject {
     let weatherViewModel: WeatherViewModel
 
     private static let customizationNotification = Notification.Name("TouchBarCustomizationDidChange")
-    private static let customizationDefaultsKey = "coremonitor.touchBarConfiguration.v4"
-    private static let defaultTheme = "dark"
-    private static let defaultWidgetIdentifiers: [NSTouchBarItem.Identifier] = [
-        TouchBarWidgetKind.worldClocks.identifier,
-        TouchBarWidgetKind.weather.identifier,
-        TouchBarWidgetKind.controlCenter.identifier,
-        TouchBarWidgetKind.dock.identifier,
-        TouchBarWidgetKind.cpu.identifier,
-    ]
 
     private let systemMonitor: SystemMonitor
     private let ownsSystemMonitor: Bool
@@ -25,6 +16,7 @@ final class CoreMonTouchBarController: NSObject {
     private var cancellables = Set<AnyCancellable>()
     private var networkBaseline: (inBytes: UInt64, outBytes: UInt64)?
     private var widgets: [NSTouchBarItem.Identifier: PKWidgetInfo] = [:]
+    private var configuredItems: [NSTouchBarItem.Identifier: TouchBarItemConfiguration] = [:]
     private var cachedItems: [NSTouchBarItem.Identifier: NSTouchBarItem] = [:]
 
     init(weatherProvider: WeatherProviding? = nil, monitor: SystemMonitor? = nil) {
@@ -115,11 +107,13 @@ final class CoreMonTouchBarController: NSObject {
     private func applyCustomization() {
         let customization = loadCustomization()
         widgets = PKCoreMonWidgetCatalog.allWidgets()
+        configuredItems = Dictionary(uniqueKeysWithValues: customization.items.map { ($0.touchBarIdentifier, $0) })
         cachedItems.removeAll()
-        touchBar.customizationAllowedItemIdentifiers = TouchBarWidgetKind.allCases.map(\.identifier)
-        touchBar.defaultItemIdentifiers = customization.widgets
+        let identifiers = customization.items.map(\.touchBarIdentifier)
+        touchBar.customizationAllowedItemIdentifiers = identifiers
+        touchBar.defaultItemIdentifiers = identifiers
         touchBar.principalItemIdentifier = nil
-        applyThemeToCachedWidgets(TouchBarTheme(rawValue: customization.theme) ?? .dark)
+        applyThemeToCachedWidgets(customization.theme)
     }
 
     private func refreshViews() {
@@ -154,6 +148,7 @@ final class CoreMonTouchBarController: NSObject {
             ssdPct: clamp(storageUsagePercent()),
             cpuPct: clamp(systemMonitor.cpuUsagePercent),
             cpuTempC: systemMonitor.cpuTemperature ?? systemMonitor.cpuUsagePercent,
+            brightness: systemMonitor.currentBrightness,
             batPct: max(0, min(100, battery.chargePercent ?? 100)),
             batCharging: battery.isCharging,
             netUpKBs: network.upKBs,
@@ -283,7 +278,7 @@ final class CoreMonTouchBarController: NSObject {
     }
 
     private func currentTheme() -> TouchBarTheme {
-        TouchBarTheme(rawValue: loadCustomization().theme) ?? .dark
+        loadCustomization().theme
     }
 
     private func applyThemeToCachedWidgets(_ theme: TouchBarTheme) {
@@ -312,23 +307,12 @@ final class CoreMonTouchBarController: NSObject {
         )
     }
 
-    private func loadCustomization() -> (theme: String, widgets: [NSTouchBarItem.Identifier]) {
-        guard let data = UserDefaults.standard.data(forKey: Self.customizationDefaultsKey),
-              let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return (Self.defaultTheme, Self.defaultWidgetIdentifiers)
-        }
-
-        let theme = payload["theme"] as? String ?? Self.defaultTheme
-        let validIdentifiers = Set(TouchBarWidgetKind.allCases.map(\.identifier))
-        let widgets = (payload["widgets"] as? [String])?
-            .map { NSTouchBarItem.Identifier($0) }
-            .filter { validIdentifiers.contains($0) }
-
-        let resolved = widgets?.isEmpty == false ? widgets ?? Self.defaultWidgetIdentifiers : Self.defaultWidgetIdentifiers
-        if resolved.contains(TouchBarWidgetKind.dock.identifier) == false {
-            return (theme, resolved + [TouchBarWidgetKind.dock.identifier])
-        }
-        return (theme, resolved)
+    private func loadCustomization() -> (theme: TouchBarTheme, items: [TouchBarItemConfiguration]) {
+        let settings = TouchBarCustomizationSettings.shared
+        return (
+            theme: settings.theme,
+            items: settings.items.isEmpty ? TouchBarPreset.classic.items : settings.items
+        )
     }
 }
 
@@ -338,13 +322,120 @@ extension CoreMonTouchBarController: NSTouchBarDelegate {
             return item
         }
 
-        guard let widgetInfo = widgets[identifier],
-              let item = PKWidgetTouchBarItem(widget: widgetInfo) else {
-            return nil
+        if let configuration = configuredItems[identifier] {
+            switch configuration {
+            case .builtIn(let kind):
+                guard let widgetInfo = widgets[kind.identifier],
+                      let item = PKWidgetTouchBarItem(widget: widgetInfo, identifier: identifier) else {
+                    return nil
+                }
+                cachedItems[identifier] = item
+                configure(item)
+                return item
+            case .pinnedApp(let app):
+                let item = NSCustomTouchBarItem(identifier: identifier)
+                item.view = TouchBarShortcutButton.makeAppButton(app: app, theme: currentTheme())
+                cachedItems[identifier] = item
+                return item
+            case .pinnedFolder(let folder):
+                let item = NSCustomTouchBarItem(identifier: identifier)
+                item.view = TouchBarShortcutButton.makeFolderButton(folder: folder, theme: currentTheme())
+                cachedItems[identifier] = item
+                return item
+            case .customWidget(let widget):
+                let item = NSCustomTouchBarItem(identifier: identifier)
+                item.view = TouchBarCustomCommandButton(widget: widget, theme: currentTheme())
+                cachedItems[identifier] = item
+                return item
+            }
         }
+        return nil
+    }
+}
 
-        cachedItems[identifier] = item
-        configure(item)
-        return item
+private final class TouchBarShortcutButton: NSButton {
+    static func makeAppButton(app: TouchBarPinnedApp, theme: TouchBarTheme) -> TouchBarShortcutButton {
+        let button = TouchBarShortcutButton(title: "", target: nil, action: #selector(openShortcut))
+        button.shortcutURL = URL(fileURLWithPath: app.filePath)
+        button.theme = theme
+        button.toolTip = app.displayName
+        button.image = (NSWorkspace.shared.icon(forFile: app.filePath)).copy() as? NSImage
+        button.configureIconStyle()
+        return button
+    }
+
+    static func makeFolderButton(folder: TouchBarPinnedFolder, theme: TouchBarTheme) -> TouchBarShortcutButton {
+        let button = TouchBarShortcutButton(title: "", target: nil, action: #selector(openShortcut))
+        button.shortcutURL = URL(fileURLWithPath: folder.folderPath)
+        button.theme = theme
+        button.toolTip = folder.displayName
+        button.image = (NSWorkspace.shared.icon(forFile: folder.folderPath)).copy() as? NSImage
+        button.configureIconStyle()
+        return button
+    }
+
+    private var shortcutURL: URL?
+    private var theme: TouchBarTheme = .dark
+
+    @objc private func openShortcut() {
+        guard let shortcutURL else { return }
+        NSWorkspace.shared.open(shortcutURL)
+    }
+
+    private func configureIconStyle() {
+        target = self
+        isBordered = false
+        bezelStyle = .shadowlessSquare
+        focusRingType = .none
+        translatesAutoresizingMaskIntoConstraints = false
+        imageScaling = .scaleProportionallyUpOrDown
+        image?.size = NSSize(width: 22, height: 22)
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.clear.cgColor
+        NSLayoutConstraint.activate([
+            widthAnchor.constraint(equalToConstant: 28),
+            heightAnchor.constraint(equalToConstant: 24)
+        ])
+    }
+}
+
+private final class TouchBarCustomCommandButton: NSButton {
+    private let widget: TouchBarCustomWidget
+
+    init(widget: TouchBarCustomWidget, theme: TouchBarTheme) {
+        self.widget = widget
+        super.init(frame: .zero)
+        title = widget.title
+        image = NSImage(systemSymbolName: widget.symbolName, accessibilityDescription: widget.title)?
+            .withSymbolConfiguration(.init(pointSize: 12, weight: .medium))
+        imagePosition = .imageLeading
+        target = self
+        action = #selector(runCommand)
+        isBordered = false
+        bezelStyle = .shadowlessSquare
+        focusRingType = .none
+        font = NSFont.systemFont(ofSize: 11, weight: .semibold)
+        contentTintColor = theme.primaryTextColor
+        wantsLayer = true
+        layer?.cornerRadius = 8
+        layer?.backgroundColor = theme.pillBackgroundColor.cgColor
+        layer?.borderWidth = 1
+        layer?.borderColor = theme.pillBorderColor.cgColor
+        translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            widthAnchor.constraint(equalToConstant: widget.width),
+            heightAnchor.constraint(equalToConstant: 24)
+        ])
+    }
+
+    required init?(coder: NSCoder) {
+        return nil
+    }
+
+    @objc private func runCommand() {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/zsh")
+        process.arguments = ["-lc", widget.command]
+        try? process.run()
     }
 }
