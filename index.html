@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Core-Monitor</title>
-  <meta name="description" content="Core-Monitor is an open-source macOS control center with fan control, live monitoring, supported Touch Bar widgets, and menu bar stats.">
+  <meta name="description" content="Core-Monitor is an open-source macOS system monitor with fan control, live monitoring, Touch Bar widgets, and menu bar stats.">
   <meta name="application-name" content="Core-Monitor">
   <meta name="apple-mobile-web-app-title" content="Core-Monitor">
   <meta name="theme-color" content="#0a0c16">
@@ -38,18 +38,18 @@
         <div class="hero-glow hero-glow-left"></div>
         <div class="hero-glow hero-glow-right"></div>
         <div class="hero-copy">
-          <p class="eyebrow">Open-source macOS control center</p>
+          <p class="eyebrow">Open-source macOS system monitor</p>
           <h1 class="hero-title">
             <span class="hero-word-window" aria-hidden="true">
-              <span class="hero-word-track">
+            <span class="hero-word-track">
                 <span class="hero-word">Monitor</span>
-                <span class="hero-word">Tune</span>
-                <span class="hero-word">Control</span>
+                <span class="hero-word">Read</span>
+                <span class="hero-word">Track</span>
                 <span class="hero-word">Monitor</span>
               </span>
             </span>
             <span class="hero-title-fixed">your Mac.</span>
-            <span class="sr-only">Monitor, tune, and control your Mac.</span>
+            <span class="sr-only">Monitor and track your Mac.</span>
           </h1>
         </div>
         <figure class="hero-shot">
@@ -57,28 +57,28 @@
         </figure>
         <div class="hero-copy hero-copy-secondary">
           <p class="hero-lead">
-            Live monitoring, real fan control, menu bar stats, benchmarking, and supported Touch Bar tools in one native app.
+            A system monitor for Apple Silicon Macs. It sits in your menu bar, reads SMC data, and stays out of your way.
           </p>
           <div class="hero-actions">
             <a class="button primary" href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Download Latest Release</a>
             <a class="button secondary" href="#screens">See the UI</a>
             <a class="button ghost" href="https://github.com/offyotto-sl3/Core-Monitor">View on GitHub</a>
           </div>
-          <p class="hero-subline">No subscriptions. No telemetry. No web wrapper. Just a proper macOS utility.</p>
+          <p class="hero-subline">No telemetry. No web wrapper. Just a proper macOS utility.</p>
         </div>
       </section>
 
       <section class="quick-install" id="install">
         <div class="section-heading">
           <p class="eyebrow">Install</p>
-          <h2>Get into the app fast.</h2>
+          <h2>Get it running fast.</h2>
         </div>
         <div class="install-grid">
           <article class="install-card install-card-main">
             <p class="card-step">1. Download</p>
             <h3>Grab the latest release from GitHub.</h3>
             <p>
-              The download button opens the newest published GitHub release, so you can choose the current app archive.
+              Download the latest notarized release from GitHub and move Core-Monitor to `/Applications`.
             </p>
             <a class="button primary" href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Download Latest Release</a>
           </article>
@@ -86,14 +86,14 @@
             <p class="card-step">2. First launch</p>
             <h3>Open the app.</h3>
             <p>
-              Launch Core-Monitor from the downloaded release and macOS will guide you through the normal first-run flow for your system.
+              Launch Core-Monitor and use the normal macOS first-run flow for your system.
             </p>
           </article>
           <article class="install-card">
             <p class="card-step">3. Unlock the advanced parts</p>
             <h3>Helper and login item setup.</h3>
             <p>
-              Fan writes use the helper path when needed, and launch-at-login uses the standard macOS approval flow instead of a custom startup workaround.
+              Fan control uses the helper when needed, and launch at login uses the standard macOS approval flow.
             </p>
             <a class="text-link" href="#install-details">See the install checklist</a>
           </article>
@@ -103,21 +103,21 @@
       <section class="screens" id="screens">
         <div class="section-heading">
           <p class="eyebrow">UI</p>
-          <h2>Built like a polished desktop app, not a pile of menus.</h2>
+          <h2>Read your hardware at a glance.</h2>
         </div>
         <div class="showcase-grid">
           <figure class="showcase-card">
             <img src="docs/images/ui/overview-2026.png" alt="Core-Monitor overview screen showing CPU load, core activity, memory usage, temperature, and power cards.">
             <figcaption>
               <strong>Overview</strong>
-              <span>The main dashboard for CPU load, memory use, temperature, power, and core activity in one focused layout.</span>
+              <span>CPU, GPU, memory, battery, temperatures, power draw, and fan speeds in one focused layout.</span>
             </figcaption>
           </figure>
           <figure class="showcase-card">
             <img src="docs/images/ui/thermals-2026.png" alt="Core-Monitor thermals screen showing live temperature cards and the SMC sensor explorer.">
             <figcaption>
               <strong>Thermals</strong>
-              <span>Live CPU and GPU temperature views with readable SMC sensor details in the same screen.</span>
+              <span>Live CPU and GPU temperature views with readable SMC sensor details from the Apple SMC.</span>
             </figcaption>
           </figure>
           <figure class="showcase-card showcase-portrait">
@@ -138,7 +138,7 @@
         <div class="video-layout">
           <div class="video-copy">
             <p>
-              A quick pass through the dashboard, menu bar panel, and live monitoring views.
+              A quick pass through the dashboard, menu bar panel, and system monitoring views.
             </p>
             <div class="video-actions">
               <a class="button secondary" href="docs/videos/ui-showcase.mp4">Open UI Video</a>
@@ -154,28 +154,28 @@
       <section class="feature-band" id="features">
         <div class="section-heading">
           <p class="eyebrow">Features</p>
-          <h2>One app, multiple control surfaces.</h2>
+          <h2>What it does.</h2>
         </div>
         <div class="feature-grid">
           <article class="feature-card">
             <h3>Live monitoring</h3>
-            <p>CPU activity, Apple silicon E-core and P-core awareness, memory pressure, thermal readings, power, battery state, and fan RPM in one native UI.</p>
+            <p>CPU activity, Apple Silicon E-core and P-core awareness, memory pressure, thermal readings, power, battery state, and fan RPM in one native UI.</p>
           </article>
           <article class="feature-card">
             <h3>Real fan control</h3>
-            <p>SMC-backed helper flow, hardware-aware fan mode handling, profiles, and wake re-apply behavior instead of a fake read-only monitor.</p>
+            <p>SMC-backed helper flow, hardware-aware fan mode handling, profiles, and wake re-apply behavior.</p>
           </article>
           <article class="feature-card">
             <h3>Touch Bar HUD</h3>
-            <p>A supported production Touch Bar surface for battery, power, and fan mode without private brightness, now-playing, or audio-control polling.</p>
+              <p>Full-width Touch Bar widgets for status, weather, stats, network, and hardware views.</p>
           </article>
           <article class="feature-card">
             <h3>Menu bar utility</h3>
-            <p>At-a-glance status and quick controls for the moments where opening a full dashboard would be overkill.</p>
+            <p>At-a-glance status and quick controls for the moments where opening the full dashboard would be overkill.</p>
           </article>
           <article class="feature-card">
             <h3>Native Swift UI</h3>
-            <p>A focused desktop interface built for macOS instead of a web wrapper, with system-facing workflows that feel like part of the platform.</p>
+            <p>A focused desktop interface built for macOS instead of a web wrapper.</p>
           </article>
         </div>
       </section>
@@ -183,24 +183,24 @@
       <section class="privacy-band" id="privacy">
         <div class="section-heading">
           <p class="eyebrow">Privacy</p>
-          <h2>Built with a simple privacy position: your Mac is yours.</h2>
+          <h2>Privacy.</h2>
         </div>
         <div class="feature-grid privacy-grid">
           <article class="feature-card">
             <h3>Privacy is a fundamental human right</h3>
-            <p>Core-Monitor is built around the idea that system utilities should help you understand your computer, not inspect you in return. The app is meant to stay useful without asking for personal data, cloud accounts, or behavioral tracking.</p>
+            <p>Core-Monitor is built around the idea that system utilities should help you understand your computer, not inspect you in return.</p>
           </article>
           <article class="feature-card">
             <h3>Open source by default</h3>
-            <p>The code is published in the open so anyone can inspect how the app works, what it talks to, and what it does not do. That visibility matters when a tool is reading hardware state and interacting with low-level macOS services.</p>
+            <p>The code is published in the open so anyone can inspect how the app works, what it talks to, and what it does not do.</p>
           </article>
           <article class="feature-card">
             <h3>No telemetry, no analytics, no data collection</h3>
-            <p>Core-Monitor does not ship with analytics, ad tech, or account-based tracking. The app runs locally on your Mac and focuses on hardware monitoring, fan control, supported Touch Bar tools, and menu bar stats without building a profile about you.</p>
+            <p>Core-Monitor does not ship with analytics, ad tech, updater frameworks, or account-based tracking. The app runs locally on your Mac and focuses on hardware monitoring, fan control, Touch Bar widgets, and menu bar stats without building a profile about you.</p>
           </article>
           <article class="feature-card">
             <h3>No subscription wall</h3>
-            <p>You do not need to hand over an email address or subscribe to unlock core functionality. The goal is a proper native utility that respects the machine it runs on and the person using it.</p>
+            <p>You do not need to hand over an email address or subscribe to unlock core functionality.</p>
           </article>
         </div>
       </section>
