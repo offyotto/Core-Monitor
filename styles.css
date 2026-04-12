@@ -62,19 +62,20 @@ code {
   z-index: 20;
   display: flex;
   align-items: center;
-  gap: 18px;
-  min-height: 88px;
-  padding: 14px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 28px;
+  gap: 16px;
+  min-height: 96px;
+  padding: 16px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 32px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05)),
-    linear-gradient(180deg, rgba(14, 18, 32, 0.74), rgba(8, 10, 18, 0.88));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04)),
+    linear-gradient(180deg, rgba(14, 18, 32, 0.66), rgba(8, 10, 18, 0.82));
   box-shadow:
-    0 22px 60px rgba(0, 0, 0, 0.44),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
+    0 18px 40px rgba(0, 0, 0, 0.3),
+    0 40px 90px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(36px) saturate(190%);
+  -webkit-backdrop-filter: blur(36px) saturate(190%);
   overflow: hidden;
 }
 
@@ -84,8 +85,8 @@ code {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(102, 255, 216, 0.08), rgba(138, 91, 255, 0.08) 42%, rgba(255, 255, 255, 0.02) 70%, rgba(255, 255, 255, 0));
-  opacity: 0.65;
+    linear-gradient(90deg, rgba(102, 255, 216, 0.1), rgba(138, 91, 255, 0.08) 38%, rgba(255, 255, 255, 0.04) 74%, rgba(255, 255, 255, 0));
+  opacity: 0.82;
 }
 
 .site-header > * {
@@ -96,15 +97,15 @@ code {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   text-decoration: none;
   flex: 0 0 auto;
 }
 
 .brand-logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   object-fit: cover;
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
@@ -120,21 +121,21 @@ code {
 }
 
 .brand-text {
-  font-size: clamp(1.5rem, 2vw, 2.75rem);
+  font-size: clamp(1.9rem, 2.2vw, 3rem);
   font-weight: 700;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.05em;
 }
 
 .site-nav {
   display: flex;
   flex: 1 1 auto;
   justify-content: center;
-  gap: 18px;
+  gap: 10px;
   color: rgba(247, 248, 252, 0.9);
 }
 
 .site-nav a {
-  padding: 12px 14px;
+  padding: 12px 16px;
   border-radius: 999px;
   font-size: 0.98rem;
   font-weight: 600;
@@ -151,16 +152,16 @@ code {
 
 .nav-download {
   margin-left: auto;
-  padding: 14px 22px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 16px 26px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(238, 240, 248, 0.84));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(235, 238, 246, 0.88));
   color: #14151d;
   font-weight: 700;
   box-shadow:
-    0 10px 24px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.62);
+    0 14px 28px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.76);
   white-space: nowrap;
 }
 
