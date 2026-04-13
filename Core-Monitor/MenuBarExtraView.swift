@@ -924,6 +924,7 @@ struct TemperatureMenuPopoverView: View {
                 MBRow(icon: "fanblades", label: "Fan", value: "Off", color: .white.opacity(0.4))
             } else {
                 ForEach(systemMonitor.fanSpeeds.indices, id: \.self) { i in
+                    let rpm = systemMonitor.fanSpeeds[i]
                     MBRow(icon: "fanblades.fill",
                           label: "Fan \(i + 1)",
                           value: rpm > 0 ? "\(rpm) RPM" : "Off",
@@ -1180,3 +1181,4 @@ private struct MBLegacyActionButton: View {
         .onHover { isHovered = $0 }
     }
 }
+
