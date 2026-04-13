@@ -156,7 +156,8 @@ final class CoreMonTouchBarController: NSObject {
             fps: currentFPS(),
             wifiName: currentWiFiName(),
             detailedClockTitle: parisTime.title,
-            detailedClockSubtitle: parisTime.subtitle
+            detailedClockSubtitle: parisTime.subtitle,
+            memoryPressure: systemMonitor.memoryPressure // Add this
         )
     }
 
@@ -322,38 +323,23 @@ extension CoreMonTouchBarController: NSTouchBarDelegate {
             return item
         }
 
-        if let configuration = configuredItems[identifier] {
-            switch configuration {
-            case .builtIn(let kind):
-                guard let widgetInfo = widgets[kind.identifier],
-                      let item = PKWidgetTouchBarItem(widget: widgetInfo, identifier: identifier) else {
-                    return nil
-                }
-                cachedItems[identifier] = item
-                configure(item)
-                return item
-            case .pinnedApp(let app):
-                let item = NSCustomTouchBarItem(identifier: identifier)
-                item.view = TouchBarShortcutButton.makeAppButton(app: app, theme: currentTheme())
-                cachedItems[identifier] = item
-                return item
-            case .pinnedFolder(let folder):
-                let item = NSCustomTouchBarItem(identifier: identifier)
-                item.view = TouchBarShortcutButton.makeFolderButton(folder: folder, theme: currentTheme())
-                cachedItems[identifier] = item
-                return item
-            case .customWidget(let widget):
-                let item = NSCustomTouchBarItem(identifier: identifier)
-                item.view = TouchBarCustomCommandButton(widget: widget, theme: currentTheme())
-                cachedItems[identifier] = item
-                return item
+        if let configuration = configuredItems[identifier],
+           let item = TouchBarItemFactory.makeTouchBarItem(
+                for: configuration,
+                widgets: widgets,
+                theme: currentTheme()
+           ) {
+            cachedItems[identifier] = item
+            if let widgetItem = item as? PKWidgetTouchBarItem {
+                configure(widgetItem)
             }
+            return item
         }
         return nil
     }
 }
 
-private final class TouchBarShortcutButton: NSButton {
+final class TouchBarShortcutButton: NSButton {
     static func makeAppButton(app: TouchBarPinnedApp, theme: TouchBarTheme) -> TouchBarShortcutButton {
         let button = TouchBarShortcutButton(title: "", target: nil, action: #selector(openShortcut))
         button.shortcutURL = URL(fileURLWithPath: app.filePath)
@@ -399,7 +385,7 @@ private final class TouchBarShortcutButton: NSButton {
     }
 }
 
-private final class TouchBarCustomCommandButton: NSButton {
+final class TouchBarCustomCommandButton: NSButton {
     private let widget: TouchBarCustomWidget
 
     init(widget: TouchBarCustomWidget, theme: TouchBarTheme) {

@@ -4,6 +4,50 @@ import CoreAudio
 import IOKit
 import IOKit.graphics
 
+protocol TouchBarThemable: AnyObject {
+    var theme: TouchBarTheme { get set }
+}
+
+struct TouchBarTheme: Equatable, Hashable {
+    let primaryTextColor: NSColor
+    let secondaryTextColor: NSColor
+    let pillBackgroundColor: NSColor
+    let pillBorderColor: NSColor
+    let barOutlineColor: NSColor
+
+    static let dark = TouchBarTheme(
+        primaryTextColor: .white,
+        secondaryTextColor: NSColor.white.withAlphaComponent(0.72),
+        pillBackgroundColor: NSColor.white.withAlphaComponent(0.08),
+        pillBorderColor: NSColor.white.withAlphaComponent(0.15),
+        barOutlineColor: NSColor.white.withAlphaComponent(0.35)
+    )
+
+    static let light = TouchBarTheme(
+        primaryTextColor: .labelColor,
+        secondaryTextColor: NSColor.secondaryLabelColor,
+        pillBackgroundColor: NSColor.black.withAlphaComponent(0.06),
+        pillBorderColor: NSColor.black.withAlphaComponent(0.12),
+        barOutlineColor: NSColor.black.withAlphaComponent(0.25)
+    )
+
+    static func == (lhs: TouchBarTheme, rhs: TouchBarTheme) -> Bool {
+        lhs.primaryTextColor == rhs.primaryTextColor &&
+        lhs.secondaryTextColor == rhs.secondaryTextColor &&
+        lhs.pillBackgroundColor == rhs.pillBackgroundColor &&
+        lhs.pillBorderColor == rhs.pillBorderColor &&
+        lhs.barOutlineColor == rhs.barOutlineColor
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(primaryTextColor)
+        hasher.combine(secondaryTextColor)
+        hasher.combine(pillBackgroundColor)
+        hasher.combine(pillBorderColor)
+        hasher.combine(barOutlineColor)
+    }
+}
+
 final class ControlCenterTouchBarWidget: NSStackView, TouchBarThemable {
     var theme: TouchBarTheme = .dark {
         didSet { applyTheme() }
@@ -375,6 +419,10 @@ final class MeterControl: NSView, TouchBarThemable {
         didSet { needsDisplay = true }
     }
 
+    var fillColor: NSColor = .systemBlue {
+        didSet { needsLayout = true }
+    }
+
     private let track = CALayer()
     private let fill = CALayer()
     private let knob = CALayer()
@@ -407,7 +455,7 @@ final class MeterControl: NSView, TouchBarThemable {
         let fillWidth = max(2, r.width * value)
         fill.frame = CGRect(x: r.minX, y: r.minY, width: fillWidth, height: r.height)
         fill.cornerRadius = 2
-        fill.backgroundColor = theme.accentBlue.cgColor
+        fill.backgroundColor = fillColor.cgColor
 
         knob.frame = CGRect(x: r.minX + fillWidth - 2.5, y: r.minY - 1.5, width: 5, height: r.height + 3)
         knob.cornerRadius = 2.5
@@ -417,6 +465,82 @@ final class MeterControl: NSView, TouchBarThemable {
     func set(value: Float) {
         self.value = CGFloat(min(max(value, 0), 1))
         needsLayout = true
+    }
+}
+
+final class RAMPressureTouchBarWidget: NSStackView, TouchBarThemable {
+    var theme: TouchBarTheme = .dark {
+        didSet { applyTheme() }
+    }
+
+    private let iconView = NSImageView()
+    let meter = MeterControl()
+    private var observer: NSObjectProtocol?
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        setup()
+        setupObserver()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+        setupObserver()
+    }
+
+    private func setup() {
+        orientation = .horizontal
+        alignment = .centerY
+        spacing = 6
+        translatesAutoresizingMaskIntoConstraints = false
+
+        iconView.image = NSImage(systemSymbolName: "memorychip", accessibilityDescription: nil)?
+            .withSymbolConfiguration(.init(pointSize: 12, weight: .medium))
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+
+        addArrangedSubview(iconView)
+        addArrangedSubview(meter)
+        
+        applyTheme()
+    }
+
+    private func setupObserver() {
+        observer = NotificationCenter.default.addObserver(
+            forName: .systemMonitorDidUpdate,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self = self, 
+                  let monitor = notification.object as? SystemMonitor else { return }
+            
+            let usage = Float(monitor.memoryUsagePercent / 100.0)
+            self.update(usage: usage, pressure: monitor.memoryPressure)
+        }
+    }
+
+    func update(usage: Float, pressure: MemoryPressureLevel) {
+        meter.set(value: usage)
+        
+        switch pressure {
+        case .green:
+            meter.fillColor = NSColor(red: 0.25, green: 0.90, blue: 0.58, alpha: 1.0)
+        case .yellow:
+            meter.fillColor = NSColor(red: 1.00, green: 0.62, blue: 0.20, alpha: 1.0)
+        case .red:
+            meter.fillColor = .systemRed
+        }
+    }
+
+    private func applyTheme() {
+        iconView.contentTintColor = theme.primaryTextColor
+        meter.theme = theme
+    }
+
+    deinit {
+        if let observer = observer {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 }
 
@@ -500,6 +624,12 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
         }
 
         for item in items {
+            let itemContainer = NSStackView()
+            itemContainer.orientation = .vertical
+            itemContainer.alignment = .centerX
+            itemContainer.spacing = 0
+            itemContainer.translatesAutoresizingMaskIntoConstraints = false
+
             let button = NSButton(title: "", target: self, action: #selector(launchItem(_:)))
             button.tag = item.index
             button.bezelStyle = .shadowlessSquare
@@ -513,9 +643,33 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
             button.toolTip = item.name
             NSLayoutConstraint.activate([
                 button.widthAnchor.constraint(equalToConstant: 24),
-                button.heightAnchor.constraint(equalToConstant: 24)
+                button.heightAnchor.constraint(equalToConstant: 22)
             ])
-            stack.addArrangedSubview(button)
+            itemContainer.addArrangedSubview(button)
+
+            if item.isRunning {
+                let dot = NSView()
+                dot.translatesAutoresizingMaskIntoConstraints = false
+                dot.wantsLayer = true
+                dot.layer?.backgroundColor = NSColor.white.cgColor
+                dot.layer?.cornerRadius = 1
+                NSLayoutConstraint.activate([
+                    dot.widthAnchor.constraint(equalToConstant: 2),
+                    dot.heightAnchor.constraint(equalToConstant: 2)
+                ])
+                itemContainer.addArrangedSubview(dot)
+            } else {
+                // Spacer for layout consistency
+                let spacer = NSView()
+                spacer.translatesAutoresizingMaskIntoConstraints = false
+                NSLayoutConstraint.activate([
+                    spacer.widthAnchor.constraint(equalToConstant: 2),
+                    spacer.heightAnchor.constraint(equalToConstant: 2)
+                ])
+                itemContainer.addArrangedSubview(spacer)
+            }
+
+            stack.addArrangedSubview(itemContainer)
         }
     }
 
@@ -523,7 +677,19 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
         var seen = Set<String>()
         var merged: [DockTouchBarItem] = []
 
-        for item in dockItems + persistentItems {
+        let runningIDs = Set(dockItems.compactMap { $0.bundleIdentifier })
+
+        for item in persistentItems {
+            let key = item.bundleIdentifier ?? item.url?.absoluteString ?? item.name
+            guard seen.insert(key).inserted else { continue }
+            var updated = item
+            if let bid = item.bundleIdentifier, runningIDs.contains(bid) {
+                updated.isRunning = true
+            }
+            merged.append(updated)
+        }
+
+        for item in dockItems {
             let key = item.bundleIdentifier ?? item.url?.absoluteString ?? item.name
             guard seen.insert(key).inserted else { continue }
             merged.append(item)
@@ -554,7 +720,8 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
                 name: app.localizedName ?? "App",
                 bundleIdentifier: app.bundleIdentifier,
                 url: nil,
-                icon: app.icon ?? NSWorkspace.shared.icon(forFile: "/System/Applications/App Store.app")
+                icon: app.icon ?? NSWorkspace.shared.icon(forFile: "/System/Applications/App Store.app"),
+                isRunning: true
             )
         }
     }
@@ -571,7 +738,7 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
             let fileURLString = (tileData["file-data"] as? [String: Any])?["_CFURLString"] as? String
             let url = fileURLString.flatMap { URL(string: $0) }
             let icon = url.map { NSWorkspace.shared.icon(forFile: $0.path) } ?? NSWorkspace.shared.icon(forFile: "/System/Applications/App Store.app")
-            return DockTouchBarItem(index: index + 100, name: label, bundleIdentifier: bundleIdentifier, url: url, icon: icon)
+            return DockTouchBarItem(index: index + 100, name: label, bundleIdentifier: bundleIdentifier, url: url, icon: icon, isRunning: false)
         }
     }
 }
@@ -582,4 +749,5 @@ private struct DockTouchBarItem {
     let bundleIdentifier: String?
     let url: URL?
     let icon: NSImage
+    var isRunning: Bool = false
 }

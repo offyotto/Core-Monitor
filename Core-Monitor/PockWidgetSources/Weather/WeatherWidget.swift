@@ -46,6 +46,7 @@ final class WeatherWidget: NSView, TouchBarThemable {
 
     func apply(state: WeatherState) {
         currentState = state
+        let tooltip: String
         switch state {
         case .idle:
             compactTitleLabel.stringValue = "Weather"
@@ -55,6 +56,7 @@ final class WeatherWidget: NSView, TouchBarThemable {
             detailLabel.stringValue = ""
             compactIconView.image = defaultImage()
             expandedIconView.image = defaultImage()
+            tooltip = "Waiting for weather data"
         case .loading:
             compactTitleLabel.stringValue = "Weather"
             compactSubtitleLabel.stringValue = "Fetching data"
@@ -63,6 +65,7 @@ final class WeatherWidget: NSView, TouchBarThemable {
             detailLabel.stringValue = ""
             compactIconView.image = defaultImage()
             expandedIconView.image = defaultImage()
+            tooltip = "Fetching live weather"
         case .loaded(let snapshot):
             compactTitleLabel.stringValue = snapshot.locationName
             compactSubtitleLabel.stringValue = "\(Int(snapshot.temperature.rounded()))°, \(snapshot.condition)"
@@ -72,7 +75,8 @@ final class WeatherWidget: NSView, TouchBarThemable {
             let icon = icon(for: snapshot)
             compactIconView.image = icon
             expandedIconView.image = icon
-        case .error:
+            tooltip = weatherTooltip(for: snapshot)
+        case .error(let message):
             compactTitleLabel.stringValue = "Weather"
             compactSubtitleLabel.stringValue = "Unavailable"
             expandedTitleLabel.stringValue = "Weather"
@@ -80,7 +84,10 @@ final class WeatherWidget: NSView, TouchBarThemable {
             detailLabel.stringValue = ""
             compactIconView.image = defaultImage()
             expandedIconView.image = defaultImage()
+            tooltip = message
         }
+        toolTip = tooltip
+        tapButton.toolTip = tooltip
         refreshLayout(animated: false)
     }
 
@@ -190,9 +197,11 @@ final class WeatherWidget: NSView, TouchBarThemable {
         expandedTitleLabel.textColor = theme.primaryTextColor
         expandedSubtitleLabel.textColor = theme.secondaryTextColor
         detailLabel.textColor = theme.secondaryTextColor
+        compactIconView.contentTintColor = theme.primaryTextColor
+        expandedIconView.contentTintColor = theme.primaryTextColor
     }
 
-    @objc private func handleTap(_ sender: NSGestureRecognizer) {
+    @objc private func handleTap(_ sender: Any?) {
         toggleMode()
     }
 
@@ -217,7 +226,9 @@ final class WeatherWidget: NSView, TouchBarThemable {
             layer?.add(transition, forKey: "weatherModeTransition")
         }
 
+        needsLayout = true
         invalidateIntrinsicContentSize()
+        superview?.invalidateIntrinsicContentSize()
     }
 
     override var intrinsicContentSize: NSSize {
@@ -295,5 +306,12 @@ final class WeatherWidget: NSView, TouchBarThemable {
         }
 
         return "03\(suffix)"
+    }
+
+    private func weatherTooltip(for snapshot: WeatherSnapshot) -> String {
+        let high = Int(snapshot.high.rounded())
+        let low = Int(snapshot.low.rounded())
+        let feelsLike = Int(snapshot.feelsLike.rounded())
+        return "\(snapshot.locationName) • \(snapshot.condition)\n\(snapshot.nextRainSummary)\nH \(high)° / L \(low)° • Feels like \(feelsLike)° • Humidity \(snapshot.humidity)%"
     }
 }

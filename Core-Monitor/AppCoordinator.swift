@@ -5,20 +5,14 @@ import Foundation
 @available(macOS 13.0, *)
 @MainActor
 final class AppCoordinator: ObservableObject {
-    private enum TouchBarMode: String {
-        case app
-        case system
-    }
-
     let systemMonitor: SystemMonitor
     let fanController: FanController
 
     private let touchBarPresenter = TouchBarPrivatePresenter()
 
     private let coreMonTouchBarController: CoreMonTouchBarController
+    private let customizationSettings = TouchBarCustomizationSettings.shared
 
-    private let touchBarModeKey = "coremonitor.touchBarMode"
-    private let touchBarModeMigrationKey = "coremonitor.touchBarMode.blankBarV1"
     private var launchObserver: NSObjectProtocol?
     private var activationObserver: NSObjectProtocol?
     private var terminateObserver: NSObjectProtocol?
@@ -41,7 +35,6 @@ final class AppCoordinator: ObservableObject {
 
     func start() {
         systemMonitor.startMonitoring()
-        normalizeTouchBarModePreference()
         installTouchBarBootstrapObservers()
         applySavedTouchBarMode()
 
@@ -73,12 +66,12 @@ final class AppCoordinator: ObservableObject {
     }
 
     func revertToSystemTouchBar() {
-        saveTouchBarMode(.system)
+        customizationSettings.presentationMode = .system
         touchBarPresenter.dismissToSystemTouchBar()
     }
 
     func revertToAppTouchBar() {
-        saveTouchBarMode(.app)
+        customizationSettings.presentationMode = .app
         startAppTouchBar()
     }
 
@@ -87,22 +80,15 @@ final class AppCoordinator: ObservableObject {
         // Also install the standard NSTouchBar on the window as a fallback
         coreMonTouchBarController.install(in: window)
 
-        if savedTouchBarMode == .app {
+        if presentationMode == .app {
             startAppTouchBar()
         } else {
             stopAppTouchBar()
         }
     }
 
-    private func normalizeTouchBarModePreference() {
-        let defaults = UserDefaults.standard
-        guard defaults.bool(forKey: touchBarModeMigrationKey) == false else { return }
-        saveTouchBarMode(.app)
-        defaults.set(true, forKey: touchBarModeMigrationKey)
-    }
-
     private func applySavedTouchBarMode() {
-        switch savedTouchBarMode {
+        switch presentationMode {
         case .app:
             scheduleTouchBarBootstrap()
         case .system:
@@ -129,7 +115,7 @@ final class AppCoordinator: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
-                guard self?.savedTouchBarMode == .app else { return }
+                guard self?.presentationMode == .app else { return }
                 self?.startAppTouchBar()
             }
         }
@@ -150,8 +136,13 @@ final class AppCoordinator: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
-                guard self?.savedTouchBarMode == .app else { return }
-                self?.startAppTouchBar()
+                guard let self else { return }
+                switch self.presentationMode {
+                case .app:
+                    self.startAppTouchBar()
+                case .system:
+                    self.touchBarPresenter.dismissToSystemTouchBar()
+                }
             }
         }
     }
@@ -161,7 +152,7 @@ final class AppCoordinator: ObservableObject {
 
         let workItem = DispatchWorkItem { [weak self] in
             Task { @MainActor [weak self] in
-                guard self?.savedTouchBarMode == .app else { return }
+                guard self?.presentationMode == .app else { return }
                 self?.startAppTouchBar()
             }
         }
@@ -177,12 +168,7 @@ final class AppCoordinator: ObservableObject {
         touchBarPresenter.dismiss()
     }
 
-    private var savedTouchBarMode: TouchBarMode {
-        let raw = UserDefaults.standard.string(forKey: touchBarModeKey) ?? TouchBarMode.app.rawValue
-        return TouchBarMode(rawValue: raw) ?? .app
-    }
-
-    private func saveTouchBarMode(_ mode: TouchBarMode) {
-        UserDefaults.standard.set(mode.rawValue, forKey: touchBarModeKey)
+    private var presentationMode: TouchBarPresentationMode {
+        customizationSettings.presentationMode
     }
 }

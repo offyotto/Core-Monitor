@@ -151,17 +151,15 @@ final class PKWeatherWidget: PKPillWidget {
     }
 }
 
-final class PKWeatherStripWidget: PKWidget {
+final class PKWeatherStripWidget: PKBareWidget {
     let weatherView: WeatherWidget
 
     required init() {
         let weatherView = WeatherWidget()
         self.weatherView = weatherView
-        super.init()
+        super.init(contentView: weatherView)
         customizationLabel = "Weather"
     }
-
-    override var view: NSView { weatherView }
 }
 
 final class PKStatsWidget: PKPillWidget {
@@ -214,6 +212,17 @@ final class PKNetworkWidget: PKPillWidget {
     }
 }
 
+final class PKRAMPressureWidget: PKBareWidget {
+    let ramPressureView: RAMPressureTouchBarWidget
+
+    required init() {
+        let ramPressureView = RAMPressureTouchBarWidget()
+        self.ramPressureView = ramPressureView
+        super.init(contentView: ramPressureView)
+        customizationLabel = "RAM Pressure"
+    }
+}
+
 extension TouchBarWidgetKind {
     var widgetInfo: PKWidgetInfo {
         switch self {
@@ -237,6 +246,8 @@ extension TouchBarWidgetKind {
             return PKWidgetInfo(bundleIdentifier: identifier.rawValue, principalClass: PKHardwareWidget.self, name: title)
         case .network:
             return PKWidgetInfo(bundleIdentifier: identifier.rawValue, principalClass: PKNetworkWidget.self, name: title)
+        case .ramPressure:
+            return PKWidgetInfo(bundleIdentifier: identifier.rawValue, principalClass: PKRAMPressureWidget.self, name: title)
         }
     }
 }
@@ -244,6 +255,37 @@ extension TouchBarWidgetKind {
 enum PKCoreMonWidgetCatalog {
     static func allWidgets() -> [NSTouchBarItem.Identifier: PKWidgetInfo] {
         Dictionary(uniqueKeysWithValues: TouchBarWidgetKind.allCases.map { ($0.identifier, $0.widgetInfo) })
+    }
+}
+
+enum TouchBarItemFactory {
+    static func makeTouchBarItem(
+        for configuration: TouchBarItemConfiguration,
+        widgets: [NSTouchBarItem.Identifier: PKWidgetInfo] = PKCoreMonWidgetCatalog.allWidgets(),
+        theme: TouchBarTheme
+    ) -> NSTouchBarItem? {
+        switch configuration {
+        case .builtIn(let kind):
+            guard let widgetInfo = widgets[kind.identifier] else {
+                return nil
+            }
+            return PKWidgetTouchBarItem(widget: widgetInfo, identifier: configuration.touchBarIdentifier)
+        case .pinnedApp(let app):
+            let item = NSCustomTouchBarItem(identifier: configuration.touchBarIdentifier)
+            item.customizationLabel = configuration.title
+            item.view = TouchBarShortcutButton.makeAppButton(app: app, theme: theme)
+            return item
+        case .pinnedFolder(let folder):
+            let item = NSCustomTouchBarItem(identifier: configuration.touchBarIdentifier)
+            item.customizationLabel = configuration.title
+            item.view = TouchBarShortcutButton.makeFolderButton(folder: folder, theme: theme)
+            return item
+        case .customWidget(let widget):
+            let item = NSCustomTouchBarItem(identifier: configuration.touchBarIdentifier)
+            item.customizationLabel = configuration.title
+            item.view = TouchBarCustomCommandButton(widget: widget, theme: theme)
+            return item
+        }
     }
 }
 
@@ -288,6 +330,8 @@ enum PKCoreMonWidgetState {
             widget.groupView.update(snapshot: snapshot)
         case let widget as PKNetworkWidget:
             widget.groupView.update(upKBs: snapshot.netUpKBs, downMBs: snapshot.netDownMBs)
+        case let widget as PKRAMPressureWidget:
+            widget.ramPressureView.update(usage: Float(snapshot.memPct / 100), pressure: snapshot.memoryPressure)
         default:
             break
         }

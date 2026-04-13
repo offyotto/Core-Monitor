@@ -1047,68 +1047,23 @@ private struct TouchBarWidgetPreview: View {
     let theme: TouchBarTheme
 
     var body: some View {
-        Group {
-            if item.isBuiltIn {
-                Image(nsImage: renderBuiltInPreview())
-                    .interpolation(.none)
-                    .antialiased(true)
-            } else {
-                customPreview
-            }
-        }
+        Image(nsImage: renderPreview())
+            .interpolation(.none)
+            .antialiased(true)
         .frame(width: item.estimatedWidth, height: TB.stripH)
     }
 
-    @ViewBuilder
-    private var customPreview: some View {
-        switch item {
-        case .pinnedApp(let app):
-            iconPreview(path: app.filePath)
-        case .pinnedFolder(let folder):
-            iconPreview(path: folder.folderPath)
-        case .customWidget(let widget):
-            HStack(spacing: 6) {
-                Image(systemName: widget.symbolName)
-                    .font(.system(size: 11, weight: .semibold))
-                Text(widget.title)
-                    .font(.system(size: 11, weight: .semibold))
-                    .lineLimit(1)
-            }
-            .foregroundStyle(Color(nsColor: theme.primaryTextColor))
-            .padding(.horizontal, 10)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color(nsColor: theme.pillBackgroundColor))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .stroke(Color(nsColor: theme.pillBorderColor), lineWidth: 1)
-                    )
-            )
-        default:
-            EmptyView()
-        }
-    }
-
-    private func iconPreview(path: String) -> some View {
-        let image = NSWorkspace.shared.icon(forFile: path)
-        image.size = NSSize(width: 22, height: 22)
-        return AnyView(
-            Image(nsImage: image)
-                .interpolation(.high)
-                .frame(width: item.estimatedWidth, height: TB.stripH)
-        )
-    }
-
-    private func renderBuiltInPreview() -> NSImage {
-        guard case .builtIn(let kind) = item else {
-            return NSImage(size: NSSize(width: item.estimatedWidth, height: TB.stripH))
-        }
+    private func renderPreview() -> NSImage {
+        let renderSize = NSSize(width: item.estimatedWidth, height: TB.stripH)
         let snapshot = TouchBarPreviewFixture.snapshot
         let weatherState = WeatherState.loaded(TouchBarPreviewFixture.weather)
 
-        if let item = PKWidgetTouchBarItem(widget: kind.widgetInfo),
-           let widget = item.widget {
+        guard let touchBarItem = TouchBarItemFactory.makeTouchBarItem(for: item, theme: theme) else {
+            return NSImage(size: renderSize)
+        }
+
+        if let widgetItem = touchBarItem as? PKWidgetTouchBarItem,
+           let widget = widgetItem.widget {
             PKCoreMonWidgetState.apply(
                 theme: theme,
                 weatherState: weatherState,
@@ -1117,22 +1072,26 @@ private struct TouchBarWidgetPreview: View {
                 clockSubtitle: TouchBarPreviewFixture.clockSubtitle,
                 to: widget
             )
-
-            let view = item.view
-            let renderBounds = NSRect(x: 0, y: 0, width: kind.estimatedWidth, height: TB.stripH)
-            view.frame = renderBounds
-
-            guard let bitmap = view.bitmapImageRepForCachingDisplay(in: renderBounds) else {
-                return NSImage(size: renderBounds.size)
-            }
-
-            view.cacheDisplay(in: renderBounds, to: bitmap)
-            let image = NSImage(size: renderBounds.size)
-            image.addRepresentation(bitmap)
-            return image
         }
 
-        return NSImage(size: NSSize(width: kind.estimatedWidth, height: TB.stripH))
+        let sourceView = touchBarItem.viewController?.view ?? touchBarItem.view
+        let renderBounds = NSRect(origin: .zero, size: renderSize)
+
+        guard let sourceView else {
+            return NSImage(size: renderSize)
+        }
+
+        sourceView.frame = renderBounds
+        sourceView.layoutSubtreeIfNeeded()
+
+        guard let bitmap = sourceView.bitmapImageRepForCachingDisplay(in: renderBounds) else {
+            return NSImage(size: renderSize)
+        }
+
+        sourceView.cacheDisplay(in: renderBounds, to: bitmap)
+        let image = NSImage(size: renderSize)
+        image.addRepresentation(bitmap)
+        return image
     }
 }
 
@@ -1163,7 +1122,8 @@ private enum TouchBarPreviewFixture {
         fps: 0,
         wifiName: "",
         detailedClockTitle: "9:20",
-        detailedClockSubtitle: "Apr 11th"
+        detailedClockSubtitle: "Apr 11th",
+        memoryPressure: .green
     )
 
     static let clockTitle = "9:20"
@@ -1291,6 +1251,7 @@ private struct TouchBarCustomizationPanel: View {
     @State private var customTitle = ""
     @State private var customSymbol = "terminal.fill"
     @State private var customCommand = ""
+    @State private var customWidth = 96.0
 
     private var widthFraction: Double {
         min(max(settings.estimatedWidth / TouchBarCustomizationSettings.recommendedTouchBarWidth, 0), 1)
@@ -1304,6 +1265,23 @@ private struct TouchBarCustomizationPanel: View {
         VStack(alignment: .leading, spacing: 16) {
             DarkCard(padding: 16) {
                 VStack(alignment: .leading, spacing: 14) {
+                    Text("Presentation")
+                        .font(.system(size: 14, weight: .bold))
+
+                    Picker("Touch Bar Mode", selection: $settings.presentationMode) {
+                        ForEach(TouchBarPresentationMode.allCases) { mode in
+                            Text(mode.title).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    Text(settings.presentationMode.subtitle)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+
+                    Divider()
+                        .overlay(Color.bdDivider)
+
                     Text("Live layout preview")
                         .font(.system(size: 14, weight: .bold))
                     TouchBarPreviewStrip()
@@ -1478,11 +1456,30 @@ private struct TouchBarCustomizationPanel: View {
                         TextField("Shell Command", text: $customCommand)
                             .textFieldStyle(.roundedBorder)
 
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack {
+                                Text("Width")
+                                    .font(.system(size: 11, weight: .semibold))
+                                Spacer()
+                                Text("\(Int(customWidth.rounded())) pt")
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                    .foregroundStyle(.secondary)
+                            }
+                            Slider(value: $customWidth, in: 72...220, step: 4)
+                                .tint(Color.bdAccent)
+                        }
+
                         Button("Add Custom Widget") {
-                            settings.addCustomWidget(title: customTitle, symbolName: customSymbol, command: customCommand)
+                            settings.addCustomWidget(
+                                title: customTitle,
+                                symbolName: customSymbol,
+                                command: customCommand,
+                                width: customWidth
+                            )
                             customTitle = ""
                             customSymbol = "terminal.fill"
                             customCommand = ""
+                            customWidth = 96
                         }
                         .buttonStyle(SoftPressButtonStyle())
                     }

@@ -14,6 +14,7 @@ struct TouchBarSystemSnapshot {
     let wifiName: String
     let detailedClockTitle: String
     let detailedClockSubtitle: String
+    let memoryPressure: MemoryPressureLevel
 }
 
 private func sanitizedUnitCGFloat(_ value: CGFloat, default defaultValue: CGFloat = 0) -> CGFloat {
@@ -26,14 +27,6 @@ private func hasDrawableGeometry(_ bounds: CGRect, minimumExtent: CGFloat = 2) -
     bounds.height.isFinite &&
     bounds.width >= minimumExtent &&
     bounds.height >= minimumExtent
-}
-
-protocol TouchBarThemable: AnyObject {
-    var theme: TouchBarTheme { get set }
-}
-
-private func makeLabel(_ text: String, font: NSFont, color: NSColor) -> NSTextField {
-    TB.label(text, font: font, color: color)
 }
 
 private final class VerticalMeterGlyphView: NSView, TouchBarThemable {
@@ -60,6 +53,7 @@ private final class VerticalMeterGlyphView: NSView, TouchBarThemable {
 
         let rect = bounds.insetBy(dx: 1, dy: 1)
         guard hasDrawableGeometry(rect, minimumExtent: 4) else { return }
+
         let fillFraction = sanitizedUnitCGFloat(fillFraction, default: 0)
         let path = NSBezierPath(roundedRect: rect, xRadius: 6, yRadius: 6)
         theme.barTrackColor.setFill()
@@ -101,6 +95,7 @@ private final class MiniHistogramGlyphView: NSView, TouchBarThemable {
 
         let frame = bounds.insetBy(dx: 1, dy: 1)
         guard hasDrawableGeometry(frame, minimumExtent: 6) else { return }
+
         let normalizedLevel = sanitizedUnitCGFloat(normalizedLevel, default: 0)
         let outline = NSBezierPath(roundedRect: frame, xRadius: 6, yRadius: 6)
         theme.barTrackColor.setFill()
@@ -146,6 +141,7 @@ private final class WaveformGlyphView: NSView, TouchBarThemable {
 
         let frame = bounds.insetBy(dx: 1, dy: 1)
         guard hasDrawableGeometry(frame, minimumExtent: 6) else { return }
+
         let outline = NSBezierPath(roundedRect: frame, xRadius: 4.5, yRadius: 4.5)
         theme.barTrackColor.setFill()
         outline.fill()
@@ -199,6 +195,7 @@ private final class MiniScreenGraphView: NSView, TouchBarThemable {
 
         let frame = bounds.insetBy(dx: 1, dy: 1)
         guard hasDrawableGeometry(frame, minimumExtent: 6) else { return }
+
         let level = sanitizedUnitCGFloat(level, default: 0)
         let outline = NSBezierPath(roundedRect: frame, xRadius: 5.5, yRadius: 5.5)
         theme.barTrackColor.setFill()
@@ -209,6 +206,7 @@ private final class MiniScreenGraphView: NSView, TouchBarThemable {
 
         let inner = frame.insetBy(dx: 6, dy: 5)
         guard hasDrawableGeometry(inner, minimumExtent: 2) else { return }
+
         let baseY = inner.minY
         let values: [CGFloat] = [0.10, 0.08, 0.12, 0.18, 0.80, 0.78, 0.76, 0.74, 0.72]
         let width = inner.width / CGFloat(values.count)
@@ -273,10 +271,6 @@ final class TimeZoneGroupView: NSView, TouchBarThemable {
         subtitleLabel.font = NSFont.systemFont(ofSize: 10, weight: .semibold)
         titleLabel.lineBreakMode = .byClipping
         subtitleLabel.lineBreakMode = .byClipping
-        titleLabel.alignment = .left
-        subtitleLabel.alignment = .left
-        titleLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
-        subtitleLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
 
         stack.addArrangedSubview(titleLabel)
         stack.addArrangedSubview(subtitleLabel)
@@ -287,6 +281,7 @@ final class TimeZoneGroupView: NSView, TouchBarThemable {
             stack.trailingAnchor.constraint(equalTo: trailingAnchor),
             stack.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
+
         applyTheme()
     }
 
@@ -330,6 +325,7 @@ final class WeatherGroupView: NSView, TouchBarThemable {
             iconView.widthAnchor.constraint(equalToConstant: 18),
             iconView.heightAnchor.constraint(equalToConstant: 18)
         ])
+
         applyTheme()
     }
 
@@ -350,17 +346,17 @@ final class WeatherGroupView: NSView, TouchBarThemable {
     }
 }
 
-enum StatsGroupStyle {
-    case compact
-    case detailed
-}
-
 final class SystemStatsGroupView: NSView, TouchBarThemable {
+    enum Style {
+        case compact
+        case detailed
+    }
+
     var theme: TouchBarTheme = .dark {
         didSet { applyTheme() }
     }
 
-    private let style: StatsGroupStyle
+    private let style: Style
     private let timeLabel = NSTextField(labelWithString: "10:38")
     private let memKey = NSTextField(labelWithString: "MEM")
     private let memBar = UsageBarView()
@@ -369,16 +365,16 @@ final class SystemStatsGroupView: NSView, TouchBarThemable {
     private let cpuKey = NSTextField(labelWithString: "CPU")
     private let cpuBar = UsageBarView()
     private let detailedTitle = NSTextField(labelWithString: "Mon 12:15")
-    private let detailedSubtitle = NSTextField(labelWithString: "Mon 04:15 (Paris)")
+    private let detailedSubtitle = NSTextField(labelWithString: "Apr 11th")
 
-    init(style: StatsGroupStyle) {
+    init(style: Style) {
         self.style = style
         super.init(frame: .zero)
         setup()
     }
 
     required init?(coder: NSCoder) {
-        self.style = .compact
+        style = .compact
         super.init(coder: coder)
         setup()
     }
@@ -395,6 +391,7 @@ final class SystemStatsGroupView: NSView, TouchBarThemable {
         [timeLabel, memKey, ssdKey, cpuKey, detailedTitle, detailedSubtitle].forEach {
             $0.lineBreakMode = .byClipping
         }
+
         timeLabel.font = TB.fontBig
         memKey.font = TB.fontKey
         ssdKey.font = TB.fontKey
@@ -441,8 +438,7 @@ final class SystemStatsGroupView: NSView, TouchBarThemable {
             stack.trailingAnchor.constraint(equalTo: trailingAnchor),
             stack.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
-        timeLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
-        timeLabel.alignment = .left
+
         applyTheme()
     }
 
@@ -450,21 +446,23 @@ final class SystemStatsGroupView: NSView, TouchBarThemable {
         let formatter = DateFormatter()
         formatter.dateFormat = "H:mm"
         timeLabel.stringValue = formatter.string(from: Date())
+
         memBar.fraction = CGFloat(snap.memPct / 100)
         memBar.fillColor = theme.accentBlue
         memBar.theme = theme
+
         ssdBar.fraction = CGFloat(snap.ssdPct / 100)
         ssdBar.fillColor = theme.accentBlue
         ssdBar.theme = theme
+
         cpuBar.fraction = CGFloat(snap.cpuPct / 100)
-        // Show CPU temperature alongside the CPU key when available
-        if snap.cpuTempC.isFinite && snap.cpuTempC > 0 {
-            cpuKey.stringValue = String(format: "CPU %.0f°", snap.cpuTempC)
-        } else {
-            cpuKey.stringValue = "CPU"
-        }
         cpuBar.fillColor = theme.accentBlue
         cpuBar.theme = theme
+
+        cpuKey.stringValue = snap.cpuTempC.isFinite && snap.cpuTempC > 0
+            ? String(format: "CPU %.0f°", snap.cpuTempC)
+            : "CPU"
+
         detailedTitle.stringValue = snap.detailedClockTitle
         detailedSubtitle.stringValue = snap.detailedClockSubtitle
     }
@@ -472,9 +470,9 @@ final class SystemStatsGroupView: NSView, TouchBarThemable {
     private func applyTheme() {
         let primary = theme.primaryTextColor
         let secondary = theme.secondaryTextColor
+
         timeLabel.textColor = primary
-        [memKey, ssdKey, cpuKey].forEach { $0.textColor = primary }
-        [detailedTitle, detailedSubtitle].forEach { $0.textColor = primary }
+        [memKey, ssdKey, cpuKey, detailedTitle].forEach { $0.textColor = primary }
         detailedSubtitle.textColor = secondary
         [memBar, ssdBar, cpuBar].forEach { $0.theme = theme }
     }
@@ -485,8 +483,11 @@ final class CPUGroupView: NSView, TouchBarThemable {
         didSet { applyTheme() }
     }
 
+    private let iconView = NSImageView()
     private let titleLabel = NSTextField(labelWithString: "CPU")
-    private let tempLabel = NSTextField(labelWithString: "—")
+    private let temperatureLabel = NSTextField(labelWithString: "--")
+    private let loadLabel = NSTextField(labelWithString: "0% load")
+    private let usageBar = UsageBarView()
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -499,38 +500,75 @@ final class CPUGroupView: NSView, TouchBarThemable {
     }
 
     private func setup() {
-        [titleLabel, tempLabel].forEach {
-            $0.font = $0 == titleLabel ? TB.fontKey : NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .semibold)
-            $0.lineBreakMode = .byClipping
-        }
+        translatesAutoresizingMaskIntoConstraints = false
 
-        let leftStack = NSStackView(views: [titleLabel, tempLabel])
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        iconView.imageScaling = .scaleProportionallyUpOrDown
+        iconView.image = NSImage(systemSymbolName: "cpu.fill", accessibilityDescription: nil)?
+            .withSymbolConfiguration(.init(pointSize: 12, weight: .medium))
+        NSLayoutConstraint.activate([
+            iconView.widthAnchor.constraint(equalToConstant: 14),
+            iconView.heightAnchor.constraint(equalToConstant: 14)
+        ])
+
+        titleLabel.font = TB.fontKey
+        temperatureLabel.font = TB.fontVal
+        loadLabel.font = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .semibold)
+
+        usageBar.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            usageBar.widthAnchor.constraint(equalToConstant: 46),
+            usageBar.heightAnchor.constraint(equalToConstant: TB.barH)
+        ])
+
+        let leftStack = NSStackView(views: [titleLabel, temperatureLabel])
         leftStack.orientation = .vertical
         leftStack.spacing = 1
         leftStack.alignment = .leading
 
-        addSubview(leftStack)
-        leftStack.translatesAutoresizingMaskIntoConstraints = false
+        let rightStack = NSStackView(views: [loadLabel, usageBar])
+        rightStack.orientation = .vertical
+        rightStack.spacing = 2
+        rightStack.alignment = .leading
+
+        let stack = NSStackView(views: [iconView, leftStack, rightStack])
+        stack.orientation = .horizontal
+        stack.spacing = 8
+        stack.alignment = .centerY
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(stack)
 
         NSLayoutConstraint.activate([
-            leftStack.leadingAnchor.constraint(equalTo: leadingAnchor),
-            leftStack.trailingAnchor.constraint(equalTo: trailingAnchor),
-            leftStack.centerYAnchor.constraint(equalTo: centerYAnchor)
+            stack.leadingAnchor.constraint(equalTo: leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: trailingAnchor),
+            stack.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
 
         applyTheme()
     }
 
     func update(snap: TouchBarSystemSnapshot) {
-        titleLabel.stringValue = snap.cpuTempC.isFinite && snap.cpuTempC > 0 ? "CPU \(Int(snap.cpuTempC.rounded()))°" : "CPU"
-        tempLabel.stringValue = "\(Int(snap.cpuPct.rounded()))% load"
+        titleLabel.stringValue = "CPU"
+        temperatureLabel.stringValue = snap.cpuTempC.isFinite && snap.cpuTempC > 0
+            ? "\(Int(snap.cpuTempC.rounded()))°"
+            : "--"
+        loadLabel.stringValue = "\(Int(snap.cpuPct.rounded()))% load"
+        usageBar.fraction = CGFloat(snap.cpuPct / 100)
+        usageBar.fillColor = barColor(load: snap.cpuPct, temperature: snap.cpuTempC)
+    }
+
+    private func barColor(load: Double, temperature: Double) -> NSColor {
+        if temperature.isFinite && temperature >= 90 { return .systemRed }
+        if load >= 85 || (temperature.isFinite && temperature >= 75) { return .systemOrange }
+        return theme.accentBlue
     }
 
     private func applyTheme() {
-        let primary = theme.primaryTextColor
-        let secondary = theme.secondaryTextColor
-        titleLabel.textColor = primary
-        tempLabel.textColor = secondary
+        iconView.contentTintColor = theme.primaryTextColor
+        titleLabel.textColor = theme.secondaryTextColor
+        temperatureLabel.textColor = theme.primaryTextColor
+        loadLabel.textColor = theme.secondaryTextColor
+        usageBar.theme = theme
     }
 }
 
@@ -570,6 +608,7 @@ final class NetworkGroupView: NSView, TouchBarThemable {
             stack.trailingAnchor.constraint(equalTo: trailingAnchor),
             stack.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
+
         applyTheme()
     }
 
@@ -678,6 +717,7 @@ final class CombinedGroupView: NSView, TouchBarThemable {
             stack.trailingAnchor.constraint(equalTo: trailingAnchor),
             stack.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
+
         applyTheme()
     }
 
@@ -696,7 +736,6 @@ final class CombinedGroupView: NSView, TouchBarThemable {
         ssdGlyph.fillFraction = CGFloat(snap.ssdPct / 100)
         ssdGlyph.fillColor = theme.primaryTextColor
         graphGlyph.normalizedLevel = CGFloat(snap.cpuPct / 100)
-
     }
 
     private func applyTheme() {
@@ -748,16 +787,11 @@ final class HardwareIconsGroupView: NSView, TouchBarThemable {
     }
 
     private func setup() {
-        let rebuiltArrow = makeSymbolView("arrow.up.right.and.arrow.down.left")
-        arrowIcon.image = rebuiltArrow.image
-        let rebuiltBolt = makeSymbolView("bolt.fill")
-        boltIcon.image = rebuiltBolt.image
-        let rebuiltDrive = makeSymbolView("externaldrive.fill")
-        driveIcon.image = rebuiltDrive.image
-        let rebuiltMemory = makeSymbolView("memorychip.fill")
-        memoryIcon.image = rebuiltMemory.image
-        let rebuiltCPU = makeSymbolView("cpu.fill")
-        cpuIcon.image = rebuiltCPU.image
+        arrowIcon.image = makeSymbolView("arrow.up.right.and.arrow.down.left").image
+        boltIcon.image = makeSymbolView("bolt.fill").image
+        driveIcon.image = makeSymbolView("externaldrive.fill").image
+        memoryIcon.image = makeSymbolView("memorychip.fill").image
+        cpuIcon.image = makeSymbolView("cpu.fill").image
 
         let stack = NSStackView(views: [
             arrowIcon,
@@ -781,6 +815,7 @@ final class HardwareIconsGroupView: NSView, TouchBarThemable {
             stack.trailingAnchor.constraint(equalTo: trailingAnchor),
             stack.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
+
         applyTheme()
     }
 
@@ -793,8 +828,9 @@ final class HardwareIconsGroupView: NSView, TouchBarThemable {
     }
 
     private func applyTheme() {
-        let glyphViews = [arrowIcon, boltIcon, driveIcon, memoryIcon, cpuIcon]
-        glyphViews.forEach { $0.contentTintColor = theme.glyphFillColor }
+        [arrowIcon, boltIcon, driveIcon, memoryIcon, cpuIcon].forEach {
+            $0.contentTintColor = theme.glyphFillColor
+        }
         waveform.theme = theme
         batteryGlyph.theme = theme
         miniBatteryGlyph.theme = theme
