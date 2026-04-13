@@ -1,11 +1,4 @@
-// PillView.swift
-// CoreMonitor — reusable dark rounded-rect group container.
-//
-// Widget groups sit in these pills:
-//   ┌────────────────────┐  ← TB.pillH tall (24pt), TB.pillRadius corner
-//   │  [content views]   │
-//   └────────────────────┘
-//  Strip bg (#000) shows between pills.
+// yeah i dont paid enough for thisssssssssssssss
 
 import AppKit
 

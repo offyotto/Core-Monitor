@@ -115,7 +115,7 @@ final class PKControlCenterWidget: PKBareWidget {
         let controlView = ControlCenterTouchBarWidget()
         self.controlView = controlView
         super.init(contentView: controlView)
-        customizationLabel = "Control Center"
+        customizationLabel = "Brightness & Volume"
     }
 }
 

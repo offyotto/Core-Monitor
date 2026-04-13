@@ -74,19 +74,13 @@ final class SLangItem: StatusItem {
         }
 
         if iconImage == nil {
-            // Try a reasonable named image fallback first
-            if let named = NSImage(systemSymbolName: "keyboard", accessibilityDescription: nil)?
+            if let named = NSImage(systemSymbolName: "globe", accessibilityDescription: nil)?
                 .withSymbolConfiguration(.init(pointSize: 15, weight: .regular)) {
                 iconImage = named
+            } else if #available(macOS 12.0, *) {
+                iconImage = NSWorkspace.shared.icon(for: .data)
             } else {
-                // Fall back to a generic content type icon from NSWorkspace
-                // Use UTType.data as a neutral, universally available type
-                if #available(macOS 12.0, *) {
-                    iconImage = NSWorkspace.shared.icon(for: .data)
-                } else {
-                    // Fallback for older macOS versions
-                    iconImage = NSWorkspace.shared.icon(forFileType: "public.data")
-                }
+                iconImage = NSWorkspace.shared.icon(forFileType: "public.data")
             }
         }
 

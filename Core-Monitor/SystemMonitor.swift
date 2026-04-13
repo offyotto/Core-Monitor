@@ -46,6 +46,15 @@ struct BatteryInfo {
     var timeRemainingMinutes: Int?
 }
 
+// MARK: - Disk stats
+struct DiskStats {
+    var totalGB: Double = 0
+    var usedGB: Double = 0
+    var freeGB: Double = 0
+    var purgeableGB: Double = 0
+    var usagePercent: Double = 0
+}
+
 private typealias SMCBytes = (
     UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
     UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
@@ -106,6 +115,11 @@ final class SystemMonitor: ObservableObject {
         let totalSystemWatts: Double?
         let currentVolume: Float
         let currentBrightness: Float
+        // New fields
+        let diskStats: DiskStats
+        let cpuPowerWatts: Double?
+        let gpuPowerWatts: Double?
+        let ssdTemperature: Double?
     }
 
     var cpuTemperature: Double?
@@ -130,6 +144,17 @@ final class SystemMonitor: ObservableObject {
     // System volume and display brightness (0–1), polled each cycle
     var currentVolume:     Float = 0.5
     var currentBrightness: Float = 1.0
+
+    // NEW: extended sensor data
+    var diskStats = DiskStats()
+    var cpuPowerWatts: Double?
+    var gpuPowerWatts: Double?
+    var ssdTemperature: Double?
+
+    // MARK: - History buffers (60 samples, used by menu bar popovers)
+    private(set) var cpuHistory:     [Double] = Array(repeating: 0, count: 60)
+    private(set) var memHistory:     [Double] = Array(repeating: 0, count: 60)
+    private(set) var cpuTempHistory: [Double] = Array(repeating: 0, count: 60)
 
     static var isAppleSilicon: Bool {
         var value: Int32 = 0
@@ -209,6 +234,9 @@ final class SystemMonitor: ObservableObject {
 
     private let gpuTempKeys = ["TGDD", "TG0P", "TG0D", "TG0E", "TG0F", "Tg0T", "Tg05"]
 
+    // SSD / NAND temperature keys
+    private let ssdTempKeys = ["TM0P", "Ts0S", "TH0A", "TH0B", "TH0C"]
+
     private let dataTypeFlt = fourCharCodeFrom("flt ")
     private let dataTypeSp78 = fourCharCodeFrom("sp78")
     private let dataTypeFpe2 = fourCharCodeFrom("fpe2")
@@ -241,8 +269,6 @@ final class SystemMonitor: ObservableObject {
             self?.updateReadings()
         }
         if let timer {
-            // Allow up to 15% timer slip — OS can batch timer callbacks to
-            // reduce wakeup frequency, cutting idle CPU usage.
             timer.tolerance = monitoringInterval * 0.15
             RunLoop.current.add(timer, forMode: .common)
         }
@@ -312,6 +338,11 @@ final class SystemMonitor: ObservableObject {
             let memoryStats = self.readMemoryStats()
             let batteryInfo = self.readBatteryInfo()
             let systemControls = self.readSystemControls()
+            // New readings
+            let diskStats = self.readDiskStats()
+            let cpuPowerWatts = self.readSMCValue(key: "PCPU")
+            let gpuPowerWatts = self.readSMCValue(key: "PGPU")
+            let ssdTemperature = self.readSSDTemperature()
 
             let snapshot = SystemSnapshot(
                 cpuTemperature: cpuTemperature,
@@ -329,7 +360,11 @@ final class SystemMonitor: ObservableObject {
                 batteryInfo: batteryInfo,
                 totalSystemWatts: batteryInfo.powerWatts,
                 currentVolume: systemControls.volume,
-                currentBrightness: systemControls.brightness
+                currentBrightness: systemControls.brightness,
+                diskStats: diskStats,
+                cpuPowerWatts: cpuPowerWatts,
+                gpuPowerWatts: gpuPowerWatts,
+                ssdTemperature: ssdTemperature
             )
 
             DispatchQueue.main.async { [weak self] in
@@ -351,6 +386,20 @@ final class SystemMonitor: ObservableObject {
                 self.totalSystemWatts = snapshot.totalSystemWatts
                 self.currentVolume = snapshot.currentVolume
                 self.currentBrightness = snapshot.currentBrightness
+                // New properties
+                self.diskStats = snapshot.diskStats
+                self.cpuPowerWatts = snapshot.cpuPowerWatts
+                self.gpuPowerWatts = snapshot.gpuPowerWatts
+                self.ssdTemperature = snapshot.ssdTemperature
+                // Update history buffers
+                self.cpuHistory.removeFirst()
+                self.cpuHistory.append(snapshot.cpuUsagePercent)
+                self.memHistory.removeFirst()
+                self.memHistory.append(snapshot.memoryUsagePercent)
+                let normTemp = snapshot.cpuTemperature.map { min($0, 120) / 120 * 100 } ?? 0
+                self.cpuTempHistory.removeFirst()
+                self.cpuTempHistory.append(normTemp)
+
                 self.isSampling = false
                 NotificationCenter.default.post(name: .systemMonitorDidUpdate, object: self)
             }
@@ -373,6 +422,47 @@ final class SystemMonitor: ObservableObject {
             }
         }
         return nil
+    }
+
+    private func readSSDTemperature() -> Double? {
+        for key in ssdTempKeys {
+            if let temp = readSMCValue(key: key), temp > 0, temp < 100 {
+                return temp
+            }
+        }
+        return nil
+    }
+
+    // MARK: - Disk stats (via FileManager)
+    private func readDiskStats() -> DiskStats {
+        var stats = DiskStats()
+        do {
+            let attrs = try FileManager.default.attributesOfFileSystem(forPath: NSHomeDirectory())
+            guard
+                let totalRaw = attrs[.systemSize] as? Int64,
+                let freeRaw  = attrs[.systemFreeSize] as? Int64
+            else { return stats }
+
+            let totalBytes = Double(totalRaw)
+            let freeBytes  = Double(freeRaw)
+
+            // Purgeable = available-for-important-usage minus truly-free
+            var purgeableBytes: Double = 0
+            let url = URL(fileURLWithPath: NSHomeDirectory())
+            if let vals = try? url.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]),
+               let importantAvail = vals.volumeAvailableCapacityForImportantUsage {
+                purgeableBytes = max(0, Double(importantAvail) - freeBytes)
+            }
+
+            let usedBytes = max(0, totalBytes - freeBytes - purgeableBytes)
+
+            stats.totalGB       = totalBytes       / 1_073_741_824
+            stats.usedGB        = usedBytes        / 1_073_741_824
+            stats.freeGB        = freeBytes        / 1_073_741_824
+            stats.purgeableGB   = purgeableBytes   / 1_073_741_824
+            stats.usagePercent  = totalBytes > 0 ? usedBytes / totalBytes * 100 : 0
+        } catch {}
+        return stats
     }
 
     private func readFanReadings() -> (speeds: [Int], mins: [Int], maxs: [Int]) {
@@ -628,7 +718,6 @@ final class SystemMonitor: ObservableObject {
                 let smartMax = (properties["AppleRawMaxCapacity"] as? Int) ?? (properties["MaxCapacity"] as? Int)
                 let smartDesign = (properties["DesignCapacity"] as? Int) ?? (properties["NominalChargeCapacity"] as? Int)
                 if let smartMax, var smartDesign, smartDesign > 0 {
-                    // Some machines report design in a different scale; normalize obvious outliers.
                     if smartDesign > 100_000, smartMax < 20_000 {
                         smartDesign /= 1000
                     }
@@ -639,8 +728,6 @@ final class SystemMonitor: ObservableObject {
                 }
 
                 if let tempRaw = properties["Temperature"] as? Int {
-                    // AppleSmartBattery temperature units vary by machine/OS build.
-                    // Prefer deci-Kelvin, then fall back to centi-Kelvin.
                     let candidates = [
                         (Double(tempRaw) / 10.0) - 273.15,
                         (Double(tempRaw) / 100.0) - 273.15

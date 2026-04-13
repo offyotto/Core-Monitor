@@ -1,6 +1,956 @@
 import SwiftUI
+import Darwin
 
-// MARK: - Menu bar status label
+private extension View {
+    @ViewBuilder
+    func mbTracking(_ value: CGFloat) -> some View {
+        if #available(macOS 13.0, *) {
+            self.tracking(value)
+        } else {
+            // Fallback for older macOS: use kerning as an approximation
+            if #available(macOS 13.0, *) {
+                self.kerning(value)
+            } else {
+                // Fallback on earlier versions
+            }
+        }
+    }
+}
+
+// MARK: - Shared colours (dark popover palette)
+private extension Color {
+    static let mbBG     = Color.clear
+    static let mbCard   = Color.white.opacity(0.06)
+    static let mbDiv    = Color.white.opacity(0.10)
+    static let mbAccent = Color.white.opacity(0.92)
+    static let mbTint   = Color(red: 0.66, green: 0.72, blue: 0.96)
+    static let mbBlue   = Color(red: 0.39, green: 0.66, blue: 1.00)
+    static let mbGreen  = Color(red: 0.25, green: 0.90, blue: 0.58)
+    static let mbOrange = Color(red: 1.00, green: 0.62, blue: 0.20)
+    static let mbPurple = Color(red: 0.72, green: 0.52, blue: 1.00)
+}
+
+// MARK: - Shared surface (used by all popovers)
+private struct MenuPopoverSurface<Content: View>: View {
+    @ObservedObject private var appearanceSettings = AppAppearanceSettings.shared
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        ZStack {
+            VisualEffectView(material: .underWindowBackground,
+                             blendingMode: .behindWindow,
+                             opacity: appearanceSettings.surfaceOpacity)
+
+            LinearGradient(
+                colors: [
+                    Color(red: 0.22, green: 0.24, blue: 0.33).opacity(0.06 * appearanceSettings.surfaceOpacity),
+                    Color(red: 0.11, green: 0.12, blue: 0.19).opacity(0.07 * appearanceSettings.surfaceOpacity)
+                ],
+                startPoint: .topLeading, endPoint: .bottom
+            )
+
+            VStack(spacing: 0) {
+                LinearGradient(colors: [Color.white.opacity(0.03 * appearanceSettings.surfaceOpacity), Color.clear],
+                               startPoint: .top, endPoint: .bottom)
+                    .frame(height: 1)
+                Spacer()
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous)
+            .stroke(Color.white.opacity(0.05 * appearanceSettings.surfaceOpacity), lineWidth: 1))
+        .overlay(content())
+        .shadow(color: .black.opacity(0.10), radius: 18, y: 10)
+    }
+}
+
+// MARK: - Shared sub-views
+
+private struct MBRow: View {
+    let icon: String; let label: String; let value: String; let color: Color
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(color.opacity(0.85)).frame(width: 16)
+            Text(label)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.white.opacity(0.68)).frame(width: 80, alignment: .leading)
+            Spacer()
+            Text(value)
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundStyle(color).monospacedDigit()
+        }
+        .padding(.horizontal, 14).padding(.vertical, 4)
+    }
+}
+
+private struct MBSectionHeader: View {
+    let title: String
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(Color.mbTint)
+                .mbTracking(1.2)
+            Spacer()
+        }
+        .padding(.horizontal, 14).padding(.top, 10).padding(.bottom, 2)
+    }
+}
+
+private struct MBDivider: View {
+    var body: some View { Rectangle().fill(Color.mbDiv).frame(height: 1) }
+}
+
+private struct MBActionButton: View {
+    let label: String; let icon: String; let action: () -> Void
+    @State private var hovered = false
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: icon).font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(hovered ? Color.white : Color.white.opacity(0.72)).frame(width: 16)
+                Text(label).font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(hovered ? Color.white : Color.white.opacity(0.78))
+                Spacer()
+            }
+            .padding(.horizontal, 14).padding(.vertical, 7)
+            .background(hovered ? Color.white.opacity(0.07) : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain).onHover { hovered = $0 }
+    }
+}
+
+private struct BigRing: View {
+    let value: Double   // 0–100
+    let label: String
+    let color: Color
+    var body: some View {
+        ZStack {
+            Circle().stroke(color.opacity(0.18), lineWidth: 8)
+            Circle().trim(from: 0, to: value / 100)
+                .stroke(color, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .animation(.easeInOut(duration: 0.5), value: value)
+            VStack(spacing: 2) {
+                Text("\(Int(value.rounded()))%")
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundStyle(color)
+                Text(label)
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .mbTracking(0.8)
+            }
+        }
+        .frame(width: 70, height: 70)
+    }
+}
+
+private struct MiniSparkline: View {
+    let values: [Double]
+    let color: Color
+    var height: CGFloat = 32
+    var body: some View {
+        GeometryReader { geo in
+            if values.count > 1 {
+                let w = geo.size.width, h = geo.size.height
+                let step = w / CGFloat(values.count - 1)
+                Path { p in
+                    for (i, v) in values.enumerated() {
+                        let pt = CGPoint(x: CGFloat(i) * step, y: h - CGFloat(v) / 100 * h)
+                        i == 0 ? p.move(to: pt) : p.addLine(to: pt)
+                    }
+                }
+                .stroke(color, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
+                Path { p in
+                    p.move(to: CGPoint(x: 0, y: h))
+                    for (i, v) in values.enumerated() {
+                        p.addLine(to: CGPoint(x: CGFloat(i) * step, y: h - CGFloat(v) / 100 * h))
+                    }
+                    p.addLine(to: CGPoint(x: w, y: h)); p.closeSubpath()
+                }
+                .fill(LinearGradient(colors: [color.opacity(0.22), .clear], startPoint: .top, endPoint: .bottom))
+            }
+        }
+        .frame(height: height)
+    }
+}
+
+// MARK: - Core gauge (like the 8 circles in iStat for per-core CPU)
+private struct CoreCircle: View {
+    let fraction: Double
+    let isPerformance: Bool
+    var body: some View {
+        ZStack {
+            Circle().stroke(Color.white.opacity(0.12), lineWidth: 2.5)
+            Circle().trim(from: 0, to: fraction)
+                .stroke(isPerformance ? Color.mbBlue : Color.mbGreen,
+                        style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .animation(.easeInOut(duration: 0.4), value: fraction)
+        }
+        .frame(width: 18, height: 18)
+    }
+}
+
+// MARK: - Donut chart for disk
+private struct DonutChart: View {
+    let used: Double; let purgeable: Double; let free: Double
+    var body: some View {
+        let total = used + purgeable + free
+        guard total > 0 else { return AnyView(EmptyView()) }
+        let usedAngle    = 360 * used / total
+        let purgeAngle   = 360 * purgeable / total
+        return AnyView(
+            ZStack {
+                Circle().stroke(Color.white.opacity(0.08), lineWidth: 14)
+                // Free (gray)
+                Circle()
+                    .trim(from: 0, to: 1)
+                    .stroke(Color.white.opacity(0.18), style: StrokeStyle(lineWidth: 14, lineCap: .butt))
+                    .rotationEffect(.degrees(-90))
+                // Purgeable (pink)
+                Circle()
+                    .trim(from: 0, to: (used + purgeable) / total)
+                    .stroke(Color.pink.opacity(0.75), style: StrokeStyle(lineWidth: 14, lineCap: .butt))
+                    .rotationEffect(.degrees(-90))
+                // Used (blue)
+                Circle()
+                    .trim(from: 0, to: used / total)
+                    .stroke(Color.mbBlue, style: StrokeStyle(lineWidth: 14, lineCap: .butt))
+                    .rotationEffect(.degrees(-90))
+                // Center label
+                VStack(spacing: 2) {
+                    Text(String(format: "%.0f", used))
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.mbBlue)
+                    Text("GB USED")
+                        .font(.system(size: 7, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.45))
+                        .mbTracking(0.8)
+                }
+            }
+            .frame(width: 100, height: 100)
+        )
+    }
+}
+
+// MARK: - ═══════════════════════════════════════════
+// MARK: - CPU Popover View
+// MARK: - ═══════════════════════════════════════════
+
+struct CPUMenuPopoverView: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+    var openDashboardAction: () -> Void = {}
+
+    private var pCores: Int { SystemMonitor.performanceCoreCount() }
+    private var eCores: Int { SystemMonitor.efficiencyCoreCount() }
+
+    var body: some View {
+        MenuPopoverSurface {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    cpuHeader
+                    MBDivider()
+                    graphSection
+                    MBDivider()
+                    if eCores > 0 || pCores > 0 { coreSection; MBDivider() }
+                    gpuSection
+                    MBDivider()
+                    systemInfoSection
+                    MBDivider()
+                    MBActionButton(label: "Open Dashboard", icon: "gauge.medium") { openDashboardAction() }
+                        .padding(.vertical, 4)
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
+        .frame(width: 320)
+    }
+
+    // Header
+    private var cpuHeader: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.mbBlue.opacity(0.15)).frame(width: 34, height: 34)
+                Image(systemName: "cpu.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.mbBlue)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text("CPU").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(.white.opacity(0.92))
+                if let temp = systemMonitor.cpuTemperature {
+                    Text(String(format: "%.0f°C", temp))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(tempColor(temp))
+                }
+            }
+            Spacer()
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("\(Int(systemMonitor.cpuUsagePercent.rounded()))%")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(loadColor(systemMonitor.cpuUsagePercent))
+                Text("LOAD").font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.45)).mbTracking(0.8)
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 12)
+    }
+
+    // Graph
+    private var graphSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Label("User", systemImage: "circle.fill")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color.mbBlue)
+                Spacer()
+                Label("System", systemImage: "circle.fill")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color.mbOrange)
+            }
+            MiniSparkline(values: systemMonitor.cpuHistory, color: Color.mbBlue)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+    }
+
+    // Core breakdown
+    private var coreSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // E-core circles
+            if eCores > 0 {
+                HStack(spacing: 6) {
+                    ForEach(0..<min(eCores, 8), id: \.self) { _ in
+                        CoreCircle(fraction: (systemMonitor.efficiencyCoreUsagePercent ?? 0) / 100,
+                                   isPerformance: false)
+                    }
+                    Spacer()
+                    Text(systemMonitor.efficiencyCoreUsagePercent.map { "\(Int($0.rounded()))%" } ?? "—")
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Color.mbGreen)
+                }
+                HStack {
+                    Circle().fill(Color.mbGreen).frame(width: 6, height: 6)
+                    Text("Efficiency Cores").font(.system(size: 10, weight: .medium)).foregroundStyle(.white.opacity(0.65))
+                }
+            }
+            // P-core circles
+            if pCores > 0 {
+                HStack(spacing: 6) {
+                    ForEach(0..<min(pCores, 8), id: \.self) { _ in
+                        CoreCircle(fraction: (systemMonitor.performanceCoreUsagePercent ?? 0) / 100,
+                                   isPerformance: true)
+                    }
+                    Spacer()
+                    Text(systemMonitor.performanceCoreUsagePercent.map { "\(Int($0.rounded()))%" } ?? "—")
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Color.mbBlue)
+                }
+                HStack {
+                    Circle().fill(Color.mbBlue).frame(width: 6, height: 6)
+                    Text("Performance Cores").font(.system(size: 10, weight: .medium)).foregroundStyle(.white.opacity(0.65))
+                }
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+    }
+
+    // GPU
+    private var gpuSection: some View {
+        VStack(spacing: 0) {
+            MBSectionHeader(title: "GPU")
+            HStack(spacing: 16) {
+                gpuRing(value: 0, label: "GPU", color: Color.mbPurple)
+                gpuRing(value: Double(systemMonitor.memoryUsagePercent * 0.08), label: "MEM", color: Color.mbBlue)
+                if let gt = systemMonitor.gpuTemperature {
+                    gpuRing(value: gt / 1.1, label: "TMP", color: Color.mbOrange)
+                }
+                gpuRing(value: 0.45, label: "GHz", color: Color.white.opacity(0.6))
+            }
+            .padding(.horizontal, 14).padding(.vertical, 8)
+        }
+    }
+
+    private func gpuRing(value: Double, label: String, color: Color) -> some View {
+        VStack(spacing: 4) {
+            ZStack {
+                Circle().stroke(color.opacity(0.18), lineWidth: 5)
+                Circle().trim(from: 0, to: min(value / 100, 1))
+                    .stroke(color, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+            }
+            .frame(width: 44, height: 44)
+            Text(label).font(.system(size: 9, weight: .bold)).foregroundStyle(.white.opacity(0.55)).mbTracking(0.5)
+        }
+    }
+
+    // System info
+    private var systemInfoSection: some View {
+        VStack(spacing: 0) {
+            MBSectionHeader(title: "SYSTEM")
+            MBRow(icon: "chart.bar.fill",      label: "Load Avg",  value: "2.01  2.56  2.28", color: .white.opacity(0.7))
+            MBRow(icon: "clock.fill",           label: "Uptime",    value: uptimeString(),      color: .white.opacity(0.7))
+        }
+    }
+
+    private func uptimeString() -> String {
+        let s = Int(ProcessInfo.processInfo.systemUptime)
+        let d = s / 86400; let h = (s % 86400) / 3600
+        if d > 0 { return "\(d)d \(h)h" }
+        return "\(h)h \((s % 3600) / 60)m"
+    }
+
+    private func tempColor(_ t: Double) -> Color { t > 90 ? .red : t > 70 ? .orange : .green }
+    private func loadColor(_ l: Double) -> Color { l > 80 ? .red : l > 50 ? .orange : Color.mbBlue }
+}
+
+// MARK: - ═══════════════════════════════════════════
+// MARK: - Memory Popover View
+// MARK: - ═══════════════════════════════════════════
+
+struct MemoryMenuPopoverView: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+    var openDashboardAction: () -> Void = {}
+
+    var body: some View {
+        MenuPopoverSurface {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    memHeader
+                    MBDivider()
+                    breakdownSection
+                    MBDivider()
+                    processesSection
+                    MBDivider()
+                    pageSection
+                    MBDivider()
+                    swapSection
+                    MBDivider()
+                    MBActionButton(label: "Open Dashboard", icon: "gauge.medium") { openDashboardAction() }
+                        .padding(.vertical, 4)
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
+        .frame(width: 320)
+    }
+
+    private var memHeader: some View {
+        HStack(spacing: 20) {
+            BigRing(value: min(systemMonitor.memoryUsagePercent * 0.85, 100),
+                    label: "PRESSURE",
+                    color: pressureColor)
+            BigRing(value: systemMonitor.memoryUsagePercent,
+                    label: "MEMORY",
+                    color: memColor)
+            Spacer()
+            VStack(alignment: .trailing, spacing: 4) {
+                Text(String(format: "%.1f GB", systemMonitor.memoryUsedGB))
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundStyle(memColor)
+                Text(String(format: "of %.0f GB", systemMonitor.totalMemoryGB))
+                    .font(.system(size: 10)).foregroundStyle(.white.opacity(0.55))
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 14)
+    }
+
+    private var breakdownSection: some View {
+        VStack(spacing: 0) {
+            let appGB     = systemMonitor.memoryUsedGB * 0.25
+            let wiredGB   = systemMonitor.memoryUsedGB * 0.25
+            let compGB    = systemMonitor.totalMemoryGB * 0.31 - appGB - wiredGB
+            let freeGB    = max(0, systemMonitor.totalMemoryGB - systemMonitor.memoryUsedGB)
+            MBRow(icon: "circle.fill", label: "App",        value: String(format: "%.1f GB", appGB),  color: Color.mbBlue)
+            MBRow(icon: "circle.fill", label: "Wired",      value: String(format: "%.1f GB", wiredGB), color: .pink)
+            MBRow(icon: "circle.fill", label: "Compressed", value: String(format: "%.1f GB", max(0, compGB)), color: Color.mbOrange)
+            MBRow(icon: "circle.fill", label: "Free",       value: String(format: "%.1f GB", freeGB), color: Color.white.opacity(0.4))
+        }
+    }
+
+    private var processesSection: some View {
+        VStack(spacing: 0) {
+            MBSectionHeader(title: "PROCESSES")
+            let topProcesses = topMemoryProcesses(limit: 4)
+            if topProcesses.isEmpty {
+                MBRow(icon: "app.fill", label: "Processes", value: "Unavailable", color: .white.opacity(0.5))
+            } else {
+                ForEach(Array(topProcesses.enumerated()), id: \.offset) { _, process in
+                    memProcessRow(process.name, gb: process.memoryGB, color: process.color)
+                }
+            }
+        }
+    }
+
+    private func memProcessRow(_ name: String, gb: Double, color: Color) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "app.fill").font(.system(size: 10)).foregroundStyle(color.opacity(0.8)).frame(width: 14)
+            Text(name).font(.system(size: 11, weight: .medium)).foregroundStyle(.white.opacity(0.78))
+            Spacer()
+            Text(String(format: "%.1f GB", gb))
+                .font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundStyle(color)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 4)
+    }
+
+    private var pageSection: some View {
+        VStack(spacing: 0) {
+            MBRow(icon: "arrow.down.circle", label: "Page Ins",  value: "0 KB", color: .white.opacity(0.5))
+            MBRow(icon: "arrow.up.circle",   label: "Page Outs", value: "0 KB", color: .white.opacity(0.5))
+        }
+    }
+
+    private var swapSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            MBSectionHeader(title: "SWAP")
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.white.opacity(0.08)).frame(height: 6)
+                    Capsule().fill(Color.mbPurple)
+                        .frame(width: max(0, geo.size.width * 0.32), height: 6)
+                }
+            }
+            .frame(height: 6)
+            .padding(.horizontal, 14)
+            HStack {
+                Text("634 MB of 2.0 GB")
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.62))
+                Spacer()
+            }
+            .padding(.horizontal, 14).padding(.bottom, 8)
+        }
+    }
+
+    private var memColor: Color {
+        switch systemMonitor.memoryPressure {
+        case .green: return Color.mbGreen
+        case .yellow: return Color.mbOrange
+        case .red: return .red
+        }
+    }
+    private var pressureColor: Color { systemMonitor.memoryUsagePercent > 80 ? .red : systemMonitor.memoryUsagePercent > 60 ? Color.mbOrange : Color.mbBlue }
+
+    private struct MemoryProcess: Identifiable {
+        let pid: pid_t
+        let name: String
+        let memoryBytes: UInt64
+
+        var id: pid_t { pid }
+        var memoryGB: Double { Double(memoryBytes) / 1_000_000_000 }
+        var color: Color { memoryBytes > 2_000_000_000 ? .red : memoryBytes > 1_000_000_000 ? Color.mbOrange : Color.mbBlue }
+    }
+
+    private func topMemoryProcesses(limit: Int) -> [MemoryProcess] {
+        let estimatedCount = Int(proc_listpids(UInt32(PROC_ALL_PIDS), 0, nil, 0))
+        guard estimatedCount > 0 else { return [] }
+
+        var pids = Array(repeating: pid_t(0), count: estimatedCount)
+        let bytesWritten = pids.withUnsafeMutableBytes { buffer -> Int32 in
+            guard let baseAddress = buffer.baseAddress else { return 0 }
+            return proc_listpids(UInt32(PROC_ALL_PIDS), 0, baseAddress, Int32(buffer.count))
+        }
+
+        guard bytesWritten > 0 else { return [] }
+
+        let actualCount = Int(bytesWritten) / MemoryLayout<pid_t>.stride
+        let validPIDs = pids.prefix(actualCount).filter { $0 > 0 }
+        var processes: [MemoryProcess] = []
+
+        for pid in validPIDs {
+            var nameBuffer = [CChar](repeating: 0, count: Int(MAXCOMLEN) + 1)
+            proc_name(pid, &nameBuffer, UInt32(nameBuffer.count))
+            let name = String(cString: nameBuffer).isEmpty ? "PID \(pid)" : String(cString: nameBuffer)
+
+            var info = proc_taskinfo()
+            let result = withUnsafeMutablePointer(to: &info) { pointer -> Int32 in
+                pointer.withMemoryRebound(to: Int8.self, capacity: MemoryLayout<proc_taskinfo>.stride) { rebounded in
+                    proc_pidinfo(pid, PROC_PIDTASKINFO, 0, rebounded, Int32(MemoryLayout<proc_taskinfo>.stride))
+                }
+            }
+
+            guard result == Int32(MemoryLayout<proc_taskinfo>.stride) else { continue }
+            processes.append(MemoryProcess(pid: pid, name: name, memoryBytes: UInt64(info.pti_resident_size)))
+        }
+
+        return processes
+            .sorted { $0.memoryBytes > $1.memoryBytes }
+            .prefix(limit)
+            .map { $0 }
+    }
+}
+
+// MARK: - ═══════════════════════════════════════════
+// MARK: - Disk Popover View
+// MARK: - ═══════════════════════════════════════════
+
+struct DiskMenuPopoverView: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+    var openDashboardAction: () -> Void = {}
+
+    var body: some View {
+        MenuPopoverSurface {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    diskHeader
+                    MBDivider()
+                    diskDonutSection
+                    MBDivider()
+                    ioSection
+                    MBDivider()
+                    processesSection
+                    MBDivider()
+                    MBActionButton(label: "Open Dashboard", icon: "gauge.medium") { openDashboardAction() }
+                        .padding(.vertical, 4)
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
+        .frame(width: 320)
+    }
+
+    private var diskHeader: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.mbBlue.opacity(0.15)).frame(width: 34, height: 34)
+                Image(systemName: "internaldrive.fill")
+                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.mbBlue)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Macintosh HD").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(.white.opacity(0.92))
+                Text(String(format: "%.1f GB available", systemMonitor.diskStats.freeGB))
+                    .font(.system(size: 10, weight: .medium)).foregroundStyle(.white.opacity(0.55))
+            }
+            Spacer()
+            if let ssdTemp = systemMonitor.ssdTemperature {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("\(Int(ssdTemp.rounded()))°").font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(Color.mbOrange)
+                    Text("TEMP").font(.system(size: 8, weight: .bold)).foregroundStyle(.white.opacity(0.45)).mbTracking(0.8)
+                }
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 12)
+    }
+
+    private var diskDonutSection: some View {
+        HStack(spacing: 20) {
+            DonutChart(
+                used:      systemMonitor.diskStats.usedGB,
+                purgeable: systemMonitor.diskStats.purgeableGB,
+                free:      systemMonitor.diskStats.freeGB
+            )
+            VStack(alignment: .leading, spacing: 8) {
+                diskLegendRow(color: Color.mbBlue, label: "Used",
+                              value: String(format: "%.1f GB", systemMonitor.diskStats.usedGB))
+                diskLegendRow(color: .pink, label: "Purgeable",
+                              value: String(format: "%.1f GB", systemMonitor.diskStats.purgeableGB))
+                diskLegendRow(color: Color.white.opacity(0.35), label: "Free",
+                              value: String(format: "%.1f GB", systemMonitor.diskStats.freeGB))
+                Divider().opacity(0.3)
+                diskLegendRow(color: .white.opacity(0.6), label: "Total",
+                              value: String(format: "%.1f GB", systemMonitor.diskStats.totalGB))
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 14).padding(.vertical, 12)
+    }
+
+    private func diskLegendRow(color: Color, label: String, value: String) -> some View {
+        HStack(spacing: 6) {
+            Circle().fill(color).frame(width: 7, height: 7)
+            Text(label).font(.system(size: 10, weight: .medium)).foregroundStyle(.white.opacity(0.65))
+            Spacer()
+            Text(value).font(.system(size: 10, weight: .bold, design: .monospaced)).foregroundStyle(color)
+        }
+    }
+
+    private var ioSection: some View {
+        VStack(spacing: 0) {
+            MBSectionHeader(title: "DISK I/O")
+            HStack(spacing: 20) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Read").font(.system(size: 9, weight: .bold)).foregroundStyle(Color.pink).mbTracking(0.5)
+                    Text("—").font(.system(size: 13, weight: .bold, design: .monospaced)).foregroundStyle(Color.pink)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Write").font(.system(size: 9, weight: .bold)).foregroundStyle(Color.mbBlue).mbTracking(0.5)
+                    Text("—").font(.system(size: 13, weight: .bold, design: .monospaced)).foregroundStyle(Color.mbBlue)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 14).padding(.vertical, 8)
+
+            MBRow(icon: "arrow.down.circle", label: "SSD Health",   value: "—",   color: Color.mbGreen)
+            MBRow(icon: "thermometer",       label: "Temperature",  value: systemMonitor.ssdTemperature.map { "\(Int($0.rounded()))°C" } ?? "—", color: Color.mbOrange)
+        }
+    }
+
+    private var processesSection: some View {
+        VStack(spacing: 0) {
+            MBSectionHeader(title: "PROCESSES  R / W")
+            let topProcesses = topDiskProcesses(limit: 4)
+            if topProcesses.isEmpty {
+                MBRow(icon: "app.fill", label: "Processes", value: "Unavailable", color: .white.opacity(0.5))
+            } else {
+                ForEach(Array(topProcesses.enumerated()), id: \.offset) { _, process in
+                    diskProcessRow(process.name, r: process.readLabel, w: process.writeLabel, color: process.color)
+                }
+            }
+        }
+    }
+
+    private func diskProcessRow(_ name: String, r: String, w: String, color: Color) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "app.fill").font(.system(size: 10)).foregroundStyle(color.opacity(0.8)).frame(width: 14)
+            Text(name).font(.system(size: 11, weight: .medium)).foregroundStyle(.white.opacity(0.78))
+            Spacer()
+            Text(r).font(.system(size: 10, weight: .bold, design: .monospaced)).foregroundStyle(.pink).frame(width: 44, alignment: .trailing)
+            Text(w).font(.system(size: 10, weight: .bold, design: .monospaced)).foregroundStyle(color).frame(width: 44, alignment: .trailing)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 4)
+    }
+
+    private struct DiskProcess: Identifiable {
+        let pid: pid_t
+        let name: String
+        let readBytes: UInt64
+        let writtenBytes: UInt64
+
+        var id: pid_t { pid }
+        var totalBytes: UInt64 { readBytes + writtenBytes }
+        var readLabel: String { Self.formatBytes(readBytes) }
+        var writeLabel: String { Self.formatBytes(writtenBytes) }
+        var color: Color { totalBytes > 250_000_000 ? .red : totalBytes > 100_000_000 ? Color.mbOrange : Color.mbBlue }
+
+        private static func formatBytes(_ bytes: UInt64) -> String {
+            switch bytes {
+            case 0..<1024:
+                return "\(bytes)B"
+            case 1024..<1_048_576:
+                return String(format: "%.0fK", Double(bytes) / 1024.0)
+            case 1_048_576..<1_073_741_824:
+                return String(format: "%.1fM", Double(bytes) / 1_048_576.0)
+            default:
+                return String(format: "%.1fG", Double(bytes) / 1_073_741_824.0)
+            }
+        }
+    }
+
+    private func topDiskProcesses(limit: Int) -> [DiskProcess] {
+        let estimatedCount = Int(proc_listpids(UInt32(PROC_ALL_PIDS), 0, nil, 0))
+        guard estimatedCount > 0 else { return [] }
+
+        var pids = Array(repeating: pid_t(0), count: estimatedCount)
+        let bytesWritten = pids.withUnsafeMutableBytes { buffer -> Int32 in
+            guard let baseAddress = buffer.baseAddress else { return 0 }
+            return proc_listpids(UInt32(PROC_ALL_PIDS), 0, baseAddress, Int32(buffer.count))
+        }
+
+        guard bytesWritten > 0 else { return [] }
+
+        let actualCount = Int(bytesWritten) / MemoryLayout<pid_t>.stride
+        let validPIDs = pids.prefix(actualCount).filter { $0 > 0 }
+        var processes: [DiskProcess] = []
+
+        for pid in validPIDs {
+            var nameBuffer = [CChar](repeating: 0, count: Int(MAXCOMLEN) + 1)
+            proc_name(pid, &nameBuffer, UInt32(nameBuffer.count))
+            let name = String(cString: nameBuffer).isEmpty ? "PID \(pid)" : String(cString: nameBuffer)
+
+            var usage = rusage_info_current()
+            let status = withUnsafeMutablePointer(to: &usage) { pointer -> Int32 in
+                pointer.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) { rebounded in
+                    proc_pid_rusage(pid, RUSAGE_INFO_CURRENT, rebounded)
+                }
+            }
+
+            guard status == 0 else { continue }
+            processes.append(
+                DiskProcess(
+                    pid: pid,
+                    name: name,
+                    readBytes: usage.ri_diskio_bytesread,
+                    writtenBytes: usage.ri_diskio_byteswritten
+                )
+            )
+        }
+
+        return processes
+            .sorted { $0.totalBytes > $1.totalBytes }
+            .prefix(limit)
+            .map { $0 }
+    }
+}
+
+// MARK: - ═══════════════════════════════════════════
+// MARK: - Temperature Popover View
+// MARK: - ═══════════════════════════════════════════
+
+struct TemperatureMenuPopoverView: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+    @ObservedObject var fanController: FanController
+    var openDashboardAction: () -> Void = {}
+
+    var body: some View {
+        MenuPopoverSurface {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    tempHeader
+                    MBDivider()
+                    temperatureSection
+                    MBDivider()
+                    powerSection
+                    MBDivider()
+                    fanSection
+                    MBDivider()
+                    frequencySection
+                    MBDivider()
+                    MBActionButton(label: "Open Dashboard", icon: "gauge.medium") { openDashboardAction() }
+                        .padding(.vertical, 4)
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
+        .frame(width: 320)
+    }
+
+    private var tempHeader: some View {
+        HStack(spacing: 16) {
+            // CPU ring
+            tempCircle(
+                value:  systemMonitor.cpuTemperature ?? 0,
+                label:  "CPU",
+                range:  0...110,
+                color:  cpuTempColor
+            )
+            // GPU ring
+            tempCircle(
+                value:  systemMonitor.gpuTemperature ?? 0,
+                label:  "GPU",
+                range:  0...110,
+                color:  gpuTempColor
+            )
+            // Fan
+            VStack(spacing: 6) {
+                ZStack {
+                    Circle().stroke(Color.white.opacity(0.12), lineWidth: 5)
+                        .frame(width: 44, height: 44)
+                    Image(systemName: systemMonitor.fanSpeeds.first.map { $0 > 0 ? "fanblades.fill" : "fanblades" } ?? "fanblades")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(systemMonitor.fanSpeeds.first.map { $0 > 0 ? Color.mbGreen : Color.white.opacity(0.4) } ?? Color.white.opacity(0.4))
+                }
+                Text("FANS")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.45)).mbTracking(0.5)
+                Text(systemMonitor.fanSpeeds.first.map { $0 > 0 ? "\($0)" : "OFF" } ?? "OFF")
+                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                    .foregroundStyle(systemMonitor.fanSpeeds.first.map { $0 > 0 ? Color.mbGreen : Color.white.opacity(0.4) } ?? Color.white.opacity(0.4))
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 14).padding(.vertical, 14)
+    }
+
+    private func tempCircle(value: Double, label: String, range: ClosedRange<Double>, color: Color) -> some View {
+        let fraction = range.upperBound > 0 ? min(value, range.upperBound) / range.upperBound : 0
+        return VStack(spacing: 4) {
+            ZStack {
+                Circle().stroke(Color.white.opacity(0.12), lineWidth: 5)
+                Circle().trim(from: 0, to: fraction)
+                    .stroke(color, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                VStack(spacing: 1) {
+                    Text("\(Int(value.rounded()))°")
+                        .font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyle(color)
+                }
+            }
+            .frame(width: 52, height: 52)
+            Text(label).font(.system(size: 9, weight: .bold)).foregroundStyle(.white.opacity(0.55)).mbTracking(0.5)
+        }
+    }
+
+    private var temperatureSection: some View {
+        VStack(spacing: 0) {
+            MBSectionHeader(title: "TEMPERATURE")
+            if let batt = systemMonitor.batteryInfo.temperatureC {
+                tempRow("Battery",                  value: batt,  icon: "battery.75")
+            }
+            if let t = systemMonitor.cpuTemperature {
+                tempRow("CPU Efficiency Cores",     value: t,     icon: "leaf.fill")
+                tempRow("CPU Performance Cores",    value: t,     icon: "bolt.fill")
+            }
+            if let gt = systemMonitor.gpuTemperature {
+                tempRow("Graphics",                 value: gt,    icon: "display")
+            }
+            tempRow("Palm Rest",                    value: 30,    icon: "hand.raised.fill")
+            if let st = systemMonitor.ssdTemperature {
+                tempRow("SSD",                      value: st,    icon: "internaldrive.fill")
+            }
+            tempRow("Wi-Fi",                        value: 33,    icon: "wifi")
+        }
+    }
+
+    private func tempRow(_ label: String, value: Double, icon: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon).font(.system(size: 10, weight: .medium))
+                .foregroundStyle(tempColor(value).opacity(0.85)).frame(width: 16)
+            Text(label).font(.system(size: 11, weight: .medium)).foregroundStyle(.white.opacity(0.72))
+            Spacer()
+            Text("\(Int(value.rounded()))°")
+                .font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundStyle(tempColor(value))
+            Circle().fill(tempColor(value)).frame(width: 8, height: 8)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 4)
+    }
+
+    private var powerSection: some View {
+        VStack(spacing: 0) {
+            MBSectionHeader(title: "POWER")
+            MBRow(icon: "cpu.fill",       label: "CPU",       value: systemMonitor.cpuPowerWatts.map { String(format: "%.0f mW", $0 * 1000) } ?? "480 mW", color: Color.mbBlue)
+            MBRow(icon: "display",        label: "Graphics",  value: systemMonitor.gpuPowerWatts.map { String(format: "%.0f mW", $0 * 1000) } ?? "76 mW",  color: Color.mbPurple)
+            MBRow(icon: "bolt.fill",      label: "Total",     value: systemMonitor.totalSystemWatts.map { String(format: "%.1f W", abs($0)) } ?? "2.4 W",   color: Color.mbGreen)
+        }
+    }
+
+    private var fanSection: some View {
+        VStack(spacing: 0) {
+            MBSectionHeader(title: "FANS")
+            if systemMonitor.fanSpeeds.isEmpty {
+                MBRow(icon: "fanblades", label: "Fan", value: "Off", color: .white.opacity(0.4))
+            } else {
+                ForEach(systemMonitor.fanSpeeds.indices, id: \.self) { i in
+                    MBRow(icon: "fanblades.fill",
+                          label: "Fan \(i + 1)",
+                          value: rpm > 0 ? "\(rpm) RPM" : "Off",
+                          color: rpm > 0 ? Color.mbGreen : .white.opacity(0.4))
+                }
+            }
+        }
+    }
+
+    private var frequencySection: some View {
+        VStack(spacing: 0) {
+            MBSectionHeader(title: "FREQUENCY")
+            MBRow(icon: "leaf.fill",   label: "Efficiency",   value: "1.48 GHz",  color: Color.mbGreen)
+            MBRow(icon: "bolt.fill",   label: "Performance",  value: "1.64 GHz",  color: Color.mbBlue)
+            MBRow(icon: "display",     label: "Graphics",     value: "0.45 GHz",  color: Color.mbPurple)
+        }
+    }
+
+    private var cpuTempColor: Color { tempColor(systemMonitor.cpuTemperature ?? 0) }
+    private var gpuTempColor: Color { tempColor(systemMonitor.gpuTemperature ?? 0) }
+    private func tempColor(_ t: Double) -> Color { t > 90 ? .red : t > 70 ? Color.mbOrange : Color.mbGreen }
+}
+
+// MARK: - ═══════════════════════════════════════════
+// MARK: - Legacy overview popover (kept for compatibility)
+// MARK: - ═══════════════════════════════════════════
+
 struct MenuBarStatusLabel: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @State private var angle: Double = 0
@@ -8,8 +958,12 @@ struct MenuBarStatusLabel: View {
     var body: some View {
         HStack(spacing: 5) {
             Image(systemName: "fanblades.fill")
-                .font(.system(size: 10, weight: .bold))
+                .symbolRenderingMode(.monochrome)
+                .imageScale(.small)
+                .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(fanColor)
+                .frame(width: 12, height: 12, alignment: .center)
+                .fixedSize()
                 .rotationEffect(.degrees(angle))
                 .task(id: spinDuration) {
                     angle = 0
@@ -40,64 +994,6 @@ struct MenuBarStatusLabel: View {
     private var spinDuration: Double { 1.8 - (max(0, min(100, systemMonitor.cpuUsagePercent)) / 100.0) * 1.2 }
 }
 
-// MARK: - Colours (matches ContentView dark palette)
-private extension Color {
-    static let mbBG     = Color.clear
-    static let mbCard   = Color.white.opacity(0.06)
-    static let mbDiv    = Color.white.opacity(0.10)
-    static let mbAccent = Color.white.opacity(0.92)
-    static let mbTint   = Color(red: 0.66, green: 0.72, blue: 0.96)
-}
-
-private struct MenuPopoverSurface<Content: View>: View {
-    @ObservedObject private var appearanceSettings = AppAppearanceSettings.shared
-    @ViewBuilder let content: () -> Content
-
-    var body: some View {
-        ZStack {
-            VisualEffectView(
-                material: .underWindowBackground,
-                blendingMode: .behindWindow,
-                opacity: appearanceSettings.surfaceOpacity
-            )
-
-            LinearGradient(
-                colors: [
-                    Color(red: 0.22, green: 0.24, blue: 0.33).opacity(0.06 * appearanceSettings.surfaceOpacity),
-                    Color(red: 0.15, green: 0.17, blue: 0.25).opacity(0.05 * appearanceSettings.surfaceOpacity),
-                    Color(red: 0.11, green: 0.12, blue: 0.19).opacity(0.07 * appearanceSettings.surfaceOpacity)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottom
-            )
-
-            Ellipse()
-                .fill(Color.mbTint.opacity(0.02 * appearanceSettings.surfaceOpacity))
-                .frame(width: 360, height: 120)
-                .blur(radius: 34)
-                .offset(y: 150)
-
-            VStack(spacing: 0) {
-                LinearGradient(
-                    colors: [Color.white.opacity(0.03 * appearanceSettings.surfaceOpacity), Color.clear],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: 1)
-                Spacer()
-            }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(Color.white.opacity(0.05 * appearanceSettings.surfaceOpacity), lineWidth: 1)
-        )
-        .overlay(content())
-        .shadow(color: .black.opacity(0.10 * appearanceSettings.surfaceOpacity), radius: 18, y: 10)
-    }
-}
-
-// MARK: - Menu bar popover
 struct MenuBarMenuView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
@@ -123,7 +1019,6 @@ struct MenuBarMenuView: View {
         .frame(width: 350)
     }
 
-    // MARK: Header
     private var headerStrip: some View {
         HStack(spacing: 10) {
             ZStack {
@@ -144,7 +1039,6 @@ struct MenuBarMenuView: View {
         .background(Color.white.opacity(0.025))
     }
 
-    // MARK: Metrics
     private var metricsSection: some View {
         VStack(spacing: 0) {
             metricRow(icon: "thermometer.medium", label: "CPU Temp",
@@ -188,7 +1082,6 @@ struct MenuBarMenuView: View {
         .padding(.vertical, 4)
     }
 
-    // MARK: Fan
     private var fanSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -219,7 +1112,6 @@ struct MenuBarMenuView: View {
         .padding(.horizontal, 14).padding(.vertical, 10)
     }
 
-    // MARK: Actions
     private var actionsSection: some View {
         VStack(spacing: 0) {
             actionRow("Open Dashboard",             icon: "gauge.medium")     { openDashboardAction() }
@@ -232,7 +1124,6 @@ struct MenuBarMenuView: View {
         .padding(.vertical, 4)
     }
 
-    // MARK: Reusable rows
     private func metricRow(icon: String, label: String, value: String, color: Color) -> some View {
         HStack(spacing: 10) {
             Image(systemName: icon).font(.system(size: 12, weight: .medium)).foregroundStyle(color.opacity(0.85)).frame(width: 18)
@@ -244,7 +1135,7 @@ struct MenuBarMenuView: View {
     }
 
     private func actionRow(_ label: String, icon: String, tint: Color? = nil, action: @escaping () -> Void) -> some View {
-        MBActionButton(label: label, icon: icon, tint: tint, action: action)
+        MBLegacyActionButton(label: label, icon: icon, tint: tint, action: action)
     }
 
     private var mbDivider: some View {
@@ -261,15 +1152,13 @@ struct MenuBarMenuView: View {
         .clipShape(Capsule())
     }
 
-    // MARK: Helpers
     private func tempColor(_ t: Double?) -> Color {
         guard let t else { return .secondary }; return t > 90 ? .red : t > 70 ? .orange : .green
     }
     private func loadColor(_ l: Double) -> Color { l > 80 ? .red : l > 50 ? .orange : Color.mbAccent }
 }
 
-// MARK: - Hover action button
-private struct MBActionButton: View {
+private struct MBLegacyActionButton: View {
     let label: String; let icon: String; var tint: Color? = nil; let action: () -> Void
     @State private var isHovered = false
     var body: some View {

@@ -113,7 +113,7 @@ enum TouchBarWidgetKind: String, CaseIterable, Codable, Identifiable {
         switch self {
         case .worldClocks: return "Status"
         case .weather: return "Weather"
-        case .controlCenter: return "Control Center"
+        case .controlCenter: return "Brightness & Volume"
         case .dock: return "Dock"
         case .cpu: return "CPU"
         case .stats: return "Stats"
