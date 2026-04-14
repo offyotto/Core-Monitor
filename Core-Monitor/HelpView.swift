@@ -34,9 +34,9 @@ struct HelpView: View {
             HelpSection(id: "thermals", title: "Thermals", icon: "thermometer.medium", content: AnyView(
                 HelpCard {
                     Text("The Thermals section displays detailed temperature readings from multiple sensors across your Mac.")
-                    HelpBullet(text: "Supports a variety of sensor types including die, battery, and ambient temperatures.")
-                    HelpBullet(text: "Shows temperature warnings and alerts if thresholds are reached.")
-                    HelpBullet(text: "You can reference individual sensor data by names like `CPU Proximity` or `Battery Max`.")
+                    HelpBullet(text: "Current builds surface CPU, GPU, SSD, and battery temperatures when those readings are available.")
+                    HelpBullet(text: "If a temperature is missing, the app could not resolve a readable sensor key for this Mac.")
+                    HelpBullet(text: "Core Monitor currently does not ship automatic thermal alert notifications.")
                 }
             )),
             HelpSection(id: "memory", title: "Memory", icon: "memorychip", content: AnyView(
@@ -51,7 +51,7 @@ struct HelpView: View {
                     Text("Manage your Mac’s fans with advanced controls and profiles.")
                     HelpBullet(text: "Fan profiles allow custom curves, manual speed settings, or automatic fan speed management.")
                     HelpBullet(text: "The helper tool must be installed to enable fan control functionality.")
-                    HelpBullet(text: "Calibration assists in aligning fan speeds correctly with actual hardware RPM.")
+                    HelpBullet(text: "The `Probe Fan Keys` action checks which fan-related SMC keys respond on the current Mac. It does not calibrate RPM accuracy.")
                     HelpBullet(text: "Safety features prevent unsafe fan speeds and protect hardware integrity.")
                     Text("Use the `Fans` tab to switch profiles or adjust settings.")
                         .font(.subheadline)
@@ -92,7 +92,8 @@ struct HelpView: View {
                 HelpCard {
                     Text("Core Monitor menu bar items provide quick overview and access to system metrics.")
                     HelpBullet(text: "Click menu bar icons to open popovers with detailed info and controls.")
-                    HelpBullet(text: "Customize which metrics appear from the app’s settings/preferences.")
+                    HelpBullet(text: "Use `System` → `Menu Bar` to choose which of the CPU, Memory, Disk, and Temperature items stay visible.")
+                    HelpBullet(text: "At least one menu bar item must stay enabled so the app remains reachable after launch.")
                 }
             )),
             HelpSection(id: "basic", title: "Basic Mode", icon: "square.grid.2x2.fill", content: AnyView(
@@ -121,7 +122,7 @@ struct HelpView: View {
                     Text("Common issues and solutions:")
                         .fontWeight(.semibold)
                     HelpBullet(text: "If sensors are missing, restart Core Monitor and verify SMC access.")
-                    HelpBullet(text: "Fan control not working? Ensure the helper is installed and try calibration.")
+                    HelpBullet(text: "Fan control not working? Ensure the helper is installed, reset to system auto, then run `Probe Fan Keys` to confirm readable fan SMC keys.")
                     HelpBullet(text: "Weather unavailable? Check location permissions and WeatherKit configuration.")
                     HelpBullet(text: "Login item requires approval — open System Settings → General → Login Items.")
                     HelpBullet(text: "Touch Bar clipping — reduce active items or apply a narrower preset.")

@@ -200,7 +200,7 @@ final class FanController: ObservableObject {
     @Published var autoAggressiveness: Double = 1.5
     @Published var autoMaxSpeed: Int = 6500
     @Published var statusMessage: String = "Idle"
-    @Published var calibrationStatus: String = "Not calibrated"
+    @Published var calibrationStatus: String = "No fan probe run yet."
     @Published var isCalibrating: Bool = false
     @Published var customPresetSource: String = FanController.defaultCustomPresetSource
     @Published var customPresetStatus: String = "No custom preset saved yet."
@@ -331,11 +331,17 @@ final class FanController: ObservableObject {
             try data.write(to: url, options: .atomic)
 
             customPresetSource = prettySource
-                        customPresetStatus = "Saved custom preset \"\(preset.name)\". Restart to apply."
+            customPresetStatus = "Saved custom preset \"\(preset.name)\". Applying now."
             customPresetLastError = nil
-            needsCustomPresetRestart = true
+            needsCustomPresetRestart = false
+            // Hot-reload: parse and activate immediately without restart
+            self.customPreset = preset
             if mode == .custom {
-                statusMessage = "Custom preset saved. Restart Core Monitor to apply it."
+                lastAppliedSpeed = 0
+                applyCurrentMode(force: true)
+            }
+            if mode == .custom {
+                statusMessage = "Custom preset \"\(preset.name)\" applied."
             }
             return .success(customPresetStatus)
         } catch {
@@ -421,7 +427,7 @@ final class FanController: ObservableObject {
 
         let keys = fanCalibrationCandidateKeys()
         isCalibrating = true
-        calibrationStatus = "Calibrating fan SMC keys 0/\(keys.count)"
+        calibrationStatus = "Probing fan-related SMC keys 0/\(keys.count)"
 
         Task { @MainActor [weak self] in
             guard let self else { return }
@@ -433,7 +439,7 @@ final class FanController: ObservableObject {
                 }
 
                 let completed = index + 1
-                calibrationStatus = "Calibrating fan SMC keys \(completed)/\(keys.count) - \(responsiveKeys.count) responsive"
+                calibrationStatus = "Probing fan-related SMC keys \(completed)/\(keys.count) - \(responsiveKeys.count) responsive"
                 if completed % 8 == 0 {
                     await Task.yield()
                 }
@@ -441,8 +447,8 @@ final class FanController: ObservableObject {
 
             let preview = responsiveKeys.prefix(10).joined(separator: ", ")
             calibrationStatus = responsiveKeys.isEmpty
-                ? "Fan calibration finished: 0/\(keys.count) keys responded"
-                : "Fan calibration finished: \(responsiveKeys.count)/\(keys.count) keys responded - \(preview)"
+                ? "Fan key probe finished: 0/\(keys.count) keys responded"
+                : "Fan key probe finished: \(responsiveKeys.count)/\(keys.count) keys responded - \(preview)"
             statusMessage = calibrationStatus
             isCalibrating = false
         }
@@ -908,4 +914,3 @@ final class FanController: ObservableObject {
         defaults.set(autoMaxSpeed, forKey: "autoMaxSpeed")
     }
 }
-

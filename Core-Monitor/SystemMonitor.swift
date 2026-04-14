@@ -136,6 +136,7 @@ final class SystemMonitor: ObservableObject {
         let cpuPowerWatts: Double?
         let gpuPowerWatts: Double?
         let ssdTemperature: Double?
+        let networkStats: NetworkStats
     }
 
     var cpuTemperature: Double?
@@ -174,6 +175,15 @@ final class SystemMonitor: ObservableObject {
     var cpuPowerWatts: Double?
     var gpuPowerWatts: Double?
     var ssdTemperature: Double?
+
+    // MARK: - Network throughput (bytes/sec since last sample)
+    struct NetworkStats {
+        var uploadBytesPerSec:   Double = 0
+        var downloadBytesPerSec: Double = 0
+    }
+    private(set) var networkStats = NetworkStats()
+    private var previousNetworkBytes: (sent: UInt64, received: UInt64) = (0, 0)
+    private var previousNetworkTime: Date = Date()
 
     // MARK: - History buffers (60 samples, used by menu bar popovers)
     private(set) var cpuHistory:     [Double] = Array(repeating: 0, count: 60)
@@ -367,6 +377,7 @@ final class SystemMonitor: ObservableObject {
             let cpuPowerWatts = self.readSMCValue(key: "PCPU")
             let gpuPowerWatts = self.readSMCValue(key: "PGPU")
             let ssdTemperature = self.readSSDTemperature()
+            let networkStats = self.readNetworkStats()
 
             let snapshot = SystemSnapshot(
                 cpuTemperature: cpuTemperature,
@@ -396,7 +407,8 @@ final class SystemMonitor: ObservableObject {
                 diskStats: diskStats,
                 cpuPowerWatts: cpuPowerWatts,
                 gpuPowerWatts: gpuPowerWatts,
-                ssdTemperature: ssdTemperature
+                ssdTemperature: ssdTemperature,
+                networkStats: networkStats
             )
 
             DispatchQueue.main.async { [weak self] in
@@ -431,6 +443,7 @@ final class SystemMonitor: ObservableObject {
                 self.cpuPowerWatts = snapshot.cpuPowerWatts
                 self.gpuPowerWatts = snapshot.gpuPowerWatts
                 self.ssdTemperature = snapshot.ssdTemperature
+                self.networkStats = snapshot.networkStats
                 // Update history buffers
                 self.cpuHistory.removeFirst()
                 self.cpuHistory.append(snapshot.cpuUsagePercent)
@@ -473,6 +486,52 @@ final class SystemMonitor: ObservableObject {
         return nil
     }
 
+    // MARK: - Network throughput via getifaddrs
+    private func readNetworkStats() -> NetworkStats {
+        var totalSent: UInt64 = 0
+        var totalReceived: UInt64 = 0
+
+        var ifap: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&ifap) == 0, let firstAddr = ifap else { return networkStats }
+        defer { freeifaddrs(ifap) }
+
+        var cursor: UnsafeMutablePointer<ifaddrs>? = firstAddr
+        while let ifa = cursor {
+            let interface = ifa.pointee
+
+            if let data = interface.ifa_data {
+                let name = String(cString: interface.ifa_name)
+
+                // Skip loopback, only count physical / WiFi interfaces
+                if name != "lo0" {
+                    let stats = data.assumingMemoryBound(to: if_data.self).pointee
+                    totalSent += UInt64(stats.ifi_obytes)
+                    totalReceived += UInt64(stats.ifi_ibytes)
+                }
+            }
+
+            cursor = interface.ifa_next
+        }
+
+        let now = Date()
+        let elapsed = now.timeIntervalSince(previousNetworkTime)
+        guard elapsed > 0, previousNetworkBytes.sent > 0 || previousNetworkBytes.received > 0 else {
+            previousNetworkBytes = (totalSent, totalReceived)
+            previousNetworkTime = now
+            return networkStats
+        }
+
+        let sentDelta = totalSent >= previousNetworkBytes.sent ? totalSent - previousNetworkBytes.sent : 0
+        let receivedDelta = totalReceived >= previousNetworkBytes.received ? totalReceived - previousNetworkBytes.received : 0
+
+        previousNetworkBytes = (totalSent, totalReceived)
+        previousNetworkTime = now
+
+        return NetworkStats(
+            uploadBytesPerSec: Double(sentDelta) / elapsed,
+            downloadBytesPerSec: Double(receivedDelta) / elapsed
+        )
+    }
     // MARK: - Disk stats (via FileManager)
     private func readDiskStats() -> DiskStats {
         var stats = DiskStats()
@@ -1051,4 +1110,3 @@ private func sysctlInt(named name: String) -> Int? {
     guard sysctlbyname(name, &value, &size, nil, 0) == 0 else { return nil }
     return Int(value)
 }
-

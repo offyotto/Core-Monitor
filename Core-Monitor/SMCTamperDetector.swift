@@ -51,6 +51,7 @@ final class SMCTamperDetector: ObservableObject {
 
     @Published private(set) var isTampered = false
     @Published private(set) var tamperLabel: String?
+    @Published private(set) var detailMessage: String?
 
     private var baselineModes: [String: Double] = [:]
 
@@ -62,17 +63,26 @@ final class SMCTamperDetector: ObservableObject {
     func inspect() {
         let currentModes = captureFanModes()
         let apps = knownFanControlApplications()
+        let appNames = apps
+            .compactMap { $0.localizedName }
+            .sorted()
         let keysChanged = baselineModes.contains { key, baseline in
             guard let current = currentModes[key] else { return false }
             return abs(current - baseline) > 0.001
         }
 
-        if !apps.isEmpty || keysChanged {
+        if !appNames.isEmpty || keysChanged {
             isTampered = true
-            tamperLabel = "Custom Fan Control"
+            tamperLabel = "External fan control detected"
+            if !appNames.isEmpty {
+                detailMessage = "Another fan utility is running: \(appNames.joined(separator: ", "))."
+            } else {
+                detailMessage = "Fan control mode changed outside Core Monitor."
+            }
         } else {
             isTampered = false
             tamperLabel = nil
+            detailMessage = nil
         }
     }
 

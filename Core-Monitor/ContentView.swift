@@ -441,6 +441,99 @@ private struct BatteryBar: View {
     }
 }
 
+private struct MenuBarSettingsCard: View {
+    @ObservedObject private var menuBarSettings = MenuBarSettings.shared
+
+    var body: some View {
+        DarkCard(padding: 16) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Menu Bar")
+                            .font(.system(size: 13, weight: .semibold))
+                        Text("Choose which live items stay visible. Changes apply immediately.")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button("Restore Defaults") {
+                        menuBarSettings.restoreDefaults()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+
+                VStack(spacing: 0) {
+                    ForEach(Array(MenuBarItemKind.allCases.enumerated()), id: \.element.defaultsKey) { index, kind in
+                        if index > 0 {
+                            Rectangle().fill(Color.bdDivider).frame(height: 1).padding(.vertical, 4)
+                        }
+                        Toggle(isOn: binding(for: kind)) {
+                            Label(kind.title, systemImage: kind.systemImageName)
+                                .font(.system(size: 12, weight: .medium))
+                        }
+                        .toggleStyle(.switch)
+                        .tint(Color.bdAccent)
+                    }
+                }
+
+                if let warning = menuBarSettings.lastWarning, !warning.isEmpty {
+                    Text(warning)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.orange)
+                }
+            }
+        }
+    }
+
+    private func binding(for kind: MenuBarItemKind) -> Binding<Bool> {
+        Binding(
+            get: { menuBarSettings.isEnabled(kind) },
+            set: { menuBarSettings.setEnabled($0, for: kind) }
+        )
+    }
+}
+
+private struct FanControlConflictNotice: View {
+    @ObservedObject private var tamperDetector = SMCTamperDetector.shared
+
+    var body: some View {
+        Group {
+            if tamperDetector.isTampered {
+                DarkCard(padding: 14) {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(tamperDetector.tamperLabel ?? "External fan control detected")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(.orange)
+                            if let detail = tamperDetector.detailMessage, !detail.isEmpty {
+                                Text(detail)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            Text("Reset to System Auto before trusting any new RPM target from Core Monitor.")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer(minLength: 10)
+                        Button("Recheck") {
+                            tamperDetector.inspect()
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                }
+            }
+        }
+        .onAppear {
+            tamperDetector.inspect()
+        }
+    }
+}
+
 // MARK: - Fan control panel
 private struct FanControlPanel: View {
     struct Snapshot { var fanSpeeds: [Int] = []; var fanMinSpeeds: [Int] = []; var fanMaxSpeeds: [Int] = [] }
@@ -510,11 +603,6 @@ private struct FanControlPanel: View {
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(Color.bdAccent)
                             Spacer()
-                            if fanController.needsCustomPresetRestart {
-                                Text("restart required")
-                                    .font(.system(size: 10, weight: .bold, design: .rounded))
-                                    .foregroundStyle(.orange)
-                            }
                         }
 
                         Text(fanController.customPresetStatus)
@@ -544,16 +632,6 @@ private struct FanControlPanel: View {
                                     .frame(maxWidth: .infinity)
                             }
                             .buttonStyle(SoftPressButtonStyle())
-
-                            Button {
-                                _ = fanController.restartAppToApplyCustomPreset()
-                            } label: {
-                                Label("Apply & Restart", systemImage: "arrow.clockwise.circle.fill")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .frame(maxWidth: .infinity)
-                            }
-                            .buttonStyle(SoftPressButtonStyle())
-                            .disabled(!fanController.needsCustomPresetRestart)
                         }
                     }
                 }
@@ -584,9 +662,9 @@ private struct FanControlPanel: View {
                             .scaleEffect(0.62)
                             .frame(width: 12, height: 12)
                     } else {
-                        Image(systemName: "wrench.and.screwdriver.fill")
+                        Image(systemName: "magnifyingglass")
                     }
-                    Text(fanController.isCalibrating ? fanController.calibrationStatus : "Calibrate Fan Control")
+                    Text(fanController.isCalibrating ? fanController.calibrationStatus : "Probe Fan Keys")
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
                 }
@@ -600,7 +678,7 @@ private struct FanControlPanel: View {
             .buttonStyle(SoftPressButtonStyle())
             .disabled(fanController.isCalibrating)
 
-            if !fanController.calibrationStatus.isEmpty, fanController.calibrationStatus != "Not calibrated" {
+            if !fanController.calibrationStatus.isEmpty, fanController.calibrationStatus != "No fan probe run yet." {
                 Text(fanController.calibrationStatus)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
@@ -645,7 +723,7 @@ private struct CustomFanPresetEditorSheet: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Custom Fan Preset")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
-                    Text("Write JSON, validate it, then restart Core Monitor to apply the saved preset.")
+                    Text("Write JSON, validate it, then save. Saved presets apply immediately while Custom mode is active.")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -666,7 +744,7 @@ private struct CustomFanPresetEditorSheet: View {
                 Button {
                     let validation = fanController.validateCustomPresetSource(draftSource)
                     hasError = !validation.isEmpty
-                    messages = validation.isEmpty ? ["Preset looks valid. Save it, then restart to apply it."] : validation
+                    messages = validation.isEmpty ? ["Preset looks valid. Save it to apply the new curve."] : validation
                 } label: {
                     Label("Validate", systemImage: "checkmark.shield")
                 }
@@ -690,18 +768,15 @@ private struct CustomFanPresetEditorSheet: View {
                     switch fanController.saveCustomPresetSource(draftSource) {
                     case .success(let message):
                         draftSource = fanController.customPresetSource
-                        messages = [message, "Closing editor…", "Restarting Core Monitor…"]
+                        messages = [message, "Closing editor…"]
                         hasError = false
                         dismiss()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                            _ = fanController.restartAppToApplyCustomPreset()
-                        }
                     case .failure(let errors):
                         messages = errors
                         hasError = true
                     }
                 } label: {
-                    Label("Apply & Restart", systemImage: "arrow.clockwise.circle.fill")
+                    Label("Save & Apply", systemImage: "arrow.down.circle.fill")
                 }
                 .buttonStyle(.borderedProminent)
             }
@@ -1008,6 +1083,7 @@ private struct DetailPane: View {
     private var fansContent: some View {
         VStack(alignment: .leading, spacing: 18) {
             header("Fans", subtitle: fanController.statusMessage)
+            FanControlConflictNotice()
             FanControlPanel(fanController: fanController,
                             snapshot: FanControlPanel.Snapshot(fanSpeeds: state.fanSpeeds,
                                                                fanMinSpeeds: state.fanMinSpeeds,
@@ -1051,6 +1127,7 @@ private struct DetailPane: View {
                              fraction: Double(state.currentBrightness),  color: Color.bdAccent)
                 }
             }
+            MenuBarSettingsCard()
             DarkCard(padding: 16) {
                 HStack(spacing: 14) {
                     Image(systemName: "power").font(.system(size: 16, weight: .medium))
@@ -2030,4 +2107,3 @@ struct ContentView: View {
         )
     }
 }
-

@@ -85,10 +85,10 @@ private let guideSteps: [GuideStep] = [
         subheadline: "See what's really heating up.",
         body: "The dashboard streams CPU, GPU, and memory data at 1-second resolution. Spark-line histories let you spot transient spikes that Activity Monitor smooths over.",
         bullets: [
-            ("cpu.fill",              .wgAmber,  "Per-cluster CPU usage & temperature"),
+            ("cpu.fill",              .wgAmber,  "P-core and E-core usage, plus CPU temperature"),
             ("memorychip",            .wgBlue,   "Memory pressure with wired/active breakdown"),
             ("chart.line.uptrend.xyaxis", .wgGreen, "60-second rolling history graphs"),
-            ("exclamationmark.triangle", .wgRed, "Thermal alerts when SoC throttles"),
+            ("thermometer.medium",    .wgRed,    "Live CPU, GPU, SSD, and battery temperatures when available"),
         ]
     ),
     GuideStep(

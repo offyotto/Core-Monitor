@@ -5,6 +5,32 @@ import SwiftUI
 enum MenuBarItemKind: CaseIterable {
     case cpu, memory, disk, temperature
 
+    var systemImageName: String {
+        switch self {
+        case .cpu:
+            return "cpu"
+        case .memory:
+            return "memorychip"
+        case .disk:
+            return "internaldrive"
+        case .temperature:
+            return "thermometer.medium"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .cpu:
+            return "CPU"
+        case .memory:
+            return "Memory"
+        case .disk:
+            return "Disk"
+        case .temperature:
+            return "Temperature"
+        }
+    }
+
     var defaultsKey: String {
         switch self {
         case .cpu:         return "menubar.cpu.enabled"
@@ -19,6 +45,7 @@ enum MenuBarItemKind: CaseIterable {
 final class MenuBarController: NSObject {
     private var itemControllers: [SingleMenuBarItemController] = []
     private var updateObserver: Any?
+    private var settingsObserver: Any?
 
     init(
         systemMonitor:            SystemMonitor,
@@ -48,10 +75,21 @@ final class MenuBarController: NSObject {
         ) { [weak self] _ in
             self?.itemControllers.forEach { $0.refresh() }
         }
+
+        settingsObserver = NotificationCenter.default.addObserver(
+            forName: .menuBarSettingsDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.itemControllers.forEach { $0.refresh() }
+        }
     }
 
     deinit {
         if let obs = updateObserver {
+            NotificationCenter.default.removeObserver(obs)
+        }
+        if let obs = settingsObserver {
             NotificationCenter.default.removeObserver(obs)
         }
     }
@@ -108,7 +146,9 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
     }
 
     func updateStatusButton() {
-        guard let button = statusItem.button else { return }
+        let isVisible = MenuBarSettings.shared.isEnabled(kind)
+        statusItem.isVisible = isVisible
+        guard isVisible, let button = statusItem.button else { return }
 
         let (labelText, labelColor) = statusLabel()
 
@@ -162,18 +202,10 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
     }
 
     private func statusBarIcon() -> NSImage? {
-        let name: String
-        switch kind {
-        case .cpu:         name = "cpu"
-        case .memory:      name = "memorychip"
-        case .disk:        name = "internaldrive"
-        case .temperature: name = "thermometer.medium"
-        }
-
         let configuration = NSImage.SymbolConfiguration(pointSize: 10, weight: .medium)
             .applying(.init(scale: .small))
 
-        return NSImage(systemSymbolName: name, accessibilityDescription: nil)?
+        return NSImage(systemSymbolName: kind.systemImageName, accessibilityDescription: nil)?
             .withSymbolConfiguration(configuration)
     }
 
@@ -274,4 +306,3 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         statusItem.button?.isHighlighted = false
     }
 }
-

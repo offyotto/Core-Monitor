@@ -205,8 +205,6 @@ private struct DonutChart: View {
     var body: some View {
         let total = used + purgeable + free
         guard total > 0 else { return AnyView(EmptyView()) }
-        let usedAngle    = 360 * used / total
-        let purgeAngle   = 360 * purgeable / total
         return AnyView(
             ZStack {
                 Circle().stroke(Color.white.opacity(0.08), lineWidth: 14)
@@ -367,12 +365,18 @@ struct CPUMenuPopoverView: View {
         VStack(spacing: 0) {
             MBSectionHeader(title: "GPU")
             HStack(spacing: 16) {
-                gpuRing(value: 0, label: "GPU", color: Color.mbPurple)
-                gpuRing(value: Double(systemMonitor.memoryUsagePercent * 0.08), label: "MEM", color: Color.mbBlue)
                 if let gt = systemMonitor.gpuTemperature {
-                    gpuRing(value: gt / 1.1, label: "TMP", color: Color.mbOrange)
+                    gpuRing(value: min(gt, 110) / 110 * 100, label: "TEMP", color: Color.mbOrange)
                 }
-                gpuRing(value: 0.45, label: "GHz", color: Color.white.opacity(0.6))
+                if let gpuW = systemMonitor.gpuPowerWatts {
+                    gpuRing(value: min(abs(gpuW) / 30.0 * 100, 100), label: "PWR", color: Color.mbPurple)
+                }
+                if systemMonitor.gpuTemperature == nil && systemMonitor.gpuPowerWatts == nil {
+                    Text("GPU data unavailable")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.45))
+                        .padding(.horizontal, 14)
+                }
             }
             .padding(.horizontal, 14).padding(.vertical, 8)
         }
@@ -395,9 +399,15 @@ struct CPUMenuPopoverView: View {
     private var systemInfoSection: some View {
         VStack(spacing: 0) {
             MBSectionHeader(title: "SYSTEM")
-            MBRow(icon: "chart.bar.fill",      label: "Load Avg",  value: "2.01  2.56  2.28", color: .white.opacity(0.7))
+            MBRow(icon: "chart.bar.fill",      label: "Load Avg",  value: loadAvgString(),     color: .white.opacity(0.7))
             MBRow(icon: "clock.fill",           label: "Uptime",    value: uptimeString(),      color: .white.opacity(0.7))
         }
+    }
+
+    private func loadAvgString() -> String {
+        var load = [Double](repeating: 0, count: 3)
+        getloadavg(&load, 3)
+        return String(format: "%.2f  %.2f  %.2f", load[0], load[1], load[2])
     }
 
     private func uptimeString() -> String {
@@ -444,11 +454,11 @@ struct MemoryMenuPopoverView: View {
 
     private var memHeader: some View {
         HStack(spacing: 20) {
-            BigRing(value: min(systemMonitor.memoryUsagePercent * 0.85, 100),
-                    label: "PRESSURE",
-                    color: pressureColor)
+            BigRing(value: freeMemoryPercent,
+                    label: "FREE",
+                    color: Color.white.opacity(0.72))
             BigRing(value: systemMonitor.memoryUsagePercent,
-                    label: "MEMORY",
+                    label: "USED",
                     color: memColor)
             Spacer()
             VStack(alignment: .trailing, spacing: 4) {
@@ -464,6 +474,12 @@ struct MemoryMenuPopoverView: View {
 
     private var breakdownSection: some View {
         VStack(spacing: 0) {
+            MBRow(
+                icon: "waveform.path.ecg",
+                label: "Pressure",
+                value: pressureLabel,
+                color: pressureColor
+            )
             MBRow(icon: "circle.fill", label: "App",        value: String(format: "%.1f GB", systemMonitor.appMemoryGB), color: Color.mbBlue)
             MBRow(icon: "circle.fill", label: "Wired",      value: String(format: "%.1f GB", systemMonitor.wiredMemoryGB), color: .pink)
             MBRow(icon: "circle.fill", label: "Compressed", value: String(format: "%.0f MB", systemMonitor.compressedMemoryGB * 1024), color: Color.mbOrange)
@@ -536,7 +552,21 @@ struct MemoryMenuPopoverView: View {
         case .red: return .red
         }
     }
-    private var pressureColor: Color { systemMonitor.memoryUsagePercent > 80 ? .red : systemMonitor.memoryUsagePercent > 60 ? Color.mbOrange : Color.mbBlue }
+    private var pressureColor: Color { memColor }
+    private var pressureLabel: String {
+        switch systemMonitor.memoryPressure {
+        case .green:
+            return "Normal"
+        case .yellow:
+            return "Elevated"
+        case .red:
+            return "Critical"
+        }
+    }
+    private var freeMemoryPercent: Double {
+        guard systemMonitor.totalMemoryGB > 0 else { return 0 }
+        return min(max((systemMonitor.freeMemoryGB / systemMonitor.totalMemoryGB) * 100, 0), 100)
+    }
 
     private struct MemoryProcess: Identifiable {
         let name: String
@@ -643,7 +673,7 @@ struct DiskMenuPopoverView: View {
                     MBDivider()
                     diskDonutSection
                     MBDivider()
-                    ioSection
+                    driveStatusSection
                     MBDivider()
                     processesSection
                     MBDivider()
@@ -712,30 +742,24 @@ struct DiskMenuPopoverView: View {
         }
     }
 
-    private var ioSection: some View {
+    private var driveStatusSection: some View {
         VStack(spacing: 0) {
-            MBSectionHeader(title: "DISK I/O")
-            HStack(spacing: 20) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Read").font(.system(size: 9, weight: .bold)).foregroundStyle(Color.pink).mbTracking(0.5)
-                    Text("—").font(.system(size: 13, weight: .bold, design: .monospaced)).foregroundStyle(Color.pink)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Write").font(.system(size: 9, weight: .bold)).foregroundStyle(Color.mbBlue).mbTracking(0.5)
-                    Text("—").font(.system(size: 13, weight: .bold, design: .monospaced)).foregroundStyle(Color.mbBlue)
-                }
-                Spacer()
-            }
-            .padding(.horizontal, 14).padding(.vertical, 8)
-
-            MBRow(icon: "arrow.down.circle", label: "SSD Health",   value: "—",   color: Color.mbGreen)
-            MBRow(icon: "thermometer",       label: "Temperature",  value: systemMonitor.ssdTemperature.map { "\(Int($0.rounded()))°C" } ?? "—", color: Color.mbOrange)
+            MBSectionHeader(title: "DRIVE STATUS")
+            MBRow(
+                icon: "chart.pie.fill",
+                label: "Used",
+                value: String(format: "%.0f%%", systemMonitor.diskStats.usagePercent),
+                color: systemMonitor.diskStats.usagePercent > 90 ? .red : systemMonitor.diskStats.usagePercent > 75 ? Color.mbOrange : Color.mbBlue
+            )
+            MBRow(icon: "internaldrive.fill", label: "Available",   value: String(format: "%.1f GB", systemMonitor.diskStats.freeGB), color: .white.opacity(0.72))
+            MBRow(icon: "trash.slash.fill",   label: "Purgeable",   value: String(format: "%.1f GB", systemMonitor.diskStats.purgeableGB), color: .pink)
+            MBRow(icon: "thermometer",        label: "Temperature", value: systemMonitor.ssdTemperature.map { "\(Int($0.rounded()))°C" } ?? "—", color: Color.mbOrange)
         }
     }
 
     private var processesSection: some View {
         VStack(spacing: 0) {
-            MBSectionHeader(title: "PROCESSES  R / W")
+            MBSectionHeader(title: "PROCESS TOTALS  R / W")
             let topProcesses = topDiskProcesses(limit: 4)
             if topProcesses.isEmpty {
                 MBRow(icon: "app.fill", label: "Processes", value: "Unavailable", color: .white.opacity(0.5))
@@ -952,17 +976,17 @@ struct TemperatureMenuPopoverView: View {
                 tempRow("Battery",                  value: batt,  icon: "battery.75")
             }
             if let t = systemMonitor.cpuTemperature {
-                tempRow("CPU Efficiency Cores",     value: t,     icon: "leaf.fill")
-                tempRow("CPU Performance Cores",    value: t,     icon: "bolt.fill")
+                tempRow("CPU Package",              value: t,     icon: "cpu.fill")
             }
             if let gt = systemMonitor.gpuTemperature {
                 tempRow("Graphics",                 value: gt,    icon: "display")
             }
-            tempRow("Palm Rest",                    value: 30,    icon: "hand.raised.fill")
             if let st = systemMonitor.ssdTemperature {
                 tempRow("SSD",                      value: st,    icon: "internaldrive.fill")
             }
-            tempRow("Wi-Fi",                        value: 33,    icon: "wifi")
+            if systemMonitor.cpuTemperature == nil && systemMonitor.gpuTemperature == nil && systemMonitor.batteryInfo.temperatureC == nil {
+                MBRow(icon: "thermometer.slash", label: "Sensors", value: "No SMC access", color: .white.opacity(0.4))
+            }
         }
     }
 
@@ -982,9 +1006,18 @@ struct TemperatureMenuPopoverView: View {
     private var powerSection: some View {
         VStack(spacing: 0) {
             MBSectionHeader(title: "POWER")
-            MBRow(icon: "cpu.fill",       label: "CPU",       value: systemMonitor.cpuPowerWatts.map { String(format: "%.0f mW", $0 * 1000) } ?? "480 mW", color: Color.mbBlue)
-            MBRow(icon: "display",        label: "Graphics",  value: systemMonitor.gpuPowerWatts.map { String(format: "%.0f mW", $0 * 1000) } ?? "76 mW",  color: Color.mbPurple)
-            MBRow(icon: "bolt.fill",      label: "Total",     value: systemMonitor.totalSystemWatts.map { String(format: "%.1f W", abs($0)) } ?? "2.4 W",   color: Color.mbGreen)
+            if let cpuW = systemMonitor.cpuPowerWatts {
+                MBRow(icon: "cpu.fill",   label: "CPU",      value: String(format: "%.0f mW", cpuW * 1000), color: Color.mbBlue)
+            }
+            if let gpuW = systemMonitor.gpuPowerWatts {
+                MBRow(icon: "display",   label: "Graphics", value: String(format: "%.0f mW", gpuW * 1000), color: Color.mbPurple)
+            }
+            if let sysW = systemMonitor.totalSystemWatts {
+                MBRow(icon: "bolt.fill", label: "Total",    value: String(format: "%.1f W", abs(sysW)),     color: Color.mbGreen)
+            }
+            if systemMonitor.cpuPowerWatts == nil && systemMonitor.gpuPowerWatts == nil && systemMonitor.totalSystemWatts == nil {
+                MBRow(icon: "bolt.slash", label: "Power", value: "No data", color: .white.opacity(0.4))
+            }
         }
     }
 
@@ -1007,10 +1040,9 @@ struct TemperatureMenuPopoverView: View {
 
     private var frequencySection: some View {
         VStack(spacing: 0) {
-            MBSectionHeader(title: "FREQUENCY")
-            MBRow(icon: "leaf.fill",   label: "Efficiency",   value: "1.48 GHz",  color: Color.mbGreen)
-            MBRow(icon: "bolt.fill",   label: "Performance",  value: "1.64 GHz",  color: Color.mbBlue)
-            MBRow(icon: "display",     label: "Graphics",     value: "0.45 GHz",  color: Color.mbPurple)
+            MBSectionHeader(title: "CORE LAYOUT")
+            MBRow(icon: "cpu.fill",    label: "P-Cores",    value: "\(SystemMonitor.performanceCoreCount()) cores", color: Color.mbBlue)
+            MBRow(icon: "leaf.fill",   label: "E-Cores",    value: "\(SystemMonitor.efficiencyCoreCount()) cores", color: Color.mbGreen)
         }
     }
 
