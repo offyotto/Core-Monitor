@@ -26,6 +26,14 @@ struct MemoryStats {
     let usedGB: Double
     let totalGB: Double
     let pressure: MemoryPressureLevel
+    let appGB: Double
+    let wiredGB: Double
+    let compressedGB: Double
+    let freeGB: Double
+    let pageInsBytes: UInt64
+    let pageOutsBytes: UInt64
+    let swapUsedBytes: UInt64
+    let swapTotalBytes: UInt64
 }
 
 struct BatteryInfo {
@@ -111,6 +119,14 @@ final class SystemMonitor: ObservableObject {
         let memoryUsedGB: Double
         let totalMemoryGB: Double
         let memoryPressure: MemoryPressureLevel
+        let appMemoryGB: Double
+        let wiredMemoryGB: Double
+        let compressedMemoryGB: Double
+        let freeMemoryGB: Double
+        let pageInsBytes: UInt64
+        let pageOutsBytes: UInt64
+        let swapUsedBytes: UInt64
+        let swapTotalBytes: UInt64
         let batteryInfo: BatteryInfo
         let totalSystemWatts: Double?
         let currentVolume: Float
@@ -140,6 +156,14 @@ final class SystemMonitor: ObservableObject {
     var memoryUsedGB: Double = 0
     var totalMemoryGB: Double = 0
     var memoryPressure: MemoryPressureLevel = .green
+    var appMemoryGB: Double = 0
+    var wiredMemoryGB: Double = 0
+    var compressedMemoryGB: Double = 0
+    var freeMemoryGB: Double = 0
+    var pageInsBytes: UInt64 = 0
+    var pageOutsBytes: UInt64 = 0
+    var swapUsedBytes: UInt64 = 0
+    var swapTotalBytes: UInt64 = 0
 
     // System volume and display brightness (0–1), polled each cycle
     var currentVolume:     Float = 0.5
@@ -357,6 +381,14 @@ final class SystemMonitor: ObservableObject {
                 memoryUsedGB: memoryStats.usedGB,
                 totalMemoryGB: memoryStats.totalGB,
                 memoryPressure: memoryStats.pressure,
+                appMemoryGB: memoryStats.appGB,
+                wiredMemoryGB: memoryStats.wiredGB,
+                compressedMemoryGB: memoryStats.compressedGB,
+                freeMemoryGB: memoryStats.freeGB,
+                pageInsBytes: memoryStats.pageInsBytes,
+                pageOutsBytes: memoryStats.pageOutsBytes,
+                swapUsedBytes: memoryStats.swapUsedBytes,
+                swapTotalBytes: memoryStats.swapTotalBytes,
                 batteryInfo: batteryInfo,
                 totalSystemWatts: batteryInfo.powerWatts,
                 currentVolume: systemControls.volume,
@@ -382,6 +414,14 @@ final class SystemMonitor: ObservableObject {
                 self.memoryUsedGB = snapshot.memoryUsedGB
                 self.totalMemoryGB = snapshot.totalMemoryGB
                 self.memoryPressure = snapshot.memoryPressure
+                self.appMemoryGB = snapshot.appMemoryGB
+                self.wiredMemoryGB = snapshot.wiredMemoryGB
+                self.compressedMemoryGB = snapshot.compressedMemoryGB
+                self.freeMemoryGB = snapshot.freeMemoryGB
+                self.pageInsBytes = snapshot.pageInsBytes
+                self.pageOutsBytes = snapshot.pageOutsBytes
+                self.swapUsedBytes = snapshot.swapUsedBytes
+                self.swapTotalBytes = snapshot.swapTotalBytes
                 self.batteryInfo = snapshot.batteryInfo
                 self.totalSystemWatts = snapshot.totalSystemWatts
                 self.currentVolume = snapshot.currentVolume
@@ -633,22 +673,39 @@ final class SystemMonitor: ObservableObject {
 
         let totalBytes = Double(ProcessInfo.processInfo.physicalMemory)
         guard kr == KERN_SUCCESS, totalBytes > 0 else {
-            return MemoryStats(usagePercent: memoryUsagePercent, usedGB: memoryUsedGB, totalGB: totalMemoryGB, pressure: memoryPressure)
+            return MemoryStats(
+                usagePercent: memoryUsagePercent,
+                usedGB: memoryUsedGB,
+                totalGB: totalMemoryGB,
+                pressure: memoryPressure,
+                appGB: appMemoryGB,
+                wiredGB: wiredMemoryGB,
+                compressedGB: compressedMemoryGB,
+                freeGB: freeMemoryGB,
+                pageInsBytes: pageInsBytes,
+                pageOutsBytes: pageOutsBytes,
+                swapUsedBytes: swapUsedBytes,
+                swapTotalBytes: swapTotalBytes
+            )
         }
 
         var pageSize: vm_size_t = 0
         host_page_size(mach_host_self(), &pageSize)
         let page = Double(pageSize)
 
-        let usedPages = Double(vmStats.active_count + vmStats.wire_count + vmStats.compressor_page_count)
-        let availablePages = Double(vmStats.free_count + vmStats.inactive_count + vmStats.speculative_count)
-
-        let usedBytes = usedPages * page
-        let availableBytes = availablePages * page
+        let appBytes = Double(vmStats.active_count) * page
+        let wiredBytes = Double(vmStats.wire_count) * page
+        let compressedBytes = Double(vmStats.compressor_page_count) * page
+        let usedBytes = appBytes + wiredBytes + compressedBytes
+        let availableBytes = max(0, totalBytes - usedBytes)
 
         let usagePercent = max(0, min(100, (usedBytes / totalBytes) * 100))
         let usedGB = usedBytes / 1_073_741_824.0
         let totalGB = totalBytes / 1_073_741_824.0
+        let appGB = appBytes / 1_073_741_824.0
+        let wiredGB = wiredBytes / 1_073_741_824.0
+        let compressedGB = compressedBytes / 1_073_741_824.0
+        let freeGB = availableBytes / 1_073_741_824.0
 
         let availableRatio = max(0, min(1, availableBytes / totalBytes))
         let pressure: MemoryPressureLevel
@@ -660,7 +717,32 @@ final class SystemMonitor: ObservableObject {
             pressure = .red
         }
 
-        return MemoryStats(usagePercent: usagePercent, usedGB: usedGB, totalGB: totalGB, pressure: pressure)
+        let pageInsBytes = UInt64(Double(vmStats.pageins) * page)
+        let pageOutsBytes = UInt64(Double(vmStats.pageouts) * page)
+
+        var swapUsedBytes: UInt64 = 0
+        var swapTotalBytes: UInt64 = 0
+        var swapUsage = xsw_usage()
+        var swapSize = MemoryLayout<xsw_usage>.stride
+        if sysctlbyname("vm.swapusage", &swapUsage, &swapSize, nil, 0) == 0 {
+            swapUsedBytes = swapUsage.xsu_used
+            swapTotalBytes = swapUsage.xsu_total
+        }
+
+        return MemoryStats(
+            usagePercent: usagePercent,
+            usedGB: usedGB,
+            totalGB: totalGB,
+            pressure: pressure,
+            appGB: appGB,
+            wiredGB: wiredGB,
+            compressedGB: compressedGB,
+            freeGB: freeGB,
+            pageInsBytes: pageInsBytes,
+            pageOutsBytes: pageOutsBytes,
+            swapUsedBytes: swapUsedBytes,
+            swapTotalBytes: swapTotalBytes
+        )
     }
 
     private func readBatteryInfo() -> BatteryInfo {
@@ -969,3 +1051,4 @@ private func sysctlInt(named name: String) -> Int? {
     guard sysctlbyname(name, &value, &size, nil, 0) == 0 else { return nil }
     return Int(value)
 }
+

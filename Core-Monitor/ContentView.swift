@@ -446,6 +446,8 @@ private struct FanControlPanel: View {
     struct Snapshot { var fanSpeeds: [Int] = []; var fanMinSpeeds: [Int] = []; var fanMaxSpeeds: [Int] = [] }
     @ObservedObject var fanController: FanController
     let snapshot: Snapshot
+    @State private var showCustomEditor = false
+
     var body: some View {
         VStack(spacing: 10) {
             ScrollView(.horizontal, showsIndicators: false) {
@@ -500,6 +502,61 @@ private struct FanControlPanel: View {
                                in: 0...3, step: 0.1).tint(.green)
                     }
                 }
+            } else if fanController.mode == .custom {
+                DarkCard(padding: 14) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Label("Custom Preset", systemImage: "curlybraces.square.fill")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(Color.bdAccent)
+                            Spacer()
+                            if fanController.needsCustomPresetRestart {
+                                Text("restart required")
+                                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.orange)
+                            }
+                        }
+
+                        Text(fanController.customPresetStatus)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+
+                        Text(fanController.customPresetFilePath)
+                            .font(.system(size: 10, weight: .regular, design: .monospaced))
+                            .foregroundStyle(Color.white.opacity(0.45))
+                            .lineLimit(2)
+                            .textSelection(.enabled)
+
+                        if let error = fanController.customPresetLastError, !error.isEmpty {
+                            Text(error)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.orange)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+
+                        HStack(spacing: 8) {
+                            Button {
+                                showCustomEditor = true
+                            } label: {
+                                Label("Open Code Editor", systemImage: "chevron.left.forwardslash.chevron.right")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(SoftPressButtonStyle())
+
+                            Button {
+                                _ = fanController.restartAppToApplyCustomPreset()
+                            } label: {
+                                Label("Apply & Restart", systemImage: "arrow.clockwise.circle.fill")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(SoftPressButtonStyle())
+                            .disabled(!fanController.needsCustomPresetRestart)
+                        }
+                    }
+                }
             }
             if !snapshot.fanSpeeds.isEmpty {
                 DarkCard(padding: 14) {
@@ -551,13 +608,150 @@ private struct FanControlPanel: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+        .sheet(isPresented: $showCustomEditor) {
+            CustomFanPresetEditorSheet(fanController: fanController)
+        }
     }
+
     private func modeIcon(_ mode: FanControlMode) -> String {
         switch mode {
-        case .smart: return "bolt.shield.fill"; case .silent: return "wind"
-        case .balanced: return "dial.medium"; case .performance: return "speedometer"
-        case .max: return "tornado"; case .manual: return "slider.horizontal.3"; case .automatic: return "cpu"
+        case .smart: return "bolt.shield.fill"
+        case .silent: return "wind"
+        case .balanced: return "dial.medium"
+        case .performance: return "speedometer"
+        case .max: return "tornado"
+        case .manual: return "slider.horizontal.3"
+        case .custom: return "curlybraces.square.fill"
+        case .automatic: return "cpu"
         }
+    }
+}
+
+private struct CustomFanPresetEditorSheet: View {
+    @ObservedObject var fanController: FanController
+    @Environment(\.dismiss) private var dismiss
+    @State private var draftSource: String
+    @State private var messages: [String] = []
+    @State private var hasError = false
+
+    init(fanController: FanController) {
+        self.fanController = fanController
+        _draftSource = State(initialValue: fanController.customPresetSource)
+    }
+
+    var body: some View {
+        VStack(spacing: 14) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Custom Fan Preset")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                    Text("Write JSON, validate it, then restart Core Monitor to apply the saved preset.")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Done") { dismiss() }
+                    .buttonStyle(.borderedProminent)
+            }
+
+            HStack(spacing: 8) {
+                Button {
+                    draftSource = FanController.defaultCustomPresetSource
+                    messages = ["Loaded the starter template."]
+                    hasError = false
+                } label: {
+                    Label("Reset to Template", systemImage: "doc.badge.plus")
+                }
+
+                Button {
+                    let validation = fanController.validateCustomPresetSource(draftSource)
+                    hasError = !validation.isEmpty
+                    messages = validation.isEmpty ? ["Preset looks valid. Save it, then restart to apply it."] : validation
+                } label: {
+                    Label("Validate", systemImage: "checkmark.shield")
+                }
+
+                Button {
+                    switch fanController.saveCustomPresetSource(draftSource) {
+                    case .success(let message):
+                        draftSource = fanController.customPresetSource
+                        messages = [message]
+                        hasError = false
+                    case .failure(let errors):
+                        messages = errors
+                        hasError = true
+                    }
+                } label: {
+                    Label("Save", systemImage: "square.and.arrow.down")
+                }
+                .buttonStyle(.borderedProminent)
+
+                Button {
+                    switch fanController.saveCustomPresetSource(draftSource) {
+                    case .success(let message):
+                        draftSource = fanController.customPresetSource
+                        messages = [message, "Closing editor…", "Restarting Core Monitor…"]
+                        hasError = false
+                        dismiss()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            _ = fanController.restartAppToApplyCustomPreset()
+                        }
+                    case .failure(let errors):
+                        messages = errors
+                        hasError = true
+                    }
+                } label: {
+                    Label("Apply & Restart", systemImage: "arrow.clockwise.circle.fill")
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .labelStyle(.titleAndIcon)
+            .font(.system(size: 12, weight: .medium))
+
+            if #available(macOS 13.0, *) {
+                TextEditor(text: $draftSource)
+                    .font(.system(size: 12, weight: .regular, design: .monospaced))
+                    .scrollContentBackground(.hidden)
+                    .padding(10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.black.opacity(0.18))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                    )
+            } else {
+                // Fallback on earlier versions
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Result")
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundStyle(.secondary)
+                if messages.isEmpty {
+                    Text("No validation output yet. Smash Validate first so the app can yell at the JSON before the helper ever touches anything.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(Array(messages.enumerated()), id: \.offset) { entry in
+                        Text("• \(entry.element)")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(hasError ? .orange : .secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.white.opacity(0.05))
+            )
+        }
+        .padding(18)
+        .frame(minWidth: 760, minHeight: 620)
+        .background(CoreMonBackdrop())
     }
 }
 
@@ -565,7 +759,7 @@ private struct FanControlPanel: View {
 private enum SidebarItem: String, CaseIterable, Identifiable {
     case overview="Overview", thermals="Thermals", memory="Memory", fans="Fans"
     case battery="Battery"
-    case system="System", touchBar="Touch Bar", about="About"
+    case system="System", touchBar="Touch Bar", help="Help", about="About"
     var id: String { rawValue }
     var icon: String {
         switch self {
@@ -573,6 +767,7 @@ private enum SidebarItem: String, CaseIterable, Identifiable {
         case .memory: return "memorychip"; case .fans: return "fanblades.fill"
         case .battery: return "battery.75"; case .system: return "gearshape"
         case .touchBar: return "rectangle.3.group"
+        case .help: return "questionmark.circle"
         case .about: return "info.circle"
         }
     }
@@ -631,7 +826,7 @@ private struct Sidebar: View {
         if hasBattery {
             items.append(.battery)
         }
-        items.append(contentsOf: [.system, .touchBar, .about])
+        items.append(contentsOf: [.system, .touchBar, .help, .about])
         return items
     }
 
@@ -686,7 +881,7 @@ private struct Sidebar: View {
     }
 }
 
-// MARK: - why do i even mark stuff, looks like ai made it. eww.
+// MARK: - DetailPane
 private struct DetailPane: View {
     let selection: SidebarItem
     let state: ContentView.DashboardState
@@ -704,23 +899,31 @@ private struct DetailPane: View {
         case .battery:   batteryContent
         case .system:    systemContent
         case .touchBar:  touchBarContent
+        case .help:      HelpView()
         case .about:     aboutContent
         }
     }
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 18) {
+        Group {
+            if selection == .help {
                 selectedContent
-                    .id(selection)
-                Spacer(minLength: 24)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 18) {
+                        selectedContent
+                            .id(selection)
+                        Spacer(minLength: 24)
+                    }
+                    .padding(.top, 28)
+                    .padding(.leading, 24)
+                    .padding(.trailing, 24)
+                    .padding(.bottom, 24)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
-            .padding(.top, 28)
-            .padding(.leading, 24)
-            .padding(.trailing, 24)
-            .padding(.bottom, 24)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     // MARK: Overview
@@ -1692,7 +1895,7 @@ struct BasicModeView: View {
     }
 }
 
-// MARK: - VisualEffectView (NSVisualEffectView wrapper) THIS ISNT AI SLOP BTW:/ btw this will STAY open source foEVAA
+// MARK: - VisualEffectView (NSVisualEffectView wrapper)
 struct VisualEffectView: NSViewRepresentable {
     let material: NSVisualEffectView.Material
     let blendingMode: NSVisualEffectView.BlendingMode
@@ -1827,3 +2030,4 @@ struct ContentView: View {
         )
     }
 }
+

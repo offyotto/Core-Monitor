@@ -172,3 +172,4 @@ final class AppCoordinator: ObservableObject {
         customizationSettings.presentationMode
     }
 }
+

@@ -112,14 +112,10 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
 
         let (labelText, labelColor) = statusLabel()
 
-        // Build: [icon] [label]
         let full = NSMutableAttributedString()
 
-        if let icon = statusBarIcon() {
-            let attach = NSTextAttachment()
-            attach.image = icon
-            attach.bounds = CGRect(x: 0, y: -2, width: 12, height: 12)
-            full.append(NSAttributedString(attachment: attach))
+        if let iconAttachment = statusBarIconAttachment() {
+            full.append(iconAttachment)
             full.append(NSAttributedString(string: " "))
         }
 
@@ -173,11 +169,26 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         case .disk:        name = "internaldrive"
         case .temperature: name = "thermometer.medium"
         }
-        let cfg = NSImage.SymbolConfiguration(pointSize: 10, weight: .medium)
-        let img = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
-            .withSymbolConfiguration(cfg)
-        img?.isTemplate = true
-        return img
+
+        let configuration = NSImage.SymbolConfiguration(pointSize: 10, weight: .medium)
+            .applying(.init(scale: .small))
+
+        return NSImage(systemSymbolName: name, accessibilityDescription: nil)?
+            .withSymbolConfiguration(configuration)
+    }
+
+    private func statusBarIconAttachment() -> NSAttributedString? {
+        guard let icon = statusBarIcon() else { return nil }
+
+        let targetHeight: CGFloat = 11
+        let sourceSize = icon.size
+        let aspectRatio = sourceSize.height > 0 ? (sourceSize.width / sourceSize.height) : 1
+        let targetWidth = max(9, min(16, targetHeight * aspectRatio))
+
+        let attachment = NSTextAttachment()
+        attachment.image = icon
+        attachment.bounds = CGRect(x: 0, y: -1, width: targetWidth, height: targetHeight)
+        return NSAttributedString(attachment: attachment)
     }
 
     // MARK: - Popover setup
@@ -263,3 +274,4 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         statusItem.button?.isHighlighted = false
     }
 }
+
