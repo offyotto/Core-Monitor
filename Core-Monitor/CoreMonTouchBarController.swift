@@ -18,6 +18,8 @@ final class CoreMonTouchBarController: NSObject {
     private var widgets: [NSTouchBarItem.Identifier: PKWidgetInfo] = [:]
     private var configuredItems: [NSTouchBarItem.Identifier: TouchBarItemConfiguration] = [:]
     private var cachedItems: [NSTouchBarItem.Identifier: NSTouchBarItem] = [:]
+    private var isStarted = false
+    private var isWeatherRunning = false
 
     init(weatherProvider: WeatherProviding? = nil, monitor: SystemMonitor? = nil) {
         let provider = weatherProvider ?? Self.defaultWeatherProvider()
@@ -51,15 +53,17 @@ final class CoreMonTouchBarController: NSObject {
     }
 
     func start() {
+        isStarted = true
         if ownsSystemMonitor {
             systemMonitor.startMonitoring()
         }
-        weatherViewModel.start()
+        updateWeatherMonitoring()
         refreshViews()
     }
 
     func stop() {
-        weatherViewModel.stop()
+        isStarted = false
+        updateWeatherMonitoring()
         if ownsSystemMonitor {
             systemMonitor.stopMonitoring()
         }
@@ -114,6 +118,7 @@ final class CoreMonTouchBarController: NSObject {
         touchBar.defaultItemIdentifiers = identifiers
         touchBar.principalItemIdentifier = nil
         applyThemeToCachedWidgets(customization.theme)
+        updateWeatherMonitoring()
     }
 
     private func refreshViews() {
@@ -314,6 +319,18 @@ final class CoreMonTouchBarController: NSObject {
             theme: settings.theme,
             items: settings.items.isEmpty ? TouchBarPreset.classic.items : settings.items
         )
+    }
+
+    private func updateWeatherMonitoring() {
+        let shouldRunWeather = isStarted && configuredItems.values.contains(where: { $0.builtInKind == .weather })
+        guard shouldRunWeather != isWeatherRunning else { return }
+
+        isWeatherRunning = shouldRunWeather
+        if shouldRunWeather {
+            weatherViewModel.start()
+        } else {
+            weatherViewModel.stop()
+        }
     }
 }
 

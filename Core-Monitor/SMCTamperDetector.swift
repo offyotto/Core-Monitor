@@ -77,7 +77,7 @@ final class SMCTamperDetector: ObservableObject {
             if !appNames.isEmpty {
                 detailMessage = "Another fan utility is running: \(appNames.joined(separator: ", "))."
             } else {
-                detailMessage = "Fan control mode changed outside Core Monitor."
+                detailMessage = "Fan control changed outside Core-Monitor."
             }
         } else {
             isTampered = false

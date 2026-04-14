@@ -20,27 +20,27 @@ enum FanControlMode: String, CaseIterable {
 
     var title: String {
         switch self {
-        case .smart:       return "SMART"
-        case .silent:      return "SILENT"
-        case .balanced:    return "BALANCED"
-        case .performance: return "PERFORMANCE"
-        case .max:         return "MAX"
-        case .manual:      return "MANUAL"
-        case .custom:      return "CUSTOM"
-        case .automatic:   return "SYSTEM"
+        case .smart:       return "Smart"
+        case .silent:      return "Silent"
+        case .balanced:    return "Balanced"
+        case .performance: return "Performance"
+        case .max:         return "Max"
+        case .manual:      return "Manual"
+        case .custom:      return "Custom"
+        case .automatic:   return "System"
         }
     }
 
     var shortTitle: String {
         switch self {
-        case .smart:       return "SMART"
-        case .silent:      return "SILENT"
-        case .balanced:    return "BAL"
-        case .performance: return "PERF"
-        case .max:         return "MAX"
-        case .manual:      return "MANUAL"
-        case .custom:      return "CODE"
-        case .automatic:   return "SYSTEM"
+        case .smart:       return "Smart"
+        case .silent:      return "Silent"
+        case .balanced:    return "Bal"
+        case .performance: return "Perf"
+        case .max:         return "Max"
+        case .manual:      return "Manual"
+        case .custom:      return "Custom"
+        case .automatic:   return "System"
         }
     }
 
@@ -199,8 +199,8 @@ final class FanController: ObservableObject {
     @Published var manualSpeed: Int = 2200
     @Published var autoAggressiveness: Double = 1.5
     @Published var autoMaxSpeed: Int = 6500
-    @Published var statusMessage: String = "Idle"
-    @Published var calibrationStatus: String = "No fan probe run yet."
+    @Published var statusMessage: String = "Ready"
+    @Published var calibrationStatus: String = "Fan key scan has not been run."
     @Published var isCalibrating: Bool = false
     @Published var customPresetSource: String = FanController.defaultCustomPresetSource
     @Published var customPresetStatus: String = "No custom preset saved yet."
@@ -376,7 +376,7 @@ final class FanController: ObservableObject {
             process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
             process.arguments = [bundlePath]
             try process.run()
-            statusMessage = "Restarting Core Monitor to apply the custom preset…"
+            statusMessage = "Restarting Core-Monitor to apply the custom preset…"
 
             for window in NSApp.windows {
                 if let attachedSheet = window.attachedSheet {
@@ -415,7 +415,7 @@ final class FanController: ObservableObject {
                 allSuccess = false
             }
         }
-        statusMessage = allSuccess ? "System automatic control restored" : "Failed to restore automatic control"
+        statusMessage = allSuccess ? "Automatic fan control restored" : "Could not restore automatic fan control"
     }
 
     func calibrateFanControl() {
@@ -427,7 +427,7 @@ final class FanController: ObservableObject {
 
         let keys = fanCalibrationCandidateKeys()
         isCalibrating = true
-        calibrationStatus = "Probing fan-related SMC keys 0/\(keys.count)"
+        calibrationStatus = "Scanning fan-related SMC keys 0/\(keys.count)"
 
         Task { @MainActor [weak self] in
             guard let self else { return }
@@ -439,7 +439,7 @@ final class FanController: ObservableObject {
                 }
 
                 let completed = index + 1
-                calibrationStatus = "Probing fan-related SMC keys \(completed)/\(keys.count) - \(responsiveKeys.count) responsive"
+                calibrationStatus = "Scanning fan-related SMC keys \(completed)/\(keys.count). \(responsiveKeys.count) responding."
                 if completed % 8 == 0 {
                     await Task.yield()
                 }
@@ -447,8 +447,8 @@ final class FanController: ObservableObject {
 
             let preview = responsiveKeys.prefix(10).joined(separator: ", ")
             calibrationStatus = responsiveKeys.isEmpty
-                ? "Fan key probe finished: 0/\(keys.count) keys responded"
-                : "Fan key probe finished: \(responsiveKeys.count)/\(keys.count) keys responded - \(preview)"
+                ? "Fan key scan complete. 0 of \(keys.count) keys responded."
+                : "Fan key scan complete. \(responsiveKeys.count) of \(keys.count) keys responded: \(preview)"
             statusMessage = calibrationStatus
             isCalibrating = false
         }
@@ -489,7 +489,7 @@ final class FanController: ObservableObject {
         switch mode {
         case .automatic:
             resetToSystemAutomatic()
-            statusMessage = "System automatic control restored"
+            statusMessage = "Automatic fan control restored"
         case .manual:
             applyFanSpeed(manualSpeed)
             lastAppliedSpeed = manualSpeed
@@ -519,7 +519,7 @@ final class FanController: ObservableObject {
                 resetToSystemAutomatic()
                 lastAppliedSpeed = -1
             }
-            statusMessage = "Silent: system automatic"
+            statusMessage = "Silent: system managed"
 
         case .balanced:
             applyFixedPercentProfile(0.60, label: "Balanced")
@@ -716,7 +716,7 @@ final class FanController: ObservableObject {
         if allSuccess {
             statusMessage = successMessage ?? "Applied fan speeds"
         } else {
-            statusMessage = "Failed to apply fan speed"
+            statusMessage = "Could not apply fan speed"
         }
 
         return allSuccess
@@ -765,9 +765,9 @@ final class FanController: ObservableObject {
 
     private func helperUnavailableMessage() -> String {
         if let monitor = systemMonitor, !monitor.hasSMCAccess {
-            return helperManager.statusMessage ?? monitor.lastError ?? "SMC access unavailable."
+            return helperManager.statusMessage ?? monitor.lastError ?? "SMC access is unavailable."
         }
-        return helperManager.statusMessage ?? "No fan detected"
+        return helperManager.statusMessage ?? "No fans detected."
     }
 
     private func fanCalibrationCandidateKeys() -> [String] {

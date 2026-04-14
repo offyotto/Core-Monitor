@@ -514,7 +514,7 @@ private struct FanControlConflictNotice: View {
                                     .foregroundStyle(.secondary)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
-                            Text("Reset to System Auto before trusting any new RPM target from Core Monitor.")
+                            Text("Reset to System Auto before trusting a new RPM target from Core-Monitor.")
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(.secondary)
                         }
@@ -678,7 +678,7 @@ private struct FanControlPanel: View {
             .buttonStyle(SoftPressButtonStyle())
             .disabled(fanController.isCalibrating)
 
-            if !fanController.calibrationStatus.isEmpty, fanController.calibrationStatus != "No fan probe run yet." {
+            if !fanController.calibrationStatus.isEmpty, fanController.calibrationStatus != "Fan key scan has not been run." {
                 Text(fanController.calibrationStatus)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
@@ -1137,7 +1137,7 @@ private struct DetailPane: View {
                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Launch at Login").font(.system(size: 13, weight: .semibold))
-                        Text(startupManager.isEnabled ? "Starts automatically with macOS" : "Start manually from Applications")
+                        Text(startupManager.isEnabled ? "Opens automatically when you sign in" : "Open it manually from Applications")
                             .font(.system(size: 11)).foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -1152,7 +1152,7 @@ private struct DetailPane: View {
                         Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
                         VStack(alignment: .leading, spacing: 3) {
                             Text(msg).font(.system(size: 11)).foregroundStyle(.orange)
-                            Text("Open System Settings → General → Login Items to approve.")
+                            Text("Open System Settings > General > Login Items to allow Core-Monitor.")
                                 .font(.system(size: 10)).foregroundStyle(.secondary)
                         }
                     }
@@ -1251,7 +1251,7 @@ private struct AboutDetailsPanel: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("App details")
                             .font(.system(size: 18, weight: .bold))
-                        Text("Version, identity and global surface appearance.")
+                        Text("Version, bundle ID, and appearance.")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(.secondary)
                     }
@@ -1267,7 +1267,7 @@ private struct AboutDetailsPanel: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Label("Global Transparency", systemImage: "circle.lefthalf.filled")
+                        Label("Interface Opacity", systemImage: "circle.lefthalf.filled")
                             .font(.system(size: 12, weight: .semibold))
                         Spacer()
                         Text("\(Int((appearanceSettings.surfaceOpacity * 100).rounded()))%")
@@ -1276,13 +1276,13 @@ private struct AboutDetailsPanel: View {
                     }
                     Slider(value: $appearanceSettings.surfaceOpacity, in: 0.0...1.0, step: 0.01)
                         .tint(Color.bdAccent)
-                    Text("Changes dashboard and card translucency across the app.")
+                    Text("Adjusts dashboard and card translucency.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
 
                 HStack(spacing: 10) {
-                    aboutPill("Core Monitor")
+                    aboutPill("Core-Monitor")
                     aboutPill("macOS Dashboard")
                     aboutPill("Build \(AppVersion.current)")
                 }
@@ -1653,7 +1653,7 @@ private struct TouchBarCustomizationPanel: View {
                     }
                     .pickerStyle(.segmented)
 
-                    Text("Weather uses Apple WeatherKit. Allow location access for Core Monitor so the live weather widget can show accurate conditions and rain timing.")
+                    Text("The weather item uses Apple WeatherKit and location access. Remove it if you do not want local weather in the Touch Bar.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
 
@@ -1788,7 +1788,7 @@ private struct TouchBarCustomizationPanel: View {
                 weatherAttributionError = nil
             } catch {
                 weatherAttribution = nil
-                weatherAttributionError = "Weather attribution is unavailable until WeatherKit is enabled for the signed app."
+                weatherAttributionError = "Weather attribution is available in signed builds with WeatherKit enabled."
             }
         }
     }
@@ -1814,9 +1814,9 @@ private struct BetterDisplayInspiredHero: View {
                 .frame(height: 360)
 
                 VStack(spacing: 6) {
-                    Text("Core Monitor")
+                    Text("Core-Monitor")
                         .font(.system(size: 22, weight: .bold))
-                    Text("Thermals, fans and live hardware telemetry.")
+                    Text("Thermals, fans, and system readings.")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -1885,7 +1885,7 @@ struct BasicModeView: View {
 
     private var basicHeader: some View {
         HStack {
-            Label("Core Monitor", systemImage: "fanblades.fill")
+            Label("Core-Monitor", systemImage: "fanblades.fill")
                 .font(.system(size: 12, weight: .bold)).foregroundStyle(.primary)
             Spacer()
             Button { withAnimation(.spring(duration: 0.2)) { modeState.isBasicMode = false } } label: {
@@ -1966,7 +1966,7 @@ struct BasicModeView: View {
     private var basicFooter: some View {
         HStack {
             Circle().fill(systemMonitor.hasSMCAccess ? Color.green : .secondary).frame(width: 5, height: 5)
-            Text(systemMonitor.hasSMCAccess ? "SMC OK" : "No SMC").font(.system(size: 9)).foregroundStyle(.secondary)
+            Text(systemMonitor.hasSMCAccess ? "SMC Ready" : "SMC Unavailable").font(.system(size: 9)).foregroundStyle(.secondary)
             Spacer()
         }.padding(.horizontal, 16).padding(.vertical, 8)
     }

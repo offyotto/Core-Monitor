@@ -14,15 +14,15 @@ enum TouchBarPresentationMode: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .app: return "Core Monitor"
+        case .app: return "Core-Monitor"
         case .system: return "System"
         }
     }
 
     var subtitle: String {
         switch self {
-        case .app: return "Show the custom Core Monitor Touch Bar"
-        case .system: return "Fall back to the standard macOS Touch Bar"
+        case .app: return "Use the Core-Monitor Touch Bar layout"
+        case .system: return "Show the standard macOS Touch Bar"
         }
     }
 }
@@ -245,7 +245,7 @@ struct TouchBarPreset: Identifiable, Equatable {
     static let classic = TouchBarPreset(
         id: "classic",
         title: "Classic",
-        subtitle: "Status, weather, control center, dock, and CPU",
+        subtitle: "Status, weather, controls, dock, and CPU",
         theme: .dark,
         items: [.builtIn(.worldClocks), .builtIn(.weather), .builtIn(.controlCenter), .builtIn(.dock), .builtIn(.cpu)]
     )
@@ -280,7 +280,7 @@ struct TouchBarPreset: Identifiable, Equatable {
     static let compact = TouchBarPreset(
         id: "compact",
         title: "Compact",
-        subtitle: "Small weather, CPU, and memory-focused strip",
+        subtitle: "Weather, CPU, network, and memory pressure",
         theme: .dark,
         items: [.builtIn(.weather), .builtIn(.cpu), .builtIn(.network), .builtIn(.ramPressure)]
     )

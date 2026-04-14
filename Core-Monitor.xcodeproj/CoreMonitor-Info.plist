@@ -3,6 +3,6 @@
 <plist version="1.0">
 <dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Core-Monitor needs your location to display the weather.</string>
+	<string>Core-Monitor uses your location for the optional Touch Bar weather item.</string>
 </dict>
 </plist>

@@ -38,7 +38,7 @@ final class SMCHelperManager: ObservableObject {
     func refreshStatus() {
         isInstalled = fileManager.fileExists(atPath: installedHelperPath)
         if isInstalled,
-           statusMessage == "Fan write access unavailable: no installed helper found." {
+           statusMessage == "Fan control is unavailable because the privileged helper is not installed." {
             statusMessage = nil
         }
     }
@@ -70,9 +70,9 @@ final class SMCHelperManager: ObservableObject {
         }
 
         if !fileManager.fileExists(atPath: installedHelperPath) {
-            statusMessage = "Fan write access unavailable: privileged helper not installed."
+            statusMessage = "Fan control is unavailable because the privileged helper is not installed."
         } else {
-            statusMessage = "Fan write access unavailable: could not connect to privileged helper."
+            statusMessage = "Fan control is unavailable because Core-Monitor could not connect to the privileged helper."
         }
         return false
     }
@@ -104,7 +104,7 @@ final class SMCHelperManager: ObservableObject {
             semaphore.signal()
         }) as? SMCHelperXPCProtocol else {
             connection.invalidate()
-            statusMessage = "Failed to create helper connection."
+            statusMessage = "Could not create a helper connection."
             return nil
         }
 
@@ -118,7 +118,7 @@ final class SMCHelperManager: ObservableObject {
         connection.invalidate()
 
         if waitResult == .timedOut {
-            statusMessage = "Timed out while waiting for privileged helper."
+            statusMessage = "Timed out while waiting for the privileged helper."
             return nil
         }
 
@@ -148,7 +148,7 @@ final class SMCHelperManager: ObservableObject {
 
     private func executeViaBlessedXPC(arguments: [String]) -> Bool {
         guard !arguments.isEmpty else {
-            statusMessage = "Helper command missing."
+            statusMessage = "Helper command is missing."
             return false
         }
 
@@ -171,7 +171,7 @@ final class SMCHelperManager: ObservableObject {
             semaphore.signal()
         }) as? SMCHelperXPCProtocol else {
             connection.invalidate()
-            statusMessage = "Failed to create helper connection."
+            statusMessage = "Could not create a helper connection."
             return false
         }
 
@@ -181,7 +181,7 @@ final class SMCHelperManager: ObservableObject {
                   let fanID = Int(arguments[1]),
                   let rpm = Int(arguments[2]) else {
                 connection.invalidate()
-                statusMessage = "Invalid helper arguments."
+                statusMessage = "The helper arguments are invalid."
                 return false
             }
             proxy.setFanManual(fanID, rpm: rpm) { errorMessage in
@@ -193,7 +193,7 @@ final class SMCHelperManager: ObservableObject {
             guard arguments.count == 2,
                   let fanID = Int(arguments[1]) else {
                 connection.invalidate()
-                statusMessage = "Invalid helper arguments."
+                statusMessage = "The helper arguments are invalid."
                 return false
             }
             proxy.setFanAuto(fanID) { errorMessage in
@@ -204,7 +204,7 @@ final class SMCHelperManager: ObservableObject {
         case "read":
             guard arguments.count == 2 else {
                 connection.invalidate()
-                statusMessage = "Invalid helper arguments."
+                statusMessage = "The helper arguments are invalid."
                 return false
             }
             proxy.readValue(arguments[1]) { _, errorMessage in
@@ -214,7 +214,7 @@ final class SMCHelperManager: ObservableObject {
 
         default:
             connection.invalidate()
-            statusMessage = "Unknown helper command."
+            statusMessage = "The helper command is not supported."
             return false
         }
 
@@ -222,7 +222,7 @@ final class SMCHelperManager: ObservableObject {
         connection.invalidate()
 
         if waitResult == .timedOut {
-            statusMessage = "Timed out while waiting for privileged helper."
+            statusMessage = "Timed out while waiting for the privileged helper."
             return false
         }
 
@@ -250,7 +250,7 @@ final class SMCHelperManager: ObservableObject {
         }
 
         guard authStatus == errAuthorizationSuccess, let authRef else {
-            completion(false, "Failed to create authorization reference.")
+            completion(false, "Could not create an authorization reference.")
             return
         }
         defer { AuthorizationFree(authRef, []) }

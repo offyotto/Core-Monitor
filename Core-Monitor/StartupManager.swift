@@ -20,10 +20,10 @@ final class StartupManager: ObservableObject {
                 errorMessage = nil
             case .requiresApproval:
                 isEnabled = false
-                errorMessage = "Startup requires approval in System Settings → General → Login Items."
+                errorMessage = "Launch at Login needs approval in System Settings > General > Login Items."
             case .notFound:
                 isEnabled = false
-                errorMessage = "Login item was not found. Try toggling launch at login off and on again."
+                errorMessage = "The Core-Monitor login item was not found. Turn Launch at Login off, then on again."
             case .notRegistered:
                 isEnabled = false
                 errorMessage = nil   // not registered yet — no error, just off
@@ -58,7 +58,7 @@ final class StartupManager: ObservableObject {
         let nsError = error as NSError
         let description = nsError.localizedDescription.lowercased()
         if description.contains("authorization") || description.contains("permission") {
-            return "Permission denied. Open System Settings > Login Items and approve Core Monitor."
+            return "Permission denied. Open System Settings > General > Login Items to allow Core-Monitor."
         }
         if description.contains("already") {
             return "Login item is already registered."
@@ -66,4 +66,3 @@ final class StartupManager: ObservableObject {
         return nsError.localizedDescription
     }
 }
-

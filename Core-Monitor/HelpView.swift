@@ -25,35 +25,35 @@ struct HelpView: View {
         [
             HelpSection(id: "overview", title: "Overview Dashboard", icon: "gauge.medium", content: AnyView(
                 HelpCard {
-                    Text("The Overview Dashboard provides a comprehensive summary of your Mac’s current state including CPU, GPU, memory, and thermal information.")
-                    HelpBullet(text: "`CPU`, `GPU`, and `Memory` usage are shown with real-time graphs and numeric values.")
-                    HelpBullet(text: "Thermal zones and sensor temperatures update continuously.")
-                    HelpBullet(text: "Use the dashboard to quickly assess system performance and health.")
+                    Text("The Overview screen shows CPU, GPU, memory, battery, and thermals in one place.")
+                    HelpBullet(text: "`CPU`, `GPU`, and `Memory` cards update with live graphs and current values.")
+                    HelpBullet(text: "Temperature cards show the readings Core-Monitor can resolve on your Mac.")
+                    HelpBullet(text: "Use the dashboard for a fast read on system activity.")
                 }
             )),
             HelpSection(id: "thermals", title: "Thermals", icon: "thermometer.medium", content: AnyView(
                 HelpCard {
-                    Text("The Thermals section displays detailed temperature readings from multiple sensors across your Mac.")
+                    Text("The Thermals section shows detailed temperature readings from the sensors Core-Monitor can resolve.")
                     HelpBullet(text: "Current builds surface CPU, GPU, SSD, and battery temperatures when those readings are available.")
                     HelpBullet(text: "If a temperature is missing, the app could not resolve a readable sensor key for this Mac.")
-                    HelpBullet(text: "Core Monitor currently does not ship automatic thermal alert notifications.")
+                    HelpBullet(text: "Core-Monitor does not include automatic thermal alerts.")
                 }
             )),
             HelpSection(id: "memory", title: "Memory", icon: "memorychip", content: AnyView(
                 HelpCard {
-                    Text("Memory monitoring includes RAM usage, swap usage, and memory pressure visualization.")
+                    Text("Memory shows RAM use, swap use, and memory pressure.")
                     HelpBullet(text: "Track real-time page ins, page outs, and compressed memory in the `Memory` tab.")
-                    HelpBullet(text: "Use the memory pressure graph to see system memory stress and performance impact.")
+                    HelpBullet(text: "Use the pressure graph to see when the system is under memory pressure.")
                 }
             )),
             HelpSection(id: "fans", title: "Fans & Fan Control", icon: "fanblades.fill", content: AnyView(
                 HelpCard {
-                    Text("Manage your Mac’s fans with advanced controls and profiles.")
-                    HelpBullet(text: "Fan profiles allow custom curves, manual speed settings, or automatic fan speed management.")
-                    HelpBullet(text: "The helper tool must be installed to enable fan control functionality.")
+                    Text("Manage the fans with fixed modes, smart curves, or a custom preset.")
+                    HelpBullet(text: "Fan modes let you use system control, fixed targets, or automatic fan management.")
+                    HelpBullet(text: "The helper must be installed before Core-Monitor can write fan speeds.")
                     HelpBullet(text: "The `Probe Fan Keys` action checks which fan-related SMC keys respond on the current Mac. It does not calibrate RPM accuracy.")
-                    HelpBullet(text: "Safety features prevent unsafe fan speeds and protect hardware integrity.")
-                    Text("Use the `Fans` tab to switch profiles or adjust settings.")
+                    HelpBullet(text: "Safety limits prevent targets outside the supported range.")
+                    Text("Use the `Fans` tab to switch modes or adjust settings.")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -61,28 +61,28 @@ struct HelpView: View {
             HelpSection(id: "battery", title: "Battery", icon: "battery.100", content: AnyView(
                 HelpCard {
                     Text("Battery monitoring shows charge cycles, current charge, health status, and battery temperature.")
-                    HelpBullet(text: "Track battery capacity relative to design capacity and receive health warnings.")
+                    HelpBullet(text: "Track battery capacity relative to design capacity and current health.")
                     HelpBullet(text: "Some details vary by Mac model.")
                 }
             )),
             HelpSection(id: "system", title: "System Controls", icon: "gearshape", content: AnyView(
                 HelpCard {
-                    Text("System controls enable adjusting volume, screen brightness, and launch-at-login behavior.")
+                    Text("System controls include volume, brightness, and Launch at Login.")
                     HelpBullet(text: "Use the `System` tab or menu bar popovers to view current volume and brightness.")
-                    HelpBullet(text: "Toggle `Launch at Login` to start Core Monitor automatically.")
+                    HelpBullet(text: "Toggle `Launch at Login` if you want Core-Monitor to open when you sign in.")
                 }
             )),
             HelpSection(id: "touchbar", title: "Touch Bar Customization", icon: "rectangle.3.group", content: AnyView(
                 HelpCard {
-                    Text("Customize your MacBook's Touch Bar with Core Monitor widgets and controls.")
-                    HelpBullet(text: "Presentation modes control how the app presents widgets on the Touch Bar.")
+                    Text("On supported Macs, customize the Touch Bar with Core-Monitor items and shortcuts.")
+                    HelpBullet(text: "Presentation modes control whether Core-Monitor uses its own Touch Bar layout or the standard macOS one.")
                     HelpBullet(text: "Presets let you quickly switch between themed layouts.")
-                    HelpBullet(text: "Built-in widgets include CPU usage, fan speed, battery, network, stats, and weather.")
+                    HelpBullet(text: "Built-in items include status, CPU, network, memory, hardware, and weather.")
                     HelpBullet(text: "Pin apps and folders for quick access directly from the Touch Bar.")
                     HelpBullet(text: "Add custom widgets via shell commands with a title, SF Symbol, and width.")
                     HelpBullet(text: "Theme options allow switching between available appearances.")
                     HelpBullet(text: "Width guidance warns when the active stack may clip on a full Touch Bar.")
-                    Text("Weather data uses WeatherKit — attribution is required by Apple.")
+                    Text("Weather uses Apple WeatherKit, and Apple requires attribution when that feature is enabled.")
                         .font(.footnote)
                         .foregroundColor(.secondary)
                         .padding(.top, 4)
@@ -90,7 +90,7 @@ struct HelpView: View {
             )),
             HelpSection(id: "menubar", title: "Menu Bar Items and Popovers", icon: "menubar.rectangle", content: AnyView(
                 HelpCard {
-                    Text("Core Monitor menu bar items provide quick overview and access to system metrics.")
+                    Text("Core-Monitor menu bar items give you quick readings and controls.")
                     HelpBullet(text: "Click menu bar icons to open popovers with detailed info and controls.")
                     HelpBullet(text: "Use `System` → `Menu Bar` to choose which of the CPU, Memory, Disk, and Temperature items stay visible.")
                     HelpBullet(text: "At least one menu bar item must stay enabled so the app remains reachable after launch.")
@@ -98,33 +98,33 @@ struct HelpView: View {
             )),
             HelpSection(id: "basic", title: "Basic Mode", icon: "square.grid.2x2.fill", content: AnyView(
                 HelpCard {
-                    Text("Basic Mode simplifies Core Monitor’s interface and monitoring options.")
-                    HelpBullet(text: "Recommended for a lightweight experience with essential metrics.")
+                    Text("Basic Mode keeps the interface lighter and more focused.")
+                    HelpBullet(text: "Use it if you want a smaller view with essential metrics.")
                     HelpBullet(text: "Switch back to Full UI any time from the header button.")
                 }
             )),
             HelpSection(id: "weather", title: "Weather Permission Tips", icon: "cloud.sun.rain.fill", content: AnyView(
                 HelpCard {
-                    Text("Core Monitor uses WeatherKit data which may require location permission.")
-                    HelpBullet(text: "Grant Core Monitor access to your location in System Settings → Privacy & Security → Location Services.")
+                    Text("The weather item uses Apple WeatherKit. Location access is only needed if you keep that item in your Touch Bar layout.")
+                    HelpBullet(text: "Grant Core-Monitor access to your location in System Settings > Privacy & Security > Location Services if you want local weather.")
                     HelpBullet(text: "If weather data fails to load, ensure WeatherKit is enabled for your signed build.")
                 }
             )),
             HelpSection(id: "smc", title: "SMC Access and Helper Install", icon: "cpu.fill", content: AnyView(
                 HelpCard {
-                    Text("Core Monitor reads sensors via AppleSMC. Fan writes require the bundled helper.")
+                    Text("Core-Monitor reads sensors through AppleSMC. Fan writes require the bundled helper.")
                     HelpBullet(text: "The helper is signed and uses the macOS authorization sheet on first use.")
-                    HelpBullet(text: "Use ‘Reset to System Auto’ in the Fans section to restore default behavior.")
+                    HelpBullet(text: "Use `Reset to System Auto` in the Fans section to restore default behavior.")
                 }
             )),
             HelpSection(id: "troubleshooting", title: "Troubleshooting", icon: "wrench.and.screwdriver", content: AnyView(
                 HelpCard {
                     Text("Common issues and solutions:")
                         .fontWeight(.semibold)
-                    HelpBullet(text: "If sensors are missing, restart Core Monitor and verify SMC access.")
+                    HelpBullet(text: "If sensors are missing, restart Core-Monitor and verify SMC access.")
                     HelpBullet(text: "Fan control not working? Ensure the helper is installed, reset to system auto, then run `Probe Fan Keys` to confirm readable fan SMC keys.")
                     HelpBullet(text: "Weather unavailable? Check location permissions and WeatherKit configuration.")
-                    HelpBullet(text: "Login item requires approval — open System Settings → General → Login Items.")
+                    HelpBullet(text: "Launch at Login requires approval. Open System Settings > General > Login Items.")
                     HelpBullet(text: "Touch Bar clipping — reduce active items or apply a narrower preset.")
                 }
             ))
@@ -176,7 +176,7 @@ struct HelpView: View {
             Image(systemName: "questionmark.circle.fill")
                 .font(.title2.weight(.semibold))
                 .foregroundColor(.accentColor)
-            Text("Core Monitor Help")
+            Text("Core-Monitor Help")
                 .font(.title3.weight(.semibold))
                 .foregroundColor(.primary)
                 .lineLimit(1)
@@ -190,12 +190,12 @@ struct HelpView: View {
             
             HStack(spacing: 8) {
                 Button(action: { hasSeenWelcomeGuide = false }) {
-                    Text("Open Welcome Guide")
+                    Text("Show Welcome Guide")
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 
                 Button(action: { hasSeenWelcomeGuide = true }) {
-                    Text("Reset Guide")
+                    Text("Mark Guide Seen")
                 }
                 .buttonStyle(BorderedAccentButtonStyle())
             }
@@ -273,7 +273,7 @@ struct HelpView: View {
                 HStack(spacing: 24) {
                     Link("GitHub Issues", destination: URL(string: "https://github.com/offyotto-sl3/Core-Monitor/issues")!)
                     Link("Official Website", destination: URL(string: "https://offyotto-sl3.github.io/Core-Monitor/")!)
-                    Link("Privacy Policy", destination: URL(string: "https://github.com/offyotto-sl3/Core-Monitor/")!)
+                    Link("Privacy Details", destination: URL(string: "https://github.com/offyotto-sl3/Core-Monitor#privacy")!)
                 }
                 .font(.footnote)
                 .foregroundColor(.accentColor)

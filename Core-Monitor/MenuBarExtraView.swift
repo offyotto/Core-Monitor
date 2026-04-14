@@ -985,7 +985,7 @@ struct TemperatureMenuPopoverView: View {
                 tempRow("SSD",                      value: st,    icon: "internaldrive.fill")
             }
             if systemMonitor.cpuTemperature == nil && systemMonitor.gpuTemperature == nil && systemMonitor.batteryInfo.temperatureC == nil {
-                MBRow(icon: "thermometer.slash", label: "Sensors", value: "No SMC access", color: .white.opacity(0.4))
+                MBRow(icon: "thermometer.slash", label: "Sensors", value: "SMC unavailable", color: .white.opacity(0.4))
             }
         }
     }
@@ -1131,12 +1131,12 @@ struct MenuBarMenuView: View {
                 Image(systemName: "fanblades.fill").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.white.opacity(0.86))
             }
             VStack(alignment: .leading, spacing: 1) {
-                Text("Core Monitor").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(.white.opacity(0.92))
-                Text("System summary").font(.system(size: 10, weight: .medium)).foregroundStyle(.white.opacity(0.58))
+                Text("Core-Monitor").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(.white.opacity(0.92))
+                Text("At a glance").font(.system(size: 10, weight: .medium)).foregroundStyle(.white.opacity(0.58))
             }
             Spacer()
             statusPill(dot: systemMonitor.hasSMCAccess ? .green : .red,
-                       label: systemMonitor.hasSMCAccess ? "SMC OK" : "No SMC",
+                       label: systemMonitor.hasSMCAccess ? "SMC Ready" : "SMC Unavailable",
                        tint: nil)
         }
         .padding(.horizontal, 16).padding(.vertical, 14)
@@ -1189,7 +1189,7 @@ struct MenuBarMenuView: View {
     private var fanSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("Fan Profile").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                Text("Fan Mode").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
                 Spacer()
                 Text(fanController.mode.title).font(.system(size: 10, weight: .bold)).foregroundStyle(.white.opacity(0.86))
             }
@@ -1202,7 +1202,7 @@ struct MenuBarMenuView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "fanblades.fill").font(.system(size: 10, weight: .semibold)).foregroundStyle(.white.opacity(0.78))
-                    Text("Change Profile").font(.system(size: 12, weight: .semibold))
+                    Text("Choose Mode").font(.system(size: 12, weight: .semibold))
                     Spacer()
                     Image(systemName: "chevron.up.chevron.down").font(.system(size: 9, weight: .bold)).foregroundStyle(.secondary)
                 }
@@ -1223,7 +1223,7 @@ struct MenuBarMenuView: View {
             actionRow("Restore App Touch Bar",      icon: "rectangle.on.rectangle") { restoreAppTouchBarAction() }
             actionRow("Revert to System Touch Bar", icon: "rectangle.3.group") { revertTouchBarAction() }
             mbDivider.padding(.horizontal, 14).padding(.vertical, 2)
-            actionRow("Quit Core Monitor", icon: "power", tint: .red) { NSApp.terminate(nil) }
+            actionRow("Quit Core-Monitor", icon: "power", tint: .red) { NSApp.terminate(nil) }
         }
         .padding(.vertical, 4)
     }

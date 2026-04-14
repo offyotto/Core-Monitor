@@ -20,29 +20,29 @@ enum TouchBarWidgetKind: String, CaseIterable, Codable, Identifiable {
         switch self {
         case .worldClocks: return "Status"
         case .weather: return "Weather"
-        case .controlCenter: return "Brightness & Volume"
+        case .controlCenter: return "Brightness and Volume"
         case .dock: return "Dock"
         case .cpu: return "CPU"
         case .stats: return "Stats"
-        case .detailedStats: return "Stats + Clock"
+        case .detailedStats: return "Stats and Clock"
         case .combined: return "Combined"
         case .hardware: return "Hardware"
         case .network: return "Network"
-        case .ramPressure: return "RAM Pressure"
+        case .ramPressure: return "Memory Pressure"
         }
     }
 
     var subtitle: String {
         switch self {
         case .worldClocks: return "Wi-Fi, battery, and clock"
-        case .weather: return "Live conditions and rain timing"
+        case .weather: return "Local weather. Requires location access."
         case .controlCenter: return "Brightness and volume controls"
-        case .dock: return "Running apps and pinned favorites"
-        case .cpu: return "Load, temperature, and usage bar"
-        case .stats: return "Time with MEM, SSD, and CPU meters"
-        case .detailedStats: return "Stats plus a longer clock readout"
-        case .combined: return "Dense status strip with power and network"
-        case .hardware: return "System glyphs and mini graphs"
+        case .dock: return "Running apps and pinned items"
+        case .cpu: return "CPU load, temperature, and activity"
+        case .stats: return "Time, memory, storage, and CPU"
+        case .detailedStats: return "Expanded meters with time and date"
+        case .combined: return "Dense status view with power and network"
+        case .hardware: return "System icons and mini graphs"
         case .network: return "Live upload and download rates"
         case .ramPressure: return "Memory pressure meter"
         }
