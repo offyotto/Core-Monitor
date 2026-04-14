@@ -5,17 +5,13 @@
 <h1 align="center">Core-Monitor</h1>
 
 <p align="center">
-  A system monitor for Apple Silicon Macs. It sits in your menu bar, reads SMC data, and stays out of your way.
+  A native system monitor for macOS, built for Apple Silicon Macs.
 </p>
 
 <p align="center">
   <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">
     <img src="https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge" alt="Download latest release">
   </a>
-</p>
-
-<p align="center">
-  <strong>Core-Monitor v12 is officially notarized by Apple.</strong>
 </p>
 
 <p align="center">
@@ -41,11 +37,11 @@
 
 ---
 
-Core Monitor reads sensor data directly from the Apple SMC and surfaces it in your menu bar and dashboard. CPU, GPU, memory, battery, temperatures, power draw, and fan speeds update every second via IOKit.
+Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs, then presents it in the menu bar, dashboard, and, on supported hardware, the Touch Bar. CPU, GPU, memory, battery, temperatures, power draw, and fan speeds update continuously in the native app.
 
-It is written in Swift, built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. No updater, no telemetry, and no network or disk throughput polling. The only extra process is the fan control helper, which is optional and described below.
+It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. Sensor reads stay local to your Mac. The optional fan control helper is the only additional process, and it is only needed if you want write access for fan control.
 
-Version 12 is the officially notarized release. The distributed app is signed and notarized for macOS Gatekeeper, so the standard download-and-run experience is as smooth as possible on supported systems.
+Public builds are available through GitHub Releases.
 
 ## UI Preview
 
@@ -94,31 +90,35 @@ The helper is bundled at `Core-Monitor.app/Contents/Library/LaunchServices/venta
 The Smart curve accounts for system power draw as a temperature boost — at 40 W it adds up to 8°C to the effective temperature before mapping to a fan speed. Fan settings persist across sleep/wake via `NSWorkspace.didWakeNotification`.
 
 **Helper commands** (also usable directly from the terminal):
+
+```text
 smc-helper set <fanID> <rpm>   # override fan speed
 smc-helper auto <fanID>        # return fan to firmware
 smc-helper read <key>          # read any 4-character SMC key
+```
+
 Supported SMC value types: `sp78`, `fpe2`, `flt`, `ui8`, `ui16`.
 
 ## Touch Bar customization
 
-Core Monitor includes a full Touch Bar layout editor in the app's **Touch Bar** section. The editor is no longer limited to toggling a fixed set of built-in widgets. A layout can now mix:
+Core-Monitor includes a Touch Bar layout editor in the app's **Touch Bar** section. Layouts can mix:
 
-- built-in widgets such as Status, Weather, CPU, Dock, Stats, and Network
+- built-in items such as Status, Weather, CPU, Dock, Stats, and Network
 - pinned applications
 - pinned folders
 - custom command widgets
 
-Every item in the active layout is stored in order and rendered live in the Touch Bar preview before you apply or rearrange anything else.
+Every item in the active layout is stored in order and rendered in the live preview before you apply changes.
 
 ### Built-in widgets
 
-Built-in widgets are the existing Core Monitor Touch Bar modules. You can enable or disable them from the built-in widget list and then reorder them from the **Active Items** section.
+Built-in items are the existing Core-Monitor Touch Bar modules. You can enable or disable them from the built-in list, then reorder them in **Active Items**.
 
 These built-ins keep their normal live behavior:
 
 - Weather continues to use WeatherKit
 - Status continues to show Wi-Fi, battery, and clock data
-- CPU/Stats widgets continue to use the current system snapshot
+- CPU and Stats items continue to use the current system snapshot
 - Dock continues to reflect the compact launcher strip
 
 ### Pinning applications
@@ -134,10 +134,10 @@ How it works:
 
 Practical notes:
 
-- pinned apps are meant to be fast launch targets, not full live widgets
+- pinned apps are meant to be quick launch targets, not live widgets
 - app icons are pulled from the app bundle on disk each time the item is rebuilt
 - if you move or rename a pinned app after saving it, the stored path may go stale and that launcher may stop working until you re-pin it
-- if you pin many apps, the estimated width meter in the customization panel will warn when your layout is wider than a full Touch Bar
+- if you pin many apps, the width meter warns when the layout is wider than a full Touch Bar
 
 ### Pinning folders
 
@@ -171,7 +171,7 @@ Each custom widget stores:
 
 Current behavior:
 
-- the widget renders as a compact labeled button in the Touch Bar
+- the widget appears as a compact labeled button in the Touch Bar
 - tapping it launches `/bin/zsh -lc "<your command>"`
 - this is designed for quick actions, scripts, and automations rather than long-running UI
 
@@ -190,7 +190,7 @@ shortcuts run "Build Project"
 ```
 
 ```bash
-osascript -e 'display notification "Build complete" with title "Core Monitor"'
+osascript -e 'display notification "Build complete" with title "Core-Monitor"'
 ```
 
 Important caveats:
@@ -198,7 +198,7 @@ Important caveats:
 - commands run with the app's user permissions
 - command output is not embedded back into the Touch Bar
 - if a command depends on shell setup files, test it directly in `zsh -lc` form first
-- keep commands short and deterministic; the current implementation is an action launcher, not a terminal emulator
+- keep commands short and predictable; the current implementation is an action launcher, not a terminal emulator
 
 ### Rearranging the layout
 
@@ -221,9 +221,9 @@ The live preview strip above the editor reflects the current order and item widt
 
 ### Presets and persistence
 
-Presets still exist, but they now apply as structured item layouts instead of the older widget-only stack.
+Presets still exist, but they now apply structured item layouts instead of the older widget-only stack.
 
-Your Touch Bar layout is persisted in user defaults and now migrates older widget-only configurations forward into the richer item model automatically. Existing users should keep their built-in widget layouts, and then add pinned apps, folders, or custom widgets on top.
+Touch Bar layouts are stored in user defaults and older widget-only configurations are migrated forward into the richer item model automatically. Existing users should keep their built-in layouts, then add pinned apps, folders, or custom widgets on top.
 
 ### Current limits
 
@@ -236,9 +236,7 @@ The new customization system is intentionally practical rather than unlimited. R
 
 ## Installation
 
-**Download:** Get the latest build from [Releases](https://github.com/offyotto-sl3/Core-Monitor/releases/latest) and move it to `/Applications`.
-
-The v12 release is officially notarized, so it should open normally on supported macOS versions without extra Gatekeeper friction.
+**Download:** Get the latest public build from [Releases](https://github.com/offyotto-sl3/Core-Monitor/releases/latest) and move it to `/Applications`.
 
 **Build from source:**
 
@@ -246,22 +244,22 @@ The v12 release is officially notarized, so it should open normally on supported
 git clone https://github.com/offyotto-sl3/Core-Monitor.git
 ```
 
-Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc-helper` is a separate target. You can build and run Core Monitor without it — fan control simply won't be available.
+Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc-helper` is a separate target. You can build and run Core-Monitor without it, but fan control will not be available.
 
 ## Compatibility
 
 - macOS 12 or later
-- Apple Silicon is the primary target; Intel Macs are not tested
+- Apple Silicon is the primary target; Intel Macs are not part of the current test path
 - Fan control requires macOS 13+ (XPC with code-signing requirements)
-- v12 is officially notarized by Apple
-- Core Monitor is not available on the Mac App Store
+- Core-Monitor is not available on the Mac App Store
 
 ## Privacy
 
-Core Monitor does not ship with updater frameworks, telemetry, analytics, or accounts. Sensor reads are local IOKit calls, and the optional fan helper only talks to the local privileged XPC service. 
+Core-Monitor does not include analytics, ad SDKs, or account features. Sensor reads stay local to your Mac, and the optional fan helper only communicates with the local privileged XPC service.
 
-## WeatherKit 
-Core-Monitor communicates with Apple's weatherkit to show you the weather. For best results, we recommend turning on location for the app.
+## WeatherKit
+
+The optional Touch Bar weather item uses Apple WeatherKit and location access to show local conditions. Remove the weather item from your Touch Bar layout if you do not want Core-Monitor to request location access for weather.
 
 ## License
 

@@ -1,20 +1,20 @@
-# Contributing to Core Monitor
+# Contributing to Core-Monitor
 
-Thanks for helping improve Core Monitor. This repo ships a macOS app, a privileged helper, and a GitHub Pages site, so keep changes focused and verify the exact area you touched.
+Thanks for helping improve Core-Monitor. This repository includes a macOS app, a privileged helper, and a GitHub Pages site, so keep changes focused and verify the exact area you touched.
 
 ## Before you start
 
-- Work on a branch, not directly on `main`.
+- Prefer working on a branch instead of committing directly to `main`.
 - Keep commits small and scoped.
 - Do not mix unrelated app, helper, and website changes unless the change really depends on all three.
-- If you are editing release assets or website pages, verify the final files in `docs/` and `index.html`.
+- If you edit release assets or website pages, verify the final files in `docs/` and `index.html`.
 
 ## Development setup
 
 - Open `Core-Monitor.xcodeproj` in Xcode.
 - Build the `Core-Monitor` scheme.
-- If you are changing fan control, also build the `smc-helper` target.
-- If you are changing the website, verify both `index.html` and `docs/index.html`.
+- If you change fan control, also build the `smc-helper` target.
+- If you change the website, verify both `index.html` and `docs/index.html`.
 
 ## Common checks
 
@@ -60,6 +60,8 @@ Use the smallest check that covers the change:
 
 Prefer the least invasive fix that makes the app correct and keeps the build green.
 
-## No LLM slop
+## Automated edits
 
-DO NOT use AI to contribute to the project. Please. I dont think theres anything else to say.
+- Review generated or automated changes before you commit them.
+- Do not submit large copy or code rewrites you did not verify.
+- Keep the final diff scoped to the area you actually tested.

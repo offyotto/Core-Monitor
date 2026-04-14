@@ -1,13 +1,13 @@
 # Xcode Cloud setup for Core-Monitor
 
-Core-Monitor is ready for the repo-side part of Xcode Cloud:
+This repository is ready for Xcode Cloud configuration:
 
 - The shared scheme is `Core-Monitor`.
 - The archive action uses the `Release` configuration.
 - The `smc-helper` target is built as a dependency and embedded into `Core-Monitor.app`.
 - There are no XCTest targets yet, so the first workflow should archive only.
 
-Xcode Cloud workflows are stored in App Store Connect, not in a repository file. Use this checklist to create the workflow in Xcode or App Store Connect.
+Xcode Cloud workflows are configured in App Store Connect, not in this repository. Use this checklist to create the workflow in Xcode or App Store Connect.
 
 ## Workflow
 
@@ -21,7 +21,7 @@ Use these workflow settings:
 
 - Product: `Core-Monitor`
 - Repository: this repository
-- Branch start condition: run on every push to the branch you use for releases, or all branches if you truly want every push archived
+- Branch start condition: run on every push to the branch you use for releases, or on all branches if you want every push archived
 - Environment: Latest stable Xcode and macOS, unless a specific Xcode version is required
 - Build action: `Archive`
 - Scheme: `Core-Monitor`
@@ -29,9 +29,9 @@ Use these workflow settings:
 - Configuration: `Release`
 - Post action: `Notarize`
 - Distribution: `Direct Distribution`
-- Tests: disabled until the project has real XCTest targets
+- Tests: disabled until the project has XCTest targets
 
-For this app, prefer a push workflow on your release branch over all branches. Notarizing every experimental branch will burn the 25 monthly compute hours quickly and will also submit every branch build to Apple's notary service.
+For this app, prefer a push workflow on your release branch over all branches. Notarizing every experimental branch consumes build time quickly and submits every branch build to Apple's notary service.
 
 ## Signing
 
@@ -59,7 +59,7 @@ After a push triggers the workflow:
 4. Open the archive or artifacts for the completed build.
 5. Download or export the notarized app from the Direct Distribution result.
 
-You can also find the same build from App Store Connect under the app's Xcode Cloud tab.
+You can also find the same build in the app's Xcode Cloud tab in App Store Connect.
 
 ## Local verification
 
@@ -75,4 +75,4 @@ xcodebuild \
   build
 ```
 
-This does not notarize. It only confirms the code and packaging steps compile locally.
+This does not notarize the app. It only confirms that the code and packaging steps compile locally.

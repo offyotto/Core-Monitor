@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Core-Monitor</title>
-  <meta name="description" content="Core-Monitor is an open-source macOS system monitor with fan control, live monitoring, Touch Bar widgets, and menu bar stats.">
+  <meta name="description" content="Core-Monitor is a native macOS system monitor for Apple Silicon Macs with menu bar readings, optional fan control, and Touch Bar customization.">
   <meta name="application-name" content="Core-Monitor">
   <meta name="apple-mobile-web-app-title" content="Core-Monitor">
   <meta name="theme-color" content="#0a0c16">
@@ -38,7 +38,7 @@
         <div class="hero-glow hero-glow-left"></div>
         <div class="hero-glow hero-glow-right"></div>
         <div class="hero-copy">
-          <p class="eyebrow">Open-source macOS system monitor</p>
+          <p class="eyebrow">Native macOS system monitor</p>
           <h1 class="hero-title">
             <span class="hero-word-window" aria-hidden="true">
             <span class="hero-word-track">
@@ -57,28 +57,28 @@
         </figure>
         <div class="hero-copy hero-copy-secondary">
           <p class="hero-lead">
-            A system monitor for Apple Silicon Macs. It sits in your menu bar, reads SMC data, and stays out of your way.
+            A native system monitor for macOS, built for Apple Silicon Macs.
           </p>
           <div class="hero-actions">
             <a class="button primary" href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Download Latest Release</a>
             <a class="button secondary" href="#screens">See the UI</a>
             <a class="button ghost" href="https://github.com/offyotto-sl3/Core-Monitor">View on GitHub</a>
           </div>
-          <p class="hero-subline">No telemetry. No web wrapper. Just a proper macOS utility.</p>
+          <p class="hero-subline">Local by default. Native on macOS. No analytics.</p>
         </div>
       </section>
 
       <section class="quick-install" id="install">
         <div class="section-heading">
           <p class="eyebrow">Install</p>
-          <h2>Get it running fast.</h2>
+          <h2>Install in a minute.</h2>
         </div>
         <div class="install-grid">
           <article class="install-card install-card-main">
             <p class="card-step">1. Download</p>
-            <h3>Grab the latest release from GitHub.</h3>
+            <h3>Download the latest release.</h3>
             <p>
-              Download the latest notarized release from GitHub and move Core-Monitor to `/Applications`.
+              Download the current public build from GitHub Releases and move Core-Monitor to `/Applications`.
             </p>
             <a class="button primary" href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Download Latest Release</a>
           </article>
@@ -86,14 +86,14 @@
             <p class="card-step">2. First launch</p>
             <h3>Open the app.</h3>
             <p>
-              Launch Core-Monitor and use the normal macOS first-run flow for your system.
+              Open Core-Monitor and follow the standard macOS confirmation flow if your system asks.
             </p>
           </article>
           <article class="install-card">
-            <p class="card-step">3. Unlock the advanced parts</p>
+            <p class="card-step">3. Optional setup</p>
             <h3>Helper and login item setup.</h3>
             <p>
-              Fan control uses the helper when needed, and launch at login uses the standard macOS approval flow.
+              Fan control uses the helper when needed, and launch at login uses the standard macOS login item approval flow.
             </p>
             <a class="text-link" href="#install-details">See the install checklist</a>
           </article>
@@ -103,7 +103,7 @@
       <section class="screens" id="screens">
         <div class="section-heading">
           <p class="eyebrow">UI</p>
-          <h2>Read your hardware at a glance.</h2>
+          <h2>Hardware, clearly.</h2>
         </div>
         <div class="showcase-grid">
           <figure class="showcase-card">
@@ -133,12 +133,12 @@
       <section class="video-section" aria-labelledby="touchbar-video-title">
         <div class="section-heading">
           <p class="eyebrow">Tour</p>
-          <h2 id="touchbar-video-title">Touch Bar widgets in action.</h2>
+          <h2 id="touchbar-video-title">Touch Bar customization in action.</h2>
         </div>
         <div class="video-layout">
           <div class="video-copy">
             <p>
-              A short walkthrough of the Touch Bar widgets, layout switching, and customization flow.
+              A short walkthrough of Touch Bar layouts, pinned items, and customization.
             </p>
             <div class="video-actions">
               <a class="button secondary" href="videos/touchbar-showcase.mp4">Open Touch Bar Video</a>
@@ -154,28 +154,28 @@
       <section class="feature-band" id="features">
         <div class="section-heading">
           <p class="eyebrow">Features</p>
-          <h2>What it does.</h2>
+          <h2>What it includes.</h2>
         </div>
         <div class="feature-grid">
           <article class="feature-card">
             <h3>Live monitoring</h3>
-            <p>CPU activity, Apple Silicon E-core and P-core awareness, memory pressure, thermal readings, power, battery state, and fan RPM in one native UI.</p>
+            <p>CPU activity, Apple Silicon core usage, memory pressure, thermal readings, power, battery state, and fan RPM in one native interface.</p>
           </article>
           <article class="feature-card">
-            <h3>Real fan control</h3>
-            <p>SMC-backed helper flow, hardware-aware fan mode handling, profiles, and wake re-apply behavior.</p>
+            <h3>Fan control</h3>
+            <p>Optional helper-backed fan control with fixed modes, smart curves, and wake re-apply behavior.</p>
           </article>
           <article class="feature-card">
-            <h3>Touch Bar HUD</h3>
-              <p>Full-width Touch Bar widgets for status, weather, stats, network, and hardware views.</p>
+            <h3>Touch Bar</h3>
+              <p>Custom layouts for status, weather, hardware, launcher, and command items on supported Touch Bar Macs.</p>
           </article>
           <article class="feature-card">
             <h3>Menu bar utility</h3>
-            <p>At-a-glance status and quick controls for the moments where opening the full dashboard would be overkill.</p>
+            <p>Quick readings and controls without opening the full dashboard.</p>
           </article>
           <article class="feature-card">
-            <h3>Native Swift UI</h3>
-            <p>A focused desktop interface built for macOS instead of a web wrapper.</p>
+            <h3>Native macOS app</h3>
+            <p>Built in Swift for macOS instead of wrapped from the web.</p>
           </article>
         </div>
       </section>
@@ -183,24 +183,24 @@
       <section class="privacy-band" id="privacy">
         <div class="section-heading">
           <p class="eyebrow">Privacy</p>
-          <h2>Privacy.</h2>
+          <h2>Built to stay local.</h2>
         </div>
         <div class="feature-grid privacy-grid">
           <article class="feature-card">
-            <h3>Privacy is a fundamental human right</h3>
-            <p>Core-Monitor is built around the idea that system utilities should help you understand your computer, not inspect you in return.</p>
+            <h3>Open source</h3>
+            <p>The code is published in the open so you can inspect how Core-Monitor works and what it talks to.</p>
           </article>
           <article class="feature-card">
-            <h3>Open source by default</h3>
-            <p>The code is published in the open so anyone can inspect how the app works, what it talks to, and what it does not do.</p>
+            <h3>Local sensor reads</h3>
+            <p>Hardware readings come from the Apple SMC and standard macOS APIs. Core monitoring stays on your Mac.</p>
           </article>
           <article class="feature-card">
-            <h3>No telemetry, no analytics, no data collection</h3>
-            <p>Core-Monitor does not ship with analytics, ad tech, updater frameworks, or account-based tracking. The app runs locally on your Mac and focuses on hardware monitoring, fan control, Touch Bar widgets, and menu bar stats without building a profile about you.</p>
+            <h3>Optional weather</h3>
+            <p>The Touch Bar weather item uses Apple WeatherKit and location access. Remove that item if you do not want local weather in the Touch Bar.</p>
           </article>
           <article class="feature-card">
-            <h3>No subscription wall</h3>
-            <p>You do not need to hand over an email address or subscribe to unlock core functionality.</p>
+            <h3>Standard macOS services</h3>
+            <p>Launch at login uses macOS login items, and fan control uses the bundled local helper only when you enable that path.</p>
           </article>
         </div>
       </section>
@@ -208,7 +208,7 @@
       <section class="details" id="install-details">
         <div class="section-heading">
           <p class="eyebrow">First-run checklist</p>
-          <h2>Everything that matters after you launch it.</h2>
+          <h2>What to check after first launch.</h2>
         </div>
         <div class="details-grid">
           <article class="detail-card">
@@ -220,12 +220,12 @@
             <p>Use the normal macOS first-run prompts if your system asks for confirmation before opening the app.</p>
           </article>
           <article class="detail-card">
-            <h3>Enable helper-backed fan writes if you want them</h3>
-            <p>You can browse monitoring features without the helper, but fan writes and deeper hardware interaction depend on that path being available.</p>
+            <h3>Enable fan writes only if you want them</h3>
+            <p>You can use the monitoring features without the helper. Fan writes depend on the helper path being available.</p>
           </article>
           <article class="detail-card">
-            <h3>Enable Launch at Login if you want it always nearby</h3>
-            <p>Core-Monitor supports launch-at-login through normal macOS login item approval instead of custom weirdness.</p>
+            <h3>Enable Launch at Login if you want it nearby</h3>
+            <p>Core-Monitor uses the standard macOS login item approval flow.</p>
           </article>
         </div>
       </section>
@@ -233,12 +233,12 @@
       <section class="video-section">
         <div class="section-heading">
           <p class="eyebrow">Walkthrough</p>
-          <h2>Watch the install flow before you click anything.</h2>
+          <h2>See the install flow first.</h2>
         </div>
         <div class="video-layout">
           <div class="video-copy">
             <p>
-              If you want the shortest path from download to running app, the recorded install walkthrough shows the expected first-run flow and what macOS is going to ask you.
+              The recorded install walkthrough shows the expected first-run flow and the macOS prompts you may see.
             </p>
             <div class="video-actions">
               <a class="button secondary" href="videos/install-walkthrough.mov">Open Install Video</a>
@@ -254,7 +254,7 @@
       <section class="cta-band">
         <div>
           <p class="eyebrow">Ready to try it?</p>
-          <h2>Download the newest release or inspect the full source.</h2>
+          <h2>Download the latest release or review the source.</h2>
         </div>
         <div class="cta-actions">
           <a class="button primary" href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Download Latest Release</a>
