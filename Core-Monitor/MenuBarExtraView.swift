@@ -1,5 +1,8 @@
 import SwiftUI
+import AppKit
 import Darwin
+
+private let kProcPidPathMaxSize = max(Int(PATH_MAX), 1024)
 
 private extension View {
     @ViewBuilder
@@ -461,14 +464,10 @@ struct MemoryMenuPopoverView: View {
 
     private var breakdownSection: some View {
         VStack(spacing: 0) {
-            let appGB     = systemMonitor.memoryUsedGB * 0.25
-            let wiredGB   = systemMonitor.memoryUsedGB * 0.25
-            let compGB    = systemMonitor.totalMemoryGB * 0.31 - appGB - wiredGB
-            let freeGB    = max(0, systemMonitor.totalMemoryGB - systemMonitor.memoryUsedGB)
-            MBRow(icon: "circle.fill", label: "App",        value: String(format: "%.1f GB", appGB),  color: Color.mbBlue)
-            MBRow(icon: "circle.fill", label: "Wired",      value: String(format: "%.1f GB", wiredGB), color: .pink)
-            MBRow(icon: "circle.fill", label: "Compressed", value: String(format: "%.1f GB", max(0, compGB)), color: Color.mbOrange)
-            MBRow(icon: "circle.fill", label: "Free",       value: String(format: "%.1f GB", freeGB), color: Color.white.opacity(0.4))
+            MBRow(icon: "circle.fill", label: "App",        value: String(format: "%.1f GB", systemMonitor.appMemoryGB), color: Color.mbBlue)
+            MBRow(icon: "circle.fill", label: "Wired",      value: String(format: "%.1f GB", systemMonitor.wiredMemoryGB), color: .pink)
+            MBRow(icon: "circle.fill", label: "Compressed", value: String(format: "%.0f MB", systemMonitor.compressedMemoryGB * 1024), color: Color.mbOrange)
+            MBRow(icon: "circle.fill", label: "Free",       value: String(format: "%.1f GB", systemMonitor.freeMemoryGB), color: Color.white.opacity(0.4))
         }
     }
 
@@ -499,25 +498,29 @@ struct MemoryMenuPopoverView: View {
 
     private var pageSection: some View {
         VStack(spacing: 0) {
-            MBRow(icon: "arrow.down.circle", label: "Page Ins",  value: "0 KB", color: .white.opacity(0.5))
-            MBRow(icon: "arrow.up.circle",   label: "Page Outs", value: "0 KB", color: .white.opacity(0.5))
+            MBRow(icon: "arrow.down.circle", label: "Page Ins",  value: formatByteCount(systemMonitor.pageInsBytes), color: .white.opacity(0.5))
+            MBRow(icon: "arrow.up.circle",   label: "Page Outs", value: formatByteCount(systemMonitor.pageOutsBytes), color: .white.opacity(0.5))
         }
     }
 
     private var swapSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let swapRatio = systemMonitor.swapTotalBytes > 0
+            ? min(1, CGFloat(Double(systemMonitor.swapUsedBytes) / Double(systemMonitor.swapTotalBytes)))
+            : 0
+
+        return VStack(alignment: .leading, spacing: 6) {
             MBSectionHeader(title: "SWAP")
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color.white.opacity(0.08)).frame(height: 6)
-                    Capsule().fill(Color.mbPurple)
-                        .frame(width: max(0, geo.size.width * 0.32), height: 6)
+                    Capsule().fill(Color.mbBlue)
+                        .frame(width: max(0, geo.size.width * swapRatio), height: 6)
                 }
             }
             .frame(height: 6)
             .padding(.horizontal, 14)
             HStack {
-                Text("634 MB of 2.0 GB")
+                Text("\(formatByteCount(systemMonitor.swapUsedBytes)) of \(systemMonitor.swapTotalBytes > 0 ? formatByteCount(systemMonitor.swapTotalBytes) : "0 B")")
                     .font(.system(size: 10, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.white.opacity(0.62))
                 Spacer()
@@ -536,20 +539,20 @@ struct MemoryMenuPopoverView: View {
     private var pressureColor: Color { systemMonitor.memoryUsagePercent > 80 ? .red : systemMonitor.memoryUsagePercent > 60 ? Color.mbOrange : Color.mbBlue }
 
     private struct MemoryProcess: Identifiable {
-        let pid: pid_t
         let name: String
         let memoryBytes: UInt64
 
-        var id: pid_t { pid }
-        var memoryGB: Double { Double(memoryBytes) / 1_000_000_000 }
+        var id: String { name }
+        var memoryGB: Double { Double(memoryBytes) / 1_073_741_824.0 }
         var color: Color { memoryBytes > 2_000_000_000 ? .red : memoryBytes > 1_000_000_000 ? Color.mbOrange : Color.mbBlue }
     }
 
     private func topMemoryProcesses(limit: Int) -> [MemoryProcess] {
-        let estimatedCount = Int(proc_listpids(UInt32(PROC_ALL_PIDS), 0, nil, 0))
-        guard estimatedCount > 0 else { return [] }
+        let bytesNeeded = Int(proc_listpids(UInt32(PROC_ALL_PIDS), 0, nil, 0))
+        guard bytesNeeded > 0 else { return [] }
 
-        var pids = Array(repeating: pid_t(0), count: estimatedCount)
+        let pidCount = max(1, bytesNeeded / MemoryLayout<pid_t>.stride)
+        var pids = Array(repeating: pid_t(0), count: pidCount)
         let bytesWritten = pids.withUnsafeMutableBytes { buffer -> Int32 in
             guard let baseAddress = buffer.baseAddress else { return 0 }
             return proc_listpids(UInt32(PROC_ALL_PIDS), 0, baseAddress, Int32(buffer.count))
@@ -559,13 +562,9 @@ struct MemoryMenuPopoverView: View {
 
         let actualCount = Int(bytesWritten) / MemoryLayout<pid_t>.stride
         let validPIDs = pids.prefix(actualCount).filter { $0 > 0 }
-        var processes: [MemoryProcess] = []
+        var grouped: [String: UInt64] = [:]
 
         for pid in validPIDs {
-            var nameBuffer = [CChar](repeating: 0, count: Int(MAXCOMLEN) + 1)
-            proc_name(pid, &nameBuffer, UInt32(nameBuffer.count))
-            let name = String(cString: nameBuffer).isEmpty ? "PID \(pid)" : String(cString: nameBuffer)
-
             var info = proc_taskinfo()
             let result = withUnsafeMutablePointer(to: &info) { pointer -> Int32 in
                 pointer.withMemoryRebound(to: Int8.self, capacity: MemoryLayout<proc_taskinfo>.stride) { rebounded in
@@ -574,13 +573,57 @@ struct MemoryMenuPopoverView: View {
             }
 
             guard result == Int32(MemoryLayout<proc_taskinfo>.stride) else { continue }
-            processes.append(MemoryProcess(pid: pid, name: name, memoryBytes: UInt64(info.pti_resident_size)))
+            let memoryBytes = UInt64(info.pti_resident_size)
+            guard memoryBytes > 0 else { continue }
+
+            let name = displayName(for: pid)
+            grouped[name, default: 0] += memoryBytes
         }
 
-        return processes
+        return grouped
+            .map { MemoryProcess(name: $0.key, memoryBytes: $0.value) }
             .sorted { $0.memoryBytes > $1.memoryBytes }
             .prefix(limit)
             .map { $0 }
+    }
+
+    private func displayName(for pid: pid_t) -> String {
+        if let runningApp = NSRunningApplication(processIdentifier: pid) {
+            let localizedName = runningApp.localizedName ?? ""
+            if !localizedName.isEmpty {
+                return localizedName
+            }
+        }
+
+        var nameBuffer = [CChar](repeating: 0, count: Int(MAXCOMLEN) + 1)
+        let procNameLength = proc_name(pid, &nameBuffer, UInt32(nameBuffer.count))
+        if procNameLength > 0 {
+            let name = String(cString: nameBuffer).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !name.isEmpty {
+                return name
+            }
+        }
+
+        var pathBuffer = [CChar](repeating: 0, count: kProcPidPathMaxSize)
+        let pathLength = proc_pidpath(pid, &pathBuffer, UInt32(pathBuffer.count))
+        if pathLength > 0 {
+            let path = String(cString: pathBuffer)
+            let lastPathComponent = URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
+            if !lastPathComponent.isEmpty {
+                return lastPathComponent
+            }
+        }
+
+        return "PID \(pid)"
+    }
+
+    private func formatByteCount(_ bytes: UInt64) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useKB, .useMB, .useGB]
+        formatter.countStyle = .binary
+        formatter.includesUnit = true
+        formatter.isAdaptive = false
+        return formatter.string(fromByteCount: Int64(bytes))
     }
 }
 
@@ -758,9 +801,7 @@ struct DiskMenuPopoverView: View {
         var processes: [DiskProcess] = []
 
         for pid in validPIDs {
-            var nameBuffer = [CChar](repeating: 0, count: Int(MAXCOMLEN) + 1)
-            proc_name(pid, &nameBuffer, UInt32(nameBuffer.count))
-            let name = String(cString: nameBuffer).isEmpty ? "PID \(pid)" : String(cString: nameBuffer)
+            let name = diskDisplayName(for: pid)
 
             var usage = rusage_info_current()
             let status = withUnsafeMutablePointer(to: &usage) { pointer -> Int32 in
@@ -784,6 +825,36 @@ struct DiskMenuPopoverView: View {
             .sorted { $0.totalBytes > $1.totalBytes }
             .prefix(limit)
             .map { $0 }
+    }
+
+    private func diskDisplayName(for pid: pid_t) -> String {
+        if let runningApp = NSRunningApplication(processIdentifier: pid) {
+            let localizedName = runningApp.localizedName ?? ""
+            if !localizedName.isEmpty {
+                return localizedName
+            }
+        }
+
+        var nameBuffer = [CChar](repeating: 0, count: Int(MAXCOMLEN) + 1)
+        let procNameLength = proc_name(pid, &nameBuffer, UInt32(nameBuffer.count))
+        if procNameLength > 0 {
+            let name = String(cString: nameBuffer).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !name.isEmpty {
+                return name
+            }
+        }
+
+        var pathBuffer = [CChar](repeating: 0, count: kProcPidPathMaxSize)
+        let pathLength = proc_pidpath(pid, &pathBuffer, UInt32(pathBuffer.count))
+        if pathLength > 0 {
+            let path = String(cString: pathBuffer)
+            let lastPathComponent = URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
+            if !lastPathComponent.isEmpty {
+                return lastPathComponent
+            }
+        }
+
+        return "PID \(pid)"
     }
 }
 
@@ -1182,3 +1253,4 @@ private struct MBLegacyActionButton: View {
     }
 }
 
+ 
