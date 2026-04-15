@@ -86,3 +86,8 @@
 ### Completed batch
 - Hardened the privileged helper boundary so XPC clients are validated against the helper’s authorized-client requirement and helper entrypoints revalidate fan IDs, RPM values, and SMC keys instead of trusting the caller.
 - Added a dedicated security audit note capturing the helper-boundary tightening and the remaining product/security follow-ups.
+
+### Completed batch
+- Added a reusable rolling trend-history model with 1-minute, 5-minute, and 15-minute time windows instead of only fixed 60-second sparklines.
+- Surfaced a new Overview dashboard trend section for CPU temp, GPU temp, primary fan RPM, and system watts so recent thermal behavior is visible at a glance without jumping to external tools.
+- Verified the batch with a fresh macOS build and full `xcodebuild ... test` pass, plus targeted unit coverage for history retention and range summaries.

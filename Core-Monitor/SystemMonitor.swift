@@ -170,6 +170,10 @@ final class SystemMonitor: ObservableObject {
     private(set) var cpuHistory:     [Double] = Array(repeating: 0, count: 60)
     private(set) var memHistory:     [Double] = Array(repeating: 0, count: 60)
     private(set) var cpuTempHistory: [Double] = Array(repeating: 0, count: 60)
+    private(set) var cpuTemperatureTrend = MonitoringTrendSeries()
+    private(set) var gpuTemperatureTrend = MonitoringTrendSeries()
+    private(set) var totalPowerTrend = MonitoringTrendSeries()
+    private(set) var primaryFanSpeedTrend = MonitoringTrendSeries()
     @Published private(set) var snapshot = SystemMonitorSnapshot.empty
     @Published private(set) var thermalState: ProcessInfo.ThermalState = .nominal
     private let activitySampler = TopProcessSampler()
@@ -503,6 +507,11 @@ final class SystemMonitor: ObservableObject {
                 let normTemp = snapshot.cpuTemperature.map { min($0, 120) / 120 * 100 } ?? 0
                 self.cpuTempHistory.removeFirst()
                 self.cpuTempHistory.append(normTemp)
+                let sampleTimestamp = snapshot.sampledAt == .distantPast ? Date() : snapshot.sampledAt
+                self.cpuTemperatureTrend.append(snapshot.cpuTemperature, at: sampleTimestamp)
+                self.gpuTemperatureTrend.append(snapshot.gpuTemperature, at: sampleTimestamp)
+                self.totalPowerTrend.append(snapshot.totalSystemWatts.map(abs), at: sampleTimestamp)
+                self.primaryFanSpeedTrend.append(snapshot.fanSpeeds.first.map(Double.init), at: sampleTimestamp)
 
                 self.isSampling = false
                 NotificationCenter.default.post(name: .systemMonitorDidUpdate, object: self)
