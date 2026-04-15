@@ -37,6 +37,7 @@ struct HelperDiagnosticsContext: Equatable {
     let launchAtLoginError: String?
     let enabledMenuBarItemCount: Int
     let menuBarPresetTitle: String
+    let dashboardLaunch: DashboardLaunchDiagnosticsSnapshot
     let signingInfo: HelperDiagnosticsSigningInfo
 }
 
@@ -73,6 +74,17 @@ struct HelperDiagnosticsReport: Codable, Equatable {
         let presetTitle: String
     }
 
+    struct DashboardLaunchDetails: Codable, Equatable {
+        let welcomeGuideSeen: Bool
+        let autoOpenEligible: Bool
+        let lastOpenRequestAt: Date?
+        let lastOpenRequestSource: DashboardOpenSource?
+        let lastVisibleAt: Date?
+        let lastClosedAt: Date?
+        let lastKnownActivationPolicy: String?
+        let recordedVisibleWindowForLastRequest: Bool
+    }
+
     let generatedAt: Date
     let summary: String
     let recommendedActions: [String]
@@ -80,6 +92,7 @@ struct HelperDiagnosticsReport: Codable, Equatable {
     let helper: HelperDetails
     let launchAtLogin: LaunchAtLoginDetails
     let menuBar: MenuBarDetails
+    let dashboardLaunch: DashboardLaunchDetails
 }
 
 enum HelperDiagnosticsExporter {
@@ -148,6 +161,7 @@ enum HelperDiagnosticsExporter {
             launchAtLoginError: startupManager.errorMessage,
             enabledMenuBarItemCount: menuBarSettings.enabledItemCount,
             menuBarPresetTitle: menuBarSettings.activePreset?.title ?? "Custom",
+            dashboardLaunch: DashboardLaunchDiagnostics.snapshot(),
             signingInfo: currentSigningInfo()
         )
     }
@@ -184,6 +198,16 @@ enum HelperDiagnosticsExporter {
             menuBar: .init(
                 enabledItemCount: context.enabledMenuBarItemCount,
                 presetTitle: context.menuBarPresetTitle
+            ),
+            dashboardLaunch: .init(
+                welcomeGuideSeen: context.dashboardLaunch.welcomeGuideSeen,
+                autoOpenEligible: context.dashboardLaunch.autoOpenEligible,
+                lastOpenRequestAt: context.dashboardLaunch.lastOpenRequestAt,
+                lastOpenRequestSource: context.dashboardLaunch.lastOpenRequestSource,
+                lastVisibleAt: context.dashboardLaunch.lastVisibleAt,
+                lastClosedAt: context.dashboardLaunch.lastClosedAt,
+                lastKnownActivationPolicy: context.dashboardLaunch.lastKnownActivationPolicy,
+                recordedVisibleWindowForLastRequest: context.dashboardLaunch.recordedVisibleWindowForLastRequest
             )
         )
     }
@@ -229,6 +253,12 @@ enum HelperDiagnosticsExporter {
 
         if context.enabledMenuBarItemCount <= 1 {
             actions.append("Keep at least one menu bar item enabled so Core Monitor stays reachable after launch.")
+        }
+
+        if context.dashboardLaunch.autoOpenEligible,
+           context.dashboardLaunch.lastOpenRequestAt != nil,
+           context.dashboardLaunch.recordedVisibleWindowForLastRequest == false {
+            actions.append("Core Monitor expected to open the onboarding dashboard on launch but did not record a visible dashboard window. Reopen it from the menu bar, then attach this report if the issue repeats.")
         }
 
         if actions.isEmpty {

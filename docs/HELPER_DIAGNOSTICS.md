@@ -8,6 +8,7 @@ Use it when:
 - fan writes fail or do nothing
 - helper installation succeeds but connection checks still fail
 - launch-at-login or menu bar reachability might be part of the support issue
+- onboarding or dashboard-window visibility looks wrong on first launch
 
 ## How to export it
 
@@ -30,6 +31,7 @@ The app reveals the saved file in Finder after export.
 - current helper status message, if one exists
 - launch-at-login state and approval errors
 - menu bar preset title and enabled-item count
+- whether Core Monitor expected to auto-open the onboarding dashboard, plus the most recent recorded dashboard open/visible timestamps
 - recommended recovery actions based on the captured state
 
 ## What it does not include
@@ -40,7 +42,7 @@ The app reveals the saved file in Finder after export.
 - shell history
 - file contents outside the saved report itself
 
-The report is a point-in-time local snapshot meant to explain helper trust and onboarding state, not a continuous diagnostic trace.
+The report is a point-in-time local snapshot meant to explain helper trust, onboarding state, and recent dashboard launch visibility, not a continuous diagnostic trace.
 
 If Core Monitor is running but its menu bar items are missing, check `System Settings` → `Menu Bar` before assuming the app failed to launch. Newer macOS releases can hide third-party menu bar apps there even when the process is healthy.
 

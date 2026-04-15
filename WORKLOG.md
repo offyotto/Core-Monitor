@@ -138,3 +138,8 @@
 - Used current public competitor sources to refresh the Stats section with its latest public release signal and to double-check menu bar/distribution support expectations against current macOS guidance.
 - Added explicit Help and diagnostics guidance for the modern macOS `System Settings` → `Menu Bar` recovery path when Core Monitor is running but its icons are hidden.
 - Added `HelpViewSearchTests` coverage for the new `allow in menu bar` / hidden-icon support language, then re-verified the macOS suite with `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test`.
+
+### Completed batch
+- Added persistent dashboard-launch diagnostics so exported helper/support reports now capture whether onboarding was expected to auto-open the dashboard, which source requested it, the last activation policy seen, and whether a visible dashboard window was ever recorded.
+- Updated the `System` support copy and `docs/HELPER_DIAGNOSTICS.md` so startup-visibility issues are explicitly part of the diagnostics workflow instead of being lumped into vague “app didn’t launch” reports.
+- Added `HelperDiagnosticsReportTests` coverage for the missing-visible-window case, re-verified the full macOS suite with `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test`, and runtime-checked that a clean first launch still records `autoOpenEligible=1` plus `launch` as the open source while `System Events` reports zero Core Monitor windows.
