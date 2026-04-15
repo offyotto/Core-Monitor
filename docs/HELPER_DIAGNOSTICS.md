@@ -42,6 +42,8 @@ The app reveals the saved file in Finder after export.
 
 The report is a point-in-time local snapshot meant to explain helper trust and onboarding state, not a continuous diagnostic trace.
 
+If Core Monitor is running but its menu bar items are missing, check `System Settings` → `Menu Bar` before assuming the app failed to launch. Newer macOS releases can hide third-party menu bar apps there even when the process is healthy.
+
 ## Reading the summary quickly
 
 - `Monitoring-only configuration` means the helper is not installed. Core Monitor can still monitor sensors, alerts, and menu bar state normally.
@@ -55,5 +57,6 @@ If a problem touches fan control or helper installation:
 
 1. Reproduce the issue
 2. Export a fresh helper diagnostics report immediately after reproducing it
-3. Attach the JSON file to the GitHub issue
-4. Include screenshots for any visible UI inconsistency or onboarding confusion
+3. If the issue is "the app is running but the menu bar icons are gone," first verify `System Settings` → `Menu Bar` still allows Core Monitor to appear there
+4. Attach the JSON file to the GitHub issue
+5. Include screenshots for any visible UI inconsistency or onboarding confusion

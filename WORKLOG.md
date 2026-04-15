@@ -133,3 +133,8 @@
 - Added a reusable monitoring-freshness model that classifies snapshots as `Waiting`, `Live`, `Delayed`, or `Stale` from the existing sample timestamp and active cadence.
 - Surfaced that status in both the Overview dashboard and menu bar popovers, including last-update copy plus live sensor/process sampling cadence so users can tell when telemetry is lagging instead of trusting stale numbers.
 - Added targeted freshness-model tests and re-verified the full macOS suite with `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test`.
+
+### Completed batch
+- Used current public competitor sources to refresh the Stats section with its latest public release signal and to double-check menu bar/distribution support expectations against current macOS guidance.
+- Added explicit Help and diagnostics guidance for the modern macOS `System Settings` → `Menu Bar` recovery path when Core Monitor is running but its icons are hidden.
+- Added `HelpViewSearchTests` coverage for the new `allow in menu bar` / hidden-icon support language, then re-verified the macOS suite with `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test`.

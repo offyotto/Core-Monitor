@@ -17,6 +17,7 @@ This document captures the current public positioning of the main macOS monitori
 
 ### Stats
 
+- The public repository page shows roughly 38k GitHub stars and a latest release tag of `v2.12.9` dated April 12, 2026.
 - The public GitHub README still describes Stats as a macOS system monitor in the menu bar.
 - The same README says fan control is in legacy mode and does not receive updates or fixes.
 - The README also documents external API usage for update checks and public IP retrieval.

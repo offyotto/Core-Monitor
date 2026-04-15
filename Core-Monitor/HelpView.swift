@@ -135,13 +135,15 @@ struct HelpView: View {
                 }
             )),
             HelpSection(id: "menubar", title: "Menu Bar Items and Popovers", icon: "menubar.rectangle", keywords: [
-                "menu bar", "popover", "visible items", "cpu", "memory", "disk", "temperature"
+                "menu bar", "popover", "visible items", "cpu", "memory", "disk", "temperature",
+                "allow in menu bar", "hidden icon", "missing icon", "macos 26", "menu bar access"
             ], content: AnyView(
                 HelpCard {
                     Text("Core Monitor menu bar items provide quick overview and access to system metrics.")
                     HelpBullet(text: "Click menu bar icons to open popovers with detailed info and controls.")
                     HelpBullet(text: "Use `System` → `Menu Bar` to choose which of the CPU, Memory, Disk, and Temperature items stay visible.")
                     HelpBullet(text: "At least one menu bar item must stay enabled so the app remains reachable after launch.")
+                    HelpBullet(text: "If Core Monitor is running but its icons are still missing, open System Settings → Menu Bar and re-enable the app there on newer macOS releases before assuming monitoring failed.")
                 }
             )),
             HelpSection(id: "basic", title: "Basic Mode", icon: "square.grid.2x2.fill", keywords: [
@@ -184,6 +186,7 @@ struct HelpView: View {
                     HelpBullet(text: "Fan control not working? Use `System` → `Helper Diagnostics` to recheck or export a support report, then reset to system auto and run `Scan Fan Keys`.")
                     HelpBullet(text: "Weather unavailable? Check location permissions and WeatherKit configuration.")
                     HelpBullet(text: "Login item requires approval — open System Settings → General → Login Items.")
+                    HelpBullet(text: "Menu bar items missing even though the app is running? Open System Settings → Menu Bar and re-enable Core Monitor there, then confirm at least one item stays enabled in `System` → `Menu Bar`.")
                     HelpBullet(text: "Touch Bar clipping — reduce active items or apply a narrower preset.")
                 }
             ))
