@@ -257,7 +257,6 @@
 /* Begin PBXShellScriptBuildPhase section */
 		35A1B0022F70000100C0DE01 /* Embed Privileged Helper */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
