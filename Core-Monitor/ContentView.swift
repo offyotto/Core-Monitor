@@ -2229,11 +2229,8 @@ struct ContentView: View {
                 fullDashboard
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .systemMonitorDidUpdate)) { _ in
-            DispatchQueue.main.async {
-                refreshDashboardState()
-                updateHistories()
-            }
+        .onReceive(systemMonitor.$snapshot.receive(on: RunLoop.main)) { snapshot in
+            applySnapshot(snapshot)
         }
         .onChange(of: modeState.isBasicMode) { systemMonitor.setBasicMode($0) }
         .onAppear {
@@ -2241,7 +2238,7 @@ struct ContentView: View {
                 systemMonitor.setBasicMode(modeState.isBasicMode)
                 systemMonitor.setInteractiveMonitoringEnabled(true, reason: "dashboard")
                 systemMonitor.setDetailedSamplingEnabled(true, reason: "dashboard")
-                refreshDashboardState()
+                applySnapshot(systemMonitor.snapshot)
             }
         }
         .onDisappear {
@@ -2286,15 +2283,14 @@ struct ContentView: View {
         .welcomeGuide()
     }
 
-    private func updateHistories() {
-        cpuHistory.removeFirst(); cpuHistory.append(dashboardState.cpuUsagePercent)
-        memHistory.removeFirst(); memHistory.append(dashboardState.memoryUsagePercent)
-        let n = dashboardState.cpuTemperature.map { min($0, 120) / 120 * 100 } ?? 0
+    private func updateHistories(using snapshot: SystemMonitorSnapshot) {
+        cpuHistory.removeFirst(); cpuHistory.append(snapshot.cpuUsagePercent)
+        memHistory.removeFirst(); memHistory.append(snapshot.memoryUsagePercent)
+        let n = snapshot.cpuTemperature.map { min($0, 120) / 120 * 100 } ?? 0
         cpuTempHistory.removeFirst(); cpuTempHistory.append(n)
     }
 
-    private func refreshDashboardState() {
-        let snapshot = systemMonitor.snapshot
+    private func applySnapshot(_ snapshot: SystemMonitorSnapshot) {
         dashboardState = DashboardState(
             hasSMCAccess: snapshot.hasSMCAccess, numberOfFans: snapshot.numberOfFans,
             fanSpeeds: snapshot.fanSpeeds, fanMinSpeeds: snapshot.fanMinSpeeds,
@@ -2310,5 +2306,6 @@ struct ContentView: View {
             batteryInfo: snapshot.batteryInfo, totalSystemWatts: snapshot.totalSystemWatts,
             currentVolume: snapshot.currentVolume, currentBrightness: snapshot.currentBrightness
         )
+        updateHistories(using: snapshot)
     }
 }
