@@ -109,6 +109,7 @@ private struct MBDivider: View {
 private struct MenuBarAlertSummarySection: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var alertManager: AlertManager
+    @ObservedObject private var helperManager = SMCHelperManager.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -138,7 +139,7 @@ private struct MenuBarAlertSummarySection: View {
             }
 
             HStack(spacing: 8) {
-                summaryPill(SMCHelperManager.shared.isInstalled ? "Helper Ready" : "Helper Missing", color: SMCHelperManager.shared.isInstalled ? Color.mbBlue : Color.mbOrange)
+                summaryPill(helperSummaryLabel, color: helperSummaryColor)
                 if let recent = alertManager.history.first {
                     summaryPill(recent.kind.title, color: severityColor(recent.severity))
                 }
@@ -174,6 +175,36 @@ private struct MenuBarAlertSummarySection: View {
         case .serious: return Color.mbOrange
         case .critical: return .red
         @unknown default: return .white.opacity(0.55)
+        }
+    }
+
+    private var helperSummaryLabel: String {
+        switch helperManager.connectionState {
+        case .reachable:
+            return "Helper Ready"
+        case .checking:
+            return "Helper Checking"
+        case .unreachable:
+            return "Helper Attention"
+        case .unknown where helperManager.isInstalled:
+            return "Helper Pending"
+        case .unknown, .missing:
+            return "Helper Missing"
+        }
+    }
+
+    private var helperSummaryColor: Color {
+        switch helperManager.connectionState {
+        case .reachable:
+            return Color.mbBlue
+        case .checking:
+            return Color.mbTint
+        case .unreachable:
+            return .red
+        case .unknown where helperManager.isInstalled:
+            return Color.mbOrange
+        case .unknown, .missing:
+            return Color.mbOrange
         }
     }
 }

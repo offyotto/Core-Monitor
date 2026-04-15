@@ -188,14 +188,59 @@ final class AlertEngineTests: XCTestCase {
         let helperOutcome = AlertEvaluator.evaluate(
             config: AlertPreset.default.configurations().first(where: { $0.kind == .helperUnavailable })!,
             runtime: .initial(for: .helperUnavailable),
-            input: makeInput(fanMode: .performance, helperInstalled: false) { _ in }
+            input: makeInput(
+                fanMode: .performance,
+                helperInstalled: false,
+                helperConnectionState: .missing
+            ) { _ in }
         )
         XCTAssertEqual(helperOutcome.activeState?.severity, .warning)
+    }
+
+    func testHelperAvailabilityRuleUsesConnectionStateInsteadOfMessageGuessing() {
+        let config = AlertPreset.default.configurations().first(where: { $0.kind == .helperUnavailable })!
+
+        let unreachable = AlertEvaluator.evaluate(
+            config: config,
+            runtime: .initial(for: .helperUnavailable),
+            input: makeInput(
+                fanMode: .performance,
+                helperInstalled: true,
+                helperConnectionState: .unreachable,
+                helperStatusMessage: nil
+            ) { _ in }
+        )
+        XCTAssertEqual(unreachable.activeState?.severity, .critical)
+
+        let checking = AlertEvaluator.evaluate(
+            config: config,
+            runtime: .initial(for: .helperUnavailable),
+            input: makeInput(
+                fanMode: .performance,
+                helperInstalled: true,
+                helperConnectionState: .checking,
+                helperStatusMessage: "Core Monitor is probing the local helper service."
+            ) { _ in }
+        )
+        XCTAssertNil(checking.activeState)
+
+        let missing = AlertEvaluator.evaluate(
+            config: config,
+            runtime: .initial(for: .helperUnavailable),
+            input: makeInput(
+                fanMode: .performance,
+                helperInstalled: false,
+                helperConnectionState: .missing,
+                helperStatusMessage: nil
+            ) { _ in }
+        )
+        XCTAssertEqual(missing.activeState?.severity, .warning)
     }
 
     private func makeInput(
         fanMode: FanControlMode = .automatic,
         helperInstalled: Bool = true,
+        helperConnectionState: SMCHelperManager.ConnectionState = .reachable,
         helperStatusMessage: String? = nil,
         now: Date = Date(timeIntervalSince1970: 1_000),
         configure: (inout SystemMonitorSnapshot) -> Void
@@ -206,6 +251,7 @@ final class AlertEngineTests: XCTestCase {
             snapshot: snapshot,
             fanMode: fanMode,
             helperInstalled: helperInstalled,
+            helperConnectionState: helperConnectionState,
             helperStatusMessage: helperStatusMessage,
             now: now
         )

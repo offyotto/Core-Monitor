@@ -170,6 +170,7 @@ final class AlertManager: NSObject, ObservableObject {
             snapshot: systemMonitor.snapshot,
             fanMode: fanController.mode,
             helperInstalled: helperManager.isInstalled,
+            helperConnectionState: helperManager.connectionState,
             helperStatusMessage: helperManager.statusMessage,
             now: Date()
         )
@@ -231,6 +232,12 @@ final class AlertManager: NSObject, ObservableObject {
             .store(in: &cancellables)
 
         helperManager.$statusMessage
+            .sink { [weak self] _ in
+                self?.evaluateAlerts()
+            }
+            .store(in: &cancellables)
+
+        helperManager.$connectionState
             .sink { [weak self] _ in
                 self?.evaluateAlerts()
             }

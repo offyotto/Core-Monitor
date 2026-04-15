@@ -4,6 +4,7 @@ struct AlertEvaluationInput {
     let snapshot: SystemMonitorSnapshot
     let fanMode: FanControlMode
     let helperInstalled: Bool
+    let helperConnectionState: SMCHelperManager.ConnectionState
     let helperStatusMessage: String?
     let now: Date
 }
@@ -219,6 +220,7 @@ enum AlertEvaluator {
                 snapshot: snapshot,
                 fanMode: .automatic,
                 helperInstalled: true,
+                helperConnectionState: .reachable,
                 helperStatusMessage: nil,
                 now: Date()
             ),
@@ -450,22 +452,39 @@ enum AlertEvaluator {
 
         case .helperUnavailable:
             let modeNeedsHelper = input.fanMode.requiresPrivilegedHelper
-            let helperConnectionFailed = (input.helperStatusMessage ?? "").localizedCaseInsensitiveContains("privileged helper")
-                || (input.helperStatusMessage ?? "").localizedCaseInsensitiveContains("helper")
             let severity: AlertSeverity
-            if modeNeedsHelper && input.helperInstalled == false {
-                severity = .warning
-            } else if modeNeedsHelper && helperConnectionFailed {
-                severity = .critical
+            if modeNeedsHelper {
+                switch input.helperConnectionState {
+                case .unreachable:
+                    severity = .critical
+                case .missing:
+                    severity = .warning
+                case .unknown where input.helperInstalled == false:
+                    severity = .warning
+                case .unknown, .checking, .reachable:
+                    severity = .none
+                }
             } else {
                 severity = .none
+            }
+
+            let message: String
+            switch input.helperConnectionState {
+            case .unreachable:
+                message = input.helperStatusMessage ?? "Core Monitor cannot use the privileged fan helper for the current fan mode."
+            case .missing:
+                message = "Install the privileged helper before using manual or managed fan modes."
+            case .unknown where input.helperInstalled == false:
+                message = "Install the privileged helper before using manual or managed fan modes."
+            case .unknown, .checking, .reachable:
+                message = input.helperStatusMessage ?? "Core Monitor cannot use the privileged fan helper for the current fan mode."
             }
 
             return AlertMeasurement(
                 severity: severity,
                 metricValue: severity == .none ? 0 : 1,
                 title: severity == .critical ? "Fan helper connection failed" : "Fan helper is unavailable",
-                message: input.helperStatusMessage ?? "Core Monitor cannot use the privileged fan helper for the current fan mode.",
+                message: message,
                 context: "Current mode: \(input.fanMode.title)",
                 isAvailable: true,
                 unavailableReason: nil
