@@ -5,8 +5,6 @@ struct AlertEvaluationInput {
     let fanMode: FanControlMode
     let helperInstalled: Bool
     let helperStatusMessage: String?
-    let tamperDetected: Bool
-    let tamperDetail: String?
     let now: Date
 }
 
@@ -68,35 +66,11 @@ enum AlertEvaluator {
                 nextRuntime.dismissUntilRecovery = false
                 nextRuntime.snoozedUntil = nil
 
-                let event = AlertEvent(
-                    id: UUID(),
-                    kind: config.kind,
-                    severity: .info,
-                    title: "\(config.kind.title) Recovered",
-                    message: "\(config.kind.title) returned to a safe state.",
-                    context: measurement.context,
-                    timestamp: input.now,
-                    isRecovery: true
-                )
-
-                let shouldNotify = shouldNotify(
-                    config: config,
-                    runtime: runtime,
-                    severity: .info,
-                    input: input,
-                    isRecovery: true
-                )
-
-                if shouldNotify {
-                    nextRuntime.lastNotificationDate = input.now
-                }
-                nextRuntime.lastEventDate = input.now
-
                 return AlertEvaluationOutcome(
                     runtime: nextRuntime,
                     activeState: nil,
-                    event: event,
-                    shouldNotify: shouldNotify,
+                    event: nil,
+                    shouldNotify: false,
                     availabilityReason: nil
                 )
             }
@@ -149,7 +123,7 @@ enum AlertEvaluator {
                     timestamp: input.now,
                     isRecovery: false
                 )
-                let shouldNotify = shouldNotify(config: config, runtime: runtime, severity: measurement.severity, input: input, isRecovery: false)
+                let shouldNotify = shouldNotify(config: config, runtime: runtime, severity: measurement.severity, input: input)
                 if shouldNotify {
                     nextRuntime.lastNotificationDate = input.now
                 }
@@ -214,7 +188,7 @@ enum AlertEvaluator {
             timestamp: input.now,
             isRecovery: false
         )
-        let shouldNotify = shouldNotify(config: config, runtime: runtime, severity: measurement.severity, input: input, isRecovery: false)
+        let shouldNotify = shouldNotify(config: config, runtime: runtime, severity: measurement.severity, input: input)
         if shouldNotify {
             nextRuntime.lastNotificationDate = input.now
         }
@@ -246,8 +220,6 @@ enum AlertEvaluator {
                 fanMode: .automatic,
                 helperInstalled: true,
                 helperStatusMessage: nil,
-                tamperDetected: false,
-                tamperDetail: nil,
                 now: Date()
             ),
             runtime: .initial(for: kind)
@@ -498,17 +470,6 @@ enum AlertEvaluator {
                 isAvailable: true,
                 unavailableReason: nil
             )
-
-        case .externalFanControl:
-            return AlertMeasurement(
-                severity: input.tamperDetected ? .warning : .none,
-                metricValue: input.tamperDetected ? 1 : 0,
-                title: "External fan control was detected",
-                message: input.tamperDetail ?? "Another utility or external change modified fan control state.",
-                context: "Current mode: \(input.fanMode.title)",
-                isAvailable: true,
-                unavailableReason: nil
-            )
         }
     }
 
@@ -557,12 +518,11 @@ enum AlertEvaluator {
         config: AlertRuleConfig,
         runtime: AlertRuleRuntime,
         severity: AlertSeverity,
-        input: AlertEvaluationInput,
-        isRecovery: Bool
+        input: AlertEvaluationInput
     ) -> Bool {
         guard config.desktopNotificationsEnabled, config.kind.supportsDesktopNotifications else { return false }
         if let snoozedUntil = runtime.snoozedUntil, snoozedUntil > input.now { return false }
-        if isRecovery == false, runtime.dismissUntilRecovery { return false }
+        if runtime.dismissUntilRecovery { return false }
         if let lastNotificationDate = runtime.lastNotificationDate,
            input.now.timeIntervalSince(lastNotificationDate) < Double(config.cooldownMinutes * 60) {
             return false
@@ -571,9 +531,9 @@ enum AlertEvaluator {
         case .critical:
             return true
         case .warning:
-            return isRecovery || config.desktopNotificationsEnabled
+            return true
         case .info:
-            return isRecovery
+            return false
         case .none:
             return false
         }

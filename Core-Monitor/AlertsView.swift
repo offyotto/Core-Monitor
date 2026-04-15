@@ -116,7 +116,6 @@ struct SystemStatusBoard: View {
     @ObservedObject var alertManager: AlertManager
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject private var helperManager = SMCHelperManager.shared
-    @ObservedObject private var tamperDetector = SMCTamperDetector.shared
 
     var body: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
@@ -136,19 +135,19 @@ struct SystemStatusBoard: View {
             )
             statusCard(
                 title: "Helper",
-                value: helperManager.isInstalled ? "Ready" : "Missing",
-                detail: helperManager.isInstalled ? "Fan control can use the privileged helper." : "Install the helper before trusting manual or managed fan modes.",
+                value: helperValue,
+                detail: helperDetail,
                 icon: "lock.shield",
-                color: helperManager.isInstalled ? Color.bdAccent : .orange
+                color: helperColor
             )
             statusCard(
                 title: "SMC / Fan State",
-                value: systemMonitor.hasSMCAccess ? (tamperDetector.isTampered ? "Tampered" : "Healthy") : "Unavailable",
+                value: systemMonitor.hasSMCAccess ? "Healthy" : "Unavailable",
                 detail: systemMonitor.hasSMCAccess
-                    ? (tamperDetector.detailMessage ?? "Core Monitor owns the expected SMC path.")
+                    ? "AppleSMC is reachable on this Mac."
                     : (systemMonitor.lastError ?? "AppleSMC could not be opened."),
                 icon: "cpu.fill",
-                color: systemMonitor.hasSMCAccess ? (tamperDetector.isTampered ? .orange : .green) : .red
+                color: systemMonitor.hasSMCAccess ? .green : .red
             )
         }
     }
@@ -229,6 +228,51 @@ struct SystemStatusBoard: View {
         case .serious: return .orange
         case .critical: return .red
         @unknown default: return .secondary
+        }
+    }
+
+    private var helperValue: String {
+        switch helperManager.connectionState {
+        case .reachable:
+            return "Ready"
+        case .checking:
+            return "Checking"
+        case .unreachable:
+            return "Rejected"
+        case .unknown where helperManager.isInstalled:
+            return "Installed"
+        case .unknown, .missing:
+            return "Missing"
+        }
+    }
+
+    private var helperDetail: String {
+        switch helperManager.connectionState {
+        case .reachable:
+            return "Fan control can use the privileged helper."
+        case .checking:
+            return "Core Monitor is probing the local helper service."
+        case .unreachable:
+            return helperManager.statusMessage ?? "The helper is installed but this app build cannot talk to it."
+        case .unknown where helperManager.isInstalled:
+            return "The helper exists on disk, but Core Monitor has not completed a health probe yet."
+        case .unknown, .missing:
+            return "Install the helper before trusting manual or managed fan modes."
+        }
+    }
+
+    private var helperColor: Color {
+        switch helperManager.connectionState {
+        case .reachable:
+            return Color.bdAccent
+        case .checking:
+            return .yellow
+        case .unreachable:
+            return .orange
+        case .unknown where helperManager.isInstalled:
+            return .yellow
+        case .unknown, .missing:
+            return .orange
         }
     }
 }
@@ -397,7 +441,7 @@ struct AlertsView: View {
                                 }
                                 .buttonStyle(.bordered)
 
-                                Button("Dismiss Until Recovery") {
+                                Button("Hide For Now") {
                                     alertManager.dismissUntilRecovery(alert.kind)
                                 }
                                 .buttonStyle(.bordered)
@@ -446,8 +490,8 @@ struct AlertsView: View {
                 } else {
                     ForEach(alertManager.history.prefix(12)) { event in
                         HStack(alignment: .top, spacing: 10) {
-                            Image(systemName: event.isRecovery ? "checkmark.circle.fill" : event.kind.systemImageName)
-                                .foregroundStyle(event.isRecovery ? .green : color(for: event.severity))
+                            Image(systemName: event.kind.systemImageName)
+                                .foregroundStyle(color(for: event.severity))
                                 .frame(width: 18)
                             VStack(alignment: .leading, spacing: 3) {
                                 HStack {
@@ -595,7 +639,7 @@ private struct AlertRuleConfigRow: View {
             return "Warns from yellow/red pressure, not a guessed RAM percentage."
         case .fanTooLowUnderHeat:
             return "Warns when fan RPM stays too low relative to current heat."
-        case .smcUnavailable, .helperUnavailable, .externalFanControl:
+        case .smcUnavailable, .helperUnavailable:
             return "Service-state rule. Thresholds are determined by live availability."
         default:
             return "Thresholds are controlled by the active preset."

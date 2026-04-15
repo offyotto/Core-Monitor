@@ -66,7 +66,7 @@ final class AlertEngineTests: XCTestCase {
             input: makeInput(now: first.event!.timestamp.addingTimeInterval(15)) { $0.cpuTemperature = 81 }
         )
         XCTAssertNil(recovered.activeState)
-        XCTAssertTrue(recovered.event?.isRecovery == true)
+        XCTAssertNil(recovered.event)
     }
 
     func testCooldownBlocksRepeatEventsUntilWindowExpires() {
@@ -153,7 +153,7 @@ final class AlertEngineTests: XCTestCase {
             runtime: suppressed.runtime,
             input: makeInput(now: Date(timeIntervalSince1970: 1_060)) { $0.cpuTemperature = 70 }
         )
-        XCTAssertTrue(recovered.event?.isRecovery == true)
+        XCTAssertNil(recovered.event)
         XCTAssertFalse(recovered.runtime.dismissUntilRecovery)
     }
 
@@ -174,7 +174,7 @@ final class AlertEngineTests: XCTestCase {
         )
     }
 
-    func testServiceRulesFlagHelperSMCAndTamperProblems() {
+    func testServiceRulesFlagHelperAndSMCProblems() {
         let smcOutcome = AlertEvaluator.evaluate(
             config: AlertPreset.default.configurations().first(where: { $0.kind == .smcUnavailable })!,
             runtime: .initial(for: .smcUnavailable),
@@ -191,21 +191,12 @@ final class AlertEngineTests: XCTestCase {
             input: makeInput(fanMode: .performance, helperInstalled: false) { _ in }
         )
         XCTAssertEqual(helperOutcome.activeState?.severity, .warning)
-
-        let tamperOutcome = AlertEvaluator.evaluate(
-            config: AlertPreset.default.configurations().first(where: { $0.kind == .externalFanControl })!,
-            runtime: .initial(for: .externalFanControl),
-            input: makeInput(tamperDetected: true, tamperDetail: "Macs Fan Control is running") { _ in }
-        )
-        XCTAssertEqual(tamperOutcome.activeState?.severity, .warning)
     }
 
     private func makeInput(
         fanMode: FanControlMode = .automatic,
         helperInstalled: Bool = true,
         helperStatusMessage: String? = nil,
-        tamperDetected: Bool = false,
-        tamperDetail: String? = nil,
         now: Date = Date(timeIntervalSince1970: 1_000),
         configure: (inout SystemMonitorSnapshot) -> Void
     ) -> AlertEvaluationInput {
@@ -216,8 +207,6 @@ final class AlertEngineTests: XCTestCase {
             fanMode: fanMode,
             helperInstalled: helperInstalled,
             helperStatusMessage: helperStatusMessage,
-            tamperDetected: tamperDetected,
-            tamperDetail: tamperDetail,
             now: now
         )
     }
