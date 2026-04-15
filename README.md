@@ -56,7 +56,19 @@ The product direction is now explicit: Core-Monitor is being rebuilt around one 
 The concrete roadmap and brutal audit live here:
 
 - [2026 audit and reinvention plan](./docs/CORE_MONITOR_AUDIT_2026.md)
+- [2026 competitor matrix](./docs/COMPETITOR_MATRIX_2026.md)
 - [Release and notarization playbook](./RELEASING.md)
+
+## Where Core Monitor fits
+
+Core Monitor is intentionally not trying to out-sprawl iStat Menus or out-admin TG Pro.
+
+- If you want the broadest possible menu bar module surface, iStat Menus and Stats are still the clearest references.
+- If you want the most rule-heavy fan control and hardware-diagnostics posture, TG Pro is still the strongest benchmark.
+- If you want the simplest fan-control mental model, Macs Fan Control is still the easiest comparison point.
+- Core Monitor’s lane is narrower and more deliberate: thermal awareness, readable menu bar telemetry, local alerts, and optional helper-backed fan control with an auditable open-source codebase.
+
+That positioning is deliberate. The project should feel more focused than the “show everything” tools and more transparent than the closed-source fan-control utilities.
 
 ## UI Preview
 
