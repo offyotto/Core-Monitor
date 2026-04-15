@@ -454,118 +454,40 @@ private struct BatteryBar: View {
     }
 }
 
-private struct MenuBarSettingsCard: View {
-    @ObservedObject private var menuBarSettings = MenuBarSettings.shared
-
-    var body: some View {
-        DarkCard(padding: 16) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Menu Bar")
-                            .font(.system(size: 13, weight: .semibold))
-                        Text("Choose which live items stay visible. Changes apply immediately.")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Button("Restore Defaults") {
-                        menuBarSettings.restoreDefaults()
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                }
-
-                VStack(spacing: 0) {
-                    ForEach(Array(MenuBarItemKind.allCases.enumerated()), id: \.element.defaultsKey) { index, kind in
-                        if index > 0 {
-                            Rectangle().fill(Color.bdDivider).frame(height: 1).padding(.vertical, 4)
-                        }
-                        Toggle(isOn: binding(for: kind)) {
-                            Label(kind.title, systemImage: kind.systemImageName)
-                                .font(.system(size: 12, weight: .medium))
-                        }
-                        .toggleStyle(.switch)
-                        .tint(Color.bdAccent)
-                    }
-                }
-
-                if let warning = menuBarSettings.lastWarning, !warning.isEmpty {
-                    Text(warning)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.orange)
-                }
-            }
-        }
-    }
-
-    private func binding(for kind: MenuBarItemKind) -> Binding<Bool> {
-        Binding(
-            get: { menuBarSettings.isEnabled(kind) },
-            set: { menuBarSettings.setEnabled($0, for: kind) }
-        )
-    }
-}
-
-private struct FanControlConflictNotice: View {
-    @ObservedObject private var tamperDetector = SMCTamperDetector.shared
-
-    var body: some View {
-        Group {
-            if tamperDetector.isTampered {
-                DarkCard(padding: 14) {
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(tamperDetector.tamperLabel ?? "External fan control detected")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(.orange)
-                            if let detail = tamperDetector.detailMessage, !detail.isEmpty {
-                                Text(detail)
-                                    .font(.system(size: 11, weight: .medium))
-                                    .foregroundStyle(.secondary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                            Text("Reset to System Auto before trusting any new RPM target from Core Monitor.")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer(minLength: 10)
-                        Button("Recheck") {
-                            tamperDetector.inspect()
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-                    }
-                }
-            }
-        }
-        .onAppear {
-            tamperDetector.inspect()
-        }
-    }
-}
-
 private struct FanHelperStatusCard: View {
     @ObservedObject private var helperManager = SMCHelperManager.shared
     let hasFans: Bool
 
     private var statusColor: Color {
-        if helperManager.isInstalled && hasFans {
+        switch helperManager.connectionState {
+        case .reachable where hasFans:
             return .green
+        case .checking:
+            return Color.bdAccent
+        case .unreachable:
+            return .orange
+        case .reachable, .unknown:
+            return helperManager.isInstalled ? .green : .orange
+        case .missing:
+            return .orange
         }
-        return .orange
     }
 
     private var statusLabel: String {
-        if helperManager.isInstalled && hasFans {
-            return "Ready"
+        switch helperManager.connectionState {
+        case .checking:
+            return "Checking"
+        case .unreachable:
+            return "Connection Failed"
+        case .reachable:
+            return hasFans ? "Ready" : "No Fans"
+        case .unknown where helperManager.isInstalled:
+            return hasFans ? "Installed" : "No Fans"
+        case .unknown:
+            return "Install Required"
+        case .missing:
+            return "Install Required"
         }
-        if helperManager.isInstalled {
-            return "No Fans"
-        }
-        return "Install Required"
     }
 
     var body: some View {
@@ -614,11 +536,17 @@ private struct FanHelperStatusCard: View {
             }
         }
         .onAppear {
-            helperManager.refreshStatus()
+            helperManager.refreshDiagnostics()
         }
     }
 
     private var helperDescription: String {
+        if helperManager.connectionState == .unreachable {
+            return "Installed, but the XPC service rejected or could not reach this app build. Fan writes will fail until the signed app and helper match."
+        }
+        if helperManager.connectionState == .checking {
+            return "Installed. Verifying the local privileged helper before enabling managed fan modes."
+        }
         if helperManager.isInstalled {
             return "Installed. Smart, Manual, Custom, and fixed fan profiles can talk to the local privileged helper on supported Macs."
         }
@@ -716,7 +644,11 @@ private struct FanControlPanel: View {
                             fanSummaryPill(String(format: "%.1fs", preset.updateIntervalSeconds ?? 2.0))
                         }
 
-                        FanCurvePreview(preset: preset)
+                        FanCurvePreview(
+                            preset: preset,
+                            showsAxisLabels: false,
+                            minimumHeight: nil
+                        )
                             .frame(height: 150)
 
                         if let error = fanController.customPresetLastError, !error.isEmpty {
@@ -756,7 +688,8 @@ private struct FanControlPanel: View {
                     .frame(maxWidth: .infinity).padding(.vertical, 9)
                     .background(Color.white.opacity(0.06))
                     .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-            }.buttonStyle(SoftPressButtonStyle())
+            }
+            .buttonStyle(SoftPressButtonStyle())
 
             Button { fanController.calibrateFanControl() } label: {
                 HStack(spacing: 8) {
@@ -1089,7 +1022,6 @@ private struct DetailPane: View {
     private var fansContent: some View {
         VStack(alignment: .leading, spacing: 18) {
             header("Fans", subtitle: fanController.statusMessage)
-            FanControlConflictNotice()
             FanControlPanel(fanController: fanController,
                             snapshot: FanControlPanel.Snapshot(fanSpeeds: state.fanSpeeds,
                                                                fanMinSpeeds: state.fanMinSpeeds,
@@ -1134,7 +1066,14 @@ private struct DetailPane: View {
                              fraction: Double(state.currentBrightness),  color: Color.bdAccent)
                 }
             }
-            MenuBarSettingsCard()
+            MenuBarSettingsCard(
+                snapshot: .init(
+                    cpuUsagePercent: state.cpuUsagePercent,
+                    memoryUsagePercent: state.memoryUsagePercent,
+                    diskUsagePercent: state.diskUsagePercent,
+                    cpuTemperature: state.cpuTemperature
+                )
+            )
             DarkCard(padding: 16) {
                 HStack(spacing: 14) {
                     Image(systemName: "power").font(.system(size: 16, weight: .medium))
@@ -2023,6 +1962,7 @@ struct ContentView: View {
         var performanceCoreCount: Int = SystemMonitor.performanceCoreCount()
         var efficiencyCoreCount: Int = SystemMonitor.efficiencyCoreCount()
         var memoryUsagePercent: Double = 0; var memoryUsedGB: Double = 0; var totalMemoryGB: Double = 0
+        var diskUsagePercent: Double = 0
         var memoryPressure: MemoryPressureLevel = .green
         var batteryInfo = BatteryInfo(); var totalSystemWatts: Double?
         var currentVolume: Float = 0.5; var currentBrightness: Float = 1.0
@@ -2049,8 +1989,6 @@ struct ContentView: View {
                 fullDashboard
             }
         }
-        .cmHideWindowToolbarBackground()
-        .cmRemoveWindowToolbarTitle()
         .onReceive(NotificationCenter.default.publisher(for: .systemMonitorDidUpdate)) { _ in
             DispatchQueue.main.async {
                 refreshDashboardState()
@@ -2061,8 +1999,14 @@ struct ContentView: View {
         .onAppear {
             DispatchQueue.main.async {
                 systemMonitor.setBasicMode(modeState.isBasicMode)
+                systemMonitor.setInteractiveMonitoringEnabled(true, reason: "dashboard")
+                systemMonitor.setDetailedSamplingEnabled(true, reason: "dashboard")
                 refreshDashboardState()
             }
+        }
+        .onDisappear {
+            systemMonitor.setInteractiveMonitoringEnabled(false, reason: "dashboard")
+            systemMonitor.setDetailedSamplingEnabled(false, reason: "dashboard")
         }
     }
 
@@ -2085,7 +2029,6 @@ struct ContentView: View {
         .padding(.horizontal, 10)
         .padding(.top, 0)
         .padding(.bottom, 10)
-        .ignoresSafeArea(.container, edges: .top)
         .background {
             ZStack {
                 VisualEffectView(
@@ -2122,7 +2065,8 @@ struct ContentView: View {
             performanceCoreCount: SystemMonitor.performanceCoreCount(),
             efficiencyCoreCount: SystemMonitor.efficiencyCoreCount(),
             memoryUsagePercent: snapshot.memoryUsagePercent, memoryUsedGB: snapshot.memoryUsedGB,
-            totalMemoryGB: snapshot.totalMemoryGB, memoryPressure: snapshot.memoryPressure,
+            totalMemoryGB: snapshot.totalMemoryGB, diskUsagePercent: snapshot.diskStats.usagePercent,
+            memoryPressure: snapshot.memoryPressure,
             batteryInfo: snapshot.batteryInfo, totalSystemWatts: snapshot.totalSystemWatts,
             currentVolume: snapshot.currentVolume, currentBrightness: snapshot.currentBrightness
         )
