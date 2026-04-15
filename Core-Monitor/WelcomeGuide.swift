@@ -127,13 +127,13 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgGreen,
         headline: "You're all set.",
         subheadline: "Dive in whenever you're ready.",
-        body: "The dashboard is live and already collecting data. Explore the Alerts tab for thresholds and notification policy, then dive into thermal, power, and fan panels or switch to Basic Mode if you want the lightest possible UI.",
+        body: "Core Monitor starts collecting telemetry immediately. Use the checklist below to confirm menu bar access, enable relaunch at login if you want persistent monitoring, and install the helper only if you want privileged fan control.",
         bullets: [
             ("sidebar.left",          .wgAmber,  "Dashboard sections collapse with a click"),
             ("bell.badge",            .wgGreen,  "Alerts combines local history, presets, and notification controls"),
-            ("fan.fill",              .wgBlue,   "Fan Control — scroll down on dashboard"),
-            ("lock.shield",           .wgPurple, "Fan writes require the blessed helper"),
-            ("questionmark.circle",   .wgGreen,  "This guide lives in Help → Show Guide"),
+            ("menubar.rectangle",     .wgBlue,   "Balanced menu bar mode keeps the app visible without adding clutter"),
+            ("lock.shield",           .wgPurple, "Monitoring works without the helper; only fan writes need it"),
+            ("questionmark.circle",   .wgGreen,  "The Help tab can reopen this guide any time"),
         ]
     ),
 ]
@@ -145,11 +145,16 @@ private let guideSteps: [GuideStep] = [
 private struct WelcomeGuideSheet: View {
     let onDismiss: () -> Void
 
+    @StateObject private var startupManager = StartupManager()
+    @ObservedObject private var helperManager = SMCHelperManager.shared
+    @ObservedObject private var menuBarSettings = MenuBarSettings.shared
+
     @State private var currentStep   = 0
     @State private var stepVisible   = false     // drives per-step fade
     @State private var sheetVisible  = false     // drives initial sheet fade-in
     @State private var headerGlow    = false     // ambient pulse on icon
     @State private var progressPulse = false     // subtle dot pulse
+
     var body: some View {
         ZStack {
             // ── Background ──────────────────────────────────────────────────
@@ -165,86 +170,45 @@ private struct WelcomeGuideSheet: View {
                 Divider()
                     .background(Color.wgBorder)
 
-                bottomBar
+                WelcomeGuideBottomBar(
+                    steps: guideSteps,
+                    currentStep: currentStep,
+                    progressPulse: progressPulse,
+                    accentColor: guideSteps[currentStep].iconColor,
+                    goBack: goBack,
+                    continueForward: advanceOrDismiss
+                )
             }
         }
         .frame(width: 660, height: 520)
         .preferredColorScheme(.dark)
         .opacity(sheetVisible ? 1 : 0)
         .scaleEffect(sheetVisible ? 1 : 0.96)
-        .onAppear {
-            // Sheet entrance
-            withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) {
-                sheetVisible = true
-            }
-            // Stagger step content
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
-                withAnimation(.easeOut(duration: 0.35)) { stepVisible = true }
-            }
-            // Ambient glow pulse (runs indefinitely, no blur involved)
-            withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
-                headerGlow = true
-            }
-            withAnimation(.easeInOut(duration: 1.2).delay(0.6).repeatForever(autoreverses: true)) {
-                progressPulse = true
-            }
-        }
+        .onAppear(perform: prepareSheet)
     }
 
     // ── Step content ─────────────────────────────────────────────────────────
 
     private var stepContent: some View {
         let step = guideSteps[currentStep]
-        return VStack(spacing: 0) {
-            // Icon + headline block
-            VStack(spacing: 14) {
-                iconBadge(for: step)
-                    .padding(.top, 36)
-
-                VStack(spacing: 6) {
-                    Text(step.headline)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
-                        .foregroundColor(.wgText)
-                        .multilineTextAlignment(.center)
-
-                    Text(step.subheadline)
-                        .font(.system(size: 13, weight: .medium, design: .monospaced))
-                        .foregroundColor(step.iconColor)
-                        .multilineTextAlignment(.center)
-                }
+        return WelcomeGuideStepContent(
+            step: step,
+            stepVisible: stepVisible,
+            badge: { iconBadge(for: step) }
+        ) {
+            if currentStep == guideSteps.count - 1 {
+                WelcomeGuideReadinessPanel(
+                    menuBarStatus: menuBarStatus,
+                    loginStatus: loginStatus,
+                    helperStatus: helperStatus,
+                    installHelper: installHelperIfNeeded,
+                    enableLaunchAtLogin: enableLaunchAtLogin,
+                    applyBalancedPreset: applyBalancedPreset,
+                    refreshHelperDiagnostics: refreshHelperDiagnostics
+                )
+                .padding(.top, 22)
             }
-            .padding(.bottom, 20)
-
-            // Body text
-            Text(step.body)
-                .font(.system(size: 13.5, weight: .regular, design: .default))
-                .foregroundColor(.wgTextSub)
-                .multilineTextAlignment(.center)
-                .lineSpacing(4)
-                .frame(maxWidth: 480)
-                .padding(.horizontal, 40)
-                .padding(.bottom, 22)
-
-            // Bullet list
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(Array(step.bullets.enumerated()), id: \.offset) { idx, bullet in
-                    bulletRow(icon: bullet.icon, color: bullet.color, text: bullet.text)
-                        .opacity(stepVisible ? 1 : 0)
-                        .offset(x: stepVisible ? 0 : -18)
-                        .animation(
-                            .spring(response: 0.42, dampingFraction: 0.78)
-                                .delay(0.08 + Double(idx) * 0.07),
-                            value: stepVisible
-                        )
-                }
-            }
-            .frame(maxWidth: 460)
-            .padding(.horizontal, 40)
-
-            Spacer()
         }
-        .opacity(stepVisible ? 1 : 0)
-        .animation(.easeOut(duration: 0.28), value: stepVisible)
     }
 
     private func iconBadge(for step: GuideStep) -> some View {
@@ -270,99 +234,6 @@ private struct WelcomeGuideSheet: View {
                 .font(.system(size: 24, weight: .semibold))
                 .foregroundColor(step.iconColor)
         }
-    }
-
-    private func bulletRow(icon: String, color: Color, text: String) -> some View {
-        HStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(color.opacity(0.12))
-                    .frame(width: 30, height: 30)
-                Image(systemName: icon)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(color)
-            }
-            Text(text)
-                .font(.system(size: 13, weight: .regular, design: .default))
-                .foregroundColor(.wgText)
-            Spacer()
-        }
-    }
-
-    // ── Bottom bar ────────────────────────────────────────────────────────────
-
-    private var bottomBar: some View {
-        HStack {
-            // Step indicators
-            HStack(spacing: 6) {
-                ForEach(guideSteps) { step in
-                    Capsule()
-                        .fill(step.id == currentStep
-                              ? guideSteps[currentStep].iconColor
-                              : Color.wgBorder)
-                        .frame(width: step.id == currentStep ? 20 : 6, height: 6)
-                        .opacity(progressPulse && step.id == currentStep ? 1 : (step.id == currentStep ? 0.85 : 0.4))
-                        .animation(.spring(response: 0.38, dampingFraction: 0.72), value: currentStep)
-                }
-            }
-
-            Spacer()
-
-            // Back
-            if currentStep > 0 {
-                Button {
-                    transition(to: currentStep - 1)
-                } label: {
-                    HStack(spacing: 5) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 11, weight: .semibold))
-                        Text("Back")
-                            .font(.system(size: 13, weight: .medium))
-                    }
-                    .foregroundColor(.wgTextSub)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 7)
-                    .background(Color.wgSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .stroke(Color.wgBorder, lineWidth: 1)
-                    )
-                }
-                .buttonStyle(.plain)
-                .transition(.opacity.combined(with: .move(edge: .leading)))
-            }
-
-            // Next / Done
-            Button {
-                if currentStep < guideSteps.count - 1 {
-                    transition(to: currentStep + 1)
-                } else {
-                    // Dismiss with a slight scale-out
-                    withAnimation(.spring(response: 0.45, dampingFraction: 0.80)) {
-                        sheetVisible = false
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                        onDismiss()
-                    }
-                }
-            } label: {
-                HStack(spacing: 6) {
-                    Text(currentStep < guideSteps.count - 1 ? "Next" : "Get Started")
-                        .font(.system(size: 13, weight: .semibold))
-                    Image(systemName: currentStep < guideSteps.count - 1 ? "chevron.right" : "checkmark")
-                        .font(.system(size: 11, weight: .bold))
-                }
-                .foregroundColor(Color.wgBackground)
-                .padding(.horizontal, 18)
-                .padding(.vertical, 8)
-                .background(guideSteps[currentStep].iconColor)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal, 28)
-        .padding(.vertical, 16)
     }
 
     // ── Decorative backgrounds ─────────────────────────────────────────────────
@@ -435,6 +306,427 @@ private struct WelcomeGuideSheet: View {
         }
     }
 
+    private func prepareSheet() {
+        startupManager.refreshState()
+        refreshHelperDiagnostics()
+
+        withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) {
+            sheetVisible = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
+            withAnimation(.easeOut(duration: 0.35)) { stepVisible = true }
+        }
+        withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
+            headerGlow = true
+        }
+        withAnimation(.easeInOut(duration: 1.2).delay(0.6).repeatForever(autoreverses: true)) {
+            progressPulse = true
+        }
+    }
+
+    private func goBack() {
+        guard currentStep > 0 else { return }
+        transition(to: currentStep - 1)
+    }
+
+    private func advanceOrDismiss() {
+        if currentStep < guideSteps.count - 1 {
+            transition(to: currentStep + 1)
+            return
+        }
+        dismissSheet()
+    }
+
+    private func dismissSheet() {
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.80)) {
+            sheetVisible = false
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            onDismiss()
+        }
+    }
+
+    private func enableLaunchAtLogin() {
+        startupManager.setEnabled(true)
+        startupManager.refreshState()
+    }
+
+    private func installHelperIfNeeded() {
+        helperManager.installFromApp()
+    }
+
+    private func applyBalancedPreset() {
+        menuBarSettings.applyPreset(.balanced)
+    }
+
+    private func refreshHelperDiagnostics() {
+        helperManager.refreshStatus()
+        helperManager.refreshDiagnostics()
+    }
+
+    private var menuBarStatus: WelcomeGuideChecklistStatus {
+        let presetTitle = menuBarSettings.activePreset?.title ?? "Custom"
+        let itemLabel = menuBarSettings.enabledItemCount == 1 ? "item" : "items"
+        let detail = "\(menuBarSettings.enabledItemCount) live \(itemLabel) • \(presetTitle) layout"
+        let needsBalancedAction = menuBarSettings.activePreset != .balanced
+
+        return WelcomeGuideChecklistStatus(
+            title: "Menu Bar Access",
+            symbol: "menubar.rectangle",
+            tone: .positive,
+            badge: presetTitle,
+            detail: detail,
+            actionTitle: needsBalancedAction ? "Use Balanced" : nil
+        )
+    }
+
+    private var loginStatus: WelcomeGuideChecklistStatus {
+        if startupManager.isEnabled {
+            return WelcomeGuideChecklistStatus(
+                title: "Launch at Login",
+                symbol: "power.circle",
+                tone: .positive,
+                badge: "Enabled",
+                detail: "Core Monitor will relaunch after sign-in so menu bar monitoring stays available."
+            )
+        }
+
+        if let errorMessage = startupManager.errorMessage, errorMessage.isEmpty == false {
+            let badge = errorMessage.localizedCaseInsensitiveContains("approval") ? "Approval Needed" : "Needs Attention"
+            return WelcomeGuideChecklistStatus(
+                title: "Launch at Login",
+                symbol: "power.circle",
+                tone: .caution,
+                badge: badge,
+                detail: errorMessage
+            )
+        }
+
+        return WelcomeGuideChecklistStatus(
+            title: "Launch at Login",
+            symbol: "power.circle",
+            tone: .neutral,
+            badge: "Optional",
+            detail: "Enable this if you rely on Core Monitor staying present in the menu bar after restart.",
+            actionTitle: "Enable"
+        )
+    }
+
+    private var helperStatus: WelcomeGuideChecklistStatus {
+        switch helperManager.connectionState {
+        case .reachable:
+            return WelcomeGuideChecklistStatus(
+                title: "Fan Control Helper",
+                symbol: "lock.shield",
+                tone: .positive,
+                badge: "Ready",
+                detail: "Privileged fan control is available for manual and profile-based fan writes."
+            )
+
+        case .checking, .unknown:
+            return WelcomeGuideChecklistStatus(
+                title: "Fan Control Helper",
+                symbol: "lock.shield",
+                tone: .neutral,
+                badge: "Checking",
+                detail: "Core Monitor is verifying helper connectivity in the background.",
+                actionTitle: "Recheck"
+            )
+
+        case .unreachable:
+            return WelcomeGuideChecklistStatus(
+                title: "Fan Control Helper",
+                symbol: "lock.shield",
+                tone: .caution,
+                badge: "Unavailable",
+                detail: helperManager.statusMessage ?? "The helper is installed but not responding right now.",
+                actionTitle: "Recheck"
+            )
+
+        case .missing:
+            return WelcomeGuideChecklistStatus(
+                title: "Fan Control Helper",
+                symbol: "lock.shield",
+                tone: .neutral,
+                badge: "Optional",
+                detail: "Monitoring, alerts, and menu bar metrics work immediately. Install the helper only if you want fan writes.",
+                actionTitle: "Install Helper"
+            )
+        }
+    }
+
+}
+
+private struct WelcomeGuideStepContent<TrailingContent: View, Badge: View>: View {
+    let step: GuideStep
+    let stepVisible: Bool
+    @ViewBuilder let badge: () -> Badge
+    @ViewBuilder let trailingContent: () -> TrailingContent
+
+    var body: some View {
+        VStack(spacing: 0) {
+            VStack(spacing: 14) {
+                badge()
+                    .padding(.top, 36)
+
+                VStack(spacing: 6) {
+                    Text(step.headline)
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundColor(.wgText)
+                        .multilineTextAlignment(.center)
+
+                    Text(step.subheadline)
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .foregroundColor(step.iconColor)
+                        .multilineTextAlignment(.center)
+                }
+            }
+            .padding(.bottom, 20)
+
+            Text(step.body)
+                .font(.system(size: 13.5, weight: .regular, design: .default))
+                .foregroundColor(.wgTextSub)
+                .multilineTextAlignment(.center)
+                .lineSpacing(4)
+                .frame(maxWidth: 500)
+                .padding(.horizontal, 40)
+                .padding(.bottom, 22)
+
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(Array(step.bullets.enumerated()), id: \.offset) { idx, bullet in
+                    WelcomeGuideBulletRow(icon: bullet.icon, color: bullet.color, text: bullet.text)
+                        .opacity(stepVisible ? 1 : 0)
+                        .offset(x: stepVisible ? 0 : -18)
+                        .animation(
+                            .spring(response: 0.42, dampingFraction: 0.78)
+                                .delay(0.08 + Double(idx) * 0.07),
+                            value: stepVisible
+                        )
+                }
+            }
+            .frame(maxWidth: 500)
+            .padding(.horizontal, 40)
+
+            trailingContent()
+
+            Spacer()
+        }
+        .opacity(stepVisible ? 1 : 0)
+        .animation(.easeOut(duration: 0.28), value: stepVisible)
+    }
+}
+
+private struct WelcomeGuideBulletRow: View {
+    let icon: String
+    let color: Color
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(color.opacity(0.12))
+                    .frame(width: 30, height: 30)
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(color)
+            }
+            Text(text)
+                .font(.system(size: 13, weight: .regular, design: .default))
+                .foregroundColor(.wgText)
+            Spacer()
+        }
+    }
+}
+
+private struct WelcomeGuideChecklistStatus {
+    let title: String
+    let symbol: String
+    let tone: WelcomeGuideChecklistTone
+    let badge: String
+    let detail: String
+    var actionTitle: String? = nil
+}
+
+private enum WelcomeGuideChecklistTone {
+    case positive
+    case caution
+    case neutral
+
+    var badgeColor: Color {
+        switch self {
+        case .positive:
+            return .wgGreen
+        case .caution:
+            return .wgAmber
+        case .neutral:
+            return .wgBlue
+        }
+    }
+}
+
+private struct WelcomeGuideReadinessPanel: View {
+    let menuBarStatus: WelcomeGuideChecklistStatus
+    let loginStatus: WelcomeGuideChecklistStatus
+    let helperStatus: WelcomeGuideChecklistStatus
+    let installHelper: () -> Void
+    let enableLaunchAtLogin: () -> Void
+    let applyBalancedPreset: () -> Void
+    let refreshHelperDiagnostics: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text("Quick Setup Checklist")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.wgText)
+                Text("Everything below is optional except keeping one menu bar item visible. Core Monitor already monitors safely by default.")
+                    .font(.system(size: 12.5, weight: .regular))
+                    .foregroundColor(.wgTextSub)
+                    .lineSpacing(3)
+            }
+
+            VStack(spacing: 10) {
+                WelcomeGuideChecklistRow(status: menuBarStatus, action: applyBalancedPreset)
+                WelcomeGuideChecklistRow(status: loginStatus, action: enableLaunchAtLogin)
+                WelcomeGuideChecklistRow(
+                    status: helperStatus,
+                    action: helperStatus.actionTitle == "Install Helper" ? installHelper : refreshHelperDiagnostics
+                )
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: 520, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.wgSurface.opacity(0.86))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.wgBorder, lineWidth: 1)
+                )
+        )
+        .padding(.horizontal, 40)
+    }
+}
+
+private struct WelcomeGuideChecklistRow: View {
+    let status: WelcomeGuideChecklistStatus
+    let action: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(status.tone.badgeColor.opacity(0.14))
+                    .frame(width: 34, height: 34)
+                Image(systemName: status.symbol)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(status.tone.badgeColor)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text(status.title)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.wgText)
+
+                    Text(status.badge.uppercased())
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundColor(status.tone.badgeColor)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 4)
+                        .background(status.tone.badgeColor.opacity(0.16))
+                        .clipShape(Capsule())
+                }
+
+                Text(status.detail)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(.wgTextSub)
+                    .lineSpacing(3)
+            }
+
+            Spacer(minLength: 12)
+
+            if let actionTitle = status.actionTitle {
+                Button(actionTitle, action: action)
+                    .buttonStyle(.plain)
+                    .font(.system(size: 11.5, weight: .semibold))
+                    .foregroundColor(.wgText)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .background(Color.white.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(Color.wgBorder, lineWidth: 1)
+                    )
+            }
+        }
+    }
+}
+
+private struct WelcomeGuideBottomBar: View {
+    let steps: [GuideStep]
+    let currentStep: Int
+    let progressPulse: Bool
+    let accentColor: Color
+    let goBack: () -> Void
+    let continueForward: () -> Void
+
+    var body: some View {
+        HStack {
+            HStack(spacing: 6) {
+                ForEach(steps) { step in
+                    Capsule()
+                        .fill(step.id == currentStep ? accentColor : Color.wgBorder)
+                        .frame(width: step.id == currentStep ? 20 : 6, height: 6)
+                        .opacity(progressPulse && step.id == currentStep ? 1 : (step.id == currentStep ? 0.85 : 0.4))
+                        .animation(.spring(response: 0.38, dampingFraction: 0.72), value: currentStep)
+                }
+            }
+
+            Spacer()
+
+            if currentStep > 0 {
+                Button(action: goBack) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text("Back")
+                            .font(.system(size: 13, weight: .medium))
+                    }
+                    .foregroundColor(.wgTextSub)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(Color.wgSurface)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(Color.wgBorder, lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+                .transition(.opacity.combined(with: .move(edge: .leading)))
+            }
+
+            Button(action: continueForward) {
+                HStack(spacing: 6) {
+                    Text(currentStep < steps.count - 1 ? "Next" : "Get Started")
+                        .font(.system(size: 13, weight: .semibold))
+                    Image(systemName: currentStep < steps.count - 1 ? "chevron.right" : "checkmark")
+                        .font(.system(size: 11, weight: .bold))
+                }
+                .foregroundColor(Color.wgBackground)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 8)
+                .background(accentColor)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 28)
+        .padding(.vertical, 16)
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

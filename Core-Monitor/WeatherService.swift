@@ -35,6 +35,36 @@ protocol WeatherProviding: AnyObject {
     func currentWeather(for location: CLLocation) async throws -> WeatherSnapshot
 }
 
+@MainActor
+final class WeatherLocationAccessController: NSObject, ObservableObject, CLLocationManagerDelegate {
+    static let shared = WeatherLocationAccessController()
+
+    @Published private(set) var authorizationStatus: CLAuthorizationStatus
+
+    private let locationManager: CLLocationManager
+
+    private override init() {
+        let locationManager = CLLocationManager()
+        self.locationManager = locationManager
+        self.authorizationStatus = locationManager.authorizationStatus
+        super.init()
+        locationManager.delegate = self
+    }
+
+    func requestAccess() {
+        guard authorizationStatus == .notDetermined else { return }
+        locationManager.requestWhenInUseAuthorization()
+    }
+
+    func refreshStatus() {
+        authorizationStatus = locationManager.authorizationStatus
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        authorizationStatus = manager.authorizationStatus
+    }
+}
+
 // MARK: - Live implementation
 
 @available(macOS 13.0, *)
@@ -176,6 +206,7 @@ final class WeatherViewModel: ObservableObject {
 
     private let provider: WeatherProviding
     private let locationManager = CLLocationManager()
+    private let locationAccess = WeatherLocationAccessController.shared
     private var refreshTask: Task<Void, Never>?
     private var isRunning = false
 
@@ -189,7 +220,7 @@ final class WeatherViewModel: ObservableObject {
     func start() {
         guard !isRunning else { return }
         isRunning = true
-        locationManager.requestWhenInUseAuthorization()
+        locationAccess.refreshStatus()
         scheduleRefresh()
     }
 
@@ -215,6 +246,22 @@ final class WeatherViewModel: ObservableObject {
     }
 
     private func fetch() async {
+        locationAccess.refreshStatus()
+
+        switch locationAccess.authorizationStatus {
+        case .authorizedAlways, .authorizedWhenInUse:
+            break
+        case .notDetermined:
+            state = .error("Location access is optional. Request it from Touch Bar settings for live local weather.")
+            return
+        case .denied, .restricted:
+            state = .error("Location access is off. Enable it in System Settings for live local weather.")
+            return
+        @unknown default:
+            state = .error("Location access is unavailable right now.")
+            return
+        }
+
         state = .loading
 
         // Use last known location or a default (Cupertino) for simulator

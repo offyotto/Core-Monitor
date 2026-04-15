@@ -1483,6 +1483,7 @@ private struct TouchBarConfiguredItemRow: View {
 
 private struct TouchBarCustomizationPanel: View {
     @StateObject private var settings = TouchBarCustomizationSettings.shared
+    @ObservedObject private var weatherLocationAccess = WeatherLocationAccessController.shared
     @Environment(\.colorScheme) private var colorScheme
     @State private var weatherAttribution: WeatherAttributionSnapshot?
     @State private var weatherAttributionError: String?
@@ -1614,6 +1615,8 @@ private struct TouchBarCustomizationPanel: View {
                     Text("Weather uses Apple WeatherKit. Allow location access for Core Monitor so the live weather widget can show accurate conditions and rain timing.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
+
+                    WeatherLocationAccessSection(controller: weatherLocationAccess)
 
                     if let attribution = weatherAttribution {
                         VStack(alignment: .leading, spacing: 10) {

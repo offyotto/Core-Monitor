@@ -192,7 +192,7 @@ final class WeatherTouchBarView: NSView {
         case .error(let msg):
             hideAll()
             tempLabel.isHidden    = false
-            tempLabel.stringValue = "⚠ \(msg.prefix(12))"
+            tempLabel.stringValue = weatherErrorTitle(for: msg)
             tempLabel.sizeToFit()
             tempLabel.frame = NSRect(
                 x: x,
@@ -236,6 +236,17 @@ final class WeatherTouchBarView: NSView {
 
     private func shortCondition(_ condition: String) -> String {
         condition.count > 12 ? String(condition.prefix(11)) + "…" : condition
+    }
+
+    private func weatherErrorTitle(for message: String) -> String {
+        let lowered = message.lowercased()
+        if lowered.contains("optional") {
+            return "Location Optional"
+        }
+        if lowered.contains("location") {
+            return "Location Off"
+        }
+        return "Weather Unavailable"
     }
 
     private func symbolImage(_ name: String, size: CGFloat) -> NSImage {

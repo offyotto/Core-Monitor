@@ -77,11 +77,12 @@ final class WeatherWidget: NSView, TouchBarThemable {
             expandedIconView.image = icon
             tooltip = weatherTooltip(for: snapshot)
         case .error(let message):
+            let errorPresentation = weatherErrorPresentation(for: message)
             compactTitleLabel.stringValue = "Weather"
-            compactSubtitleLabel.stringValue = "Unavailable"
+            compactSubtitleLabel.stringValue = errorPresentation.subtitle
             expandedTitleLabel.stringValue = "Weather"
-            expandedSubtitleLabel.stringValue = "Unavailable"
-            detailLabel.stringValue = ""
+            expandedSubtitleLabel.stringValue = errorPresentation.subtitle
+            detailLabel.stringValue = errorPresentation.detail
             compactIconView.image = defaultImage()
             expandedIconView.image = defaultImage()
             tooltip = message
@@ -313,5 +314,16 @@ final class WeatherWidget: NSView, TouchBarThemable {
         let low = Int(snapshot.low.rounded())
         let feelsLike = Int(snapshot.feelsLike.rounded())
         return "\(snapshot.locationName) • \(snapshot.condition)\n\(snapshot.nextRainSummary)\nH \(high)° / L \(low)° • Feels like \(feelsLike)° • Humidity \(snapshot.humidity)%"
+    }
+
+    private func weatherErrorPresentation(for message: String) -> (subtitle: String, detail: String) {
+        let lowered = message.lowercased()
+        if lowered.contains("optional") {
+            return ("Location Optional", "Request access from Touch Bar settings")
+        }
+        if lowered.contains("location") {
+            return ("Location Off", "Enable access in System Settings")
+        }
+        return ("Unavailable", "")
     }
 }
