@@ -1,65 +1,98 @@
 # Contributing to Core Monitor
 
-Thanks for helping improve Core Monitor. This repo ships a macOS app, a privileged helper, and a GitHub Pages site, so keep changes focused and verify the exact area you touched.
+Core Monitor is a macOS utility with privileged-helper fan control, real-time monitoring, menu bar surfaces, alerts, onboarding, and optional Touch Bar support.
 
-## Before you start
+That mix makes small regressions easy to ship unless contributors stay disciplined about scope and verification.
 
-- Work on a branch, not directly on `main`.
-- Keep commits small and scoped.
-- Do not mix unrelated app, helper, and website changes unless the change really depends on all three.
-- If you are editing release assets or website pages, verify the final files in `docs/` and `index.html`.
+## Start here
 
-## Development setup
+Before editing code, read:
 
-- Open `Core-Monitor.xcodeproj` in Xcode.
-- Build the `Core-Monitor` scheme.
-- If you are changing fan control, also build the `smc-helper` target.
-- If you are changing the website, verify both `index.html` and `docs/index.html`.
+1. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+2. [`docs/HELPER_DIAGNOSTICS.md`](docs/HELPER_DIAGNOSTICS.md) if your change touches helper install, signing, or fan control
+3. the closest existing tests for the feature you are about to change
 
-## Common checks
+## Local prerequisites
 
-Use the smallest check that covers the change:
+- Xcode with the macOS SDK used by the project
+- a macOS machine for app builds and runtime verification
+- a signed build only if you need to validate the full privileged-helper trust path end to end
 
-- App UI or logic: build the `Core-Monitor` scheme.
-- Helper changes: build the helper target and confirm the app still launches.
-- Website changes: confirm the site files render correctly and assets exist in `docs/`.
-- Asset swaps: verify the new file is actually different before committing.
+You can build and test most of the app without installing the helper.
 
-## Code style
+## Core build and test commands
 
-- Follow the surrounding Swift style.
-- Keep views and controllers easy to read.
-- Avoid adding new abstractions unless they remove real duplication.
-- Keep user-facing copy direct and accurate.
+Build:
 
-## Touch Bar work
+```bash
+xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
+```
 
-- Keep Touch Bar widgets compact.
-- Test the default widget layout after changes.
-- If you add or remove widgets, update the default order and any relevant onboarding text.
+Test:
 
-## Fan control and helper work
+```bash
+xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test
+```
 
-- Do not change the helper contract casually.
-- Preserve the signed helper workflow already in the app.
-- If you touch privileged helper code, verify the app still builds and the helper bundle is still embedded correctly.
+When a feature has focused regression tests, run those too:
 
-## Pull requests / commits
+```bash
+xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test -only-testing:Core-MonitorTests/HelperDiagnosticsReportTests
+```
 
-- Commit the actual behavior change, not formatting-only churn.
-- Mention any manual verification you performed.
-- If a change affects the website, include the relevant page and asset paths in your summary.
+## Change strategy
 
-## What to avoid
+Prefer the smallest owner of the behavior:
 
-- Do not commit build products or derived data.
-- Do not add recovery or scratch files to the repo.
-- Do not rename public bundle identifiers or helper labels unless that is part of the change.
+- monitoring regressions: `SystemMonitor.swift`
+- helper or fan-write trust issues: `SMCHelperManager.swift`, `SMCHelperXPC.swift`, or `smc-helper/`
+- alert threshold/evaluation issues: `AlertEngine.swift`
+- menu bar visibility or density: `MenuBarSettings.swift`, `MenubarController.swift`, `MenuBarExtraView.swift`
+- onboarding or helper explanation problems: `WelcomeGuide.swift`
 
-## When in doubt
+If a change crosses multiple layers, document why in the commit message and worklog.
 
-Prefer the least invasive fix that makes the app correct and keeps the build green.
+## Helper and fan-control safety rules
 
-## No LLM slop
+- Do not weaken validation inside the privileged helper.
+- Do not assume the app process is a sufficient trust boundary for privileged behavior.
+- Keep “monitoring works without the helper” true.
+- Keep “System Auto returns control to macOS” language accurate anywhere fan modes are described.
+- If you change helper trust or installation behavior, update both user-facing copy and support intake docs.
 
-DO NOT use AI to contribute to the project. Please. I dont think theres anything else to say.
+## UI and product verification
+
+For user-visible changes:
+
+1. Build the app
+2. Launch it
+3. Inspect the affected surface directly
+4. Capture screenshots when the change affects onboarding, menu bar behavior, alerts, or dashboard layout
+
+Do not claim a UI improvement without looking at the actual runtime result.
+
+## Tests and regression coverage
+
+- Add focused tests when changing:
+  - helper diagnostics or helper trust behavior
+  - fan curve validation or interpolation
+  - alert evaluation logic
+  - permission-gating behavior such as weather/location startup handling
+- Keep tests close to the feature boundary instead of relying only on full-suite coverage.
+
+## Issues and bug reports
+
+If a bug touches fan control, helper install, helper reachability, or signing mismatch:
+
+- ask for the exported helper diagnostics report
+- use the GitHub bug form in `.github/ISSUE_TEMPLATE/bug_report.yml`
+- avoid debugging those reports from screenshots alone
+
+## Pull request expectations
+
+- Keep commits atomic and specific
+- include verification notes
+- call out any runtime limitation you could not validate
+- avoid unrelated refactors in high-risk files such as `ContentView.swift` and `SystemMonitor.swift`
+
+Core Monitor benefits more from a steady stream of verified improvements than from large speculative rewrites.
