@@ -11,10 +11,12 @@ Use it when:
 
 ## How to export it
 
-1. Open `Help`
-2. Click `Open Welcome Guide`
-3. On the final readiness step, click `Export Report`
+1. Open `System`
+2. Use the `Helper Diagnostics` card
+3. Click `Export Report`
 4. Save the JSON file and attach it to your issue or support thread
+
+You can still reach the same export flow from `Help` → `Reopen Welcome Guide` → final readiness step if you want the onboarding checklist at the same time.
 
 The app reveals the saved file in Finder after export.
 

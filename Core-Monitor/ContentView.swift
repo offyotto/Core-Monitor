@@ -790,6 +790,161 @@ private struct FanHelperStatusCard: View {
     }
 }
 
+private struct HelperDiagnosticsSupportCard: View {
+    @ObservedObject private var helperManager = SMCHelperManager.shared
+    @ObservedObject private var menuBarSettings = MenuBarSettings.shared
+    @ObservedObject var startupManager: StartupManager
+
+    @State private var exportMessage: String?
+
+    var body: some View {
+        DarkCard(padding: 16) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Helper Diagnostics")
+                            .font(.system(size: 13, weight: .semibold))
+                        Text(summaryText)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer(minLength: 12)
+
+                    Text(connectionLabel)
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(connectionColor)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(connectionColor.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+
+                HStack(spacing: 8) {
+                    if primaryActionTitle == "Install Helper" {
+                        Button(primaryActionTitle, action: performPrimaryAction)
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                    } else {
+                        Button(primaryActionTitle, action: performPrimaryAction)
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                    }
+
+                    Button("Export Report", action: exportReport)
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                }
+
+                Text("The report captures app signing, helper install state, connectivity, launch-at-login approval, and menu bar reachability so support issues can be triaged without guessing.")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let helperStatusMessage = helperManager.statusMessage, helperStatusMessage.isEmpty == false {
+                    Text(helperStatusMessage)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(helperStatusColor)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                if let exportMessage, exportMessage.isEmpty == false {
+                    Text(exportMessage)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(exportMessage.localizedCaseInsensitiveContains("could not") ? .orange : .green)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .onAppear {
+            helperManager.refreshDiagnostics()
+        }
+    }
+
+    private var primaryActionTitle: String {
+        helperManager.isInstalled ? "Recheck Helper" : "Install Helper"
+    }
+
+    private var connectionLabel: String {
+        switch helperManager.connectionState {
+        case .missing:
+            return "Missing"
+        case .unknown:
+            return helperManager.isInstalled ? "Pending Check" : "Missing"
+        case .checking:
+            return "Checking"
+        case .reachable:
+            return "Reachable"
+        case .unreachable:
+            return "Needs Attention"
+        }
+    }
+
+    private var connectionColor: Color {
+        switch helperManager.connectionState {
+        case .reachable:
+            return .green
+        case .checking:
+            return Color.bdAccent
+        case .missing, .unknown:
+            return .orange
+        case .unreachable:
+            return .red
+        }
+    }
+
+    private var helperStatusColor: Color {
+        helperManager.connectionState == .reachable ? .green : .orange
+    }
+
+    private var summaryText: String {
+        switch helperManager.connectionState {
+        case .reachable:
+            return "The helper responded to the latest trust check. Managed fan modes should be available on supported Macs."
+        case .checking:
+            return "Core Monitor is verifying the local helper before trusting it for fan writes."
+        case .unreachable:
+            return "The helper is installed but this build could not establish a trusted XPC connection. Recheck first, then reinstall from this exact app build if needed."
+        case .unknown:
+            return helperManager.isInstalled
+                ? "The helper exists, but Core Monitor has not finished a fresh health probe yet."
+                : "Monitoring already works. Install the helper only if you want managed or manual fan control."
+        case .missing:
+            return "Monitoring already works. Install the helper only if you want managed or manual fan control."
+        }
+    }
+
+    private func performPrimaryAction() {
+        exportMessage = nil
+        if helperManager.isInstalled {
+            helperManager.refreshStatus()
+            helperManager.refreshDiagnostics()
+        } else {
+            helperManager.installFromApp()
+        }
+    }
+
+    private func exportReport() {
+        do {
+            let savedURL = try HelperDiagnosticsExporter.exportReport(
+                helperManager: helperManager,
+                startupManager: startupManager,
+                menuBarSettings: menuBarSettings
+            )
+
+            guard let savedURL else {
+                exportMessage = nil
+                return
+            }
+
+            exportMessage = "Saved helper diagnostics to \(savedURL.lastPathComponent)."
+        } catch {
+            exportMessage = "Could not export helper diagnostics: \(error.localizedDescription)"
+        }
+    }
+}
+
 // MARK: - Fan control panel
 private struct FanControlPanel: View {
     struct Snapshot { var fanSpeeds: [Int] = []; var fanMinSpeeds: [Int] = []; var fanMaxSpeeds: [Int] = [] }
@@ -1294,6 +1449,7 @@ private struct DetailPane: View {
         VStack(alignment: .leading, spacing: 18) {
             header("System", subtitle: "Controls and startup")
             SystemStatusBoard(alertManager: alertManager, systemMonitor: systemMonitor)
+            HelperDiagnosticsSupportCard(startupManager: startupManager)
             DarkCard(padding: 16) {
                 VStack(spacing: 8) {
                     levelRow(label: "Volume",     icon: state.currentVolume < 0.01 ? "speaker.slash.fill" : "speaker.wave.2.fill",

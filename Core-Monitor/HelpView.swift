@@ -127,6 +127,7 @@ struct HelpView: View {
                     Text("Core Monitor reads sensors via AppleSMC. Fan writes require the bundled helper.")
                     HelpBullet(text: "The helper is signed and uses the macOS authorization sheet on first use.")
                     HelpBullet(text: "If the helper is missing or another utility owns fan control, Core Monitor raises a service alert instead of pretending writes are safe.")
+                    HelpBullet(text: "Use the `System` tab’s `Helper Diagnostics` card to recheck helper trust or export a support report without reopening onboarding.")
                     HelpBullet(text: "Use ‘Reset to System Auto’ in the Fans section to restore default behavior.")
                 }
             )),
@@ -135,7 +136,7 @@ struct HelpView: View {
                     Text("Common issues and solutions:")
                         .fontWeight(.semibold)
                     HelpBullet(text: "If sensors are missing, restart Core Monitor and verify SMC access.")
-                    HelpBullet(text: "Fan control not working? Ensure the helper is installed, reset to system auto, then run `Scan Fan Keys` to confirm readable fan SMC keys.")
+                    HelpBullet(text: "Fan control not working? Use `System` → `Helper Diagnostics` to recheck or export a support report, then reset to system auto and run `Scan Fan Keys`.")
                     HelpBullet(text: "Weather unavailable? Check location permissions and WeatherKit configuration.")
                     HelpBullet(text: "Login item requires approval — open System Settings → General → Login Items.")
                     HelpBullet(text: "Touch Bar clipping — reduce active items or apply a narrower preset.")
@@ -203,12 +204,12 @@ struct HelpView: View {
             
             HStack(spacing: 8) {
                 Button(action: { hasSeenWelcomeGuide = false }) {
-                    Text("Open Welcome Guide")
+                    Text("Reopen Welcome Guide")
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 
                 Button(action: { hasSeenWelcomeGuide = true }) {
-                    Text("Reset Guide")
+                    Text("Mark Guide Seen")
                 }
                 .buttonStyle(BorderedAccentButtonStyle())
             }
