@@ -174,6 +174,8 @@ final class SystemMonitor: ObservableObject {
     private(set) var gpuTemperatureTrend = MonitoringTrendSeries()
     private(set) var totalPowerTrend = MonitoringTrendSeries()
     private(set) var primaryFanSpeedTrend = MonitoringTrendSeries()
+    private(set) var memoryUsageTrend = MonitoringTrendSeries()
+    private(set) var swapUsedTrend = MonitoringTrendSeries()
     var thermalState: ProcessInfo.ThermalState { snapshot.thermalState }
     private let activitySampler = TopProcessSampler()
 
@@ -468,6 +470,8 @@ final class SystemMonitor: ObservableObject {
                 self.gpuTemperatureTrend.append(snapshot.gpuTemperature, at: sampleTimestamp)
                 self.totalPowerTrend.append(snapshot.totalSystemWatts.map(abs), at: sampleTimestamp)
                 self.primaryFanSpeedTrend.append(snapshot.fanSpeeds.first.map(Double.init), at: sampleTimestamp)
+                self.memoryUsageTrend.append(snapshot.memoryUsagePercent, at: sampleTimestamp)
+                self.swapUsedTrend.append(Double(snapshot.swapUsedBytes) / 1_073_741_824.0, at: sampleTimestamp)
                 self.snapshot = snapshot
 
                 self.isSampling = false
