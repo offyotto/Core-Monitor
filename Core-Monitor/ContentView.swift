@@ -940,7 +940,7 @@ private struct HelperDiagnosticsSupportCard: View {
                         .controlSize(.small)
                 }
 
-                Text("The report captures app signing, helper install state, connectivity, launch-at-login approval, and menu bar reachability so support issues can be triaged without guessing.")
+                Text("The report captures app signing, helper install state, connectivity, launch-at-login approval, menu bar reachability, and recent dashboard-launch visibility so support issues can be triaged without guessing.")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
