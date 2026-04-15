@@ -4,7 +4,7 @@ import AppKit
 
 // MARK: - Fan Control Modes
 
-enum FanControlMode: String, CaseIterable {
+nonisolated enum FanControlMode: String, CaseIterable {
     case smart
     case silent
     case balanced
@@ -51,8 +51,8 @@ enum FanControlMode: String, CaseIterable {
 
 // MARK: - Custom Fan Preset Model
 
-struct CustomFanPreset: Codable, Equatable {
-    enum Sensor: String, Codable, CaseIterable, Identifiable {
+nonisolated struct CustomFanPreset: Codable, Equatable {
+    nonisolated enum Sensor: String, Codable, CaseIterable, Identifiable {
         case cpu
         case gpu
         case max
@@ -68,7 +68,7 @@ struct CustomFanPreset: Codable, Equatable {
         }
     }
 
-    struct CurvePoint: Codable, Equatable, Identifiable {
+    nonisolated struct CurvePoint: Codable, Equatable, Identifiable {
         let id: UUID
         var temperatureC: Double
         var speedPercent: Double
@@ -99,7 +99,7 @@ struct CustomFanPreset: Codable, Equatable {
         }
     }
 
-    struct PowerBoost: Codable, Equatable {
+    nonisolated struct PowerBoost: Codable, Equatable {
         var enabled: Bool = true
         var wattsAtMaxBoost: Double = 40
         var maxAddedTemperatureC: Double = 8
@@ -251,7 +251,7 @@ struct CustomFanPreset: Codable, Equatable {
     }
 }
 
-enum CustomPresetSaveOutcome {
+nonisolated enum CustomPresetSaveOutcome {
     case success(String)
     case failure([String])
 }
@@ -497,7 +497,6 @@ final class FanController: ObservableObject {
             }
         }
         if allSuccess {
-            SMCTamperDetector.shared.refreshBaseline()
         }
         statusMessage = allSuccess ? "System automatic control restored" : "Failed to restore automatic control"
     }
@@ -798,7 +797,6 @@ final class FanController: ObservableObject {
         }
 
         if allSuccess {
-            SMCTamperDetector.shared.refreshBaseline()
             statusMessage = successMessage ?? "Applied fan speeds"
         } else {
             statusMessage = "Failed to apply fan speed"

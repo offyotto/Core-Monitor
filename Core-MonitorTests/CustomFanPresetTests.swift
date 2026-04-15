@@ -1,4 +1,5 @@
 import XCTest
+import CoreGraphics
 @testable import Core_Monitor
 
 final class CustomFanPresetTests: XCTestCase {
@@ -64,5 +65,76 @@ final class CustomFanPresetTests: XCTestCase {
         )
 
         XCTAssertEqual(preset.interpolatedSpeedPercent(for: 60), 60, accuracy: 0.001)
+    }
+
+    func testFanCurveChartGeometryRoundTripsPointCoordinates() {
+        let point = CustomFanPreset.CurvePoint(temperatureC: 64, speedPercent: 57)
+        let size = CGSize(width: 420, height: 230)
+
+        let plotPoint = FanCurveChartGeometry.plotPoint(for: point, size: size)
+        let values = FanCurveChartGeometry.values(for: plotPoint, size: size)
+
+        XCTAssertEqual(values.temperature, point.temperatureC, accuracy: 0.001)
+        XCTAssertEqual(values.speed, point.speedPercent, accuracy: 0.001)
+    }
+
+    func testFanCurveChartGeometryClampsDraggedPointBetweenNeighbors() {
+        let points: [CustomFanPreset.CurvePoint] = [
+            .init(temperatureC: 40, speedPercent: 20),
+            .init(temperatureC: 60, speedPercent: 50),
+            .init(temperatureC: 80, speedPercent: 90),
+        ]
+
+        let clampedHigh = FanCurveChartGeometry.clampedValues(
+            for: points[1].id,
+            rawTemperature: 120,
+            rawSpeed: 140,
+            points: points
+        )
+        let clampedLow = FanCurveChartGeometry.clampedValues(
+            for: points[1].id,
+            rawTemperature: 10,
+            rawSpeed: -10,
+            points: points
+        )
+
+        XCTAssertEqual(clampedHigh?.temperature, 79)
+        XCTAssertEqual(clampedHigh?.speed, 100)
+        XCTAssertEqual(clampedLow?.temperature, 41)
+        XCTAssertEqual(clampedLow?.speed, 0)
+    }
+
+    func testFanCurveChartGeometrySelectsNearestHandleInsteadOfDefaultingToLastPoint() {
+        let points: [CustomFanPreset.CurvePoint] = [
+            .init(temperatureC: 40, speedPercent: 20),
+            .init(temperatureC: 60, speedPercent: 50),
+            .init(temperatureC: 80, speedPercent: 90),
+        ]
+        let size = CGSize(width: 420, height: 230)
+        let middleHandle = FanCurveChartGeometry.plotPoint(for: points[1], size: size)
+        let selectedPointID = FanCurveChartGeometry.nearestPointID(
+            to: CGPoint(x: middleHandle.x + 6, y: middleHandle.y - 4),
+            size: size,
+            points: points
+        )
+
+        XCTAssertEqual(selectedPointID, points[1].id)
+    }
+
+    func testTouchBarCommandRunnerRejectsControlCharacters() {
+        XCTAssertNil(TouchBarCommandRunner.sanitizedCommand(from: "echo hello\nrm -rf /"))
+        XCTAssertNil(TouchBarCommandRunner.sanitizedCommand(from: "\u{0}"))
+    }
+
+    func testTouchBarCommandRunnerUsesIsolatedShellConfiguration() {
+        let command = "open /Applications"
+        let process = TouchBarCommandRunner.makeProcess(for: command)
+
+        XCTAssertNotNil(process)
+        XCTAssertEqual(process?.executableURL?.path, "/bin/zsh")
+        XCTAssertEqual(process?.arguments ?? [], ["-f", "-c", command])
+        XCTAssertEqual(process?.environment?["PATH"], "/usr/bin:/bin:/usr/sbin:/sbin")
+        XCTAssertEqual(process?.environment?["SHELL"], "/bin/zsh")
+        XCTAssertEqual(process?.currentDirectoryURL, FileManager.default.homeDirectoryForCurrentUser)
     }
 }

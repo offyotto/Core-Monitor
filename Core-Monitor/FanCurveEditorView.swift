@@ -18,8 +18,105 @@ private struct FanCurveCard<Content: View>: View {
     }
 }
 
+enum FanCurveChartGeometry {
+    static let temperatureRange: ClosedRange<Double> = 30...110
+    static let speedRange: ClosedRange<Double> = 0...100
+    static let pointInset: CGFloat = 12
+    static let handleSelectionRadius: CGFloat = 28
+
+    static func plotPoint(
+        for point: CustomFanPreset.CurvePoint,
+        size: CGSize
+    ) -> CGPoint {
+        let width = max(size.width, 1)
+        let height = max(size.height, 1)
+        let innerWidth = max(width - (pointInset * 2), 1)
+        let innerHeight = max(height - (pointInset * 2), 1)
+        let xRatio = (point.temperatureC - temperatureRange.lowerBound) / (temperatureRange.upperBound - temperatureRange.lowerBound)
+        let yRatio = point.speedPercent / speedRange.upperBound
+
+        return CGPoint(
+            x: pointInset + (CGFloat(xRatio) * innerWidth),
+            y: height - (pointInset + (CGFloat(yRatio) * innerHeight))
+        )
+    }
+
+    static func values(
+        for location: CGPoint,
+        size: CGSize
+    ) -> (temperature: Double, speed: Double) {
+        let width = max(size.width, 1)
+        let height = max(size.height, 1)
+        let innerWidth = max(width - (pointInset * 2), 1)
+        let innerHeight = max(height - (pointInset * 2), 1)
+        let clampedX = min(max(location.x, pointInset), width - pointInset)
+        let clampedY = min(max(location.y, pointInset), height - pointInset)
+        let xRatio = (clampedX - pointInset) / innerWidth
+        let yRatio = 1 - ((clampedY - pointInset) / innerHeight)
+
+        return (
+            temperature: temperatureRange.lowerBound + (Double(xRatio) * (temperatureRange.upperBound - temperatureRange.lowerBound)),
+            speed: Double(yRatio) * speedRange.upperBound
+        )
+    }
+
+    static func temperatureRange(
+        for index: Int,
+        points: [CustomFanPreset.CurvePoint]
+    ) -> ClosedRange<Double> {
+        let previousTemperature = points[safe: index - 1]?.temperatureC ?? temperatureRange.lowerBound
+        let nextTemperature = points[safe: index + 1]?.temperatureC ?? temperatureRange.upperBound
+        let minimumTemperature = max(temperatureRange.lowerBound, previousTemperature + (index == 0 ? 0 : 1))
+        let maximumTemperature = min(temperatureRange.upperBound, nextTemperature - (index == points.count - 1 ? 0 : 1))
+        let clampedMaximumTemperature = max(minimumTemperature, maximumTemperature)
+        return minimumTemperature...clampedMaximumTemperature
+    }
+
+    static func clampedValues(
+        for pointID: UUID,
+        rawTemperature: Double,
+        rawSpeed: Double,
+        points: [CustomFanPreset.CurvePoint]
+    ) -> (temperature: Double, speed: Double)? {
+        guard let index = points.firstIndex(where: { $0.id == pointID }) else { return nil }
+        let allowedTemperatureRange = temperatureRange(for: index, points: points)
+        return (
+            temperature: min(max(rawTemperature.rounded(), allowedTemperatureRange.lowerBound), allowedTemperatureRange.upperBound),
+            speed: min(max(rawSpeed.rounded(), speedRange.lowerBound), speedRange.upperBound)
+        )
+    }
+
+    static func nearestPointID(
+        to location: CGPoint,
+        size: CGSize,
+        points: [CustomFanPreset.CurvePoint],
+        selectionRadius: CGFloat = handleSelectionRadius
+    ) -> UUID? {
+        let nearest = points.min { lhs, rhs in
+            distanceSquared(from: location, to: plotPoint(for: lhs, size: size)) <
+                distanceSquared(from: location, to: plotPoint(for: rhs, size: size))
+        }
+
+        guard let nearest else { return nil }
+        let nearestDistance = sqrt(distanceSquared(from: location, to: plotPoint(for: nearest, size: size)))
+        return nearestDistance <= selectionRadius ? nearest.id : nil
+    }
+
+    private static func distanceSquared(from lhs: CGPoint, to rhs: CGPoint) -> CGFloat {
+        let dx = lhs.x - rhs.x
+        let dy = lhs.y - rhs.y
+        return (dx * dx) + (dy * dy)
+    }
+}
+
 struct FanCurvePreview: View {
     let preset: CustomFanPreset
+    var activePointID: UUID? = nil
+    var onPointDragChanged: ((UUID, Double, Double) -> Void)? = nil
+    var onPointDragEnded: (() -> Void)? = nil
+    var showsAxisLabels = true
+    var minimumHeight: CGFloat? = 220
+    @State private var dragPointID: UUID?
 
     var body: some View {
         GeometryReader { geometry in
@@ -47,24 +144,24 @@ struct FanCurvePreview: View {
                         .stroke(Color.bdAccent, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
 
                     ForEach(points) { point in
-                        let plotPoint = chartPoint(for: point, width: width, height: height)
-                        Circle()
-                            .fill(Color.bdAccent)
-                            .frame(width: 10, height: 10)
-                            .position(plotPoint)
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.white.opacity(0.22), lineWidth: 2)
-                                    .frame(width: 10, height: 10)
-                                    .position(plotPoint)
-                            )
+                        pointHandle(point, size: geometry.size)
                     }
                 }
 
-                axisLabels
+                if showsAxisLabels {
+                    axisLabels
+                }
+
+                if onPointDragChanged != nil {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.clear)
+                        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .gesture(chartGesture(size: geometry.size, points: points))
+                }
             }
+            .coordinateSpace(name: "FanCurvePreviewChart")
         }
-        .frame(minHeight: 220)
+        .frame(minHeight: minimumHeight)
     }
 
     private var axisLabels: some View {
@@ -129,12 +226,49 @@ struct FanCurvePreview: View {
     }
 
     private func chartPoint(for point: CustomFanPreset.CurvePoint, width: CGFloat, height: CGFloat) -> CGPoint {
-        let xRatio = (point.temperatureC - 30) / 80
-        let yRatio = point.speedPercent / 100
-        return CGPoint(
-            x: max(12, min(width - 12, CGFloat(xRatio) * (width - 24) + 12)),
-            y: max(12, min(height - 12, height - (CGFloat(yRatio) * (height - 24) + 12)))
-        )
+        FanCurveChartGeometry.plotPoint(for: point, size: CGSize(width: width, height: height))
+    }
+
+    private func pointHandle(
+        _ point: CustomFanPreset.CurvePoint,
+        size: CGSize
+    ) -> some View {
+        let plotPoint = FanCurveChartGeometry.plotPoint(for: point, size: size)
+
+        return Circle()
+            .fill(Color.bdAccent)
+            .frame(width: 10, height: 10)
+            .position(plotPoint)
+            .overlay(
+                Circle()
+                    .stroke(Color.white.opacity(0.22), lineWidth: 2)
+                    .frame(width: 10, height: 10)
+                    .position(plotPoint)
+            )
+    }
+
+    private func chartGesture(
+        size: CGSize,
+        points: [CustomFanPreset.CurvePoint]
+    ) -> some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .named("FanCurvePreviewChart"))
+            .onChanged { value in
+                guard onPointDragChanged != nil else { return }
+
+                let lockedPointID = dragPointID
+                    ?? FanCurveChartGeometry.nearestPointID(to: value.startLocation, size: size, points: points)
+                    ?? FanCurveChartGeometry.nearestPointID(to: value.location, size: size, points: points)
+
+                guard let lockedPointID else { return }
+                dragPointID = lockedPointID
+
+                let values = FanCurveChartGeometry.values(for: value.location, size: size)
+                onPointDragChanged?(lockedPointID, values.temperature, values.speed)
+            }
+            .onEnded { _ in
+                dragPointID = nil
+                onPointDragEnded?()
+            }
     }
 }
 
@@ -162,6 +296,7 @@ struct CustomFanPresetEditorSheet: View {
     @State private var messages: [String] = []
     @State private var hasError = false
     @State private var showsAdvancedJSON = false
+    @State private var activeDragPointID: UUID?
 
     init(fanController: FanController) {
         self.fanController = fanController
@@ -242,7 +377,17 @@ struct CustomFanPresetEditorSheet: View {
                         .foregroundStyle(.secondary)
                 }
 
-                FanCurvePreview(preset: normalizedDraft)
+                FanCurvePreview(
+                    preset: normalizedDraft,
+                    activePointID: activeDragPointID,
+                    onPointDragChanged: { id, temperature, speed in
+                        activeDragPointID = id
+                        updatePoint(id, temperature: temperature, speed: speed)
+                    },
+                    onPointDragEnded: {
+                        activeDragPointID = nil
+                    }
+                )
                     .frame(height: 230)
 
                 Text("The preview shows fan speed percentage against effective temperature. Power Boost raises the effective temperature under sustained watt draw before the curve is evaluated.")
@@ -547,11 +692,7 @@ struct CustomFanPresetEditorSheet: View {
     }
 
     private func pointRow(index: Int, point: CustomFanPreset.CurvePoint) -> some View {
-        let previousTemperature = normalizedDraft.sortedPoints[safe: index - 1]?.temperatureC ?? 30
-        let nextTemperature = normalizedDraft.sortedPoints[safe: index + 1]?.temperatureC ?? 110
-        let minimumTemperature = max(30, previousTemperature + (index == 0 ? 0 : 1))
-        let maximumTemperature = min(110, nextTemperature - (index == normalizedDraft.sortedPoints.count - 1 ? 0 : 1))
-        let clampedMaximumTemperature = max(minimumTemperature, maximumTemperature)
+        let allowedTemperatureRange = FanCurveChartGeometry.temperatureRange(for: index, points: normalizedDraft.sortedPoints)
 
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -570,15 +711,15 @@ struct CustomFanPresetEditorSheet: View {
             HStack(spacing: 12) {
                 numericSlider(
                     title: "Temperature",
-                    value: pointBinding(id: point.id, keyPath: \.temperatureC),
-                    range: minimumTemperature...clampedMaximumTemperature,
+                    value: temperatureBinding(for: point.id),
+                    range: allowedTemperatureRange,
                     step: 1,
                     format: { String(format: "%.0f°C", $0) }
                 )
 
                 numericSlider(
                     title: "Speed",
-                    value: pointBinding(id: point.id, keyPath: \.speedPercent),
+                    value: speedBinding(for: point.id),
                     range: 0...100,
                     step: 1,
                     format: { String(format: "%.0f%%", $0) }
@@ -590,20 +731,54 @@ struct CustomFanPresetEditorSheet: View {
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
-    private func pointBinding(
-        id: UUID,
-        keyPath: WritableKeyPath<CustomFanPreset.CurvePoint, Double>
-    ) -> Binding<Double> {
+    private func temperatureBinding(for id: UUID) -> Binding<Double> {
         Binding(
             get: {
-                normalizedDraft.sortedPoints.first(where: { $0.id == id })?[keyPath: keyPath] ?? 0
+                normalizedDraft.sortedPoints.first(where: { $0.id == id })?.temperatureC ?? 0
             },
             set: { newValue in
-                guard let index = draft.points.firstIndex(where: { $0.id == id }) else { return }
-                draft.points[index][keyPath: keyPath] = newValue
-                draft.points = draft.sortedPoints
+                updatePoint(id, temperature: newValue)
             }
         )
+    }
+
+    private func speedBinding(for id: UUID) -> Binding<Double> {
+        Binding(
+            get: {
+                normalizedDraft.sortedPoints.first(where: { $0.id == id })?.speedPercent ?? 0
+            },
+            set: { newValue in
+                updatePoint(id, speed: newValue)
+            }
+        )
+    }
+
+    private func updatePoint(
+        _ id: UUID,
+        temperature: Double? = nil,
+        speed: Double? = nil
+    ) {
+        let points = draft.sortedPoints
+        guard let draftIndex = draft.points.firstIndex(where: { $0.id == id }) else { return }
+        let currentPoint = draft.points[draftIndex]
+        let rawTemperature = temperature ?? currentPoint.temperatureC
+        let rawSpeed = speed ?? currentPoint.speedPercent
+        guard let values = FanCurveChartGeometry.clampedValues(
+            for: id,
+            rawTemperature: rawTemperature,
+            rawSpeed: rawSpeed,
+            points: points
+        ) else {
+            return
+        }
+
+        draft.points[draftIndex].temperatureC = values.temperature
+        draft.points[draftIndex].speedPercent = values.speed
+        draft.points = draft.sortedPoints
+        hasError = false
+        if !messages.isEmpty {
+            messages.removeAll()
+        }
     }
 
     private func removePoint(_ id: UUID) {
@@ -613,6 +788,9 @@ struct CustomFanPresetEditorSheet: View {
             return
         }
         draft.points.removeAll { $0.id == id }
+        if activeDragPointID == id {
+            activeDragPointID = nil
+        }
     }
 
     private func addPoint() {
