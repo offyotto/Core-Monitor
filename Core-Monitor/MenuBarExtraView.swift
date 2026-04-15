@@ -112,41 +112,51 @@ private struct MenuBarAlertSummarySection: View {
     @ObservedObject private var helperManager = SMCHelperManager.shared
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Text(alertManager.highestActiveSeverity == .none ? "STATUS" : "ALERTS")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(Color.mbTint)
-                    .mbTracking(1.2)
-                Spacer()
-                Text(alertManager.highestActiveSeverity.title.uppercased())
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(severityColor(alertManager.highestActiveSeverity))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(severityColor(alertManager.highestActiveSeverity).opacity(0.18))
-                    .clipShape(Capsule())
-            }
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let health = systemMonitor.snapshotHealth(now: context.date)
 
-            Text(alertManager.summaryLine)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.84))
-                .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    Text(alertManager.highestActiveSeverity == .none ? "STATUS" : "ALERTS")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(Color.mbTint)
+                        .mbTracking(1.2)
+                    Spacer()
+                    Text(alertManager.highestActiveSeverity.title.uppercased())
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(severityColor(alertManager.highestActiveSeverity))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(severityColor(alertManager.highestActiveSeverity).opacity(0.18))
+                        .clipShape(Capsule())
+                }
 
-            HStack(spacing: 8) {
-                summaryPill("Thermal \(AlertEvaluator.thermalStateLabel(systemMonitor.thermalState))", color: thermalColor(systemMonitor.thermalState))
-                summaryPill(systemMonitor.hasSMCAccess ? "SMC Ready" : "SMC Unavailable", color: systemMonitor.hasSMCAccess ? Color.mbGreen : .red)
-            }
+                Text(alertManager.summaryLine)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.84))
+                    .fixedSize(horizontal: false, vertical: true)
 
-            HStack(spacing: 8) {
-                summaryPill(helperSummaryLabel, color: helperSummaryColor)
-                if let recent = alertManager.history.first {
-                    summaryPill(recent.kind.title, color: severityColor(recent.severity))
+                Text("\(health.ageDescription) • \(health.cadenceDescription)")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(freshnessColor(health))
+                    .monospacedDigit()
+
+                HStack(spacing: 8) {
+                    summaryPill(health.statusLabel, color: freshnessColor(health))
+                    summaryPill("Thermal \(AlertEvaluator.thermalStateLabel(systemMonitor.thermalState))", color: thermalColor(systemMonitor.thermalState))
+                    summaryPill(systemMonitor.hasSMCAccess ? "SMC Ready" : "SMC Unavailable", color: systemMonitor.hasSMCAccess ? Color.mbGreen : .red)
+                }
+
+                HStack(spacing: 8) {
+                    summaryPill(helperSummaryLabel, color: helperSummaryColor)
+                    if let recent = alertManager.history.first {
+                        summaryPill(recent.kind.title, color: severityColor(recent.severity))
+                    }
                 }
             }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
     }
 
     private func summaryPill(_ text: String, color: Color) -> some View {
@@ -175,6 +185,19 @@ private struct MenuBarAlertSummarySection: View {
         case .serious: return Color.mbOrange
         case .critical: return .red
         @unknown default: return .white.opacity(0.55)
+        }
+    }
+
+    private func freshnessColor(_ health: MonitoringSnapshotHealth) -> Color {
+        switch health.freshness {
+        case .waiting:
+            return Color.mbTint
+        case .live:
+            return Color.mbGreen
+        case .delayed:
+            return Color.mbOrange
+        case .stale:
+            return .red
         }
     }
 

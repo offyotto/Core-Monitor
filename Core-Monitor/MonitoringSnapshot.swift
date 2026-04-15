@@ -24,6 +24,82 @@ enum MonitoringTrendRange: String, CaseIterable, Identifiable {
     }
 }
 
+enum MonitoringFreshness: Equatable {
+    case waiting
+    case live
+    case delayed
+    case stale
+}
+
+struct MonitoringSnapshotHealth: Equatable {
+    let freshness: MonitoringFreshness
+    let sampledAt: Date?
+    let age: TimeInterval?
+    let expectedInterval: TimeInterval
+
+    init(sampledAt: Date, expectedInterval: TimeInterval, now: Date = Date()) {
+        let normalizedInterval = max(expectedInterval, 1)
+        self.expectedInterval = normalizedInterval
+
+        guard sampledAt != .distantPast else {
+            self.freshness = .waiting
+            self.sampledAt = nil
+            self.age = nil
+            return
+        }
+
+        let resolvedAge = max(0, now.timeIntervalSince(sampledAt))
+        let liveThreshold = max(normalizedInterval * 1.5, 2.5)
+        let staleThreshold = max(normalizedInterval * 4.0, 12.0)
+
+        if resolvedAge <= liveThreshold {
+            freshness = .live
+        } else if resolvedAge <= staleThreshold {
+            freshness = .delayed
+        } else {
+            freshness = .stale
+        }
+
+        self.sampledAt = sampledAt
+        self.age = resolvedAge
+    }
+
+    var statusLabel: String {
+        switch freshness {
+        case .waiting: return "Waiting"
+        case .live: return "Live"
+        case .delayed: return "Delayed"
+        case .stale: return "Stale"
+        }
+    }
+
+    var ageDescription: String {
+        guard let age else { return "Waiting for the first sample" }
+        if age < 1.5 {
+            return "Updated just now"
+        }
+        return "Updated \(Self.compactDurationDescription(age)) ago"
+    }
+
+    var cadenceDescription: String {
+        "Cadence \(Self.compactDurationDescription(expectedInterval))"
+    }
+
+    static func compactDurationDescription(_ interval: TimeInterval) -> String {
+        let rounded = max(Int(interval.rounded()), 1)
+        if rounded < 60 {
+            return "\(rounded)s"
+        }
+
+        let minutes = rounded / 60
+        let seconds = rounded % 60
+        if seconds == 0 {
+            return "\(minutes)m"
+        }
+        return "\(minutes)m \(seconds)s"
+    }
+}
+
 struct MonitoringTrendPoint: Equatable {
     let timestamp: Date
     let value: Double

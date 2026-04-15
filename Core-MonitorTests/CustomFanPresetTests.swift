@@ -195,4 +195,43 @@ final class CustomFanPresetTests: XCTestCase {
         XCTAssertFalse(FanControlMode.silent.guidance.showsAppleSiliconDelayedResponseNote)
         XCTAssertFalse(FanControlMode.automatic.guidance.showsAppleSiliconDelayedResponseNote)
     }
+
+    func testMonitoringSnapshotHealthReportsWaitingBeforeFirstSample() {
+        let now = Date(timeIntervalSinceReferenceDate: 12_000)
+        let health = MonitoringSnapshotHealth(sampledAt: .distantPast, expectedInterval: 1, now: now)
+
+        XCTAssertEqual(health.freshness, .waiting)
+        XCTAssertNil(health.sampledAt)
+        XCTAssertNil(health.age)
+        XCTAssertEqual(health.statusLabel, "Waiting")
+        XCTAssertEqual(health.ageDescription, "Waiting for the first sample")
+        XCTAssertEqual(health.cadenceDescription, "Cadence 1s")
+    }
+
+    func testMonitoringSnapshotHealthDistinguishesLiveDelayedAndStaleSamples() {
+        let now = Date(timeIntervalSinceReferenceDate: 20_000)
+
+        let live = MonitoringSnapshotHealth(sampledAt: now.addingTimeInterval(-1), expectedInterval: 1, now: now)
+        let delayed = MonitoringSnapshotHealth(sampledAt: now.addingTimeInterval(-4), expectedInterval: 1, now: now)
+        let stale = MonitoringSnapshotHealth(sampledAt: now.addingTimeInterval(-13), expectedInterval: 1, now: now)
+
+        XCTAssertEqual(live.freshness, .live)
+        XCTAssertEqual(live.statusLabel, "Live")
+        XCTAssertEqual(live.ageDescription, "Updated just now")
+
+        XCTAssertEqual(delayed.freshness, .delayed)
+        XCTAssertEqual(delayed.statusLabel, "Delayed")
+        XCTAssertEqual(delayed.ageDescription, "Updated 4s ago")
+
+        XCTAssertEqual(stale.freshness, .stale)
+        XCTAssertEqual(stale.statusLabel, "Stale")
+        XCTAssertEqual(stale.ageDescription, "Updated 13s ago")
+    }
+
+    func testMonitoringSnapshotHealthFormatsCompactDurations() {
+        XCTAssertEqual(MonitoringSnapshotHealth.compactDurationDescription(1), "1s")
+        XCTAssertEqual(MonitoringSnapshotHealth.compactDurationDescription(30), "30s")
+        XCTAssertEqual(MonitoringSnapshotHealth.compactDurationDescription(90), "1m 30s")
+        XCTAssertEqual(MonitoringSnapshotHealth.compactDurationDescription(120), "2m")
+    }
 }

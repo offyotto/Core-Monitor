@@ -177,6 +177,10 @@ final class SystemMonitor: ObservableObject {
     private(set) var memoryUsageTrend = MonitoringTrendSeries()
     private(set) var swapUsedTrend = MonitoringTrendSeries()
     var thermalState: ProcessInfo.ThermalState { snapshot.thermalState }
+    var activeMonitoringInterval: TimeInterval { monitoringInterval }
+    var activitySamplingInterval: TimeInterval {
+        detailedSamplingReasons.isEmpty ? ActivitySamplingMode.background.interval : ActivitySamplingMode.detailed.interval
+    }
     private let activitySampler = TopProcessSampler()
 
     static var isAppleSilicon: Bool {
@@ -337,6 +341,14 @@ final class SystemMonitor: ObservableObject {
         }
 
         applyMonitoringIntervalIfNeeded()
+    }
+
+    func snapshotHealth(now: Date = Date()) -> MonitoringSnapshotHealth {
+        MonitoringSnapshotHealth(
+            sampledAt: snapshot.sampledAt,
+            expectedInterval: activeMonitoringInterval,
+            now: now
+        )
     }
 
     private func openSMCConnection() -> Bool {

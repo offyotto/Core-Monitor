@@ -609,6 +609,91 @@ private struct MonitoringTrendChart: View {
     }
 }
 
+private struct MonitoringStatusCard: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let health = systemMonitor.snapshotHealth(now: context.date)
+
+            DarkCard(padding: 16) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .top, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Monitoring Status")
+                                .font(.system(size: 13, weight: .semibold))
+                            Text(health.ageDescription)
+                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .foregroundStyle(statusColor(for: health))
+                                .cmNumericTextTransition()
+                        }
+
+                        Spacer(minLength: 12)
+
+                        Text(health.statusLabel.uppercased())
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(statusColor(for: health))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(statusColor(for: health).opacity(0.14))
+                            .clipShape(Capsule())
+                    }
+
+                    Text(detailText(for: health))
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    HStack(spacing: 10) {
+                        statusMeta(label: "Sensor cadence", value: MonitoringSnapshotHealth.compactDurationDescription(systemMonitor.activeMonitoringInterval), color: Color.bdAccent)
+                        statusMeta(label: "Process detail", value: MonitoringSnapshotHealth.compactDurationDescription(systemMonitor.activitySamplingInterval), color: .green)
+                        statusMeta(label: "SMC", value: systemMonitor.hasSMCAccess ? "Ready" : "Limited", color: systemMonitor.hasSMCAccess ? .green : .orange)
+                    }
+                }
+            }
+        }
+    }
+
+    private func detailText(for health: MonitoringSnapshotHealth) -> String {
+        switch health.freshness {
+        case .waiting:
+            return "Core Monitor is warming up the local sensor pipeline and will publish live readings as soon as the first sample completes."
+        case .live:
+            return "The dashboard is receiving fresh sensor data on the active cadence. Background-heavy process detail stays adaptive to reduce idle overhead."
+        case .delayed:
+            return "The latest sample is slightly behind the active cadence, so values may briefly lag while the Mac is under load or waking from sleep."
+        case .stale:
+            return "The latest sample is well behind the expected cadence. If this persists, reopen the dashboard or check helper and SMC health from the System tab."
+        }
+    }
+
+    private func statusColor(for health: MonitoringSnapshotHealth) -> Color {
+        switch health.freshness {
+        case .waiting:
+            return Color.bdAccent
+        case .live:
+            return .green
+        case .delayed:
+            return .orange
+        case .stale:
+            return .red
+        }
+    }
+
+    private func statusMeta(label: String, value: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundStyle(color)
+                .cmNumericTextTransition()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 // MARK: - Compact row
 private struct CompactRow: View {
     let icon: String; let label: String; let value: String; let color: Color
@@ -1347,6 +1432,7 @@ private struct DetailPane: View {
             AlertsDashboardStrip(alertManager: alertManager) {
                 selection = .alerts
             }
+            MonitoringStatusCard(systemMonitor: systemMonitor)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 MetricTile(label: "CPU Load",  value: "\(Int(state.cpuUsagePercent.rounded()))", unit: "%",
                            color: cpuColor, gauge: state.cpuUsagePercent / 100, history: cpuHistory,
