@@ -137,4 +137,43 @@ final class CustomFanPresetTests: XCTestCase {
         XCTAssertEqual(process?.environment?["SHELL"], "/bin/zsh")
         XCTAssertEqual(process?.currentDirectoryURL, FileManager.default.homeDirectoryForCurrentUser)
     }
+
+    func testMonitoringTrendSeriesTrimsSamplesOutsideRetentionWindow() {
+        var series = MonitoringTrendSeries(retention: 60)
+        let start = Date(timeIntervalSinceReferenceDate: 1_000)
+
+        series.append(45, at: start)
+        series.append(55, at: start.addingTimeInterval(30))
+        series.append(65, at: start.addingTimeInterval(61))
+
+        XCTAssertEqual(series.count, 2)
+        XCTAssertEqual(series.values(for: .fifteenMinutes, now: start.addingTimeInterval(61)), [55, 65])
+    }
+
+    func testMonitoringTrendSeriesSummaryUsesSelectedRangeWindow() {
+        var series = MonitoringTrendSeries(retention: MonitoringTrendRange.fifteenMinutes.duration)
+        let start = Date(timeIntervalSinceReferenceDate: 5_000)
+
+        series.append(40, at: start)
+        series.append(50, at: start.addingTimeInterval(120))
+        series.append(70, at: start.addingTimeInterval(240))
+        series.append(55, at: start.addingTimeInterval(360))
+
+        let oneMinuteSummary = series.summary(for: .oneMinute, now: start.addingTimeInterval(360))
+        let fiveMinuteSummary = series.summary(for: .fiveMinutes, now: start.addingTimeInterval(360))
+
+        XCTAssertNotNil(oneMinuteSummary)
+        XCTAssertNotNil(fiveMinuteSummary)
+        XCTAssertEqual(oneMinuteSummary?.latest, 55)
+        XCTAssertEqual(oneMinuteSummary?.minimum, 55)
+        XCTAssertEqual(oneMinuteSummary?.maximum, 55)
+        XCTAssertEqual(oneMinuteSummary?.average, 55)
+        XCTAssertEqual(oneMinuteSummary?.delta, 0)
+
+        XCTAssertEqual(fiveMinuteSummary?.latest, 55)
+        XCTAssertEqual(fiveMinuteSummary?.minimum, 50)
+        XCTAssertEqual(fiveMinuteSummary?.maximum, 70)
+        XCTAssertEqual(fiveMinuteSummary?.average ?? 0, 58.333333333333336, accuracy: 0.0001)
+        XCTAssertEqual(fiveMinuteSummary?.delta, 5)
+    }
 }

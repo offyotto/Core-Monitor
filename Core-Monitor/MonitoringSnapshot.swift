@@ -1,5 +1,93 @@
 import Foundation
 
+enum MonitoringTrendRange: String, CaseIterable, Identifiable {
+    case oneMinute
+    case fiveMinutes
+    case fifteenMinutes
+
+    nonisolated var id: String { rawValue }
+
+    nonisolated var title: String {
+        switch self {
+        case .oneMinute: return "1m"
+        case .fiveMinutes: return "5m"
+        case .fifteenMinutes: return "15m"
+        }
+    }
+
+    nonisolated var duration: TimeInterval {
+        switch self {
+        case .oneMinute: return 60
+        case .fiveMinutes: return 5 * 60
+        case .fifteenMinutes: return 15 * 60
+        }
+    }
+}
+
+struct MonitoringTrendPoint: Equatable {
+    let timestamp: Date
+    let value: Double
+}
+
+struct MonitoringTrendSummary: Equatable {
+    let latest: Double
+    let minimum: Double
+    let maximum: Double
+    let average: Double
+    let delta: Double
+}
+
+struct MonitoringTrendSeries {
+    private(set) var points: [MonitoringTrendPoint] = []
+    let retention: TimeInterval
+
+    init(retention: TimeInterval = MonitoringTrendRange.fifteenMinutes.duration) {
+        self.retention = retention
+    }
+
+    mutating func append(_ value: Double?, at timestamp: Date = Date()) {
+        trim(olderThan: timestamp.addingTimeInterval(-retention))
+        guard let value else { return }
+        points.append(MonitoringTrendPoint(timestamp: timestamp, value: value))
+    }
+
+    func values(for range: MonitoringTrendRange, now: Date = Date()) -> [Double] {
+        relevantPoints(for: range, now: now).map(\.value)
+    }
+
+    func summary(for range: MonitoringTrendRange, now: Date = Date()) -> MonitoringTrendSummary? {
+        let values = values(for: range, now: now)
+        guard let first = values.first,
+              let last = values.last,
+              let minimum = values.min(),
+              let maximum = values.max() else {
+            return nil
+        }
+
+        let average = values.reduce(0, +) / Double(values.count)
+        return MonitoringTrendSummary(
+            latest: last,
+            minimum: minimum,
+            maximum: maximum,
+            average: average,
+            delta: last - first
+        )
+    }
+
+    var count: Int {
+        points.count
+    }
+
+    private func relevantPoints(for range: MonitoringTrendRange, now: Date) -> [MonitoringTrendPoint] {
+        let cutoff = now.addingTimeInterval(-range.duration)
+        return points.filter { $0.timestamp >= cutoff }
+    }
+
+    private mutating func trim(olderThan cutoff: Date) {
+        points.removeAll { $0.timestamp < cutoff }
+    }
+}
+
 struct ProcessActivity: Codable, Equatable, Identifiable {
     let pid: Int32
     let name: String

@@ -355,6 +355,242 @@ private struct MetricTile: View {
     }
 }
 
+private struct MonitoringTrendSection: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+    @State private var selectedRange: MonitoringTrendRange = .fiveMinutes
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Thermal Trends")
+                        .font(.system(size: 18, weight: .bold))
+                    Text("Recent CPU, GPU, fan, and system watt history without leaving the dashboard.")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Picker("Range", selection: $selectedRange) {
+                    ForEach(MonitoringTrendRange.allCases) { range in
+                        Text(range.title).tag(range)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 180)
+            }
+
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                MonitoringTrendCard(
+                    title: "CPU Temp",
+                    unit: "°C",
+                    color: .orange,
+                    summary: systemMonitor.cpuTemperatureTrend.summary(for: selectedRange),
+                    values: systemMonitor.cpuTemperatureTrend.values(for: selectedRange),
+                    rangeTitle: selectedRange.title,
+                    formatter: { "\(Int($0.rounded()))" }
+                )
+                MonitoringTrendCard(
+                    title: "GPU Temp",
+                    unit: "°C",
+                    color: Color(red: 0.98, green: 0.58, blue: 0.28),
+                    summary: systemMonitor.gpuTemperatureTrend.summary(for: selectedRange),
+                    values: systemMonitor.gpuTemperatureTrend.values(for: selectedRange),
+                    rangeTitle: selectedRange.title,
+                    formatter: { "\(Int($0.rounded()))" }
+                )
+                MonitoringTrendCard(
+                    title: "Primary Fan",
+                    unit: " RPM",
+                    color: Color.bdAccent,
+                    summary: systemMonitor.primaryFanSpeedTrend.summary(for: selectedRange),
+                    values: systemMonitor.primaryFanSpeedTrend.values(for: selectedRange),
+                    rangeTitle: selectedRange.title,
+                    formatter: { "\(Int($0.rounded()))" }
+                )
+                MonitoringTrendCard(
+                    title: "System Power",
+                    unit: " W",
+                    color: .purple,
+                    summary: systemMonitor.totalPowerTrend.summary(for: selectedRange),
+                    values: systemMonitor.totalPowerTrend.values(for: selectedRange),
+                    rangeTitle: selectedRange.title,
+                    formatter: { String(format: "%.1f", $0) }
+                )
+            }
+        }
+    }
+}
+
+private struct MonitoringTrendCard: View {
+    let title: String
+    let unit: String
+    let color: Color
+    let summary: MonitoringTrendSummary?
+    let values: [Double]
+    let rangeTitle: String
+    let formatter: (Double) -> String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Color.white.opacity(0.72))
+                    if let summary {
+                        HStack(alignment: .lastTextBaseline, spacing: 5) {
+                            Text(formatter(summary.latest))
+                                .font(.system(size: 30, weight: .bold, design: .rounded))
+                                .foregroundStyle(color)
+                                .cmNumericTextTransition()
+                            Text(unit)
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .foregroundStyle(color.opacity(0.68))
+                        }
+                    } else {
+                        Text("Collecting…")
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+                Text(rangeTitle)
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(color)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                    .background(color.opacity(0.16))
+                    .clipShape(Capsule())
+            }
+
+            if let summary {
+                MonitoringTrendChart(values: values, color: color)
+                    .frame(height: 84)
+                HStack(spacing: 10) {
+                    MonitoringTrendMiniStat(label: "Min", value: formatter(summary.minimum) + unit)
+                    MonitoringTrendMiniStat(label: "Max", value: formatter(summary.maximum) + unit)
+                    MonitoringTrendMiniStat(label: "Avg", value: formatter(summary.average) + unit)
+                    Spacer(minLength: 0)
+                    Text(deltaLabel(summary.delta))
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundStyle(color.opacity(0.85))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(color.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 8) {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color.white.opacity(0.05))
+                        .frame(height: 84)
+                    Text("Trend history fills in after a few live samples.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 18)
+        .padding(.bottom, 16)
+        .background(
+            CoreMonGlassBackground(
+                cornerRadius: 22,
+                tintOpacity: 0.14,
+                strokeOpacity: 0.18,
+                shadowRadius: 12
+            )
+        )
+    }
+
+    private func deltaLabel(_ delta: Double) -> String {
+        let sign = delta > 0 ? "+" : ""
+        return "\(sign)\(formatter(delta))\(unit)"
+    }
+}
+
+private struct MonitoringTrendMiniStat: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.82))
+                .cmNumericTextTransition()
+        }
+    }
+}
+
+private struct MonitoringTrendChart: View {
+    let values: [Double]
+    let color: Color
+
+    var body: some View {
+        GeometryReader { geo in
+            let chartValues = resolvedValues
+            let step = geo.size.width / CGFloat(max(chartValues.count - 1, 1))
+            let lowerBound = chartValues.min() ?? 0
+            let upperBound = chartValues.max() ?? 0
+            let span = max(upperBound - lowerBound, 0.001)
+
+            ZStack {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.white.opacity(0.04))
+
+                Path { path in
+                    for (index, value) in chartValues.enumerated() {
+                        let point = CGPoint(
+                            x: CGFloat(index) * step,
+                            y: yPosition(for: value, in: geo.size.height, lowerBound: lowerBound, span: span)
+                        )
+                        if index == 0 {
+                            path.move(to: point)
+                        } else {
+                            path.addLine(to: point)
+                        }
+                    }
+                }
+                .stroke(color, style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
+
+                Path { path in
+                    path.move(to: CGPoint(x: 0, y: geo.size.height))
+                    for (index, value) in chartValues.enumerated() {
+                        path.addLine(to: CGPoint(
+                            x: CGFloat(index) * step,
+                            y: yPosition(for: value, in: geo.size.height, lowerBound: lowerBound, span: span)
+                        ))
+                    }
+                    path.addLine(to: CGPoint(x: geo.size.width, y: geo.size.height))
+                    path.closeSubpath()
+                }
+                .fill(
+                    LinearGradient(
+                        colors: [color.opacity(0.25), color.opacity(0.03)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+            }
+        }
+        .clipped()
+    }
+
+    private var resolvedValues: [Double] {
+        guard let first = values.first else { return [0, 0] }
+        return values.count == 1 ? [first, first] : values
+    }
+
+    private func yPosition(for value: Double, in height: CGFloat, lowerBound: Double, span: Double) -> CGFloat {
+        let normalized = (value - lowerBound) / span
+        return height - (CGFloat(normalized) * height)
+    }
+}
+
 // MARK: - Compact row
 private struct CompactRow: View {
     let icon: String; let label: String; let value: String; let color: Color
@@ -972,6 +1208,7 @@ private struct DetailPane: View {
                                badgeText: alertBadgeText(for: .lowBatteryDischarging), badgeColor: alertBadgeColor(for: .lowBatteryDischarging))
                 }
             }
+            MonitoringTrendSection(systemMonitor: systemMonitor)
         }
     }
 
