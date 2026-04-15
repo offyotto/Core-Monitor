@@ -55,7 +55,6 @@ enum AlertRuleKind: String, Codable, CaseIterable, Identifiable {
     case lowBatteryDischarging
     case smcUnavailable
     case helperUnavailable
-    case externalFanControl
 
     nonisolated var id: String { rawValue }
 
@@ -69,7 +68,7 @@ enum AlertRuleKind: String, Codable, CaseIterable, Identifiable {
             return .fanSafety
         case .batteryTemperature, .batteryHealth, .lowBatteryDischarging:
             return .battery
-        case .smcUnavailable, .helperUnavailable, .externalFanControl:
+        case .smcUnavailable, .helperUnavailable:
             return .services
         }
     }
@@ -88,7 +87,6 @@ enum AlertRuleKind: String, Codable, CaseIterable, Identifiable {
         case .lowBatteryDischarging: return "Low Battery"
         case .smcUnavailable: return "SMC Access"
         case .helperUnavailable: return "Helper Availability"
-        case .externalFanControl: return "External Fan Control"
         }
     }
 
@@ -106,7 +104,6 @@ enum AlertRuleKind: String, Codable, CaseIterable, Identifiable {
         case .lowBatteryDischarging: return "Warn on low charge while unplugged."
         case .smcUnavailable: return "Warn when AppleSMC cannot be opened."
         case .helperUnavailable: return "Warn when privileged fan control cannot be used."
-        case .externalFanControl: return "Warn when another app or external change owns fan state."
         }
     }
 
@@ -130,8 +127,6 @@ enum AlertRuleKind: String, Codable, CaseIterable, Identifiable {
             return "cpu.fill"
         case .helperUnavailable:
             return "lock.shield"
-        case .externalFanControl:
-            return "exclamationmark.shield"
         }
     }
 
@@ -334,8 +329,6 @@ extension AlertPreset {
                 return AlertRuleConfig(kind: kind, isEnabled: true, threshold: .disabled, cooldownMinutes: 30, debounceSamples: 1, desktopNotificationsEnabled: true)
             case (.default, .helperUnavailable):
                 return AlertRuleConfig(kind: kind, isEnabled: true, threshold: .disabled, cooldownMinutes: 30, debounceSamples: 1, desktopNotificationsEnabled: true)
-            case (.default, .externalFanControl):
-                return AlertRuleConfig(kind: kind, isEnabled: true, threshold: .disabled, cooldownMinutes: 20, debounceSamples: 1, desktopNotificationsEnabled: true)
 
             case (.quiet, .cpuTemperature):
                 return AlertRuleConfig(kind: kind, isEnabled: true, threshold: .init(warning: 90, critical: 100, hysteresis: 3), cooldownMinutes: 35, debounceSamples: 3, desktopNotificationsEnabled: true)
@@ -357,7 +350,7 @@ extension AlertPreset {
                 return AlertRuleConfig(kind: kind, isEnabled: true, threshold: .init(warning: 80, critical: 68, hysteresis: 0), cooldownMinutes: 1_440, debounceSamples: 1, desktopNotificationsEnabled: false)
             case (.quiet, .lowBatteryDischarging):
                 return AlertRuleConfig(kind: kind, isEnabled: true, threshold: .init(warning: 12, critical: 7, hysteresis: 3), cooldownMinutes: 40, debounceSamples: 1, desktopNotificationsEnabled: true)
-            case (.quiet, .smcUnavailable), (.quiet, .helperUnavailable), (.quiet, .externalFanControl):
+            case (.quiet, .smcUnavailable), (.quiet, .helperUnavailable):
                 var config = AlertPreset.default.configurations().first { $0.kind == kind } ?? AlertRuleConfig(kind: kind, isEnabled: true, threshold: .disabled, cooldownMinutes: 30, debounceSamples: 1, desktopNotificationsEnabled: true)
                 config.cooldownMinutes = 40
                 return config
@@ -382,7 +375,7 @@ extension AlertPreset {
                 return AlertRuleConfig(kind: kind, isEnabled: true, threshold: .init(warning: 82, critical: 70, hysteresis: 0), cooldownMinutes: 1_440, debounceSamples: 1, desktopNotificationsEnabled: false)
             case (.performance, .lowBatteryDischarging):
                 return AlertRuleConfig(kind: kind, isEnabled: true, threshold: .init(warning: 20, critical: 12, hysteresis: 3), cooldownMinutes: 30, debounceSamples: 1, desktopNotificationsEnabled: true)
-            case (.performance, .smcUnavailable), (.performance, .helperUnavailable), (.performance, .externalFanControl):
+            case (.performance, .smcUnavailable), (.performance, .helperUnavailable):
                 return AlertPreset.default.configurations().first { $0.kind == kind } ?? AlertRuleConfig(kind: kind, isEnabled: true, threshold: .disabled, cooldownMinutes: 30, debounceSamples: 1, desktopNotificationsEnabled: true)
 
             case (.aggressiveThermalSafety, .cpuTemperature):
@@ -405,7 +398,7 @@ extension AlertPreset {
                 return AlertRuleConfig(kind: kind, isEnabled: true, threshold: .init(warning: 84, critical: 72, hysteresis: 0), cooldownMinutes: 1_440, debounceSamples: 1, desktopNotificationsEnabled: false)
             case (.aggressiveThermalSafety, .lowBatteryDischarging):
                 return AlertRuleConfig(kind: kind, isEnabled: true, threshold: .init(warning: 18, critical: 10, hysteresis: 3), cooldownMinutes: 20, debounceSamples: 1, desktopNotificationsEnabled: true)
-            case (.aggressiveThermalSafety, .smcUnavailable), (.aggressiveThermalSafety, .helperUnavailable), (.aggressiveThermalSafety, .externalFanControl):
+            case (.aggressiveThermalSafety, .smcUnavailable), (.aggressiveThermalSafety, .helperUnavailable):
                 var config = AlertPreset.default.configurations().first { $0.kind == kind } ?? AlertRuleConfig(kind: kind, isEnabled: true, threshold: .disabled, cooldownMinutes: 30, debounceSamples: 1, desktopNotificationsEnabled: true)
                 config.cooldownMinutes = 10
                 return config

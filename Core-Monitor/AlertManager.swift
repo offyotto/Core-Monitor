@@ -20,25 +20,20 @@ final class AlertManager: NSObject, ObservableObject {
     private let systemMonitor: SystemMonitor
     private let fanController: FanController
     private let helperManager: SMCHelperManager
-    private let tamperDetector: SMCTamperDetector
 
-    private var store: AlertStore {
-        didSet { persistStore() }
-    }
+    private var store: AlertStore
     private var cancellables = Set<AnyCancellable>()
 
     init(
         systemMonitor: SystemMonitor,
         fanController: FanController,
         helperManager: SMCHelperManager? = nil,
-        tamperDetector: SMCTamperDetector? = nil,
         userDefaults: UserDefaults = .standard,
         notificationCenter: UNUserNotificationCenter = .current()
     ) {
         self.systemMonitor = systemMonitor
         self.fanController = fanController
         self.helperManager = helperManager ?? .shared
-        self.tamperDetector = tamperDetector ?? .shared
         self.userDefaults = userDefaults
         self.notificationCenter = notificationCenter
         self.store = Self.loadStore(from: userDefaults, key: storageKey)
@@ -112,28 +107,33 @@ final class AlertManager: NSObject, ObservableObject {
     func applyPreset(_ preset: AlertPreset) {
         store.selectedPreset = preset
         store.ruleConfigs = preset.configurations()
+        persistStore()
         selectedPreset = preset
         evaluateAlerts()
     }
 
     func setNotificationPolicy(_ policy: AlertNotificationPolicy) {
         store.notificationPolicy = policy
+        persistStore()
         notificationPolicy = policy
     }
 
     func setDesktopNotificationsEnabled(_ enabled: Bool) {
         store.desktopNotificationsEnabled = enabled
+        persistStore()
         desktopNotificationsEnabled = enabled
     }
 
     func muteNotifications(for interval: TimeInterval) {
         let until = Date().addingTimeInterval(interval)
         store.notificationsMutedUntil = until
+        persistStore()
         notificationsMutedUntil = until
     }
 
     func clearNotificationMute() {
         store.notificationsMutedUntil = nil
+        persistStore()
         notificationsMutedUntil = nil
     }
 
@@ -171,8 +171,6 @@ final class AlertManager: NSObject, ObservableObject {
             fanMode: fanController.mode,
             helperInstalled: helperManager.isInstalled,
             helperStatusMessage: helperManager.statusMessage,
-            tamperDetected: tamperDetector.isTampered,
-            tamperDetail: tamperDetector.detailMessage,
             now: Date()
         )
 
@@ -208,6 +206,7 @@ final class AlertManager: NSObject, ObservableObject {
                 }
             }
             store.history = Array(updatedHistory.prefix(AlertStore.historyLimit))
+            persistStore()
             history = store.history
         }
     }
@@ -236,18 +235,6 @@ final class AlertManager: NSObject, ObservableObject {
                 self?.evaluateAlerts()
             }
             .store(in: &cancellables)
-
-        tamperDetector.$isTampered
-            .sink { [weak self] _ in
-                self?.evaluateAlerts()
-            }
-            .store(in: &cancellables)
-
-        tamperDetector.$detailMessage
-            .sink { [weak self] _ in
-                self?.evaluateAlerts()
-            }
-            .store(in: &cancellables)
     }
 
     private func shouldDeliverDesktopNotification(for event: AlertEvent) -> Bool {
@@ -260,9 +247,9 @@ final class AlertManager: NSObject, ObservableObject {
         case .inAppOnly:
             return false
         case .criticalOnly:
-            return event.severity == .critical || event.isRecovery
+            return event.severity == .critical
         case .warningsAndCritical:
-            return event.severity >= .warning || event.isRecovery
+            return event.severity >= .warning
         }
     }
 
@@ -275,8 +262,7 @@ final class AlertManager: NSObject, ObservableObject {
         content.sound = .default
         content.userInfo = [
             "kind": event.kind.rawValue,
-            "severity": event.severity.rawValue,
-            "recovery": event.isRecovery
+            "severity": event.severity.rawValue
         ]
 
         let request = UNNotificationRequest(
@@ -304,6 +290,7 @@ final class AlertManager: NSObject, ObservableObject {
         guard let index = configs.firstIndex(where: { $0.kind == kind }) else { return }
         mutate(&configs[index])
         store.ruleConfigs = configs
+        persistStore()
         evaluateAlerts()
     }
 
@@ -312,6 +299,7 @@ final class AlertManager: NSObject, ObservableObject {
         guard let index = runtimes.firstIndex(where: { $0.kind == kind }) else { return }
         mutate(&runtimes[index])
         store.runtimes = runtimes
+        persistStore()
     }
 
     private func persistStore() {
@@ -353,7 +341,7 @@ final class AlertManager: NSObject, ObservableObject {
                     ?? AlertRuleConfig(kind: kind, isEnabled: true, threshold: .disabled, cooldownMinutes: 20, debounceSamples: 1, desktopNotificationsEnabled: true)
             },
             runtimes: AlertRuleKind.allCases.map { runtimeMap[$0] ?? .initial(for: $0) },
-            history: Array(store.history.prefix(AlertStore.historyLimit))
+            history: Array(store.history.filter { !$0.isRecovery }.prefix(AlertStore.historyLimit))
         )
     }
 }

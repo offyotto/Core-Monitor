@@ -66,3 +66,8 @@
 - Fixed the first-launch discoverability gap for the accessory-style app: if the welcome guide has never been seen, Core Monitor now opens the dashboard automatically instead of launching invisibly into the menu bar.
 - Centralized the welcome-guide completion flag so launch behavior and onboarding sheet state use the same source of truth.
 - Added `WelcomeGuideProgressTests` to lock the launch decision down, rebuilt the macOS app, and confirmed at runtime that a fresh launch now shows the onboarding sheet over a visible dashboard window.
+
+### Completed batch
+- Added a helper diagnostics report that captures signing state, helper install/probe status, launch-at-login state, and menu bar reachability so support issues can be exported as structured JSON instead of vague screenshots.
+- Turned helper health into a richer local state machine (`missing`, `checking`, `reachable`, `unreachable`) and surfaced that in service alerts instead of pretending helper status is just installed vs missing.
+- Removed the old external-fan-control/tamper alert path, simplified recovery notification noise, and verified the whole macOS suite with `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test`.

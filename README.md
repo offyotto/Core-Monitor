@@ -86,7 +86,7 @@ The concrete roadmap and brutal audit live here:
 
 ## Alerts
 
-Core Monitor now includes a local alerts engine that runs off the same monitor snapshot used by the dashboard and menu bar. Alerts cover CPU and GPU temperature, macOS thermal pressure, CPU usage, memory pressure, swap growth, fan safety, battery temperature, battery health, low battery while discharging, SMC availability, helper availability, and external fan-control detection.
+Core Monitor now includes a local alerts engine that runs off the same monitor snapshot used by the dashboard and menu bar. Alerts cover CPU and GPU temperature, macOS thermal pressure, CPU usage, memory pressure, swap growth, fan safety, battery temperature, battery health, low battery while discharging, SMC availability, and helper availability.
 
 - Desktop notifications are optional. In-app alert history and active alert state continue to work even if you disable banners.
 - Presets (`Default`, `Quiet`, `Performance`, and `Aggressive Thermal Safety`) change thresholds, debounce, and repeat timing in one step.

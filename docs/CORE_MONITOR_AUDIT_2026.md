@@ -109,7 +109,7 @@ The main blocker is not raw feature count. It is trust and focus. Users trust TG
 ## What this implementation pass changes
 
 - Hardens helper identity handling so the app and helper label are not trapped behind one literal string.
-- Fixes fan discovery and tamper detection edge cases that directly affect trust in hardware behavior.
+- Fixes fan discovery edge cases that directly affect trust in hardware behavior.
 - Fixes custom curve persistence and replaces the raw-JSON-first editing path with a proper graphical fan curve editor.
 - Adds source-controlled CI, release, notarization, checksum, and Homebrew distribution scaffolding.
 - Tightens README, website, and release docs around the actual product story instead of vague "system monitor" positioning.

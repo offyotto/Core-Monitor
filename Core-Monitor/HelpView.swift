@@ -42,11 +42,11 @@ struct HelpView: View {
             )),
             HelpSection(id: "alerts", title: "Alerts", icon: "bell.badge", content: AnyView(
                 HelpCard {
-                    Text("Core Monitor ships local alerts for thermals, memory pressure, swap usage, battery state, fan safety, helper availability, SMC access, and external fan-control detection.")
+                    Text("Core Monitor ships local alerts for thermals, memory pressure, swap usage, battery state, fan safety, helper availability, and SMC access.")
                     HelpBullet(text: "Desktop notifications are optional. Turning them off does not disable in-app alert history.")
                     HelpBullet(text: "Presets let you trade off earlier warning thresholds against quieter notification behavior.")
                     HelpBullet(text: "CPU and memory alerts include top-process context so you can see likely culprits without configuring per-process rules.")
-                    HelpBullet(text: "Snooze suppresses desktop notifications for a rule, while dismiss-until-recovery hides the current active alert until the metric returns to a safe state.")
+                    HelpBullet(text: "Snooze suppresses desktop notifications for a rule, while `Hide For Now` clears the current alert card until conditions change again.")
                 }
             )),
             HelpSection(id: "memory", title: "Memory", icon: "memorychip", content: AnyView(
