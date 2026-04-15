@@ -176,4 +176,23 @@ final class CustomFanPresetTests: XCTestCase {
         XCTAssertEqual(fiveMinuteSummary?.average ?? 0, 58.333333333333336, accuracy: 0.0001)
         XCTAssertEqual(fiveMinuteSummary?.delta, 5)
     }
+
+    func testManagedFanModesExposeQuitRestoreGuidance() {
+        XCTAssertTrue(FanControlMode.smart.guidance.restoresSystemAutomaticOnExit)
+        XCTAssertTrue(FanControlMode.manual.guidance.restoresSystemAutomaticOnExit)
+        XCTAssertFalse(FanControlMode.automatic.guidance.restoresSystemAutomaticOnExit)
+    }
+
+    func testSystemOwnedModesAreMarkedAsSystemControlled() {
+        XCTAssertEqual(FanControlMode.automatic.guidance.ownership, .system)
+        XCTAssertEqual(FanControlMode.silent.guidance.ownership, .system)
+        XCTAssertEqual(FanControlMode.custom.guidance.ownership, .coreMonitor)
+    }
+
+    func testAppleSiliconCaveatOnlyAppearsForManagedModes() {
+        XCTAssertTrue(FanControlMode.smart.guidance.showsAppleSiliconDelayedResponseNote)
+        XCTAssertTrue(FanControlMode.manual.guidance.showsAppleSiliconDelayedResponseNote)
+        XCTAssertFalse(FanControlMode.silent.guidance.showsAppleSiliconDelayedResponseNote)
+        XCTAssertFalse(FanControlMode.automatic.guidance.showsAppleSiliconDelayedResponseNote)
+    }
 }

@@ -86,9 +86,11 @@ struct HelpView: View {
             ], content: AnyView(
                     HelpCard {
                         Text("Manage your Mac’s fans with advanced controls and profiles.")
-                        HelpBullet(text: "Fan profiles allow custom curves, manual speed settings, or automatic fan speed management.")
-                        HelpBullet(text: "The helper tool must be installed to enable fan control functionality.")
+                        HelpBullet(text: "Silent and System leave the firmware curve in charge. Smart, Balanced, Performance, Max, Manual, and Custom actively write targets through the helper.")
+                        HelpBullet(text: "The helper tool must be installed and trusted before managed fan control is reliable.")
+                        HelpBullet(text: "Use `Reset to System Auto` or quit Core Monitor to hand control back to macOS.")
                         HelpBullet(text: "The `Scan Fan Keys` action checks which fan-related SMC keys respond on the current Mac. It does not calibrate RPM accuracy.")
+                        HelpBullet(text: "On some Apple Silicon notebooks, manual targets only take effect after macOS has already activated the fan.")
                         HelpBullet(text: "Safety features prevent unsafe fan speeds and protect hardware integrity.")
                         Text("Use the `Fans` tab to switch profiles or adjust settings.")
                             .font(.subheadline)
@@ -169,7 +171,7 @@ struct HelpView: View {
                     HelpBullet(text: "The helper is signed and uses the macOS authorization sheet on first use.")
                     HelpBullet(text: "If the helper is missing or another utility owns fan control, Core Monitor raises a service alert instead of pretending writes are safe.")
                     HelpBullet(text: "Use the `System` tab’s `Helper Diagnostics` card to recheck helper trust or export a support report without reopening onboarding.")
-                    HelpBullet(text: "Use ‘Reset to System Auto’ in the Fans section to restore default behavior.")
+                    HelpBullet(text: "Use `Reset to System Auto` in the Fans section to restore default behavior immediately; Core Monitor also best-effort restores system auto when the app quits.")
                 }
             )),
             HelpSection(id: "troubleshooting", title: "Troubleshooting", icon: "wrench.and.screwdriver", keywords: [

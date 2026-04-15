@@ -44,6 +44,7 @@ final class AppCoordinator: ObservableObject {
     func stop() {
         bootstrapWorkItem?.cancel()
         bootstrapWorkItem = nil
+        fanController.restoreSystemAutomaticOnTermination()
         if let launchObserver {
             NotificationCenter.default.removeObserver(launchObserver)
             self.launchObserver = nil

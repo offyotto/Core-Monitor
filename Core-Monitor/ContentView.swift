@@ -764,7 +764,7 @@ private struct FanHelperStatusCard: View {
                 }
 
                 Text(hasFans
-                    ? "Core Monitor only writes RPM targets inside each fan's reported minimum and maximum range. Use System Auto to return control to macOS."
+                    ? "Core Monitor only writes RPM targets inside each fan's reported minimum and maximum range. Use System Auto any time, and quitting the app now also returns fans to macOS automatic control."
                     : "This Mac did not expose any controllable fans, so monitoring will work but fan control will stay unavailable.")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
@@ -975,6 +975,7 @@ private struct FanControlPanel: View {
                     }
                 }.padding(.horizontal, 1)
             }
+            FanModeGuidanceCard(mode: fanController.mode, hasFans: snapshot.fanSpeeds.isEmpty == false)
             if fanController.mode.usesManualSlider {
                 DarkCard(padding: 14) {
                     VStack(spacing: 8) {

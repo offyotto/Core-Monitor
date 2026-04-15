@@ -125,6 +125,10 @@ The helper is bundled at `Core-Monitor.app/Contents/Library/LaunchServices/venta
 
 The Smart curve accounts for system power draw as a temperature boost — at 40 W it adds up to 8°C to the effective temperature before mapping to a fan speed. Fan settings persist across sleep/wake via `NSWorkspace.didWakeNotification`.
 
+Core Monitor now also makes a best-effort pass to return every controllable fan to firmware automatic mode when the app quits, so managed profiles do not outlive the app process.
+
+On some Apple Silicon notebooks, manual or profile-based targets may only take effect after macOS has already decided the machine needs airflow. Core Monitor surfaces that limitation in-app instead of pretending every target will move the fan immediately.
+
 **Helper commands** (also usable directly from the terminal):
 smc-helper set <fanID> <rpm>   # override fan speed
 smc-helper auto <fanID>        # return fan to firmware
