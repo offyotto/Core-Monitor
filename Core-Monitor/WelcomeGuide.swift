@@ -16,7 +16,7 @@ extension View {
 }
 
 private struct WelcomeGuideModifier: ViewModifier {
-    @AppStorage("com.coremonitor.hasSeenWelcomeGuide.v1") private var hasSeen = false
+    @AppStorage(WelcomeGuideProgress.hasSeenDefaultsKey) private var hasSeen = false
 
     func body(content: Content) -> some View {
         content
@@ -154,6 +154,7 @@ private struct WelcomeGuideSheet: View {
     @State private var sheetVisible  = false     // drives initial sheet fade-in
     @State private var headerGlow    = false     // ambient pulse on icon
     @State private var progressPulse = false     // subtle dot pulse
+    @State private var diagnosticsExportMessage: String?
 
     var body: some View {
         ZStack {
@@ -204,7 +205,9 @@ private struct WelcomeGuideSheet: View {
                     installHelper: installHelperIfNeeded,
                     enableLaunchAtLogin: enableLaunchAtLogin,
                     applyBalancedPreset: applyBalancedPreset,
-                    refreshHelperDiagnostics: refreshHelperDiagnostics
+                    refreshHelperDiagnostics: refreshHelperDiagnostics,
+                    exportHelperDiagnostics: exportHelperDiagnostics,
+                    diagnosticsExportMessage: diagnosticsExportMessage
                 )
                 .padding(.top, 22)
             }
@@ -362,6 +365,25 @@ private struct WelcomeGuideSheet: View {
     private func refreshHelperDiagnostics() {
         helperManager.refreshStatus()
         helperManager.refreshDiagnostics()
+    }
+
+    private func exportHelperDiagnostics() {
+        do {
+            let savedURL = try HelperDiagnosticsExporter.exportReport(
+                helperManager: helperManager,
+                startupManager: startupManager,
+                menuBarSettings: menuBarSettings
+            )
+
+            guard let savedURL else {
+                diagnosticsExportMessage = nil
+                return
+            }
+
+            diagnosticsExportMessage = "Saved helper diagnostics to \(savedURL.lastPathComponent)."
+        } catch {
+            diagnosticsExportMessage = "Could not export helper diagnostics: \(error.localizedDescription)"
+        }
     }
 
     private var menuBarStatus: WelcomeGuideChecklistStatus {
@@ -573,6 +595,8 @@ private struct WelcomeGuideReadinessPanel: View {
     let enableLaunchAtLogin: () -> Void
     let applyBalancedPreset: () -> Void
     let refreshHelperDiagnostics: () -> Void
+    let exportHelperDiagnostics: () -> Void
+    let diagnosticsExportMessage: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -594,6 +618,11 @@ private struct WelcomeGuideReadinessPanel: View {
                     action: helperStatus.actionTitle == "Install Helper" ? installHelper : refreshHelperDiagnostics
                 )
             }
+
+            WelcomeGuideDiagnosticsExportRow(
+                message: diagnosticsExportMessage,
+                exportHelperDiagnostics: exportHelperDiagnostics
+            )
         }
         .padding(16)
         .frame(maxWidth: 520, alignment: .leading)
@@ -606,6 +635,58 @@ private struct WelcomeGuideReadinessPanel: View {
                 )
         )
         .padding(.horizontal, 40)
+    }
+}
+
+private struct WelcomeGuideDiagnosticsExportRow: View {
+    let message: String?
+    let exportHelperDiagnostics: () -> Void
+
+    private var messageColor: Color {
+        guard let message else { return .wgTextSub }
+        return message.localizedCaseInsensitiveContains("could not") ? .wgAmber : .wgGreen
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Divider()
+                .background(Color.wgBorder)
+
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Need support or fan-control troubleshooting?")
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundColor(.wgText)
+                    Text("Export a helper diagnostics report with app signing, helper state, login-item status, and menu bar configuration before filing an issue.")
+                        .font(.system(size: 11.5, weight: .regular))
+                        .foregroundColor(.wgTextSub)
+                        .lineSpacing(3)
+                }
+
+                Spacer(minLength: 12)
+
+                Button("Export Report", action: exportHelperDiagnostics)
+                    .buttonStyle(.plain)
+                    .font(.system(size: 11.5, weight: .semibold))
+                    .foregroundColor(.wgText)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .background(Color.white.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(Color.wgBorder, lineWidth: 1)
+                    )
+            }
+
+            if let message, message.isEmpty == false {
+                Text(message)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(messageColor)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(.top, 2)
     }
 }
 
