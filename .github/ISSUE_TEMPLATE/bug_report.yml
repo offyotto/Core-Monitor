@@ -1,0 +1,122 @@
+name: Bug report
+description: Report a Core Monitor defect with the context needed to reproduce and fix it.
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem.
+
+        If the issue involves fan control, helper installation, or the app saying the helper is unavailable, export the helper diagnostics report first and attach it here.
+
+        In Core Monitor:
+        1. Open `Help`
+        2. Choose `Open Welcome Guide`
+        3. Use `Export Report` in the readiness panel
+
+        The report is a local JSON file with app signing, helper install/connectivity, launch-at-login, and menu bar context.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of Core Monitor is failing?
+      options:
+        - Fan control / helper
+        - Monitoring / sensors
+        - Alerts
+        - Menu bar
+        - Dashboard UI
+        - Touch Bar
+        - Weather
+        - Startup / launch at login
+        - Documentation / repo
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: app_version
+    attributes:
+      label: Core Monitor version
+      description: Include the app version and build if you know them.
+      placeholder: "Example: 1.4.0 (14010)"
+    validations:
+      required: true
+  - type: input
+    id: mac_model
+    attributes:
+      label: Mac model
+      description: The exact Mac model identifier or marketing name.
+      placeholder: "Example: Mac14,7 or MacBook Pro (14-inch, M3 Pro, 2023)"
+    validations:
+      required: true
+  - type: input
+    id: macos_version
+    attributes:
+      label: macOS version
+      placeholder: "Example: macOS 15.5"
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Briefly describe the failure in one or two sentences.
+      placeholder: "Example: Core Monitor says the helper is installed, but fan writes fail with a signature mismatch warning."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Give the shortest reliable path to reproduce the problem.
+      placeholder: |
+        1. Launch Core Monitor
+        2. Open Fans
+        3. Switch to Performance mode
+        4. Observe helper warning
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: "Core Monitor should install or talk to the helper and apply the selected fan mode."
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: "The app reports the helper as unavailable and fan mode stays unchanged."
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics_report
+    attributes:
+      label: Helper diagnostics report
+      description: Attach the exported JSON file if the issue touches fan control or helper trust. If you cannot attach it, paste the most relevant summary and recommended actions here.
+      placeholder: "Attach the JSON file or paste the summary/recommended actions."
+      render: shell
+    validations:
+      required: false
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or recordings
+      description: Include screenshots for UI or onboarding problems when possible.
+      placeholder: "Drag screenshots or screen recordings here."
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I reproduced this on a current Core Monitor build.
+          required: true
+        - label: I exported and attached the helper diagnostics report if this issue involves helper install, signing, or fan control.
+          required: false
+        - label: I checked whether another fan utility might still be controlling the machine.
+          required: false

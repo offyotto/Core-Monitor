@@ -48,6 +48,10 @@
 - Surfaced diagnostics export directly in the welcome-guide readiness panel so support and trust workflows are available where users first decide whether they need helper-backed fan control.
 - Verified the batch with a fresh macOS build, a full `xcodebuild ... test` pass, and a targeted `-only-testing:Core-MonitorTests/HelperDiagnosticsReportTests` run.
 
+### Completed batch
+- Added a GitHub bug-report form that asks for the exported helper diagnostics report when issues involve helper install, signing, or fan control.
+- Added `docs/HELPER_DIAGNOSTICS.md` so support guidance and privacy expectations for the JSON report are source-controlled instead of tribal knowledge.
+
 ## 2026-04-16
 
 ### Completed batch
