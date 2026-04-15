@@ -29,4 +29,18 @@ final class HelpViewSearchTests: XCTestCase {
         XCTAssertTrue(section.matches(query: "weather location"))
         XCTAssertFalse(section.matches(query: "weather helper"))
     }
+
+    func testHelpSectionMatchesMenuBarRecoveryLanguage() {
+        let section = HelpView.HelpSection(
+            id: "menubar",
+            title: "Menu Bar Items and Popovers",
+            icon: "menubar.rectangle",
+            keywords: ["allow in menu bar", "hidden icon", "missing icon", "macos 26"],
+            content: AnyView(EmptyView())
+        )
+
+        XCTAssertTrue(section.matches(query: "allow menu"))
+        XCTAssertTrue(section.matches(query: "hidden icon"))
+        XCTAssertTrue(section.matches(query: "macos 26"))
+    }
 }
