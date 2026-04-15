@@ -14,10 +14,24 @@ final class CoreMonTouchBarController: NSObject {
     private let ownsSystemMonitor: Bool
 
     private var cancellables = Set<AnyCancellable>()
-    private var networkBaseline: (inBytes: UInt64, outBytes: UInt64)?
     private var widgets: [NSTouchBarItem.Identifier: PKWidgetInfo] = [:]
     private var configuredItems: [NSTouchBarItem.Identifier: TouchBarItemConfiguration] = [:]
     private var cachedItems: [NSTouchBarItem.Identifier: NSTouchBarItem] = [:]
+    private var isStarted = false
+    private var refreshTimer: Timer?
+    private var lastRefreshDate = Date.distantPast
+    private lazy var timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "H:mm"
+        return formatter
+    }()
+    private lazy var monthDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
 
     init(weatherProvider: WeatherProviding? = nil, monitor: SystemMonitor? = nil) {
         let provider = weatherProvider ?? Self.defaultWeatherProvider()
@@ -35,10 +49,11 @@ final class CoreMonTouchBarController: NSObject {
         bindSystem()
         bindCustomization()
         applyCustomization()
-        refreshViews()
+        refreshViews(force: true)
     }
 
     deinit {
+        refreshTimer?.invalidate()
         let viewModel = weatherViewModel
         let monitor = systemMonitor
         let ownsMonitor = ownsSystemMonitor
@@ -51,13 +66,27 @@ final class CoreMonTouchBarController: NSObject {
     }
 
     func start() {
+        guard !isStarted else {
+            refreshViews(force: true)
+            return
+        }
+        isStarted = true
         if ownsSystemMonitor {
             systemMonitor.startMonitoring()
         }
-        refreshViews()
+        if configuredItems.values.contains(where: { $0.builtInKind == .weather }) {
+            weatherViewModel.start()
+        }
+        startRefreshTimer()
+        refreshViews(force: true)
     }
 
     func stop() {
+        guard isStarted else { return }
+        isStarted = false
+        refreshTimer?.invalidate()
+        refreshTimer = nil
+        lastRefreshDate = .distantPast
         weatherViewModel.stop()
         if ownsSystemMonitor {
             systemMonitor.stopMonitoring()
@@ -79,7 +108,7 @@ final class CoreMonTouchBarController: NSObject {
         weatherViewModel.$state
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
-                self?.refreshViews()
+                self?.refreshViews(force: true)
             }
             .store(in: &cancellables)
     }
@@ -98,7 +127,7 @@ final class CoreMonTouchBarController: NSObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.applyCustomization()
-                self?.refreshViews()
+                self?.refreshViews(force: true)
             }
             .store(in: &cancellables)
     }
@@ -118,12 +147,30 @@ final class CoreMonTouchBarController: NSObject {
         }
     }
 
-    private func refreshViews() {
-        let snapshot = makeSnapshot()
+    private func startRefreshTimer() {
+        refreshTimer?.invalidate()
+        let timer = Timer.scheduledTimer(withTimeInterval: TB.refreshInterval, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.refreshViews(force: true)
+            }
+        }
+        timer.tolerance = TB.refreshInterval * 0.2
+        RunLoop.main.add(timer, forMode: .common)
+        refreshTimer = timer
+    }
+
+    private func refreshViews(force: Bool = false) {
+        guard isStarted, cachedItems.isEmpty == false else { return }
         let now = Date()
+        if force == false && now.timeIntervalSince(lastRefreshDate) < TB.refreshInterval {
+            return
+        }
+
+        lastRefreshDate = now
+        let snapshot = makeSnapshot()
         let theme = currentTheme()
-        let clockTitle = formattedTime(from: now, timeZone: .current)
-        let clockSubtitle = formattedMonthDay(from: now)
+        let clockTitle = formattedTime(from: lastRefreshDate, timeZone: .current)
+        let clockSubtitle = formattedMonthDay(from: lastRefreshDate)
 
         for item in cachedItems.values {
             guard let widget = (item as? PKWidgetTouchBarItem)?.widget else {
@@ -142,7 +189,7 @@ final class CoreMonTouchBarController: NSObject {
 
     private func makeSnapshot() -> TouchBarSystemSnapshot {
         let battery = systemMonitor.batteryInfo
-        let network = networkThroughput()
+        let network = systemMonitor.networkStats
         let parisTime = detailedClockStrings()
 
         return TouchBarSystemSnapshot(
@@ -153,8 +200,8 @@ final class CoreMonTouchBarController: NSObject {
             brightness: systemMonitor.currentBrightness,
             batPct: max(0, min(100, battery.chargePercent ?? 100)),
             batCharging: battery.isCharging,
-            netUpKBs: network.upKBs,
-            netDownMBs: network.downMBs,
+            netUpKBs: network.uploadBytesPerSec / 1_000,
+            netDownMBs: network.downloadBytesPerSec / 1_000_000,
             fps: currentFPS(),
             wifiName: currentWiFiName(),
             detailedClockTitle: parisTime.title,
@@ -181,21 +228,14 @@ final class CoreMonTouchBarController: NSObject {
     }
 
     private func formattedTime(from date: Date, timeZone: TimeZone) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = timeZone
-        formatter.dateFormat = "H:mm"
-        return formatter.string(from: date)
+        timeFormatter.timeZone = timeZone
+        return timeFormatter.string(from: date)
     }
 
     private func formattedMonthDay(from date: Date) -> String {
-        let monthDay = DateFormatter()
-        monthDay.locale = Locale(identifier: "en_US_POSIX")
-        monthDay.timeZone = .current
-        monthDay.dateFormat = "MMM d"
-
+        monthDayFormatter.timeZone = .current
         let day = Calendar.current.component(.day, from: date)
-        return "\(monthDay.string(from: date))\(ordinalSuffix(for: day))"
+        return "\(monthDayFormatter.string(from: date))\(ordinalSuffix(for: day))"
     }
 
     private func ordinalSuffix(for day: Int) -> String {
@@ -230,54 +270,6 @@ final class CoreMonTouchBarController: NSObject {
         }
         let used = max(Int64(total) - available, 0)
         return (Double(used) / Double(total)) * 100
-    }
-
-    private func networkThroughput() -> (upKBs: Double, downMBs: Double) {
-        let current = networkBytes()
-        defer { networkBaseline = current }
-
-        guard let baseline = networkBaseline else {
-            return (0, 0)
-        }
-
-        let upBytes = current.outBytes > baseline.outBytes ? current.outBytes - baseline.outBytes : 0
-        let downBytes = current.inBytes > baseline.inBytes ? current.inBytes - baseline.inBytes : 0
-        return (
-            upKBs: Double(upBytes) / 1000,
-            downMBs: Double(downBytes) / 1_000_000
-        )
-    }
-
-    private func networkBytes() -> (inBytes: UInt64, outBytes: UInt64) {
-        var ifaddr: UnsafeMutablePointer<ifaddrs>?
-        guard getifaddrs(&ifaddr) == 0, let head = ifaddr else { return (0, 0) }
-        defer { freeifaddrs(head) }
-
-        var totalIn: UInt64 = 0
-        var totalOut: UInt64 = 0
-        var current = head
-
-        while true {
-            let interface = current.pointee
-            if interface.ifa_addr.pointee.sa_family == UInt8(AF_LINK) {
-                let name = String(cString: interface.ifa_name)
-                if name.hasPrefix("en") || name.hasPrefix("utun") || name.hasPrefix("ipsec") {
-                    if let data = interface.ifa_data {
-                        let stats = data.assumingMemoryBound(to: if_data.self).pointee
-                        totalIn += UInt64(stats.ifi_ibytes)
-                        totalOut += UInt64(stats.ifi_obytes)
-                    }
-                }
-            }
-
-            if let next = interface.ifa_next {
-                current = next
-            } else {
-                break
-            }
-        }
-
-        return (totalIn, totalOut)
     }
 
     private func currentTheme() -> TouchBarTheme {
@@ -335,7 +327,7 @@ extension CoreMonTouchBarController: NSTouchBarDelegate {
                 weatherViewModel.start()
             }
             cachedItems[identifier] = item
-            if let widgetItem = item as? PKWidgetTouchBarItem {
+            if isStarted, let widgetItem = item as? PKWidgetTouchBarItem {
                 configure(widgetItem)
             }
             return item
@@ -390,6 +382,50 @@ final class TouchBarShortcutButton: NSButton {
     }
 }
 
+enum TouchBarCommandRunner {
+    private static let maxCommandLength = 512
+    private static let allowedEnvironmentKeys = ["HOME", "LANG", "LOGNAME", "TMPDIR", "USER"]
+
+    static func sanitizedCommand(from rawValue: String) -> String? {
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed.utf8.count <= maxCommandLength else {
+            return nil
+        }
+
+        let disallowedControlCharacters = CharacterSet.controlCharacters
+            .subtracting(CharacterSet(charactersIn: "\t"))
+        guard trimmed.unicodeScalars.allSatisfy({ !disallowedControlCharacters.contains($0) }) else {
+            return nil
+        }
+
+        return trimmed
+    }
+
+    static func makeProcess(for rawCommand: String) -> Process? {
+        guard let command = sanitizedCommand(from: rawCommand) else { return nil }
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/zsh")
+        process.arguments = ["-f", "-c", command]
+        process.currentDirectoryURL = FileManager.default.homeDirectoryForCurrentUser
+
+        var environment: [String: String] = [
+            "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
+            "SHELL": "/bin/zsh",
+        ]
+
+        let inheritedEnvironment = ProcessInfo.processInfo.environment
+        for key in allowedEnvironmentKeys {
+            if let value = inheritedEnvironment[key], !value.isEmpty {
+                environment[key] = value
+            }
+        }
+
+        process.environment = environment
+        return process
+    }
+}
+
 final class TouchBarCustomCommandButton: NSButton {
     private let widget: TouchBarCustomWidget
 
@@ -424,9 +460,15 @@ final class TouchBarCustomCommandButton: NSButton {
     }
 
     @objc private func runCommand() {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/bin/zsh")
-        process.arguments = ["-lc", widget.command]
-        try? process.run()
+        guard let process = TouchBarCommandRunner.makeProcess(for: widget.command) else {
+            NSSound.beep()
+            return
+        }
+
+        do {
+            try process.run()
+        } catch {
+            NSSound.beep()
+        }
     }
 }

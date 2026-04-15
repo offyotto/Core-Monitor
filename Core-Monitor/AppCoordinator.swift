@@ -10,15 +10,20 @@ final class AppCoordinator: ObservableObject {
     let alertManager: AlertManager
 
     private let touchBarPresenter = TouchBarPrivatePresenter()
-
-    private let coreMonTouchBarController: CoreMonTouchBarController
     private let customizationSettings = TouchBarCustomizationSettings.shared
+    private let touchBarMonitoringReason = "touchbar"
+
+    private lazy var coreMonTouchBarController = CoreMonTouchBarController(
+        weatherProvider: nil,
+        monitor: systemMonitor
+    )
 
     private var launchObserver: NSObjectProtocol?
     private var activationObserver: NSObjectProtocol?
     private var terminateObserver: NSObjectProtocol?
     private var customizationObserver: NSObjectProtocol?
     private var bootstrapWorkItem: DispatchWorkItem?
+    private weak var attachedWindow: NSWindow?
 
     init() {
         let monitor = SystemMonitor()
@@ -27,12 +32,6 @@ final class AppCoordinator: ObservableObject {
         self.fanController = fanController
         self.alertManager = AlertManager(systemMonitor: monitor, fanController: fanController)
 
-        // Build controller with the live monitor so MEM/CPU/BAT bars are populated
-        self.coreMonTouchBarController = CoreMonTouchBarController(
-            weatherProvider: nil,   // nil = uses default (mock DEBUG / live RELEASE)
-            monitor: monitor
-        )
-
         start()
     }
 
@@ -40,8 +39,6 @@ final class AppCoordinator: ObservableObject {
         systemMonitor.startMonitoring()
         installTouchBarBootstrapObservers()
         applySavedTouchBarMode()
-
-        coreMonTouchBarController.start()
     }
 
     func stop() {
@@ -63,14 +60,13 @@ final class AppCoordinator: ObservableObject {
             NotificationCenter.default.removeObserver(customizationObserver)
             self.customizationObserver = nil
         }
-        coreMonTouchBarController.stop()
         stopAppTouchBar()
         systemMonitor.stopMonitoring()
     }
 
     func revertToSystemTouchBar() {
         customizationSettings.presentationMode = .system
-        touchBarPresenter.dismissToSystemTouchBar()
+        stopAppTouchBar()
     }
 
     func revertToAppTouchBar() {
@@ -79,8 +75,8 @@ final class AppCoordinator: ObservableObject {
     }
 
     func attachTouchBar(to window: NSWindow) {
+        attachedWindow = window
         touchBarPresenter.attach(to: window)
-        // Also install the standard NSTouchBar on the window as a fallback
         coreMonTouchBarController.install(in: window)
 
         if presentationMode == .app {
@@ -100,7 +96,12 @@ final class AppCoordinator: ObservableObject {
     }
 
     private func installTouchBarBootstrapObservers() {
-        guard launchObserver == nil, activationObserver == nil, terminateObserver == nil, customizationObserver == nil else { return }
+        guard launchObserver == nil,
+              activationObserver == nil,
+              terminateObserver == nil,
+              customizationObserver == nil else {
+            return
+        }
 
         launchObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didFinishLaunchingNotification,
@@ -129,7 +130,7 @@ final class AppCoordinator: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
-                self?.touchBarPresenter.dismissToSystemTouchBar()
+                self?.stopAppTouchBar()
             }
         }
 
@@ -144,7 +145,7 @@ final class AppCoordinator: ObservableObject {
                 case .app:
                     self.startAppTouchBar()
                 case .system:
-                    self.touchBarPresenter.dismissToSystemTouchBar()
+                    self.stopAppTouchBar()
                 }
             }
         }
@@ -155,8 +156,8 @@ final class AppCoordinator: ObservableObject {
 
         let workItem = DispatchWorkItem { [weak self] in
             Task { @MainActor [weak self] in
-                guard self?.presentationMode == .app else { return }
-                self?.startAppTouchBar()
+                guard let self, self.presentationMode == .app else { return }
+                self.startAppTouchBar()
             }
         }
         bootstrapWorkItem = workItem
@@ -164,11 +165,19 @@ final class AppCoordinator: ObservableObject {
     }
 
     private func startAppTouchBar() {
-        touchBarPresenter.present(touchBar: coreMonTouchBarController.touchBar)
+        let controller = coreMonTouchBarController
+        if let attachedWindow {
+            controller.install(in: attachedWindow)
+        }
+        systemMonitor.setMonitoringIntervalOverride(TB.refreshInterval, reason: touchBarMonitoringReason)
+        controller.start()
+        touchBarPresenter.present(touchBar: controller.touchBar)
     }
 
     private func stopAppTouchBar() {
-        touchBarPresenter.dismiss()
+        touchBarPresenter.dismissToSystemTouchBar()
+        systemMonitor.setMonitoringIntervalOverride(nil, reason: touchBarMonitoringReason)
+        coreMonTouchBarController.stop()
     }
 
     private var presentationMode: TouchBarPresentationMode {

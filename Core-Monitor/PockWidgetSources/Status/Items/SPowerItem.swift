@@ -14,7 +14,6 @@ private struct SPowerStatus {
 }
 
 final class SPowerItem: StatusItem {
-    private var refreshTimer: Timer?
     private var powerStatus = SPowerStatus(isCharging: false, isCharged: false, currentValue: 0)
     private var currentTheme: TouchBarTheme = .dark
 
@@ -40,15 +39,9 @@ final class SPowerItem: StatusItem {
         configureStackView()
         stackView.wantsLayer = false
         reload()
-        refreshTimer = Timer.scheduledTimer(timeInterval: 30, target: self, repeats: true) { [weak self] in
-            self?.reload()
-        }
     }
 
-    func didUnload() {
-        refreshTimer?.invalidate()
-        refreshTimer = nil
-    }
+    func didUnload() {}
 
     func apply(theme: TouchBarTheme) {
         currentTheme = theme

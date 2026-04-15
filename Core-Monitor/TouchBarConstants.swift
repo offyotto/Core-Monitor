@@ -3,8 +3,10 @@
 // All values tuned from reference screenshots.
 
 import AppKit
+import Foundation
 
 enum TB {
+    static let refreshInterval: TimeInterval = 10
 
     // ── Physical Touch Bar geometry ───────────────────────────────────────
     /// Physical height of the Touch Bar strip in points.

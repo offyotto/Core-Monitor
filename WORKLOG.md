@@ -74,3 +74,7 @@
 
 ### Completed batch
 - Checked in the explicit `main.swift` app entry point used by the accessory-style startup flow so the branch no longer depends on an untracked local file to boot the macOS app.
+
+### Completed batch
+- Reduced background churn across the Touch Bar and menu bar paths by centralizing refresh timing, caching date formatters, and removing per-widget polling timers that were duplicating the main monitor cadence.
+- Added adaptive activity sampling so expensive top-process/detail work only stays hot while detailed UI is actually visible, while the default background state backs off to a much slower cadence.
