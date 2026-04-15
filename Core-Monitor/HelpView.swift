@@ -9,7 +9,7 @@ import SwiftUI
 import AppKit
 
 struct HelpView: View {
-    @AppStorage("com.coremonitor.hasSeenWelcomeGuide.v1") private var hasSeenWelcomeGuide: Bool = true
+    @AppStorage(WelcomeGuideProgress.hasSeenDefaultsKey) private var hasSeenWelcomeGuide: Bool = true
     @State private var searchText: String = ""
 
     // MARK: - Help Section Model
@@ -17,13 +17,32 @@ struct HelpView: View {
         let id: String
         let title: String
         let icon: String
+        let keywords: [String]
         let content: AnyView
+
+        func matches(query rawQuery: String) -> Bool {
+            let query = rawQuery
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+
+            guard query.isEmpty == false else { return true }
+
+            let searchableText = ([title] + keywords)
+                .joined(separator: " ")
+                .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+
+            return query
+                .split(whereSeparator: \.isWhitespace)
+                .allSatisfy { token in searchableText.contains(token) }
+        }
     }
 
     // MARK: - Help Data
     private var allSections: [HelpSection] {
         [
-            HelpSection(id: "overview", title: "Overview Dashboard", icon: "gauge.medium", content: AnyView(
+            HelpSection(id: "overview", title: "Overview Dashboard", icon: "gauge.medium", keywords: [
+                "dashboard", "cpu", "gpu", "memory", "thermal", "power"
+            ], content: AnyView(
                 HelpCard {
                     Text("The Overview Dashboard provides a comprehensive summary of your Mac’s current state including CPU, GPU, memory, and thermal information.")
                     HelpBullet(text: "`CPU`, `GPU`, and `Memory` usage are shown with real-time graphs and numeric values.")
@@ -31,7 +50,9 @@ struct HelpView: View {
                     HelpBullet(text: "Use the dashboard to quickly assess system performance and health.")
                 }
             )),
-            HelpSection(id: "thermals", title: "Thermals", icon: "thermometer.medium", content: AnyView(
+            HelpSection(id: "thermals", title: "Thermals", icon: "thermometer.medium", keywords: [
+                "temperature", "sensors", "thermal pressure", "cpu temp", "gpu temp", "ssd"
+            ], content: AnyView(
                 HelpCard {
                     Text("The Thermals section displays detailed temperature readings from multiple sensors across your Mac.")
                     HelpBullet(text: "Current builds surface CPU, GPU, SSD, and battery temperatures when those readings are available.")
@@ -40,7 +61,9 @@ struct HelpView: View {
                     HelpBullet(text: "Use the `Alerts` tab to configure thermal thresholds, notification policy, mute windows, and recent alert history.")
                 }
             )),
-            HelpSection(id: "alerts", title: "Alerts", icon: "bell.badge", content: AnyView(
+            HelpSection(id: "alerts", title: "Alerts", icon: "bell.badge", keywords: [
+                "notifications", "thresholds", "warnings", "critical", "snooze", "history"
+            ], content: AnyView(
                 HelpCard {
                     Text("Core Monitor ships local alerts for thermals, memory pressure, swap usage, battery state, fan safety, helper availability, and SMC access.")
                     HelpBullet(text: "Desktop notifications are optional. Turning them off does not disable in-app alert history.")
@@ -49,14 +72,18 @@ struct HelpView: View {
                     HelpBullet(text: "Snooze suppresses desktop notifications for a rule, while `Hide For Now` clears the current alert card until conditions change again.")
                 }
             )),
-            HelpSection(id: "memory", title: "Memory", icon: "memorychip", content: AnyView(
+            HelpSection(id: "memory", title: "Memory", icon: "memorychip", keywords: [
+                "swap", "ram", "page outs", "pressure", "compressed", "top processes"
+            ], content: AnyView(
                 HelpCard {
                     Text("Memory monitoring includes RAM usage, swap usage, and memory pressure visualization.")
                     HelpBullet(text: "Track real-time page ins, page outs, and compressed memory in the `Memory` tab.")
                     HelpBullet(text: "Use the memory pressure graph and top-process panel to see system memory stress and the apps most likely to be driving it.")
                 }
             )),
-            HelpSection(id: "fans", title: "Fans & Fan Control", icon: "fanblades.fill", content: AnyView(
+            HelpSection(id: "fans", title: "Fans & Fan Control", icon: "fanblades.fill", keywords: [
+                "helper", "manual", "curve", "rpm", "scan fan keys", "automatic"
+            ], content: AnyView(
                     HelpCard {
                         Text("Manage your Mac’s fans with advanced controls and profiles.")
                         HelpBullet(text: "Fan profiles allow custom curves, manual speed settings, or automatic fan speed management.")
@@ -68,14 +95,18 @@ struct HelpView: View {
                         .foregroundColor(.secondary)
                 }
             )),
-            HelpSection(id: "battery", title: "Battery", icon: "battery.100", content: AnyView(
+            HelpSection(id: "battery", title: "Battery", icon: "battery.100", keywords: [
+                "cycles", "health", "charge", "capacity", "temperature"
+            ], content: AnyView(
                 HelpCard {
                     Text("Battery monitoring shows charge cycles, current charge, health status, and battery temperature.")
                     HelpBullet(text: "Track battery capacity relative to design capacity and receive health warnings.")
                     HelpBullet(text: "Some details vary by Mac model.")
                 }
             )),
-            HelpSection(id: "system", title: "System Controls", icon: "gearshape", content: AnyView(
+            HelpSection(id: "system", title: "System Controls", icon: "gearshape", keywords: [
+                "volume", "brightness", "launch at login", "login items", "helper diagnostics", "notifications"
+            ], content: AnyView(
                 HelpCard {
                     Text("System controls enable adjusting volume, screen brightness, and launch-at-login behavior.")
                     HelpBullet(text: "Use the `System` tab or menu bar popovers to view current volume and brightness.")
@@ -83,7 +114,9 @@ struct HelpView: View {
                     HelpBullet(text: "The `System` tab now also surfaces helper state, SMC access, overall thermal pressure, and notification permission status in dedicated status cards.")
                 }
             )),
-            HelpSection(id: "touchbar", title: "Touch Bar Customization", icon: "rectangle.3.group", content: AnyView(
+            HelpSection(id: "touchbar", title: "Touch Bar Customization", icon: "rectangle.3.group", keywords: [
+                "widgets", "pinned apps", "folders", "custom command", "presets", "layout"
+            ], content: AnyView(
                 HelpCard {
                     Text("Customize your MacBook's Touch Bar with Core Monitor widgets and controls.")
                     HelpBullet(text: "Presentation modes control how the app presents widgets on the Touch Bar.")
@@ -99,7 +132,9 @@ struct HelpView: View {
                         .padding(.top, 4)
                 }
             )),
-            HelpSection(id: "menubar", title: "Menu Bar Items and Popovers", icon: "menubar.rectangle", content: AnyView(
+            HelpSection(id: "menubar", title: "Menu Bar Items and Popovers", icon: "menubar.rectangle", keywords: [
+                "menu bar", "popover", "visible items", "cpu", "memory", "disk", "temperature"
+            ], content: AnyView(
                 HelpCard {
                     Text("Core Monitor menu bar items provide quick overview and access to system metrics.")
                     HelpBullet(text: "Click menu bar icons to open popovers with detailed info and controls.")
@@ -107,14 +142,18 @@ struct HelpView: View {
                     HelpBullet(text: "At least one menu bar item must stay enabled so the app remains reachable after launch.")
                 }
             )),
-            HelpSection(id: "basic", title: "Basic Mode", icon: "square.grid.2x2.fill", content: AnyView(
+            HelpSection(id: "basic", title: "Basic Mode", icon: "square.grid.2x2.fill", keywords: [
+                "lightweight", "simplified", "full ui", "essential metrics"
+            ], content: AnyView(
                 HelpCard {
                     Text("Basic Mode simplifies Core Monitor’s interface and monitoring options.")
                     HelpBullet(text: "Recommended for a lightweight experience with essential metrics.")
                     HelpBullet(text: "Switch back to Full UI any time from the header button.")
                 }
             )),
-            HelpSection(id: "weather", title: "Weather Permission Tips", icon: "cloud.sun.rain.fill", content: AnyView(
+            HelpSection(id: "weather", title: "Weather Permission Tips", icon: "cloud.sun.rain.fill", keywords: [
+                "location", "weatherkit", "permission", "location services", "forecast"
+            ], content: AnyView(
                 HelpCard {
                     Text("Core Monitor uses WeatherKit data which may require location permission.")
                     HelpBullet(text: "Core Monitor only requests location after the live weather widget is shown.")
@@ -122,7 +161,9 @@ struct HelpView: View {
                     HelpBullet(text: "If weather data fails to load, ensure WeatherKit is enabled for your signed build.")
                 }
             )),
-            HelpSection(id: "smc", title: "SMC Access and Helper Install", icon: "cpu.fill", content: AnyView(
+            HelpSection(id: "smc", title: "SMC Access and Helper Install", icon: "cpu.fill", keywords: [
+                "apple smc", "helper", "privileged", "fan control", "reset to system auto"
+            ], content: AnyView(
                 HelpCard {
                     Text("Core Monitor reads sensors via AppleSMC. Fan writes require the bundled helper.")
                     HelpBullet(text: "The helper is signed and uses the macOS authorization sheet on first use.")
@@ -131,7 +172,9 @@ struct HelpView: View {
                     HelpBullet(text: "Use ‘Reset to System Auto’ in the Fans section to restore default behavior.")
                 }
             )),
-            HelpSection(id: "troubleshooting", title: "Troubleshooting", icon: "wrench.and.screwdriver", content: AnyView(
+            HelpSection(id: "troubleshooting", title: "Troubleshooting", icon: "wrench.and.screwdriver", keywords: [
+                "missing sensors", "helper diagnostics", "weather unavailable", "login items", "touch bar clipping"
+            ], content: AnyView(
                 HelpCard {
                     Text("Common issues and solutions:")
                         .fontWeight(.semibold)
@@ -147,9 +190,13 @@ struct HelpView: View {
 
     // MARK: - Filtered Sections
     private var filteredSections: [HelpSection] {
-        let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !q.isEmpty else { return allSections }
-        return allSections.filter { $0.title.localizedCaseInsensitiveContains(q) }
+        let query = trimmedSearchText
+        guard !query.isEmpty else { return allSections }
+        return allSections.filter { $0.matches(query: query) }
+    }
+
+    private var trimmedSearchText: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     // MARK: - Body
@@ -160,13 +207,25 @@ struct HelpView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 32) {
-                        sidebarIndex(proxy: proxy)
-                        
-                        ForEach(filteredSections) { section in
-                            SectionView(section: section)
-                                .id(section.id)
+                        if filteredSections.isEmpty == false {
+                            sidebarIndex(proxy: proxy)
                         }
-                        
+
+                        if trimmedSearchText.isEmpty == false {
+                            Text("\(filteredSections.count) topic\(filteredSections.count == 1 ? "" : "s") for \"\(trimmedSearchText)\"")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        if filteredSections.isEmpty {
+                            HelpSearchEmptyState(query: trimmedSearchText)
+                        } else {
+                            ForEach(filteredSections) { section in
+                                SectionView(section: section)
+                                    .id(section.id)
+                            }
+                        }
+
                         footer
                     }
                     .padding(.horizontal, 24)
@@ -229,6 +288,17 @@ struct HelpView: View {
                 .textFieldStyle(.plain)
                 .frame(minWidth: 100, maxWidth: 180)
                 .disableAutocorrection(true)
+            if trimmedSearchText.isEmpty == false {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 12, weight: .medium))
+                }
+                .buttonStyle(.plain)
+                .help("Clear help search")
+            }
         }
         .padding(.vertical, 6)
         .padding(.horizontal, 10)
@@ -327,6 +397,24 @@ private struct HelpCard<Content: View>: View {
                 content()
             }
             .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+private struct HelpSearchEmptyState: View {
+    let query: String
+
+    var body: some View {
+        CoreMonGlassPanel(cornerRadius: 18, tintOpacity: 0.12, strokeOpacity: 0.16, shadowRadius: 10, contentPadding: 18) {
+            VStack(alignment: .leading, spacing: 10) {
+                Label("No matching help topics", systemImage: "magnifyingglass.circle")
+                    .font(.system(size: 15, weight: .semibold))
+                Text("No help sections matched \"\(query)\". Try terms like helper, weather, login items, alerts, or Touch Bar.")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
