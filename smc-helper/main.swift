@@ -1,5 +1,6 @@
 import Foundation
 import IOKit
+import Security
 
 private typealias SMCBytes = (
     UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
@@ -361,14 +362,28 @@ private func printUsageAndExit() -> Never {
 }
 
 private func validatedFanID(_ rawValue: String) throws -> Int {
-    guard let fanID = Int(rawValue), (0..<12).contains(fanID) else {
+    guard let fanID = Int(rawValue) else {
+        throw HelperError("Fan ID must be between 0 and 11")
+    }
+    return try validatedFanID(fanID)
+}
+
+private func validatedFanID(_ fanID: Int) throws -> Int {
+    guard (0..<12).contains(fanID) else {
         throw HelperError("Fan ID must be between 0 and 11")
     }
     return fanID
 }
 
 private func validatedRPM(_ rawValue: String) throws -> Int {
-    guard let rpm = Int(rawValue), (500...10_000).contains(rpm) else {
+    guard let rpm = Int(rawValue) else {
+        throw HelperError("RPM must be between 500 and 10000")
+    }
+    return try validatedRPM(rpm)
+}
+
+private func validatedRPM(_ rpm: Int) throws -> Int {
+    guard (500...10_000).contains(rpm) else {
         throw HelperError("RPM must be between 500 and 10000")
     }
     return rpm
@@ -382,10 +397,55 @@ private func validatedSMCKey(_ rawValue: String) throws -> String {
     return rawValue
 }
 
-private let helperMachServiceName = "ventaphobia.smc-helper"
+private final class HelperClientValidator {
+    private let requirementString: String
+    private let requirement: SecRequirement
+
+    init?(bundle: Bundle = .main) {
+        guard let candidates = bundle.object(forInfoDictionaryKey: "SMAuthorizedClients") as? [String],
+              let firstRequirement = candidates.first(where: { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }) else {
+            return nil
+        }
+
+        var requirementRef: SecRequirement?
+        let status = SecRequirementCreateWithString(firstRequirement as CFString, SecCSFlags(), &requirementRef)
+        guard status == errSecSuccess, let requirementRef else {
+            return nil
+        }
+
+        self.requirementString = firstRequirement
+        self.requirement = requirementRef
+    }
+
+    func authorize(_ connection: NSXPCConnection) -> Bool {
+        guard validateProcess(pid: connection.processIdentifier) else {
+            return false
+        }
+
+        if #available(macOS 13.0, *) {
+            connection.setCodeSigningRequirement(requirementString)
+        }
+
+        return true
+    }
+
+    private func validateProcess(pid: pid_t) -> Bool {
+        let attributes = [kSecGuestAttributePid as String: NSNumber(value: pid)] as CFDictionary
+        var guestCode: SecCode?
+        let copyStatus = SecCodeCopyGuestWithAttributes(nil, attributes, SecCSFlags(), &guestCode)
+        guard copyStatus == errSecSuccess, let guestCode else {
+            return false
+        }
+
+        return SecCodeCheckValidity(guestCode, SecCSFlags(), requirement) == errSecSuccess
+    }
+}
+
+private let helperMachServiceName = Bundle.main.bundleIdentifier ?? "ventaphobia.smc-helper"
 
 private final class SMCHelperXPCService: NSObject, NSXPCListenerDelegate, SMCHelperXPCProtocol {
     private let controller = SMCController()
+    private let clientValidator = HelperClientValidator()
 
     override init() {
         super.init()
@@ -393,6 +453,11 @@ private final class SMCHelperXPCService: NSObject, NSXPCListenerDelegate, SMCHel
     }
 
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
+        guard let clientValidator, clientValidator.authorize(newConnection) else {
+            NSLog("smc-helper rejected unauthorized XPC client from pid %d", newConnection.processIdentifier)
+            return false
+        }
+
         newConnection.exportedInterface = NSXPCInterface(with: SMCHelperXPCProtocol.self)
         newConnection.exportedObject = self
         newConnection.resume()
@@ -401,8 +466,10 @@ private final class SMCHelperXPCService: NSObject, NSXPCListenerDelegate, SMCHel
 
     func setFanManual(_ fanID: Int, rpm: Int, withReply reply: @escaping (NSString?) -> Void) {
         do {
+            let validatedFanID = try validatedFanID(fanID)
+            let validatedRPM = try validatedRPM(rpm)
             try controller.open()
-            try controller.setFanManual(fanID, rpm: rpm)
+            try controller.setFanManual(validatedFanID, rpm: validatedRPM)
             reply(nil)
         } catch {
             reply(error.localizedDescription as NSString)
@@ -411,8 +478,9 @@ private final class SMCHelperXPCService: NSObject, NSXPCListenerDelegate, SMCHel
 
     func setFanAuto(_ fanID: Int, withReply reply: @escaping (NSString?) -> Void) {
         do {
+            let validatedFanID = try validatedFanID(fanID)
             try controller.open()
-            try controller.setFanAuto(fanID)
+            try controller.setFanAuto(validatedFanID)
             reply(nil)
         } catch {
             reply(error.localizedDescription as NSString)
@@ -421,8 +489,9 @@ private final class SMCHelperXPCService: NSObject, NSXPCListenerDelegate, SMCHel
 
     func readValue(_ key: String, withReply reply: @escaping (NSNumber?, NSString?) -> Void) {
         do {
+            let validatedKey = try validatedSMCKey(key)
             try controller.open()
-            let value = try controller.readValue(key)
+            let value = try controller.readValue(validatedKey)
             reply(NSNumber(value: value), nil)
         } catch {
             reply(nil, error.localizedDescription as NSString)
