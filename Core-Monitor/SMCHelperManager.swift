@@ -105,15 +105,30 @@ final class SMCHelperManager: ObservableObject {
     /// Executes the helper with the given arguments.
     /// Returns true on success.
     func execute(arguments: [String]) -> Bool {
+        execute(arguments: arguments, allowInstall: true, timeout: 5)
+    }
+
+    func executeIfInstalled(arguments: [String], timeout: TimeInterval = 5) -> Bool {
+        execute(arguments: arguments, allowInstall: false, timeout: timeout)
+    }
+
+    private func execute(arguments: [String], allowInstall: Bool, timeout: TimeInterval) -> Bool {
         refreshStatus()
 
-        guard fileManager.fileExists(atPath: installedHelperPath) || ensureInstalledIfNeeded() else {
-            connectionState = .missing
-            statusMessage = "Fan write access unavailable: privileged helper not installed."
-            return false
+        if allowInstall {
+            guard fileManager.fileExists(atPath: installedHelperPath) || ensureInstalledIfNeeded() else {
+                connectionState = .missing
+                statusMessage = "Fan write access unavailable: privileged helper not installed."
+                return false
+            }
+        } else {
+            guard fileManager.fileExists(atPath: installedHelperPath) else {
+                connectionState = .missing
+                return false
+            }
         }
 
-        return executeViaBlessedXPC(arguments: arguments)
+        return executeViaBlessedXPC(arguments: arguments, timeout: timeout)
     }
 
     func readValue(key: String) -> Double? {
@@ -155,7 +170,7 @@ final class SMCHelperManager: ObservableObject {
         return didInstall
     }
 
-    private func executeViaBlessedXPC(arguments: [String]) -> Bool {
+    private func executeViaBlessedXPC(arguments: [String], timeout: TimeInterval) -> Bool {
         guard !arguments.isEmpty else {
             statusMessage = "Helper command missing."
             return false
@@ -171,7 +186,7 @@ final class SMCHelperManager: ObservableObject {
                 statusMessage = "Invalid helper arguments."
                 return false
             }
-            result = withHelperConnection(timeout: 5) { proxy, finish in
+            result = withHelperConnection(timeout: timeout) { proxy, finish in
                 proxy.setFanManual(fanID, rpm: rpm) { errorMessage in
                     finish(true, errorMessage as String?)
                 }
@@ -183,7 +198,7 @@ final class SMCHelperManager: ObservableObject {
                 statusMessage = "Invalid helper arguments."
                 return false
             }
-            result = withHelperConnection(timeout: 5) { proxy, finish in
+            result = withHelperConnection(timeout: timeout) { proxy, finish in
                 proxy.setFanAuto(fanID) { errorMessage in
                     finish(true, errorMessage as String?)
                 }
@@ -194,7 +209,7 @@ final class SMCHelperManager: ObservableObject {
                 statusMessage = "Invalid helper arguments."
                 return false
             }
-            result = withHelperConnection(timeout: 5) { proxy, finish in
+            result = withHelperConnection(timeout: timeout) { proxy, finish in
                 proxy.readValue(arguments[1]) { _, errorMessage in
                     finish(true, errorMessage as String?)
                 }

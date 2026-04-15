@@ -47,6 +47,97 @@ nonisolated enum FanControlMode: String, CaseIterable {
     nonisolated var usesManualSlider: Bool { self == .manual }
     nonisolated var isManagedProfile: Bool { self != .manual && self != .automatic }
     nonisolated var requiresPrivilegedHelper: Bool { self != .automatic }
+
+    nonisolated var guidance: FanModeGuidance {
+        switch self {
+        case .smart:
+            return FanModeGuidance(
+                summary: "Blends the hottest CPU or GPU reading with system watt draw and keeps adjusting while Core Monitor runs.",
+                detail: "Best daily default for sustained mixed workloads that need extra cooling before throttling shows up.",
+                ownership: .coreMonitor,
+                requiresHelper: true,
+                restoresSystemAutomaticOnExit: true,
+                showsAppleSiliconDelayedResponseNote: true
+            )
+        case .silent:
+            return FanModeGuidance(
+                summary: "Leaves the firmware curve in charge instead of holding a custom RPM target.",
+                detail: "Best when you want monitoring and alerts without an ongoing fan override.",
+                ownership: .system,
+                requiresHelper: true,
+                restoresSystemAutomaticOnExit: false,
+                showsAppleSiliconDelayedResponseNote: false
+            )
+        case .balanced:
+            return FanModeGuidance(
+                summary: "Pins every controllable fan close to 60% of its reported maximum.",
+                detail: "Useful for longer compile, render, and emulator sessions where steady cooling matters more than acoustics.",
+                ownership: .coreMonitor,
+                requiresHelper: true,
+                restoresSystemAutomaticOnExit: true,
+                showsAppleSiliconDelayedResponseNote: true
+            )
+        case .performance:
+            return FanModeGuidance(
+                summary: "Pins every controllable fan close to 85% for aggressive sustained cooling.",
+                detail: "Good for heavy GPU or all-core work when you want lower temperatures without going full blast.",
+                ownership: .coreMonitor,
+                requiresHelper: true,
+                restoresSystemAutomaticOnExit: true,
+                showsAppleSiliconDelayedResponseNote: true
+            )
+        case .max:
+            return FanModeGuidance(
+                summary: "Pins every controllable fan at the reported maximum RPM.",
+                detail: "Use only when you want the strongest possible cooling and do not care about noise.",
+                ownership: .coreMonitor,
+                requiresHelper: true,
+                restoresSystemAutomaticOnExit: true,
+                showsAppleSiliconDelayedResponseNote: true
+            )
+        case .manual:
+            return FanModeGuidance(
+                summary: "Writes one fixed RPM target across every controllable fan until you reset or quit.",
+                detail: "Best for short debugging sessions when you know the exact airflow target you want.",
+                ownership: .coreMonitor,
+                requiresHelper: true,
+                restoresSystemAutomaticOnExit: true,
+                showsAppleSiliconDelayedResponseNote: true
+            )
+        case .custom:
+            return FanModeGuidance(
+                summary: "Follows your saved temperature curve with optional power-based boost and smoothing.",
+                detail: "Best when you want repeatable ramp behavior that matches one machine and one workload profile.",
+                ownership: .coreMonitor,
+                requiresHelper: true,
+                restoresSystemAutomaticOnExit: true,
+                showsAppleSiliconDelayedResponseNote: true
+            )
+        case .automatic:
+            return FanModeGuidance(
+                summary: "Restores every fan to the firmware's automatic curve.",
+                detail: "Use this any time you want macOS to own cooling again immediately.",
+                ownership: .system,
+                requiresHelper: false,
+                restoresSystemAutomaticOnExit: false,
+                showsAppleSiliconDelayedResponseNote: false
+            )
+        }
+    }
+}
+
+nonisolated enum FanControlOwnership: Equatable {
+    case system
+    case coreMonitor
+}
+
+nonisolated struct FanModeGuidance: Equatable {
+    let summary: String
+    let detail: String
+    let ownership: FanControlOwnership
+    let requiresHelper: Bool
+    let restoresSystemAutomaticOnExit: Bool
+    let showsAppleSiliconDelayedResponseNote: Bool
 }
 
 // MARK: - Custom Fan Preset Model
@@ -311,6 +402,21 @@ final class FanController: ObservableObject {
     }
 
     // MARK: - Public API
+
+    /// Best-effort shutdown cleanup so managed fan targets do not outlive the app process.
+    func restoreSystemAutomaticOnTermination() {
+        stopControlLoop()
+
+        guard mode != .automatic else { return }
+        guard helperManager.isInstalled else { return }
+
+        let fanCount = resolvedFanCount()
+        guard fanCount > 0 else { return }
+
+        for fanID in 0..<fanCount {
+            _ = helperManager.executeIfInstalled(arguments: ["auto", "\(fanID)"], timeout: 1.0)
+        }
+    }
 
     func setMode(_ mode: FanControlMode) {
         if mode.requiresPrivilegedHelper {

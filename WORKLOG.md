@@ -119,3 +119,8 @@
 - Upgraded the in-app Help search from title-only matching to a lightweight keyword index so common support queries like helper, location, weather, alerts, and login items now resolve to the right sections.
 - Added a clearer search UX with result counts, a one-click clear action, and an empty-state card instead of leaving users with a blank scroll view when no topic matches.
 - Added dedicated `HelpViewSearchTests` coverage and re-verified the full macOS suite with `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test`.
+
+### Completed batch
+- Closed a trust-critical fan-control gap by making app shutdown perform a best-effort return-to-system-auto pass instead of leaving managed RPM targets active until macOS eventually overrides them.
+- Added an in-app fan-mode guidance card so each mode now explains who owns the fan curve, whether the helper path is required, when Core Monitor restores system auto, and when Apple Silicon may delay visible RPM changes.
+- Updated the README and in-app Help to match the real control model, then added regression coverage for the new fan-mode guidance metadata.
