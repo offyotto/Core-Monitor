@@ -363,9 +363,9 @@ private struct MonitoringTrendSection: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Thermal Trends")
+                    Text("Load & Thermal Trends")
                         .font(.system(size: 18, weight: .bold))
-                    Text("Recent CPU, GPU, fan, and system watt history without leaving the dashboard.")
+                    Text("Recent CPU, GPU, fan, power, memory, and swap history without leaving the dashboard.")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -413,6 +413,24 @@ private struct MonitoringTrendSection: View {
                     color: .purple,
                     summary: systemMonitor.totalPowerTrend.summary(for: selectedRange),
                     values: systemMonitor.totalPowerTrend.values(for: selectedRange),
+                    rangeTitle: selectedRange.title,
+                    formatter: { String(format: "%.1f", $0) }
+                )
+                MonitoringTrendCard(
+                    title: "Memory Use",
+                    unit: "%",
+                    color: .green,
+                    summary: systemMonitor.memoryUsageTrend.summary(for: selectedRange),
+                    values: systemMonitor.memoryUsageTrend.values(for: selectedRange),
+                    rangeTitle: selectedRange.title,
+                    formatter: { "\(Int($0.rounded()))" }
+                )
+                MonitoringTrendCard(
+                    title: "Swap Used",
+                    unit: " GB",
+                    color: Color(red: 0.97, green: 0.42, blue: 0.72),
+                    summary: systemMonitor.swapUsedTrend.summary(for: selectedRange),
+                    values: systemMonitor.swapUsedTrend.values(for: selectedRange),
                     rangeTitle: selectedRange.title,
                     formatter: { String(format: "%.1f", $0) }
                 )

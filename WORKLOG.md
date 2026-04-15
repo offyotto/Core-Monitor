@@ -124,3 +124,7 @@
 - Closed a trust-critical fan-control gap by making app shutdown perform a best-effort return-to-system-auto pass instead of leaving managed RPM targets active until macOS eventually overrides them.
 - Added an in-app fan-mode guidance card so each mode now explains who owns the fan curve, whether the helper path is required, when Core Monitor restores system auto, and when Apple Silicon may delay visible RPM changes.
 - Updated the README and in-app Help to match the real control model, then added regression coverage for the new fan-mode guidance metadata.
+
+### Completed batch
+- Expanded the overview trend surface beyond thermals so it now includes time-range memory usage and swap history alongside CPU, GPU, fan, and power trends.
+- Renamed the section to `Load & Thermal Trends` so the dashboard wording matches the broader sustained-load story instead of implying it is temperature-only.
