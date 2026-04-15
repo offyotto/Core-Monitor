@@ -534,6 +534,85 @@ private struct FanControlConflictNotice: View {
     }
 }
 
+private struct FanHelperStatusCard: View {
+    @ObservedObject private var helperManager = SMCHelperManager.shared
+    let hasFans: Bool
+
+    private var statusColor: Color {
+        if helperManager.isInstalled && hasFans {
+            return .green
+        }
+        return .orange
+    }
+
+    private var statusLabel: String {
+        if helperManager.isInstalled && hasFans {
+            return "Ready"
+        }
+        if helperManager.isInstalled {
+            return "No Fans"
+        }
+        return "Install Required"
+    }
+
+    var body: some View {
+        DarkCard(padding: 14) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Privileged Helper")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text(helperDescription)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 12)
+                    if helperManager.isInstalled {
+                        Text(statusLabel)
+                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                            .foregroundStyle(statusColor)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(statusColor.opacity(0.12))
+                            .clipShape(Capsule())
+                    } else {
+                        Button("Install Helper") {
+                            helperManager.installFromApp()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                    }
+                }
+
+                if let statusMessage = helperManager.statusMessage, !statusMessage.isEmpty {
+                    Text(statusMessage)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(statusMessage == "Privileged helper installed. Fan control is ready." ? .green : .orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Text(hasFans
+                    ? "Core Monitor only writes RPM targets inside each fan's reported minimum and maximum range. Use System Auto to return control to macOS."
+                    : "This Mac did not expose any controllable fans, so monitoring will work but fan control will stay unavailable.")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .onAppear {
+            helperManager.refreshStatus()
+        }
+    }
+
+    private var helperDescription: String {
+        if helperManager.isInstalled {
+            return "Installed. Smart, Manual, Custom, and fixed fan profiles can talk to the local privileged helper on supported Macs."
+        }
+        return "Required for Smart, Silent, Balanced, Performance, Max, Manual, and Custom fan control. Monitoring works without it."
+    }
+}
+
 // MARK: - Fan control panel
 private struct FanControlPanel: View {
     struct Snapshot { var fanSpeeds: [Int] = []; var fanMinSpeeds: [Int] = []; var fanMaxSpeeds: [Int] = [] }
@@ -543,6 +622,7 @@ private struct FanControlPanel: View {
 
     var body: some View {
         VStack(spacing: 10) {
+            FanHelperStatusCard(hasFans: snapshot.fanSpeeds.isEmpty == false)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(FanControlMode.quickModes, id: \.self) { mode in
@@ -627,7 +707,7 @@ private struct FanControlPanel: View {
                             Button {
                                 showCustomEditor = true
                             } label: {
-                                Label("Open Code Editor", systemImage: "chevron.left.forwardslash.chevron.right")
+                                Label("Edit Curve JSON", systemImage: "chevron.left.forwardslash.chevron.right")
                                     .font(.system(size: 12, weight: .medium))
                                     .frame(maxWidth: .infinity)
                             }
@@ -664,7 +744,7 @@ private struct FanControlPanel: View {
                     } else {
                         Image(systemName: "magnifyingglass")
                     }
-                    Text(fanController.isCalibrating ? fanController.calibrationStatus : "Probe Fan Keys")
+                    Text(fanController.isCalibrating ? fanController.calibrationStatus : "Scan Fan Keys")
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
                 }
@@ -678,7 +758,12 @@ private struct FanControlPanel: View {
             .buttonStyle(SoftPressButtonStyle())
             .disabled(fanController.isCalibrating)
 
-            if !fanController.calibrationStatus.isEmpty, fanController.calibrationStatus != "No fan probe run yet." {
+            Text("Fan key scans are diagnostic only. They confirm which fan-related SMC keys respond on this Mac; they do not calibrate RPM accuracy or guarantee every preset is safe.")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            if !fanController.calibrationStatus.isEmpty, fanController.calibrationStatus != "No fan key scan run yet." {
                 Text(fanController.calibrationStatus)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
@@ -721,9 +806,9 @@ private struct CustomFanPresetEditorSheet: View {
         VStack(spacing: 14) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Custom Fan Preset")
+                    Text("Custom Fan Curve")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
-                    Text("Write JSON, validate it, then save. Saved presets apply immediately while Custom mode is active.")
+                    Text("Edit the JSON preset, validate it, then save. Core Monitor only applies it while Custom mode is active.")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -738,7 +823,7 @@ private struct CustomFanPresetEditorSheet: View {
                     messages = ["Loaded the starter template."]
                     hasError = false
                 } label: {
-                    Label("Reset to Template", systemImage: "doc.badge.plus")
+                    Label("Load Template", systemImage: "doc.badge.plus")
                 }
 
                 Button {
@@ -746,7 +831,7 @@ private struct CustomFanPresetEditorSheet: View {
                     hasError = !validation.isEmpty
                     messages = validation.isEmpty ? ["Preset looks valid. Save it to apply the new curve."] : validation
                 } label: {
-                    Label("Validate", systemImage: "checkmark.shield")
+                    Label("Validate JSON", systemImage: "checkmark.shield")
                 }
 
                 Button {
@@ -776,7 +861,7 @@ private struct CustomFanPresetEditorSheet: View {
                         hasError = true
                     }
                 } label: {
-                    Label("Save & Apply", systemImage: "arrow.down.circle.fill")
+                    Label("Save & Use", systemImage: "arrow.down.circle.fill")
                 }
                 .buttonStyle(.borderedProminent)
             }
@@ -805,7 +890,7 @@ private struct CustomFanPresetEditorSheet: View {
                     .font(.system(size: 11, weight: .bold, design: .rounded))
                     .foregroundStyle(.secondary)
                 if messages.isEmpty {
-                    Text("No validation output yet. Smash Validate first so the app can yell at the JSON before the helper ever touches anything.")
+                    Text("No validation results yet. Validate the JSON before saving so Core Monitor can catch structural errors before it tries to apply the curve.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
                 } else {

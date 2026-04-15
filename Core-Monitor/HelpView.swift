@@ -47,14 +47,14 @@ struct HelpView: View {
                 }
             )),
             HelpSection(id: "fans", title: "Fans & Fan Control", icon: "fanblades.fill", content: AnyView(
-                HelpCard {
-                    Text("Manage your Mac’s fans with advanced controls and profiles.")
-                    HelpBullet(text: "Fan profiles allow custom curves, manual speed settings, or automatic fan speed management.")
-                    HelpBullet(text: "The helper tool must be installed to enable fan control functionality.")
-                    HelpBullet(text: "The `Probe Fan Keys` action checks which fan-related SMC keys respond on the current Mac. It does not calibrate RPM accuracy.")
-                    HelpBullet(text: "Safety features prevent unsafe fan speeds and protect hardware integrity.")
-                    Text("Use the `Fans` tab to switch profiles or adjust settings.")
-                        .font(.subheadline)
+                    HelpCard {
+                        Text("Manage your Mac’s fans with advanced controls and profiles.")
+                        HelpBullet(text: "Fan profiles allow custom curves, manual speed settings, or automatic fan speed management.")
+                        HelpBullet(text: "The helper tool must be installed to enable fan control functionality.")
+                        HelpBullet(text: "The `Scan Fan Keys` action checks which fan-related SMC keys respond on the current Mac. It does not calibrate RPM accuracy.")
+                        HelpBullet(text: "Safety features prevent unsafe fan speeds and protect hardware integrity.")
+                        Text("Use the `Fans` tab to switch profiles or adjust settings.")
+                            .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
             )),
@@ -106,6 +106,7 @@ struct HelpView: View {
             HelpSection(id: "weather", title: "Weather Permission Tips", icon: "cloud.sun.rain.fill", content: AnyView(
                 HelpCard {
                     Text("Core Monitor uses WeatherKit data which may require location permission.")
+                    HelpBullet(text: "Core Monitor only requests location after the live weather widget is shown.")
                     HelpBullet(text: "Grant Core Monitor access to your location in System Settings → Privacy & Security → Location Services.")
                     HelpBullet(text: "If weather data fails to load, ensure WeatherKit is enabled for your signed build.")
                 }
@@ -122,7 +123,7 @@ struct HelpView: View {
                     Text("Common issues and solutions:")
                         .fontWeight(.semibold)
                     HelpBullet(text: "If sensors are missing, restart Core Monitor and verify SMC access.")
-                    HelpBullet(text: "Fan control not working? Ensure the helper is installed, reset to system auto, then run `Probe Fan Keys` to confirm readable fan SMC keys.")
+                    HelpBullet(text: "Fan control not working? Ensure the helper is installed, reset to system auto, then run `Scan Fan Keys` to confirm readable fan SMC keys.")
                     HelpBullet(text: "Weather unavailable? Check location permissions and WeatherKit configuration.")
                     HelpBullet(text: "Login item requires approval — open System Settings → General → Login Items.")
                     HelpBullet(text: "Touch Bar clipping — reduce active items or apply a narrower preset.")
@@ -273,7 +274,7 @@ struct HelpView: View {
                 HStack(spacing: 24) {
                     Link("GitHub Issues", destination: URL(string: "https://github.com/offyotto-sl3/Core-Monitor/issues")!)
                     Link("Official Website", destination: URL(string: "https://offyotto-sl3.github.io/Core-Monitor/")!)
-                    Link("Privacy Policy", destination: URL(string: "https://github.com/offyotto-sl3/Core-Monitor/")!)
+                    Link("Security Policy", destination: URL(string: "https://github.com/offyotto-sl3/Core-Monitor/blob/main/SECURITY.md")!)
                 }
                 .font(.footnote)
                 .foregroundColor(.accentColor)

@@ -54,7 +54,6 @@ final class CoreMonTouchBarController: NSObject {
         if ownsSystemMonitor {
             systemMonitor.startMonitoring()
         }
-        weatherViewModel.start()
         refreshViews()
     }
 
@@ -114,6 +113,9 @@ final class CoreMonTouchBarController: NSObject {
         touchBar.defaultItemIdentifiers = identifiers
         touchBar.principalItemIdentifier = nil
         applyThemeToCachedWidgets(customization.theme)
+        if customization.items.contains(where: { $0.builtInKind == .weather }) == false {
+            weatherViewModel.stop()
+        }
     }
 
     private func refreshViews() {
@@ -329,6 +331,9 @@ extension CoreMonTouchBarController: NSTouchBarDelegate {
                 widgets: widgets,
                 theme: currentTheme()
            ) {
+            if configuration.builtInKind == .weather {
+                weatherViewModel.start()
+            }
             cachedItems[identifier] = item
             if let widgetItem = item as? PKWidgetTouchBarItem {
                 configure(widgetItem)

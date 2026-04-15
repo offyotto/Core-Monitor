@@ -46,6 +46,7 @@ enum FanControlMode: String, CaseIterable {
 
     var usesManualSlider: Bool { self == .manual }
     var isManagedProfile: Bool { self != .manual && self != .automatic }
+    var requiresPrivilegedHelper: Bool { self != .automatic }
 }
 
 // MARK: - Custom Fan Preset Model
@@ -200,7 +201,7 @@ final class FanController: ObservableObject {
     @Published var autoAggressiveness: Double = 1.5
     @Published var autoMaxSpeed: Int = 6500
     @Published var statusMessage: String = "Idle"
-    @Published var calibrationStatus: String = "No fan probe run yet."
+    @Published var calibrationStatus: String = "No fan key scan run yet."
     @Published var isCalibrating: Bool = false
     @Published var customPresetSource: String = FanController.defaultCustomPresetSource
     @Published var customPresetStatus: String = "No custom preset saved yet."
@@ -266,6 +267,9 @@ final class FanController: ObservableObject {
     // MARK: - Public API
 
     func setMode(_ mode: FanControlMode) {
+        if mode.requiresPrivilegedHelper {
+            guard canActivatePrivilegedMode() else { return }
+        }
         self.mode = mode
         lastAppliedSpeed = 0
         saveSettings()
@@ -415,6 +419,9 @@ final class FanController: ObservableObject {
                 allSuccess = false
             }
         }
+        if allSuccess {
+            SMCTamperDetector.shared.refreshBaseline()
+        }
         statusMessage = allSuccess ? "System automatic control restored" : "Failed to restore automatic control"
     }
 
@@ -427,7 +434,7 @@ final class FanController: ObservableObject {
 
         let keys = fanCalibrationCandidateKeys()
         isCalibrating = true
-        calibrationStatus = "Probing fan-related SMC keys 0/\(keys.count)"
+        calibrationStatus = "Scanning fan-related SMC keys 0/\(keys.count)"
 
         Task { @MainActor [weak self] in
             guard let self else { return }
@@ -439,7 +446,7 @@ final class FanController: ObservableObject {
                 }
 
                 let completed = index + 1
-                calibrationStatus = "Probing fan-related SMC keys \(completed)/\(keys.count) - \(responsiveKeys.count) responsive"
+                calibrationStatus = "Scanning fan-related SMC keys \(completed)/\(keys.count) - \(responsiveKeys.count) responsive"
                 if completed % 8 == 0 {
                     await Task.yield()
                 }
@@ -447,8 +454,8 @@ final class FanController: ObservableObject {
 
             let preview = responsiveKeys.prefix(10).joined(separator: ", ")
             calibrationStatus = responsiveKeys.isEmpty
-                ? "Fan key probe finished: 0/\(keys.count) keys responded"
-                : "Fan key probe finished: \(responsiveKeys.count)/\(keys.count) keys responded - \(preview)"
+                ? "Fan key scan finished: 0/\(keys.count) keys responded"
+                : "Fan key scan finished: \(responsiveKeys.count)/\(keys.count) keys responded - \(preview)"
             statusMessage = calibrationStatus
             isCalibrating = false
         }
@@ -714,12 +721,22 @@ final class FanController: ObservableObject {
         }
 
         if allSuccess {
+            SMCTamperDetector.shared.refreshBaseline()
             statusMessage = successMessage ?? "Applied fan speeds"
         } else {
             statusMessage = "Failed to apply fan speed"
         }
 
         return allSuccess
+    }
+
+    private func canActivatePrivilegedMode() -> Bool {
+        guard ensureHelperInstalledIfNeeded() else { return false }
+        guard resolvedFanCount() > 0 else {
+            statusMessage = helperUnavailableMessage()
+            return false
+        }
+        return true
     }
 
     // MARK: - Helper Execution

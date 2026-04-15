@@ -365,7 +365,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 13100;
+				CURRENT_PROJECT_VERSION = 13200;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 6VDP675K4L;
 				ENABLE_APP_SANDBOX = NO;
@@ -382,7 +382,7 @@
 					"@executable_path/../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MARKETING_VERSION = 13.1;
+				MARKETING_VERSION = 13.2;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "CoreTools.Core-Monitor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -414,7 +414,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 13100;
+				CURRENT_PROJECT_VERSION = 13200;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 6VDP675K4L;
 				ENABLE_APP_SANDBOX = NO;
@@ -431,7 +431,7 @@
 					"@executable_path/../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MARKETING_VERSION = 13.1;
+				MARKETING_VERSION = 13.2;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "CoreTools.Core-Monitor";
 				PRODUCT_NAME = "$(TARGET_NAME)";

@@ -265,4 +265,18 @@ final class SMCHelperManager: ObservableObject {
             completion(false, message)
         }
     }
+
+    func installFromApp() {
+        installBundledHelper { [weak self] success, message in
+            guard let self else { return }
+            if success {
+                hasAttemptedBlessInstall = false
+                refreshStatus()
+                statusMessage = "Privileged helper installed. Fan control is ready."
+            } else {
+                refreshStatus()
+                statusMessage = message ?? "Failed to install privileged helper."
+            }
+        }
+    }
 }
