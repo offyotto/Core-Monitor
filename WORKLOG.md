@@ -95,3 +95,8 @@
 ### Completed batch
 - Refreshed the competitor matrix with current-source notes on Stats, iStat Menus 7, TG Pro, Macs Fan Control, plus open-source reference points including Hot, iGlance, and iSMC.
 - Tightened the README’s positioning so the repo is explicit about which product lane Core Monitor is choosing instead of implying it will beat every utility on every axis.
+
+### Completed batch
+- Collapsed `SystemMonitor` onto its published `snapshot` instead of maintaining a second parallel set of mutable top-level telemetry fields, removing the manual `objectWillChange` broadcast on every sample.
+- Switched the dashboard refresh path to observe `systemMonitor.$snapshot` directly so the main SwiftUI surface now follows the same source of truth already used by alerts and history/trend logic.
+- Verified the batch with a fresh macOS build and full `xcodebuild ... test` pass.

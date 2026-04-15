@@ -120,49 +120,49 @@ final class SystemMonitor: ObservableObject {
         }
     }
 
-    var cpuTemperature: Double?
-    var gpuTemperature: Double?
-    var fanSpeeds: [Int] = []
-    var fanMinSpeeds: [Int] = []
-    var fanMaxSpeeds: [Int] = []
-    @Published var numberOfFans: Int = 0
-    var cpuUsagePercent: Double = 0
-    var performanceCoreUsagePercent: Double?
-    var efficiencyCoreUsagePercent: Double?
-    @Published var hasSMCAccess: Bool = false
-    @Published var lastError: String?
+    @Published private(set) var snapshot = SystemMonitorSnapshot.empty
 
-    var batteryInfo = BatteryInfo()
-    var totalSystemWatts: Double?
-    var memoryUsagePercent: Double = 0
-    var memoryUsedGB: Double = 0
-    var totalMemoryGB: Double = 0
-    var memoryPressure: MemoryPressureLevel = .green
-    var appMemoryGB: Double = 0
-    var wiredMemoryGB: Double = 0
-    var compressedMemoryGB: Double = 0
-    var freeMemoryGB: Double = 0
-    var pageInsBytes: UInt64 = 0
-    var pageOutsBytes: UInt64 = 0
-    var swapUsedBytes: UInt64 = 0
-    var swapTotalBytes: UInt64 = 0
+    var cpuTemperature: Double? { snapshot.cpuTemperature }
+    var gpuTemperature: Double? { snapshot.gpuTemperature }
+    var fanSpeeds: [Int] { snapshot.fanSpeeds }
+    var fanMinSpeeds: [Int] { snapshot.fanMinSpeeds }
+    var fanMaxSpeeds: [Int] { snapshot.fanMaxSpeeds }
+    var numberOfFans: Int { snapshot.numberOfFans }
+    var cpuUsagePercent: Double { snapshot.cpuUsagePercent }
+    var performanceCoreUsagePercent: Double? { snapshot.performanceCoreUsagePercent }
+    var efficiencyCoreUsagePercent: Double? { snapshot.efficiencyCoreUsagePercent }
+    var hasSMCAccess: Bool { snapshot.hasSMCAccess }
+    var lastError: String? { snapshot.lastError }
+    var batteryInfo: BatteryInfo { snapshot.batteryInfo }
+    var totalSystemWatts: Double? { snapshot.totalSystemWatts }
+    var memoryUsagePercent: Double { snapshot.memoryUsagePercent }
+    var memoryUsedGB: Double { snapshot.memoryUsedGB }
+    var totalMemoryGB: Double { snapshot.totalMemoryGB }
+    var memoryPressure: MemoryPressureLevel { snapshot.memoryPressure }
+    var appMemoryGB: Double { snapshot.appMemoryGB }
+    var wiredMemoryGB: Double { snapshot.wiredMemoryGB }
+    var compressedMemoryGB: Double { snapshot.compressedMemoryGB }
+    var freeMemoryGB: Double { snapshot.freeMemoryGB }
+    var pageInsBytes: UInt64 { snapshot.pageInsBytes }
+    var pageOutsBytes: UInt64 { snapshot.pageOutsBytes }
+    var swapUsedBytes: UInt64 { snapshot.swapUsedBytes }
+    var swapTotalBytes: UInt64 { snapshot.swapTotalBytes }
 
-    // System volume and display brightness (0–1), polled each cycle
-    var currentVolume:     Float = 0.5
-    var currentBrightness: Float = 1.0
+    // System volume and display brightness (0–1), polled each cycle.
+    var currentVolume: Float { snapshot.currentVolume }
+    var currentBrightness: Float { snapshot.currentBrightness }
 
-    // NEW: extended sensor data
-    var diskStats = DiskStats()
-    var cpuPowerWatts: Double?
-    var gpuPowerWatts: Double?
-    var ssdTemperature: Double?
+    var diskStats: DiskStats { snapshot.diskStats }
+    var cpuPowerWatts: Double? { snapshot.cpuPowerWatts }
+    var gpuPowerWatts: Double? { snapshot.gpuPowerWatts }
+    var ssdTemperature: Double? { snapshot.ssdTemperature }
 
     // MARK: - Network throughput (bytes/sec since last sample)
     struct NetworkStats {
         var uploadBytesPerSec:   Double = 0
         var downloadBytesPerSec: Double = 0
     }
-    private(set) var networkStats = NetworkStats()
+    var networkStats: NetworkStats { snapshot.networkStats }
     private var previousNetworkBytes: (sent: UInt64, received: UInt64) = (0, 0)
     private var previousNetworkTime: Date = Date()
 
@@ -174,8 +174,7 @@ final class SystemMonitor: ObservableObject {
     private(set) var gpuTemperatureTrend = MonitoringTrendSeries()
     private(set) var totalPowerTrend = MonitoringTrendSeries()
     private(set) var primaryFanSpeedTrend = MonitoringTrendSeries()
-    @Published private(set) var snapshot = SystemMonitorSnapshot.empty
-    @Published private(set) var thermalState: ProcessInfo.ThermalState = .nominal
+    var thermalState: ProcessInfo.ThermalState { snapshot.thermalState }
     private let activitySampler = TopProcessSampler()
 
     static var isAppleSilicon: Bool {
@@ -267,9 +266,7 @@ final class SystemMonitor: ObservableObject {
     private let maxFanProbeCount = 12
 
     init() {
-        hasSMCAccess = openSMCConnection()
-        snapshot.hasSMCAccess = hasSMCAccess
-        snapshot.lastError = lastError
+        _ = openSMCConnection()
         activitySampler.onUpdate = { [weak self] topProcesses in
             self?.updateTopProcesses(topProcesses)
         }
@@ -342,17 +339,15 @@ final class SystemMonitor: ObservableObject {
 
     private func openSMCConnection() -> Bool {
         if smcConnection != 0 {
-            hasSMCAccess = true
             snapshot.hasSMCAccess = true
+            snapshot.lastError = nil
             return true
         }
 
         let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleSMC"))
         guard service != 0 else {
-            hasSMCAccess = false
-            lastError = "AppleSMC service not found"
             snapshot.hasSMCAccess = false
-            snapshot.lastError = lastError
+            snapshot.lastError = "AppleSMC service not found"
             return false
         }
 
@@ -360,17 +355,13 @@ final class SystemMonitor: ObservableObject {
 
         let result = IOServiceOpen(service, mach_task_self_, 0, &smcConnection)
         if result == kIOReturnSuccess {
-            hasSMCAccess = true
-            lastError = nil
             snapshot.hasSMCAccess = true
             snapshot.lastError = nil
             return true
         }
 
-        hasSMCAccess = false
-        lastError = "Failed to open SMC connection (\(result))"
         snapshot.hasSMCAccess = false
-        snapshot.lastError = lastError
+        snapshot.lastError = "Failed to open SMC connection (\(result))"
         return false
     }
 
@@ -383,7 +374,6 @@ final class SystemMonitor: ObservableObject {
 
     private func detectFans() {
         if let directCount = readSMCValue(key: "FNum").map(Int.init), directCount > 0 {
-            numberOfFans = directCount
             snapshot.numberOfFans = directCount
             return
         }
@@ -399,7 +389,6 @@ final class SystemMonitor: ObservableObject {
                 count = i + 1
             }
         }
-        numberOfFans = count
         snapshot.numberOfFans = count
     }
 
@@ -464,42 +453,9 @@ final class SystemMonitor: ObservableObject {
 
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                self.objectWillChange.send()
-                self.cpuTemperature = snapshot.cpuTemperature
-                self.gpuTemperature = snapshot.gpuTemperature
-                self.fanSpeeds = snapshot.fanSpeeds
-                self.fanMinSpeeds = snapshot.fanMinSpeeds
-                self.fanMaxSpeeds = snapshot.fanMaxSpeeds
-                self.cpuUsagePercent = snapshot.cpuUsagePercent
-                self.performanceCoreUsagePercent = snapshot.performanceCoreUsagePercent
-                self.efficiencyCoreUsagePercent = snapshot.efficiencyCoreUsagePercent
-                self.memoryUsagePercent = snapshot.memoryUsagePercent
-                self.memoryUsedGB = snapshot.memoryUsedGB
-                self.totalMemoryGB = snapshot.totalMemoryGB
-                self.memoryPressure = snapshot.memoryPressure
-                self.appMemoryGB = snapshot.appMemoryGB
-                self.wiredMemoryGB = snapshot.wiredMemoryGB
-                self.compressedMemoryGB = snapshot.compressedMemoryGB
-                self.freeMemoryGB = snapshot.freeMemoryGB
-                self.pageInsBytes = snapshot.pageInsBytes
-                self.pageOutsBytes = snapshot.pageOutsBytes
-                self.swapUsedBytes = snapshot.swapUsedBytes
-                self.swapTotalBytes = snapshot.swapTotalBytes
-                self.batteryInfo = snapshot.batteryInfo
-                self.totalSystemWatts = snapshot.totalSystemWatts
-                self.currentVolume = snapshot.currentVolume
-                self.currentBrightness = snapshot.currentBrightness
-                // New properties
-                self.diskStats = snapshot.diskStats
-                self.cpuPowerWatts = snapshot.cpuPowerWatts
-                self.gpuPowerWatts = snapshot.gpuPowerWatts
-                self.ssdTemperature = snapshot.ssdTemperature
-                self.networkStats = snapshot.networkStats
-                self.thermalState = snapshot.thermalState
                 snapshot.hasSMCAccess = self.hasSMCAccess
                 snapshot.lastError = self.lastError
-                self.snapshot = snapshot
-                // Update history buffers
+
                 self.cpuHistory.removeFirst()
                 self.cpuHistory.append(snapshot.cpuUsagePercent)
                 self.memHistory.removeFirst()
@@ -512,6 +468,7 @@ final class SystemMonitor: ObservableObject {
                 self.gpuTemperatureTrend.append(snapshot.gpuTemperature, at: sampleTimestamp)
                 self.totalPowerTrend.append(snapshot.totalSystemWatts.map(abs), at: sampleTimestamp)
                 self.primaryFanSpeedTrend.append(snapshot.fanSpeeds.first.map(Double.init), at: sampleTimestamp)
+                self.snapshot = snapshot
 
                 self.isSampling = false
                 NotificationCenter.default.post(name: .systemMonitorDidUpdate, object: self)
