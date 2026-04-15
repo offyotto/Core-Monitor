@@ -177,6 +177,7 @@ final class WeatherViewModel: ObservableObject {
     private let provider: WeatherProviding
     private let locationManager = CLLocationManager()
     private var refreshTask: Task<Void, Never>?
+    private var isRunning = false
 
     /// Refresh interval in seconds (default 10 min)
     var refreshInterval: TimeInterval = 600
@@ -186,13 +187,18 @@ final class WeatherViewModel: ObservableObject {
     }
 
     func start() {
+        guard !isRunning else { return }
+        isRunning = true
         locationManager.requestWhenInUseAuthorization()
         scheduleRefresh()
     }
 
     func stop() {
+        guard isRunning else { return }
+        isRunning = false
         refreshTask?.cancel()
         refreshTask = nil
+        state = .idle
     }
 
     // MARK: Private

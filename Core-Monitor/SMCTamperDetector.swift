@@ -86,6 +86,11 @@ final class SMCTamperDetector: ObservableObject {
         }
     }
 
+    func refreshBaseline() {
+        baselineModes = captureFanModes()
+        inspect()
+    }
+
     private func knownFanControlApplications() -> [NSRunningApplication] {
         let names = [
             "Macs Fan Control",
