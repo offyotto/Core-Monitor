@@ -37,6 +37,7 @@ struct Core_MonitorApp: App {
                         menuBarController = MenuBarController(
                             systemMonitor:    coordinator.systemMonitor,
                             fanController:    coordinator.fanController,
+                            alertManager:     coordinator.alertManager,
                             openDashboardAction: openDashboard,
                             restoreAppTouchBarAction: coordinator.revertToAppTouchBar,
                             revertTouchBarAction: coordinator.revertToSystemTouchBar
@@ -61,6 +62,7 @@ struct Core_MonitorApp: App {
         ContentView(
             systemMonitor:    coordinator.systemMonitor,
             fanController:    coordinator.fanController,
+            alertManager:     coordinator.alertManager,
             startupManager:   startupManager
         )
         .frame(minWidth: 820, minHeight: 560)

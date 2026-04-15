@@ -14,9 +14,9 @@
     <string>BNDL</string>
     <key>CFBundleVersion</key>
     <string>$(CURRENT_PROJECT_VERSION)</string>
-    <key>SMAuthorizedClients</key>
-    <array>
-        <string>identifier "CoreTools.Core-Monitor" and anchor apple generic and certificate leaf[subject.OU] = "6VDP675K4L"</string>
-    </array>
+	<key>SMAuthorizedClients</key>
+	<array>
+		<string>identifier "$(CORE_MONITOR_APP_BUNDLE_IDENTIFIER)" and anchor apple generic and certificate leaf[subject.OU] = "$(DEVELOPMENT_TEAM)"</string>
+	</array>
 </dict>
 </plist>

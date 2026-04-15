@@ -7,6 +7,7 @@ import Foundation
 final class AppCoordinator: ObservableObject {
     let systemMonitor: SystemMonitor
     let fanController: FanController
+    let alertManager: AlertManager
 
     private let touchBarPresenter = TouchBarPrivatePresenter()
 
@@ -21,8 +22,10 @@ final class AppCoordinator: ObservableObject {
 
     init() {
         let monitor = SystemMonitor()
+        let fanController = FanController(systemMonitor: monitor)
         self.systemMonitor = monitor
-        self.fanController = FanController(systemMonitor: monitor)
+        self.fanController = fanController
+        self.alertManager = AlertManager(systemMonitor: monitor, fanController: fanController)
 
         // Build controller with the live monitor so MEM/CPU/BAT bars are populated
         self.coreMonTouchBarController = CoreMonTouchBarController(
@@ -172,4 +175,3 @@ final class AppCoordinator: ObservableObject {
         customizationSettings.presentationMode
     }
 }
-

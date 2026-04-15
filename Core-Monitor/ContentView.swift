@@ -301,13 +301,26 @@ private struct MetricTile: View {
     let color: Color
     var gauge: Double = 0
     var history: [Double] = []
+    var badgeText: String?
+    var badgeColor: Color?
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(label)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Color.white.opacity(0.72))
+                    HStack(spacing: 8) {
+                        Text(label)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Color.white.opacity(0.72))
+                        if let badgeText, let badgeColor {
+                            Text(badgeText.uppercased())
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(badgeColor)
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 4)
+                                .background(badgeColor.opacity(0.16))
+                                .clipShape(Capsule())
+                        }
+                    }
                     HStack(alignment: .lastTextBaseline, spacing: 5) {
                         Text(value)
                             .font(.system(size: 36, weight: .bold, design: .rounded))
@@ -696,6 +709,16 @@ private struct FanControlPanel: View {
                             .lineLimit(2)
                             .textSelection(.enabled)
 
+                        let preset = fanController.currentCustomPresetDraft()
+                        HStack(spacing: 10) {
+                            fanSummaryPill(preset.sensor.title)
+                            fanSummaryPill("\(preset.sortedPoints.count) points")
+                            fanSummaryPill(String(format: "%.1fs", preset.updateIntervalSeconds ?? 2.0))
+                        }
+
+                        FanCurvePreview(preset: preset)
+                            .frame(height: 150)
+
                         if let error = fanController.customPresetLastError, !error.isEmpty {
                             Text(error)
                                 .font(.system(size: 11, weight: .medium))
@@ -707,7 +730,7 @@ private struct FanControlPanel: View {
                             Button {
                                 showCustomEditor = true
                             } label: {
-                                Label("Edit Curve JSON", systemImage: "chevron.left.forwardslash.chevron.right")
+                                Label("Edit Curve", systemImage: "slider.horizontal.below.rectangle")
                                     .font(.system(size: 12, weight: .medium))
                                     .frame(maxWidth: .infinity)
                             }
@@ -788,142 +811,28 @@ private struct FanControlPanel: View {
         case .automatic: return "cpu"
         }
     }
-}
 
-private struct CustomFanPresetEditorSheet: View {
-    @ObservedObject var fanController: FanController
-    @Environment(\.dismiss) private var dismiss
-    @State private var draftSource: String
-    @State private var messages: [String] = []
-    @State private var hasError = false
-
-    init(fanController: FanController) {
-        self.fanController = fanController
-        _draftSource = State(initialValue: fanController.customPresetSource)
-    }
-
-    var body: some View {
-        VStack(spacing: 14) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Custom Fan Curve")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
-                    Text("Edit the JSON preset, validate it, then save. Core Monitor only applies it while Custom mode is active.")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Button("Done") { dismiss() }
-                    .buttonStyle(.borderedProminent)
-            }
-
-            HStack(spacing: 8) {
-                Button {
-                    draftSource = FanController.defaultCustomPresetSource
-                    messages = ["Loaded the starter template."]
-                    hasError = false
-                } label: {
-                    Label("Load Template", systemImage: "doc.badge.plus")
-                }
-
-                Button {
-                    let validation = fanController.validateCustomPresetSource(draftSource)
-                    hasError = !validation.isEmpty
-                    messages = validation.isEmpty ? ["Preset looks valid. Save it to apply the new curve."] : validation
-                } label: {
-                    Label("Validate JSON", systemImage: "checkmark.shield")
-                }
-
-                Button {
-                    switch fanController.saveCustomPresetSource(draftSource) {
-                    case .success(let message):
-                        draftSource = fanController.customPresetSource
-                        messages = [message]
-                        hasError = false
-                    case .failure(let errors):
-                        messages = errors
-                        hasError = true
-                    }
-                } label: {
-                    Label("Save", systemImage: "square.and.arrow.down")
-                }
-                .buttonStyle(.borderedProminent)
-
-                Button {
-                    switch fanController.saveCustomPresetSource(draftSource) {
-                    case .success(let message):
-                        draftSource = fanController.customPresetSource
-                        messages = [message, "Closing editor…"]
-                        hasError = false
-                        dismiss()
-                    case .failure(let errors):
-                        messages = errors
-                        hasError = true
-                    }
-                } label: {
-                    Label("Save & Use", systemImage: "arrow.down.circle.fill")
-                }
-                .buttonStyle(.borderedProminent)
-            }
-            .labelStyle(.titleAndIcon)
-            .font(.system(size: 12, weight: .medium))
-
-            if #available(macOS 13.0, *) {
-                TextEditor(text: $draftSource)
-                    .font(.system(size: 12, weight: .regular, design: .monospaced))
-                    .scrollContentBackground(.hidden)
-                    .padding(10)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(Color.black.opacity(0.18))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-                    )
-            } else {
-                // Fallback on earlier versions
-            }
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Result")
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundStyle(.secondary)
-                if messages.isEmpty {
-                    Text("No validation results yet. Validate the JSON before saving so Core Monitor can catch structural errors before it tries to apply the curve.")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(Array(messages.enumerated()), id: \.offset) { entry in
-                        Text("• \(entry.element)")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(hasError ? .orange : .secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color.white.opacity(0.05))
-            )
-        }
-        .padding(18)
-        .frame(minWidth: 760, minHeight: 620)
-        .background(CoreMonBackdrop())
+    private func fanSummaryPill(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(Color.bdAccent)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(Color.bdAccent.opacity(0.14))
+            .clipShape(Capsule())
     }
 }
 
 // MARK: - Sidebar items
 private enum SidebarItem: String, CaseIterable, Identifiable {
-    case overview="Overview", thermals="Thermals", memory="Memory", fans="Fans"
+    case overview="Overview", alerts="Alerts", thermals="Thermals", memory="Memory", fans="Fans"
     case battery="Battery"
     case system="System", touchBar="Touch Bar", help="Help", about="About"
     var id: String { rawValue }
     var icon: String {
         switch self {
         case .overview: return "gauge.medium"; case .thermals: return "thermometer.medium"
+        case .alerts: return "bell.badge"
         case .memory: return "memorychip"; case .fans: return "fanblades.fill"
         case .battery: return "battery.75"; case .system: return "gearshape"
         case .touchBar: return "rectangle.3.group"
@@ -982,7 +891,7 @@ private struct Sidebar: View {
     let modeState: AppModeState
 
     var visibleItems: [SidebarItem] {
-        var items: [SidebarItem] = [.overview, .thermals, .memory, .fans]
+        var items: [SidebarItem] = [.overview, .alerts, .thermals, .memory, .fans]
         if hasBattery {
             items.append(.battery)
         }
@@ -1043,16 +952,18 @@ private struct Sidebar: View {
 
 // MARK: - DetailPane
 private struct DetailPane: View {
-    let selection: SidebarItem
+    @Binding var selection: SidebarItem
     let state: ContentView.DashboardState
     let cpuHistory: [Double]; let memHistory: [Double]; let cpuTempHistory: [Double]
     let fanController: FanController; let systemMonitor: SystemMonitor
+    let alertManager: AlertManager
     let startupManager: StartupManager
 
     @ViewBuilder
     private var selectedContent: some View {
         switch selection {
         case .overview:  overviewContent
+        case .alerts:    AlertsView(alertManager: alertManager, systemMonitor: systemMonitor, fanController: fanController)
         case .thermals:  thermalsContent
         case .memory:    memoryContent
         case .fans:      fansContent
@@ -1090,9 +1001,13 @@ private struct DetailPane: View {
     private var overviewContent: some View {
         VStack(alignment: .leading, spacing: 18) {
             header("Overview", subtitle: hostModelName())
+            AlertsDashboardStrip(alertManager: alertManager) {
+                selection = .alerts
+            }
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 MetricTile(label: "CPU Load",  value: "\(Int(state.cpuUsagePercent.rounded()))", unit: "%",
-                           color: cpuColor, gauge: state.cpuUsagePercent / 100, history: cpuHistory)
+                           color: cpuColor, gauge: state.cpuUsagePercent / 100, history: cpuHistory,
+                           badgeText: alertBadgeText(for: .cpuUsage), badgeColor: alertBadgeColor(for: .cpuUsage))
                 if let pUsage = state.performanceCoreUsagePercent {
                     MetricTile(label: "P-Core Load (\(state.performanceCoreCount) cores)",
                                value: "\(Int(pUsage.rounded()))", unit: "%",
@@ -1104,20 +1019,24 @@ private struct DetailPane: View {
                                color: loadColor(eUsage), gauge: eUsage / 100)
                 }
                 MetricTile(label: "Memory",    value: "\(Int(state.memoryUsagePercent.rounded()))", unit: "%",
-                           color: memColor, gauge: state.memoryUsagePercent / 100, history: memHistory)
+                           color: memColor, gauge: state.memoryUsagePercent / 100, history: memHistory,
+                           badgeText: alertBadgeText(for: .memoryPressure), badgeColor: alertBadgeColor(for: .memoryPressure))
                 if let t = state.cpuTemperature {
                     MetricTile(label: "CPU Temp", value: "\(Int(t.rounded()))", unit: "°C",
-                               color: tempColor(t), gauge: min(t, 110) / 110, history: cpuTempHistory)
+                               color: tempColor(t), gauge: min(t, 110) / 110, history: cpuTempHistory,
+                               badgeText: alertBadgeText(for: .cpuTemperature), badgeColor: alertBadgeColor(for: .cpuTemperature))
                 }
                 if let rpm = state.fanSpeeds.first, rpm > 0 {
-                    MetricTile(label: "Fan", value: "\(rpm)", unit: " RPM", color: Color.bdAccent)
+                    MetricTile(label: "Fan", value: "\(rpm)", unit: " RPM", color: Color.bdAccent,
+                               badgeText: alertBadgeText(for: .fanTooLowUnderHeat), badgeColor: alertBadgeColor(for: .fanTooLowUnderHeat))
                 }
                 if let w = state.totalSystemWatts {
                     MetricTile(label: "Power", value: String(format: "%.1f", abs(w)), unit: " W", color: .purple)
                 }
                 if state.batteryInfo.hasBattery {
                     MetricTile(label: "Battery", value: "\(state.batteryInfo.chargePercent ?? 0)", unit: "%",
-                               color: battColor, gauge: battFrac)
+                               color: battColor, gauge: battFrac,
+                               badgeText: alertBadgeText(for: .lowBatteryDischarging), badgeColor: alertBadgeColor(for: .lowBatteryDischarging))
                 }
             }
         }
@@ -1147,7 +1066,8 @@ private struct DetailPane: View {
             header("Memory", subtitle: "Unified memory pressure and usage")
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 MetricTile(label: "Usage", value: "\(Int(state.memoryUsagePercent.rounded()))", unit: "%",
-                           color: memColor, gauge: state.memoryUsagePercent / 100, history: memHistory)
+                           color: memColor, gauge: state.memoryUsagePercent / 100, history: memHistory,
+                           badgeText: alertBadgeText(for: .memoryPressure), badgeColor: alertBadgeColor(for: .memoryPressure))
                 MetricTile(label: "Used", value: String(format: "%.1f", state.memoryUsedGB), unit: " GB",
                            color: memColor, gauge: state.memoryUsedGB / max(1, state.totalMemoryGB))
             }
@@ -1162,6 +1082,7 @@ private struct DetailPane: View {
                     }
                 }
             }
+            TopMemoryProcessesPanel(snapshot: systemMonitor.snapshot.topProcesses)
         }
     }
 
@@ -1203,6 +1124,7 @@ private struct DetailPane: View {
     private var systemContent: some View {
         VStack(alignment: .leading, spacing: 18) {
             header("System", subtitle: "Controls and startup")
+            SystemStatusBoard(alertManager: alertManager, systemMonitor: systemMonitor)
             DarkCard(padding: 16) {
                 VStack(spacing: 8) {
                     levelRow(label: "Volume",     icon: state.currentVolume < 0.01 ? "speaker.slash.fill" : "speaker.wave.2.fill",
@@ -1319,6 +1241,18 @@ private struct DetailPane: View {
     }
     private func loadColor(_ usage: Double) -> Color { usage > 80 ? .red : usage > 50 ? .orange : .green }
     private func tempColor(_ t: Double) -> Color { t > 90 ? .red : t > 70 ? .orange : .green }
+    private func alertBadgeText(for kind: AlertRuleKind) -> String? {
+        alertManager.activeAlerts.first(where: { $0.kind == kind })?.severity.title
+    }
+    private func alertBadgeColor(for kind: AlertRuleKind) -> Color? {
+        guard let severity = alertManager.activeAlerts.first(where: { $0.kind == kind })?.severity else { return nil }
+        switch severity {
+        case .none: return nil
+        case .info: return Color.bdAccent
+        case .warning: return .orange
+        case .critical: return .red
+        }
+    }
     private func hostModelName() -> String {
         var size = 0; sysctlbyname("hw.model", nil, &size, nil, 0)
         var m = [CChar](repeating: 0, count: size); sysctlbyname("hw.model", &m, &size, nil, 0)
@@ -2096,6 +2030,7 @@ struct ContentView: View {
 
     let systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
+    @ObservedObject var alertManager: AlertManager
     @ObservedObject var startupManager: StartupManager
 
     @StateObject private var modeState      = AppModeState()
@@ -2139,10 +2074,10 @@ struct ContentView: View {
                 modeState: modeState
             )
             DetailPane(
-                selection: sidebarSelection,
+                selection: $sidebarSelection,
                 state: dashboardState,
                 cpuHistory: cpuHistory, memHistory: memHistory, cpuTempHistory: cpuTempHistory,
-                fanController: fanController, systemMonitor: systemMonitor,
+                fanController: fanController, systemMonitor: systemMonitor, alertManager: alertManager,
                 startupManager: startupManager
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -2176,19 +2111,20 @@ struct ContentView: View {
     }
 
     private func refreshDashboardState() {
+        let snapshot = systemMonitor.snapshot
         dashboardState = DashboardState(
-            hasSMCAccess: systemMonitor.hasSMCAccess, numberOfFans: systemMonitor.numberOfFans,
-            fanSpeeds: systemMonitor.fanSpeeds, fanMinSpeeds: systemMonitor.fanMinSpeeds,
-            fanMaxSpeeds: systemMonitor.fanMaxSpeeds, cpuUsagePercent: systemMonitor.cpuUsagePercent,
-            cpuTemperature: systemMonitor.cpuTemperature, gpuTemperature: systemMonitor.gpuTemperature,
-            performanceCoreUsagePercent: systemMonitor.performanceCoreUsagePercent,
-            efficiencyCoreUsagePercent: systemMonitor.efficiencyCoreUsagePercent,
+            hasSMCAccess: snapshot.hasSMCAccess, numberOfFans: snapshot.numberOfFans,
+            fanSpeeds: snapshot.fanSpeeds, fanMinSpeeds: snapshot.fanMinSpeeds,
+            fanMaxSpeeds: snapshot.fanMaxSpeeds, cpuUsagePercent: snapshot.cpuUsagePercent,
+            cpuTemperature: snapshot.cpuTemperature, gpuTemperature: snapshot.gpuTemperature,
+            performanceCoreUsagePercent: snapshot.performanceCoreUsagePercent,
+            efficiencyCoreUsagePercent: snapshot.efficiencyCoreUsagePercent,
             performanceCoreCount: SystemMonitor.performanceCoreCount(),
             efficiencyCoreCount: SystemMonitor.efficiencyCoreCount(),
-            memoryUsagePercent: systemMonitor.memoryUsagePercent, memoryUsedGB: systemMonitor.memoryUsedGB,
-            totalMemoryGB: systemMonitor.totalMemoryGB, memoryPressure: systemMonitor.memoryPressure,
-            batteryInfo: systemMonitor.batteryInfo, totalSystemWatts: systemMonitor.totalSystemWatts,
-            currentVolume: systemMonitor.currentVolume, currentBrightness: systemMonitor.currentBrightness
+            memoryUsagePercent: snapshot.memoryUsagePercent, memoryUsedGB: snapshot.memoryUsedGB,
+            totalMemoryGB: snapshot.totalMemoryGB, memoryPressure: snapshot.memoryPressure,
+            batteryInfo: snapshot.batteryInfo, totalSystemWatts: snapshot.totalSystemWatts,
+            currentVolume: snapshot.currentVolume, currentBrightness: snapshot.currentBrightness
         )
     }
 }

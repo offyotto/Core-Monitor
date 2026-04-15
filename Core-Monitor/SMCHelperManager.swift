@@ -20,7 +20,7 @@ final class SMCHelperManager: ObservableObject {
     @Published var statusMessage: String?
 
     // Bundle identifier of the helper used for the privileged-helper path
-    private let helperLabel = "ventaphobia.smc-helper"
+    private let helperLabel = HelperConfiguration.label
     private var hasAttemptedBlessInstall = false
 
     private let fileManager = FileManager.default

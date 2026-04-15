@@ -1,0 +1,59 @@
+import Foundation
+
+struct ProcessActivity: Codable, Equatable, Identifiable {
+    let pid: Int32
+    let name: String
+    let cpuPercent: Double
+    let memoryBytes: UInt64
+
+    nonisolated var id: String { "\(pid)-\(name)" }
+    nonisolated var memoryGB: Double { Double(memoryBytes) / 1_073_741_824.0 }
+}
+
+struct TopProcessSnapshot: Codable, Equatable {
+    var sampledAt: Date
+    var topCPU: [ProcessActivity]
+    var topMemory: [ProcessActivity]
+
+    nonisolated static let empty = TopProcessSnapshot(sampledAt: .distantPast, topCPU: [], topMemory: [])
+}
+
+struct SystemMonitorSnapshot {
+    var sampledAt: Date = .distantPast
+    var cpuTemperature: Double?
+    var gpuTemperature: Double?
+    var fanSpeeds: [Int] = []
+    var fanMinSpeeds: [Int] = []
+    var fanMaxSpeeds: [Int] = []
+    var numberOfFans: Int = 0
+    var cpuUsagePercent: Double = 0
+    var performanceCoreUsagePercent: Double?
+    var efficiencyCoreUsagePercent: Double?
+    var memoryUsagePercent: Double = 0
+    var memoryUsedGB: Double = 0
+    var totalMemoryGB: Double = 0
+    var memoryPressure: MemoryPressureLevel = .green
+    var appMemoryGB: Double = 0
+    var wiredMemoryGB: Double = 0
+    var compressedMemoryGB: Double = 0
+    var freeMemoryGB: Double = 0
+    var pageInsBytes: UInt64 = 0
+    var pageOutsBytes: UInt64 = 0
+    var swapUsedBytes: UInt64 = 0
+    var swapTotalBytes: UInt64 = 0
+    var batteryInfo = BatteryInfo()
+    var totalSystemWatts: Double?
+    var currentVolume: Float = 0.5
+    var currentBrightness: Float = 1.0
+    var diskStats = DiskStats()
+    var cpuPowerWatts: Double?
+    var gpuPowerWatts: Double?
+    var ssdTemperature: Double?
+    var networkStats = SystemMonitor.NetworkStats()
+    var thermalState: ProcessInfo.ThermalState = .nominal
+    var topProcesses: TopProcessSnapshot = .empty
+    var hasSMCAccess: Bool = false
+    var lastError: String?
+
+    nonisolated static let empty = SystemMonitorSnapshot()
+}

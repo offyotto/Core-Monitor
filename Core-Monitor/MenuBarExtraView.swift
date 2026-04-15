@@ -106,6 +106,78 @@ private struct MBDivider: View {
     var body: some View { Rectangle().fill(Color.mbDiv).frame(height: 1) }
 }
 
+private struct MenuBarAlertSummarySection: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+    @ObservedObject var alertManager: AlertManager
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Text(alertManager.highestActiveSeverity == .none ? "STATUS" : "ALERTS")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(Color.mbTint)
+                    .mbTracking(1.2)
+                Spacer()
+                Text(alertManager.highestActiveSeverity.title.uppercased())
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(severityColor(alertManager.highestActiveSeverity))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(severityColor(alertManager.highestActiveSeverity).opacity(0.18))
+                    .clipShape(Capsule())
+            }
+
+            Text(alertManager.summaryLine)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.84))
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: 8) {
+                summaryPill("Thermal \(AlertEvaluator.thermalStateLabel(systemMonitor.thermalState))", color: thermalColor(systemMonitor.thermalState))
+                summaryPill(systemMonitor.hasSMCAccess ? "SMC Ready" : "SMC Unavailable", color: systemMonitor.hasSMCAccess ? Color.mbGreen : .red)
+            }
+
+            HStack(spacing: 8) {
+                summaryPill(SMCHelperManager.shared.isInstalled ? "Helper Ready" : "Helper Missing", color: SMCHelperManager.shared.isInstalled ? Color.mbBlue : Color.mbOrange)
+                if let recent = alertManager.history.first {
+                    summaryPill(recent.isRecovery ? "Recovered" : recent.kind.title, color: severityColor(recent.severity))
+                }
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+    }
+
+    private func summaryPill(_ text: String, color: Color) -> some View {
+        Text(text)
+            .font(.system(size: 9, weight: .semibold))
+            .foregroundStyle(color)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(color.opacity(0.16))
+            .clipShape(Capsule())
+    }
+
+    private func severityColor(_ severity: AlertSeverity) -> Color {
+        switch severity {
+        case .none: return .white.opacity(0.55)
+        case .info: return Color.mbBlue
+        case .warning: return Color.mbOrange
+        case .critical: return .red
+        }
+    }
+
+    private func thermalColor(_ thermalState: ProcessInfo.ThermalState) -> Color {
+        switch thermalState {
+        case .nominal: return Color.mbGreen
+        case .fair: return Color.mbBlue
+        case .serious: return Color.mbOrange
+        case .critical: return .red
+        @unknown default: return .white.opacity(0.55)
+        }
+    }
+}
+
 private struct MBActionButton: View {
     let label: String; let icon: String; let action: () -> Void
     @State private var hovered = false
@@ -245,6 +317,7 @@ private struct DonutChart: View {
 
 struct CPUMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
+    @ObservedObject var alertManager: AlertManager
     var openDashboardAction: () -> Void = {}
 
     private var pCores: Int { SystemMonitor.performanceCoreCount() }
@@ -255,6 +328,8 @@ struct CPUMenuPopoverView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
                     cpuHeader
+                    MBDivider()
+                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager)
                     MBDivider()
                     graphSection
                     MBDivider()
@@ -427,6 +502,7 @@ struct CPUMenuPopoverView: View {
 
 struct MemoryMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
+    @ObservedObject var alertManager: AlertManager
     var openDashboardAction: () -> Void = {}
 
     var body: some View {
@@ -434,6 +510,8 @@ struct MemoryMenuPopoverView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
                     memHeader
+                    MBDivider()
+                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager)
                     MBDivider()
                     breakdownSection
                     MBDivider()
@@ -490,12 +568,12 @@ struct MemoryMenuPopoverView: View {
     private var processesSection: some View {
         VStack(spacing: 0) {
             MBSectionHeader(title: "PROCESSES")
-            let topProcesses = topMemoryProcesses(limit: 4)
+            let topProcesses = Array(systemMonitor.snapshot.topProcesses.topMemory.prefix(4))
             if topProcesses.isEmpty {
                 MBRow(icon: "app.fill", label: "Processes", value: "Unavailable", color: .white.opacity(0.5))
             } else {
                 ForEach(Array(topProcesses.enumerated()), id: \.offset) { _, process in
-                    memProcessRow(process.name, gb: process.memoryGB, color: process.color)
+                    memProcessRow(process.name, gb: process.memoryGB, color: memoryProcessColor(process.memoryBytes))
                 }
             }
         }
@@ -568,83 +646,14 @@ struct MemoryMenuPopoverView: View {
         return min(max((systemMonitor.freeMemoryGB / systemMonitor.totalMemoryGB) * 100, 0), 100)
     }
 
-    private struct MemoryProcess: Identifiable {
-        let name: String
-        let memoryBytes: UInt64
-
-        var id: String { name }
-        var memoryGB: Double { Double(memoryBytes) / 1_073_741_824.0 }
-        var color: Color { memoryBytes > 2_000_000_000 ? .red : memoryBytes > 1_000_000_000 ? Color.mbOrange : Color.mbBlue }
-    }
-
-    private func topMemoryProcesses(limit: Int) -> [MemoryProcess] {
-        let bytesNeeded = Int(proc_listpids(UInt32(PROC_ALL_PIDS), 0, nil, 0))
-        guard bytesNeeded > 0 else { return [] }
-
-        let pidCount = max(1, bytesNeeded / MemoryLayout<pid_t>.stride)
-        var pids = Array(repeating: pid_t(0), count: pidCount)
-        let bytesWritten = pids.withUnsafeMutableBytes { buffer -> Int32 in
-            guard let baseAddress = buffer.baseAddress else { return 0 }
-            return proc_listpids(UInt32(PROC_ALL_PIDS), 0, baseAddress, Int32(buffer.count))
+    private func memoryProcessColor(_ memoryBytes: UInt64) -> Color {
+        if memoryBytes > 2_000_000_000 {
+            return .red
         }
-
-        guard bytesWritten > 0 else { return [] }
-
-        let actualCount = Int(bytesWritten) / MemoryLayout<pid_t>.stride
-        let validPIDs = pids.prefix(actualCount).filter { $0 > 0 }
-        var grouped: [String: UInt64] = [:]
-
-        for pid in validPIDs {
-            var info = proc_taskinfo()
-            let result = withUnsafeMutablePointer(to: &info) { pointer -> Int32 in
-                pointer.withMemoryRebound(to: Int8.self, capacity: MemoryLayout<proc_taskinfo>.stride) { rebounded in
-                    proc_pidinfo(pid, PROC_PIDTASKINFO, 0, rebounded, Int32(MemoryLayout<proc_taskinfo>.stride))
-                }
-            }
-
-            guard result == Int32(MemoryLayout<proc_taskinfo>.stride) else { continue }
-            let memoryBytes = UInt64(info.pti_resident_size)
-            guard memoryBytes > 0 else { continue }
-
-            let name = displayName(for: pid)
-            grouped[name, default: 0] += memoryBytes
+        if memoryBytes > 1_000_000_000 {
+            return Color.mbOrange
         }
-
-        return grouped
-            .map { MemoryProcess(name: $0.key, memoryBytes: $0.value) }
-            .sorted { $0.memoryBytes > $1.memoryBytes }
-            .prefix(limit)
-            .map { $0 }
-    }
-
-    private func displayName(for pid: pid_t) -> String {
-        if let runningApp = NSRunningApplication(processIdentifier: pid) {
-            let localizedName = runningApp.localizedName ?? ""
-            if !localizedName.isEmpty {
-                return localizedName
-            }
-        }
-
-        var nameBuffer = [CChar](repeating: 0, count: Int(MAXCOMLEN) + 1)
-        let procNameLength = proc_name(pid, &nameBuffer, UInt32(nameBuffer.count))
-        if procNameLength > 0 {
-            let name = String(cString: nameBuffer).trimmingCharacters(in: .whitespacesAndNewlines)
-            if !name.isEmpty {
-                return name
-            }
-        }
-
-        var pathBuffer = [CChar](repeating: 0, count: kProcPidPathMaxSize)
-        let pathLength = proc_pidpath(pid, &pathBuffer, UInt32(pathBuffer.count))
-        if pathLength > 0 {
-            let path = String(cString: pathBuffer)
-            let lastPathComponent = URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
-            if !lastPathComponent.isEmpty {
-                return lastPathComponent
-            }
-        }
-
-        return "PID \(pid)"
+        return Color.mbBlue
     }
 
     private func formatByteCount(_ bytes: UInt64) -> String {
@@ -663,6 +672,7 @@ struct MemoryMenuPopoverView: View {
 
 struct DiskMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
+    @ObservedObject var alertManager: AlertManager
     var openDashboardAction: () -> Void = {}
 
     var body: some View {
@@ -670,6 +680,8 @@ struct DiskMenuPopoverView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
                     diskHeader
+                    MBDivider()
+                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager)
                     MBDivider()
                     diskDonutSection
                     MBDivider()
@@ -889,6 +901,7 @@ struct DiskMenuPopoverView: View {
 struct TemperatureMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
+    @ObservedObject var alertManager: AlertManager
     var openDashboardAction: () -> Void = {}
 
     var body: some View {
@@ -896,6 +909,8 @@ struct TemperatureMenuPopoverView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
                     tempHeader
+                    MBDivider()
+                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager)
                     MBDivider()
                     temperatureSection
                     MBDivider()

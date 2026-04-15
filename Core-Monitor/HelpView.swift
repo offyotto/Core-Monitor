@@ -36,14 +36,24 @@ struct HelpView: View {
                     Text("The Thermals section displays detailed temperature readings from multiple sensors across your Mac.")
                     HelpBullet(text: "Current builds surface CPU, GPU, SSD, and battery temperatures when those readings are available.")
                     HelpBullet(text: "If a temperature is missing, the app could not resolve a readable sensor key for this Mac.")
-                    HelpBullet(text: "Core Monitor currently does not ship automatic thermal alert notifications.")
+                    HelpBullet(text: "Overall thermal uses `ProcessInfo.processInfo.thermalState`, which is macOS thermal pressure rather than a guessed package sensor.")
+                    HelpBullet(text: "Use the `Alerts` tab to configure thermal thresholds, notification policy, mute windows, and recent alert history.")
+                }
+            )),
+            HelpSection(id: "alerts", title: "Alerts", icon: "bell.badge", content: AnyView(
+                HelpCard {
+                    Text("Core Monitor ships local alerts for thermals, memory pressure, swap usage, battery state, fan safety, helper availability, SMC access, and external fan-control detection.")
+                    HelpBullet(text: "Desktop notifications are optional. Turning them off does not disable in-app alert history.")
+                    HelpBullet(text: "Presets let you trade off earlier warning thresholds against quieter notification behavior.")
+                    HelpBullet(text: "CPU and memory alerts include top-process context so you can see likely culprits without configuring per-process rules.")
+                    HelpBullet(text: "Snooze suppresses desktop notifications for a rule, while dismiss-until-recovery hides the current active alert until the metric returns to a safe state.")
                 }
             )),
             HelpSection(id: "memory", title: "Memory", icon: "memorychip", content: AnyView(
                 HelpCard {
                     Text("Memory monitoring includes RAM usage, swap usage, and memory pressure visualization.")
                     HelpBullet(text: "Track real-time page ins, page outs, and compressed memory in the `Memory` tab.")
-                    HelpBullet(text: "Use the memory pressure graph to see system memory stress and performance impact.")
+                    HelpBullet(text: "Use the memory pressure graph and top-process panel to see system memory stress and the apps most likely to be driving it.")
                 }
             )),
             HelpSection(id: "fans", title: "Fans & Fan Control", icon: "fanblades.fill", content: AnyView(
@@ -70,6 +80,7 @@ struct HelpView: View {
                     Text("System controls enable adjusting volume, screen brightness, and launch-at-login behavior.")
                     HelpBullet(text: "Use the `System` tab or menu bar popovers to view current volume and brightness.")
                     HelpBullet(text: "Toggle `Launch at Login` to start Core Monitor automatically.")
+                    HelpBullet(text: "The `System` tab now also surfaces helper state, SMC access, overall thermal pressure, and notification permission status in dedicated status cards.")
                 }
             )),
             HelpSection(id: "touchbar", title: "Touch Bar Customization", icon: "rectangle.3.group", content: AnyView(
@@ -115,6 +126,7 @@ struct HelpView: View {
                 HelpCard {
                     Text("Core Monitor reads sensors via AppleSMC. Fan writes require the bundled helper.")
                     HelpBullet(text: "The helper is signed and uses the macOS authorization sheet on first use.")
+                    HelpBullet(text: "If the helper is missing or another utility owns fan control, Core Monitor raises a service alert instead of pretending writes are safe.")
                     HelpBullet(text: "Use ‘Reset to System Auto’ in the Fans section to restore default behavior.")
                 }
             )),

@@ -83,7 +83,7 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgAmber,
         headline: "Thermals & Metrics",
         subheadline: "See what's really heating up.",
-        body: "The dashboard streams CPU, GPU, and memory data at 1-second resolution. Spark-line histories let you spot transient spikes that Activity Monitor smooths over.",
+        body: "The dashboard streams CPU, GPU, and memory data at 1-second resolution. Spark-line histories let you spot transient spikes that Activity Monitor smooths over, and the Alerts screen turns those readings into actual warning rules.",
         bullets: [
             ("cpu.fill",              .wgAmber,  "P-core and E-core usage, plus CPU temperature"),
             ("memorychip",            .wgBlue,   "Memory pressure with wired/active breakdown"),
@@ -127,9 +127,10 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgGreen,
         headline: "You're all set.",
         subheadline: "Dive in whenever you're ready.",
-        body: "The dashboard is live and already collecting data. Explore the thermal, power, and fan panels, or switch to Basic Mode if you want the lightest possible UI.",
+        body: "The dashboard is live and already collecting data. Explore the Alerts tab for thresholds and notification policy, then dive into thermal, power, and fan panels or switch to Basic Mode if you want the lightest possible UI.",
         bullets: [
             ("sidebar.left",          .wgAmber,  "Dashboard sections collapse with a click"),
+            ("bell.badge",            .wgGreen,  "Alerts combines local history, presets, and notification controls"),
             ("fan.fill",              .wgBlue,   "Fan Control — scroll down on dashboard"),
             ("lock.shield",           .wgPurple, "Fan writes require the blessed helper"),
             ("questionmark.circle",   .wgGreen,  "This guide lives in Help → Show Guide"),

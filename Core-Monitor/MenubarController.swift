@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 
 // MARK: - MenuBarItemKind
@@ -46,10 +47,12 @@ final class MenuBarController: NSObject {
     private var itemControllers: [SingleMenuBarItemController] = []
     private var updateObserver: Any?
     private var settingsObserver: Any?
+    private var alertCancellable: AnyCancellable?
 
     init(
         systemMonitor:            SystemMonitor,
         fanController:            FanController,
+        alertManager:             AlertManager,
         openDashboardAction:      @escaping () -> Void,
         restoreAppTouchBarAction: @escaping () -> Void,
         revertTouchBarAction:     @escaping () -> Void
@@ -61,6 +64,7 @@ final class MenuBarController: NSObject {
                 kind:                     kind,
                 systemMonitor:            systemMonitor,
                 fanController:            fanController,
+                alertManager:             alertManager,
                 openDashboardAction:      openDashboardAction,
                 restoreAppTouchBarAction: restoreAppTouchBarAction,
                 revertTouchBarAction:     revertTouchBarAction
@@ -83,6 +87,12 @@ final class MenuBarController: NSObject {
         ) { [weak self] _ in
             self?.itemControllers.forEach { $0.refresh() }
         }
+
+        alertCancellable = alertManager.$activeAlerts
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.itemControllers.forEach { $0.refresh() }
+            }
     }
 
     deinit {
@@ -104,6 +114,7 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
 
     private let systemMonitor:            SystemMonitor
     private let fanController:            FanController
+    private let alertManager:             AlertManager
     private let openDashboardAction:      () -> Void
     private let restoreAppTouchBarAction: () -> Void
     private let revertTouchBarAction:     () -> Void
@@ -115,6 +126,7 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         kind:                     MenuBarItemKind,
         systemMonitor:            SystemMonitor,
         fanController:            FanController,
+        alertManager:             AlertManager,
         openDashboardAction:      @escaping () -> Void,
         restoreAppTouchBarAction: @escaping () -> Void,
         revertTouchBarAction:     @escaping () -> Void
@@ -122,6 +134,7 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         self.kind                     = kind
         self.systemMonitor            = systemMonitor
         self.fanController            = fanController
+        self.alertManager             = alertManager
         self.openDashboardAction      = openDashboardAction
         self.restoreAppTouchBarAction = restoreAppTouchBarAction
         self.revertTouchBarAction     = revertTouchBarAction
@@ -166,6 +179,17 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                 .font: NSFont.monospacedSystemFont(ofSize: 11, weight: .semibold)
             ]
         ))
+
+        if alertManager.hasCriticalAlert {
+            full.append(NSAttributedString(string: " "))
+            full.append(NSAttributedString(
+                string: "●",
+                attributes: [
+                    .foregroundColor: NSColor.systemRed,
+                    .font: NSFont.systemFont(ofSize: 10, weight: .bold)
+                ]
+            ))
+        }
 
         button.attributedTitle = full
         button.imagePosition   = .noImage
@@ -246,25 +270,25 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         switch kind {
         case .cpu:
             return AnyView(
-                CPUMenuPopoverView(systemMonitor: systemMonitor, openDashboardAction: { [weak self] in
+                CPUMenuPopoverView(systemMonitor: systemMonitor, alertManager: alertManager, openDashboardAction: { [weak self] in
                     self?.popover.performClose(nil); self?.openDashboardAction()
                 })
             )
         case .memory:
             return AnyView(
-                MemoryMenuPopoverView(systemMonitor: systemMonitor, openDashboardAction: { [weak self] in
+                MemoryMenuPopoverView(systemMonitor: systemMonitor, alertManager: alertManager, openDashboardAction: { [weak self] in
                     self?.popover.performClose(nil); self?.openDashboardAction()
                 })
             )
         case .disk:
             return AnyView(
-                DiskMenuPopoverView(systemMonitor: systemMonitor, openDashboardAction: { [weak self] in
+                DiskMenuPopoverView(systemMonitor: systemMonitor, alertManager: alertManager, openDashboardAction: { [weak self] in
                     self?.popover.performClose(nil); self?.openDashboardAction()
                 })
             )
         case .temperature:
             return AnyView(
-                TemperatureMenuPopoverView(systemMonitor: systemMonitor, fanController: fanController, openDashboardAction: { [weak self] in
+                TemperatureMenuPopoverView(systemMonitor: systemMonitor, fanController: fanController, alertManager: alertManager, openDashboardAction: { [weak self] in
                     self?.popover.performClose(nil); self?.openDashboardAction()
                 })
             )

@@ -95,9 +95,9 @@ final class SMCTamperDetector: ObservableObject {
         let names = [
             "Macs Fan Control",
             "TG Pro",
-            "System Monitor",
             "smcFanControl",
-            "Stats"
+            "Stats",
+            "iStat Menus"
         ]
         return NSWorkspace.shared.runningApplications.filter { app in
             let name = app.localizedName ?? ""
@@ -111,9 +111,12 @@ final class SMCTamperDetector: ObservableObject {
         let count = Int(controller.readValue("FNum") ?? 0)
         guard count > 0 else { return result }
         for fan in 0..<count {
-            let key = "F\(fan)Md"
-            if let value = controller.readValue(key) {
-                result[key] = value
+            let upperKey = "F\(fan)Md"
+            let lowerKey = "F\(fan)md"
+            if let value = controller.readValue(upperKey) {
+                result[upperKey] = value
+            } else if let value = controller.readValue(lowerKey) {
+                result[lowerKey] = value
             }
         }
         return result

@@ -14,11 +14,11 @@ enum FanControlMode: String, CaseIterable {
     case custom
     case automatic
 
-    static var quickModes: [FanControlMode] {
+    nonisolated static var quickModes: [FanControlMode] {
         [.smart, .silent, .balanced, .performance, .max, .manual, .custom, .automatic]
     }
 
-    var title: String {
+    nonisolated var title: String {
         switch self {
         case .smart:       return "SMART"
         case .silent:      return "SILENT"
@@ -31,7 +31,7 @@ enum FanControlMode: String, CaseIterable {
         }
     }
 
-    var shortTitle: String {
+    nonisolated var shortTitle: String {
         switch self {
         case .smart:       return "SMART"
         case .silent:      return "SILENT"
@@ -44,41 +44,96 @@ enum FanControlMode: String, CaseIterable {
         }
     }
 
-    var usesManualSlider: Bool { self == .manual }
-    var isManagedProfile: Bool { self != .manual && self != .automatic }
-    var requiresPrivilegedHelper: Bool { self != .automatic }
+    nonisolated var usesManualSlider: Bool { self == .manual }
+    nonisolated var isManagedProfile: Bool { self != .manual && self != .automatic }
+    nonisolated var requiresPrivilegedHelper: Bool { self != .automatic }
 }
 
 // MARK: - Custom Fan Preset Model
 
-private struct CustomFanPreset: Codable {
-    enum Sensor: String, Codable, CaseIterable {
+struct CustomFanPreset: Codable, Equatable {
+    enum Sensor: String, Codable, CaseIterable, Identifiable {
         case cpu
         case gpu
         case max
+
+        nonisolated var id: String { rawValue }
+
+        nonisolated var title: String {
+            switch self {
+            case .cpu: return "CPU"
+            case .gpu: return "GPU"
+            case .max: return "Hottest"
+            }
+        }
     }
 
-    struct CurvePoint: Codable {
-        let temperatureC: Double
-        let speedPercent: Double
+    struct CurvePoint: Codable, Equatable, Identifiable {
+        let id: UUID
+        var temperatureC: Double
+        var speedPercent: Double
+
+        private enum CodingKeys: String, CodingKey {
+            case id
+            case temperatureC
+            case speedPercent
+        }
+
+        init(id: UUID = UUID(), temperatureC: Double, speedPercent: Double) {
+            self.id = id
+            self.temperatureC = temperatureC
+            self.speedPercent = speedPercent
+        }
+
+        init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+            temperatureC = try container.decode(Double.self, forKey: .temperatureC)
+            speedPercent = try container.decode(Double.self, forKey: .speedPercent)
+        }
+
+        func encode(to encoder: any Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(temperatureC, forKey: .temperatureC)
+            try container.encode(speedPercent, forKey: .speedPercent)
+        }
     }
 
-    struct PowerBoost: Codable {
+    struct PowerBoost: Codable, Equatable {
         var enabled: Bool = true
         var wattsAtMaxBoost: Double = 40
         var maxAddedTemperatureC: Double = 8
     }
 
-    let name: String
-    let version: Int
-    let sensor: Sensor
-    let updateIntervalSeconds: Double?
-    let smoothingStepRPM: Int?
-    let minimumRPM: Int?
-    let maximumRPM: Int?
-    let perFanRPMOffset: [Int]?
-    let powerBoost: PowerBoost?
-    let points: [CurvePoint]
+    var name: String
+    var version: Int
+    var sensor: Sensor
+    var updateIntervalSeconds: Double?
+    var smoothingStepRPM: Int?
+    var minimumRPM: Int?
+    var maximumRPM: Int?
+    var perFanRPMOffset: [Int]?
+    var powerBoost: PowerBoost?
+    var points: [CurvePoint]
+
+    nonisolated static let starter = CustomFanPreset(
+        name: "Quiet ramp with thermal boost",
+        version: 1,
+        sensor: .max,
+        updateIntervalSeconds: 2,
+        smoothingStepRPM: 100,
+        minimumRPM: 1400,
+        maximumRPM: 6200,
+        perFanRPMOffset: [0, 0],
+        powerBoost: PowerBoost(enabled: true, wattsAtMaxBoost: 42, maxAddedTemperatureC: 8),
+        points: [
+            CurvePoint(temperatureC: 38, speedPercent: 24),
+            CurvePoint(temperatureC: 50, speedPercent: 32),
+            CurvePoint(temperatureC: 65, speedPercent: 50),
+            CurvePoint(temperatureC: 78, speedPercent: 72),
+            CurvePoint(temperatureC: 88, speedPercent: 100),
+        ]
+    )
 
     var resolvedUpdateInterval: TimeInterval {
         let raw = updateIntervalSeconds ?? 2.0
@@ -185,6 +240,15 @@ private struct CustomFanPreset: Codable {
 
         return last.speedPercent
     }
+
+    var sortedPoints: [CurvePoint] {
+        points.sorted { lhs, rhs in
+            if lhs.temperatureC == rhs.temperatureC {
+                return lhs.speedPercent < rhs.speedPercent
+            }
+            return lhs.temperatureC < rhs.temperatureC
+        }
+    }
 }
 
 enum CustomPresetSaveOutcome {
@@ -234,30 +298,12 @@ final class FanController: ObservableObject {
     }
 
     static var defaultCustomPresetSource: String {
-        """
-        {
-          "name" : "Quiet ramp with thermal boost",
-          "version" : 1,
-          "sensor" : "max",
-          "updateIntervalSeconds" : 2,
-          "smoothingStepRPM" : 100,
-          "minimumRPM" : 1400,
-          "maximumRPM" : 6200,
-          "perFanRPMOffset" : [0, 0],
-          "powerBoost" : {
-            "enabled" : true,
-            "wattsAtMaxBoost" : 42,
-            "maxAddedTemperatureC" : 8
-          },
-          "points" : [
-            { "temperatureC" : 38, "speedPercent" : 24 },
-            { "temperatureC" : 50, "speedPercent" : 32 },
-            { "temperatureC" : 65, "speedPercent" : 50 },
-            { "temperatureC" : 78, "speedPercent" : 72 },
-            { "temperatureC" : 88, "speedPercent" : 100 }
-          ]
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+        guard let data = try? encoder.encode(CustomFanPreset.starter) else {
+            return "{}"
         }
-        """
+        return String(decoding: data, as: UTF8.self)
     }
 
     var customPresetFilePath: String {
@@ -308,6 +354,37 @@ final class FanController: ObservableObject {
         } catch {
             return [error.localizedDescription]
         }
+    }
+
+    func currentCustomPresetDraft() -> CustomFanPreset {
+        if let customPreset {
+            return customPreset
+        }
+        if let preset = try? decodeCustomPreset(from: customPresetSource) {
+            return preset
+        }
+        return .starter
+    }
+
+    func validateCustomPreset(_ preset: CustomFanPreset) -> [String] {
+        preset.validationErrors(globalMinRPM: minSpeed, globalMaxRPM: maxSpeed)
+    }
+
+    @discardableResult
+    func saveCustomPreset(_ preset: CustomFanPreset) -> CustomPresetSaveOutcome {
+        do {
+            let source = try prettyPrintedJSONString(from: preset)
+            return saveCustomPresetSource(source)
+        } catch {
+            let message = error.localizedDescription
+            customPresetLastError = message
+            customPresetStatus = "Preset validation failed."
+            return .failure([message])
+        }
+    }
+
+    func prettyPrintedPresetSource(for preset: CustomFanPreset) -> String {
+        (try? prettyPrintedJSONString(from: preset)) ?? Self.defaultCustomPresetSource
     }
 
     @discardableResult
@@ -862,6 +939,7 @@ final class FanController: ObservableObject {
             guard validationErrors.isEmpty else {
                 throw NSError(domain: "CoreMonitor.CustomFanPreset", code: 2, userInfo: [NSLocalizedDescriptionKey: validationErrors.joined(separator: " ")])
             }
+            customPreset = preset
             customPresetSource = try prettyPrintedJSONString(from: preset)
             customPresetStatus = "Loaded \"\(preset.name)\" from \(url.path)"
             customPresetLastError = nil

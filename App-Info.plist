@@ -22,10 +22,12 @@
 	<string>public.app-category.utilities</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Core Monitor uses your location to show local weather in the Touch Bar.</string>
+	<key>CoreMonitorPrivilegedHelperLabel</key>
+	<string>$(PRIVILEGED_HELPER_LABEL)</string>
 	<key>SMPrivilegedExecutables</key>
 	<dict>
 		<key>ventaphobia.smc-helper</key>
-		<string>identifier "ventaphobia.smc-helper" and anchor apple generic and certificate leaf[subject.OU] = "6VDP675K4L"</string>
+		<string>identifier "$(PRIVILEGED_HELPER_LABEL)" and anchor apple generic and certificate leaf[subject.OU] = "$(DEVELOPMENT_TEAM)"</string>
 	</dict>
 </dict>
 </plist>

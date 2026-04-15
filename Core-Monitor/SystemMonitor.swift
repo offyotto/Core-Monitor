@@ -106,39 +106,6 @@ private struct SMCParamStruct {
 }
 
 final class SystemMonitor: ObservableObject {
-    private struct SystemSnapshot {
-        let cpuTemperature: Double?
-        let gpuTemperature: Double?
-        let fanSpeeds: [Int]
-        let fanMinSpeeds: [Int]
-        let fanMaxSpeeds: [Int]
-        let cpuUsagePercent: Double
-        let performanceCoreUsagePercent: Double?
-        let efficiencyCoreUsagePercent: Double?
-        let memoryUsagePercent: Double
-        let memoryUsedGB: Double
-        let totalMemoryGB: Double
-        let memoryPressure: MemoryPressureLevel
-        let appMemoryGB: Double
-        let wiredMemoryGB: Double
-        let compressedMemoryGB: Double
-        let freeMemoryGB: Double
-        let pageInsBytes: UInt64
-        let pageOutsBytes: UInt64
-        let swapUsedBytes: UInt64
-        let swapTotalBytes: UInt64
-        let batteryInfo: BatteryInfo
-        let totalSystemWatts: Double?
-        let currentVolume: Float
-        let currentBrightness: Float
-        // New fields
-        let diskStats: DiskStats
-        let cpuPowerWatts: Double?
-        let gpuPowerWatts: Double?
-        let ssdTemperature: Double?
-        let networkStats: NetworkStats
-    }
-
     var cpuTemperature: Double?
     var gpuTemperature: Double?
     var fanSpeeds: [Int] = []
@@ -189,6 +156,9 @@ final class SystemMonitor: ObservableObject {
     private(set) var cpuHistory:     [Double] = Array(repeating: 0, count: 60)
     private(set) var memHistory:     [Double] = Array(repeating: 0, count: 60)
     private(set) var cpuTempHistory: [Double] = Array(repeating: 0, count: 60)
+    @Published private(set) var snapshot = SystemMonitorSnapshot.empty
+    @Published private(set) var thermalState: ProcessInfo.ThermalState = .nominal
+    private let activitySampler = TopProcessSampler()
 
     static var isAppleSilicon: Bool {
         var value: Int32 = 0
@@ -286,6 +256,11 @@ final class SystemMonitor: ObservableObject {
 
     init() {
         hasSMCAccess = openSMCConnection()
+        snapshot.hasSMCAccess = hasSMCAccess
+        snapshot.lastError = lastError
+        activitySampler.onUpdate = { [weak self] topProcesses in
+            self?.updateTopProcesses(topProcesses)
+        }
     }
 
     deinit {
@@ -297,6 +272,7 @@ final class SystemMonitor: ObservableObject {
         _ = openSMCConnection()
         detectFans()
         updateReadings()
+        activitySampler.start()
 
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: monitoringInterval, repeats: true) { [weak self] _ in
@@ -311,11 +287,13 @@ final class SystemMonitor: ObservableObject {
     func stopMonitoring() {
         timer?.invalidate()
         timer = nil
+        activitySampler.stop()
     }
 
     private func openSMCConnection() -> Bool {
         if smcConnection != 0 {
             hasSMCAccess = true
+            snapshot.hasSMCAccess = true
             return true
         }
 
@@ -323,6 +301,8 @@ final class SystemMonitor: ObservableObject {
         guard service != 0 else {
             hasSMCAccess = false
             lastError = "AppleSMC service not found"
+            snapshot.hasSMCAccess = false
+            snapshot.lastError = lastError
             return false
         }
 
@@ -332,11 +312,15 @@ final class SystemMonitor: ObservableObject {
         if result == kIOReturnSuccess {
             hasSMCAccess = true
             lastError = nil
+            snapshot.hasSMCAccess = true
+            snapshot.lastError = nil
             return true
         }
 
         hasSMCAccess = false
         lastError = "Failed to open SMC connection (\(result))"
+        snapshot.hasSMCAccess = false
+        snapshot.lastError = lastError
         return false
     }
 
@@ -348,14 +332,25 @@ final class SystemMonitor: ObservableObject {
     }
 
     private func detectFans() {
+        if let directCount = readSMCValue(key: "FNum").map(Int.init), directCount > 0 {
+            numberOfFans = directCount
+            snapshot.numberOfFans = directCount
+            return
+        }
+
         var count = 0
         for i in 0..<maxFanProbeCount {
-            let key = String(format: "F%dAc", i)
-            if readSMCValue(key: key) != nil {
-                count += 1
+            let actualKey = String(format: "F%dAc", i)
+            let minKey = String(format: "F%dMn", i)
+            let maxKey = String(format: "F%dMx", i)
+            if readSMCValue(key: actualKey) != nil ||
+                readSMCValue(key: minKey) != nil ||
+                readSMCValue(key: maxKey) != nil {
+                count = i + 1
             }
         }
         numberOfFans = count
+        snapshot.numberOfFans = count
     }
 
     private func updateReadings() {
@@ -372,19 +367,21 @@ final class SystemMonitor: ObservableObject {
             let memoryStats = self.readMemoryStats()
             let batteryInfo = self.readBatteryInfo()
             let systemControls = self.readSystemControls()
-            // New readings
             let diskStats = self.readDiskStats()
             let cpuPowerWatts = self.readSMCValue(key: "PCPU")
             let gpuPowerWatts = self.readSMCValue(key: "PGPU")
             let ssdTemperature = self.readSSDTemperature()
             let networkStats = self.readNetworkStats()
+            let thermalState = ProcessInfo.processInfo.thermalState
 
-            let snapshot = SystemSnapshot(
+            var snapshot = SystemMonitorSnapshot(
+                sampledAt: Date(),
                 cpuTemperature: cpuTemperature,
                 gpuTemperature: gpuTemperature,
                 fanSpeeds: fanReadings.speeds,
                 fanMinSpeeds: fanReadings.mins,
                 fanMaxSpeeds: fanReadings.maxs,
+                numberOfFans: fanReadings.speeds.count,
                 cpuUsagePercent: cpuStats.usagePercent,
                 performanceCoreUsagePercent: cpuStats.performanceCoreUsagePercent,
                 efficiencyCoreUsagePercent: cpuStats.efficiencyCoreUsagePercent,
@@ -408,7 +405,11 @@ final class SystemMonitor: ObservableObject {
                 cpuPowerWatts: cpuPowerWatts,
                 gpuPowerWatts: gpuPowerWatts,
                 ssdTemperature: ssdTemperature,
-                networkStats: networkStats
+                networkStats: networkStats,
+                thermalState: thermalState,
+                topProcesses: self.snapshot.topProcesses,
+                hasSMCAccess: self.hasSMCAccess,
+                lastError: self.lastError
             )
 
             DispatchQueue.main.async { [weak self] in
@@ -444,6 +445,10 @@ final class SystemMonitor: ObservableObject {
                 self.gpuPowerWatts = snapshot.gpuPowerWatts
                 self.ssdTemperature = snapshot.ssdTemperature
                 self.networkStats = snapshot.networkStats
+                self.thermalState = snapshot.thermalState
+                snapshot.hasSMCAccess = self.hasSMCAccess
+                snapshot.lastError = self.lastError
+                self.snapshot = snapshot
                 // Update history buffers
                 self.cpuHistory.removeFirst()
                 self.cpuHistory.append(snapshot.cpuUsagePercent)
@@ -457,6 +462,13 @@ final class SystemMonitor: ObservableObject {
                 NotificationCenter.default.post(name: .systemMonitorDidUpdate, object: self)
             }
         }
+    }
+
+    private func updateTopProcesses(_ topProcesses: TopProcessSnapshot) {
+        var updatedSnapshot = snapshot
+        updatedSnapshot.topProcesses = topProcesses
+        snapshot = updatedSnapshot
+        NotificationCenter.default.post(name: .systemMonitorDidUpdate, object: self)
     }
 
     private func readCPUTemperature() -> Double? {
