@@ -35,8 +35,15 @@ protocol WeatherProviding: AnyObject {
     func currentWeather(for location: CLLocation) async throws -> WeatherSnapshot
 }
 
+protocol WeatherLocationAccessControlling: AnyObject {
+    var authorizationStatus: CLAuthorizationStatus { get }
+    var currentLocation: CLLocation? { get }
+    func requestAccess()
+    func refreshStatus()
+}
+
 @MainActor
-final class WeatherLocationAccessController: NSObject, ObservableObject, CLLocationManagerDelegate {
+final class WeatherLocationAccessController: NSObject, ObservableObject, CLLocationManagerDelegate, WeatherLocationAccessControlling {
     static let shared = WeatherLocationAccessController()
 
     @Published private(set) var authorizationStatus: CLAuthorizationStatus
@@ -49,6 +56,10 @@ final class WeatherLocationAccessController: NSObject, ObservableObject, CLLocat
         self.authorizationStatus = locationManager.authorizationStatus
         super.init()
         locationManager.delegate = self
+    }
+
+    var currentLocation: CLLocation? {
+        locationManager.location
     }
 
     func requestAccess() {
@@ -205,8 +216,7 @@ final class WeatherViewModel: ObservableObject {
     @Published private(set) var state: WeatherState = .idle
 
     private let provider: WeatherProviding
-    private let locationManager = CLLocationManager()
-    private let locationAccess = WeatherLocationAccessController.shared
+    private let locationAccess: WeatherLocationAccessControlling
     private var refreshTask: Task<Void, Never>?
     private var isRunning = false
 
@@ -215,6 +225,15 @@ final class WeatherViewModel: ObservableObject {
 
     init(provider: WeatherProviding) {
         self.provider = provider
+        self.locationAccess = WeatherLocationAccessController.shared
+    }
+
+    init(
+        provider: WeatherProviding,
+        locationAccess: WeatherLocationAccessControlling
+    ) {
+        self.provider = provider
+        self.locationAccess = locationAccess
     }
 
     func start() {
@@ -239,13 +258,13 @@ final class WeatherViewModel: ObservableObject {
         refreshTask = Task { [weak self] in
             guard let self else { return }
             while !Task.isCancelled {
-                await self.fetch()
+                await self.refreshNow()
                 try? await Task.sleep(nanoseconds: UInt64(self.refreshInterval * 1_000_000_000))
             }
         }
     }
 
-    private func fetch() async {
+    func refreshNow() async {
         locationAccess.refreshStatus()
 
         switch locationAccess.authorizationStatus {
@@ -265,7 +284,7 @@ final class WeatherViewModel: ObservableObject {
         state = .loading
 
         // Use last known location or a default (Cupertino) for simulator
-        let location: CLLocation = locationManager.location
+        let location: CLLocation = locationAccess.currentLocation
             ?? CLLocation(latitude: 37.3346, longitude: -122.0090)
 
         do {
