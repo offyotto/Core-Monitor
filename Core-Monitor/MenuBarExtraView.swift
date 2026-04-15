@@ -140,7 +140,7 @@ private struct MenuBarAlertSummarySection: View {
             HStack(spacing: 8) {
                 summaryPill(SMCHelperManager.shared.isInstalled ? "Helper Ready" : "Helper Missing", color: SMCHelperManager.shared.isInstalled ? Color.mbBlue : Color.mbOrange)
                 if let recent = alertManager.history.first {
-                    summaryPill(recent.isRecovery ? "Recovered" : recent.kind.title, color: severityColor(recent.severity))
+                    summaryPill(recent.kind.title, color: severityColor(recent.severity))
                 }
             }
         }
@@ -528,6 +528,12 @@ struct MemoryMenuPopoverView: View {
         }
         .preferredColorScheme(.dark)
         .frame(width: 320)
+        .onAppear {
+            systemMonitor.setDetailedSamplingEnabled(true, reason: "menubar.memory")
+        }
+        .onDisappear {
+            systemMonitor.setDetailedSamplingEnabled(false, reason: "menubar.memory")
+        }
     }
 
     private var memHeader: some View {

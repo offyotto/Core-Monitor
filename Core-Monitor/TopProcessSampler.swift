@@ -21,7 +21,7 @@ final class TopProcessSampler {
     var onUpdate: ((TopProcessSnapshot) -> Void)?
 
     private let samplingQueue = DispatchQueue(label: "CoreMonitor.TopProcessSampler", qos: .utility)
-    private let interval: TimeInterval
+    private var interval: TimeInterval
     private let limit: Int
     private var timer: Timer?
     private var previousCPUTimeByPID: [pid_t: UInt64] = [:]
@@ -33,19 +33,27 @@ final class TopProcessSampler {
         self.limit = limit
     }
 
-    func start() {
+    func start(interval: TimeInterval? = nil) {
+        if let interval {
+            self.interval = interval
+        }
         stop()
         sample()
 
-        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: self.interval, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.sample()
             }
         }
         if let timer {
-            timer.tolerance = min(1.0, interval * 0.2)
+            timer.tolerance = min(1.0, self.interval * 0.2)
             RunLoop.current.add(timer, forMode: .common)
         }
+    }
+
+    func updateInterval(_ interval: TimeInterval) {
+        guard abs(self.interval - interval) > .ulpOfOne else { return }
+        start(interval: interval)
     }
 
     func stop() {

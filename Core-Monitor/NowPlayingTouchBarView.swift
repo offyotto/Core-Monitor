@@ -46,10 +46,11 @@ final class NowPlayingTouchBarView: NSView, TouchBarThemable {
         applyTheme()
         updateFromNowPlaying()
 
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: TB.refreshInterval, repeats: true) { [weak self] _ in
             self?.updateFromNowPlaying()
         }
         if let refreshTimer {
+            refreshTimer.tolerance = TB.refreshInterval * 0.2
             RunLoop.main.add(refreshTimer, forMode: .common)
         }
 

@@ -74,7 +74,7 @@ final class MenuBarController: NSObject {
 
         updateObserver = NotificationCenter.default.addObserver(
             forName: .systemMonitorDidUpdate,
-            object:  nil,
+            object:  systemMonitor,
             queue:   .main
         ) { [weak self] _ in
             self?.itemControllers.forEach { $0.refresh() }
@@ -107,10 +107,39 @@ final class MenuBarController: NSObject {
 
 // MARK: - SingleMenuBarItemController
 final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
+    private enum StatusTone: Equatable {
+        case normal
+        case warning
+        case critical
+        case secondary
+
+        var color: NSColor {
+            switch self {
+            case .normal:
+                return .labelColor
+            case .warning:
+                return .systemOrange
+            case .critical:
+                return .systemRed
+            case .secondary:
+                return .secondaryLabelColor
+            }
+        }
+    }
+
+    private struct StatusButtonState: Equatable {
+        let isVisible: Bool
+        let labelText: String
+        let tone: StatusTone
+        let hasCriticalAlert: Bool
+    }
+
+    private static let labelFont = NSFont.monospacedSystemFont(ofSize: 11, weight: .semibold)
+    private static let alertFont = NSFont.systemFont(ofSize: 10, weight: .bold)
 
     let kind: MenuBarItemKind
     private var statusItem: NSStatusItem!
-    private var popover:    NSPopover!
+    private var popover: NSPopover?
 
     private let systemMonitor:            SystemMonitor
     private let fanController:            FanController
@@ -121,6 +150,8 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
 
     // Keep the hosting controller alive
     private var hostingController: NSHostingController<AnyView>?
+    private var cachedIconAttachment: NSAttributedString?
+    private var lastStatusState: StatusButtonState?
 
     init(
         kind:                     MenuBarItemKind,
@@ -140,7 +171,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         self.revertTouchBarAction     = revertTouchBarAction
         super.init()
         setupStatusItem()
-        setupPopover()
         refresh()
     }
 
@@ -152,6 +182,8 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         button.target = self
         button.action = #selector(togglePopover(_:))
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        button.imagePosition = .noImage
+        cachedIconAttachment = makeStatusBarIconAttachment()
     }
 
     func refresh() {
@@ -159,69 +191,84 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
     }
 
     func updateStatusButton() {
-        let isVisible = MenuBarSettings.shared.isEnabled(kind)
-        statusItem.isVisible = isVisible
-        guard isVisible, let button = statusItem.button else { return }
-
-        let (labelText, labelColor) = statusLabel()
+        let state = statusButtonState()
+        if statusItem.isVisible != state.isVisible {
+            statusItem.isVisible = state.isVisible
+        }
+        guard state.isVisible, let button = statusItem.button else {
+            lastStatusState = state
+            return
+        }
+        guard lastStatusState != state else { return }
 
         let full = NSMutableAttributedString()
 
-        if let iconAttachment = statusBarIconAttachment() {
+        if let iconAttachment = cachedIconAttachment {
             full.append(iconAttachment)
             full.append(NSAttributedString(string: " "))
         }
 
         full.append(NSAttributedString(
-            string: labelText,
+            string: state.labelText,
             attributes: [
-                .foregroundColor: labelColor,
-                .font: NSFont.monospacedSystemFont(ofSize: 11, weight: .semibold)
+                .foregroundColor: state.tone.color,
+                .font: Self.labelFont
             ]
         ))
 
-        if alertManager.hasCriticalAlert {
+        if state.hasCriticalAlert {
             full.append(NSAttributedString(string: " "))
             full.append(NSAttributedString(
                 string: "●",
                 attributes: [
                     .foregroundColor: NSColor.systemRed,
-                    .font: NSFont.systemFont(ofSize: 10, weight: .bold)
+                    .font: Self.alertFont
                 ]
             ))
         }
 
         button.attributedTitle = full
-        button.imagePosition   = .noImage
+        lastStatusState = state
     }
 
     // MARK: - Label content per kind
 
-    private func statusLabel() -> (String, NSColor) {
+    private func statusButtonState() -> StatusButtonState {
+        let isVisible = MenuBarSettings.shared.isEnabled(kind)
+        let label = statusLabel()
+        return StatusButtonState(
+            isVisible: isVisible,
+            labelText: label.text,
+            tone: label.tone,
+            hasCriticalAlert: alertManager.hasCriticalAlert
+        )
+    }
+
+    private func statusLabel() -> (text: String, tone: StatusTone) {
         switch kind {
 
         case .cpu:
             let pct = Int(systemMonitor.cpuUsagePercent.rounded())
-            let color: NSColor = pct > 80 ? .systemRed : pct > 50 ? .systemOrange : .labelColor
-            return ("CPU \(pct)%", color)
+            let tone: StatusTone = pct > 80 ? .critical : pct > 50 ? .warning : .normal
+            return ("CPU \(pct)%", tone)
 
         case .memory:
             let pct = Int(systemMonitor.memoryUsagePercent.rounded())
-            let color: NSColor = pct > 85 ? .systemRed : pct > 70 ? .systemOrange : .labelColor
-            return ("MEM \(pct)%", color)
+            let tone: StatusTone = pct > 85 ? .critical : pct > 70 ? .warning : .normal
+            return ("MEM \(pct)%", tone)
 
         case .disk:
             let pct = Int(systemMonitor.diskStats.usagePercent.rounded())
-            let color: NSColor = pct > 90 ? .systemRed : pct > 75 ? .systemOrange : .labelColor
-            return ("SSD \(pct)%", color)
+            let tone: StatusTone = pct > 90 ? .critical : pct > 75 ? .warning : .normal
+            return ("SSD \(pct)%", tone)
 
         case .temperature:
             if let t = systemMonitor.cpuTemperature {
                 let ti = Int(t.rounded())
-                let color: NSColor = t > 90 ? .systemRed : t > 70 ? .systemOrange : .labelColor
-                return ("\(ti)°", color)
+                let tone: StatusTone = t > 90 ? .critical : t > 70 ? .warning : .normal
+                return ("\(ti)°", tone)
             }
-            return ("—°", .secondaryLabelColor)
+            return ("—°", .secondary)
         }
     }
 
@@ -233,7 +280,7 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
             .withSymbolConfiguration(configuration)
     }
 
-    private func statusBarIconAttachment() -> NSAttributedString? {
+    private func makeStatusBarIconAttachment() -> NSAttributedString? {
         guard let icon = statusBarIcon() else { return nil }
 
         let targetHeight: CGFloat = 11
@@ -258,12 +305,12 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         self.hostingController = hc
 
         popover = NSPopover()
-        popover.contentSize       = NSSize(width: 320, height: 500)
-        popover.behavior          = .transient
-        popover.animates          = true
-        popover.contentViewController = hc
-        popover.delegate          = self
-        popover.appearance        = nil
+        popover?.contentSize = NSSize(width: 320, height: 500)
+        popover?.behavior = .transient
+        popover?.animates = true
+        popover?.contentViewController = hc
+        popover?.delegate = self
+        popover?.appearance = nil
     }
 
     private func makePopoverView() -> AnyView {
@@ -271,53 +318,60 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         case .cpu:
             return AnyView(
                 CPUMenuPopoverView(systemMonitor: systemMonitor, alertManager: alertManager, openDashboardAction: { [weak self] in
-                    self?.popover.performClose(nil); self?.openDashboardAction()
+                    self?.popover?.performClose(nil); self?.openDashboardAction()
                 })
             )
         case .memory:
             return AnyView(
                 MemoryMenuPopoverView(systemMonitor: systemMonitor, alertManager: alertManager, openDashboardAction: { [weak self] in
-                    self?.popover.performClose(nil); self?.openDashboardAction()
+                    self?.popover?.performClose(nil); self?.openDashboardAction()
                 })
             )
         case .disk:
             return AnyView(
                 DiskMenuPopoverView(systemMonitor: systemMonitor, alertManager: alertManager, openDashboardAction: { [weak self] in
-                    self?.popover.performClose(nil); self?.openDashboardAction()
+                    self?.popover?.performClose(nil); self?.openDashboardAction()
                 })
             )
         case .temperature:
             return AnyView(
                 TemperatureMenuPopoverView(systemMonitor: systemMonitor, fanController: fanController, alertManager: alertManager, openDashboardAction: { [weak self] in
-                    self?.popover.performClose(nil); self?.openDashboardAction()
+                    self?.popover?.performClose(nil); self?.openDashboardAction()
                 })
             )
         }
     }
 
+    private func ensurePopover() {
+        guard popover == nil else { return }
+        setupPopover()
+    }
+
     // MARK: - Toggle
 
     @objc private func togglePopover(_ sender: NSStatusBarButton) {
-        if popover.isShown {
-            popover.performClose(sender)
+        if popover?.isShown == true {
+            popover?.performClose(sender)
             return
         }
         guard let button = statusItem.button else { return }
+        ensurePopover()
         hostingController?.view.layoutSubtreeIfNeeded()
         let fit    = hostingController?.view.fittingSize ?? NSSize(width: 320, height: 500)
         let maxH   = max(300, min(640, (button.window?.screen?.visibleFrame.height ?? 900) - 100))
         let height = min(max(fit.height, 300), maxH)
-        popover.contentSize = NSSize(width: 320, height: height)
-        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-        popover.contentViewController?.view.window?.makeKey()
+        popover?.contentSize = NSSize(width: 320, height: height)
+        popover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        popover?.contentViewController?.view.window?.makeKey()
     }
 
     // MARK: - NSPopoverDelegate
 
     func popoverWillShow(_ notification: Notification) {
+        systemMonitor.setInteractiveMonitoringEnabled(true, reason: "menubar.\(kind.title)")
         statusItem.button?.isHighlighted = true
         DispatchQueue.main.async { [weak self] in
-            guard let win = self?.popover.contentViewController?.view.window else { return }
+            guard let win = self?.popover?.contentViewController?.view.window else { return }
             win.isOpaque = false
             win.backgroundColor = .clear
             win.hasShadow = true
@@ -327,6 +381,11 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
     }
 
     func popoverDidClose(_ notification: Notification) {
+        systemMonitor.setInteractiveMonitoringEnabled(false, reason: "menubar.\(kind.title)")
         statusItem.button?.isHighlighted = false
+        popover?.contentViewController = nil
+        popover?.delegate = nil
+        hostingController = nil
+        popover = nil
     }
 }

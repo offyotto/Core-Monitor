@@ -551,7 +551,6 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
 
     private let scrollView = NSScrollView()
     private let contentStack = NSStackView()
-    private var refreshTimer: Timer?
     private var dockItems: [DockTouchBarItem] = []
     private var persistentItems: [DockTouchBarItem] = []
 
@@ -595,7 +594,6 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
         ])
 
         reload()
-        startRefreshing()
     }
 
     func reload() {
@@ -608,13 +606,6 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
     private func applyTheme() {
         layer?.backgroundColor = NSColor.clear.cgColor
         scrollView.contentView.backgroundColor = .clear
-    }
-
-    private func startRefreshing() {
-        refreshTimer?.invalidate()
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
-            self?.reload()
-        }
     }
 
     private func rebuildStack(_ stack: NSStackView, with items: [DockTouchBarItem]) {

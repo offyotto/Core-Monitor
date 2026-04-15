@@ -106,6 +106,20 @@ private struct SMCParamStruct {
 }
 
 final class SystemMonitor: ObservableObject {
+    private enum ActivitySamplingMode {
+        case background
+        case detailed
+
+        var interval: TimeInterval {
+            switch self {
+            case .background:
+                return 30.0
+            case .detailed:
+                return 5.0
+            }
+        }
+    }
+
     var cpuTemperature: Double?
     var gpuTemperature: Double?
     var fanSpeeds: [Int] = []
@@ -200,30 +214,24 @@ final class SystemMonitor: ObservableObject {
     }
 
     private var smcConnection: io_connect_t = 0
-    /// Normal: 1 s. Basic mode: 4 s.
+    /// Interactive mode runs at 1 s. Background mode falls back to 30 s.
     private var monitoringInterval: TimeInterval = 1.0
+    private var preferredMonitoringInterval: TimeInterval = 1.0
     private var timer: Timer?
     private var keyInfoCache: [UInt32: SMCKeyData_keyInfo_t] = [:]
     private let samplingQueue = DispatchQueue(label: "CoreMonitor.SystemMonitorSampling", qos: .utility)
     private var isSampling = false
+    private var isMonitoringActive = false
+    private var detailedSamplingReasons = Set<String>()
+    private var interactiveMonitoringReasons = Set<String>()
+    private var monitoringIntervalOverrides: [String: TimeInterval] = [:]
 
     // MARK: - Basic mode adaptive polling
     /// Called by ContentView when the user toggles Basic Mode.
     /// Restarts the timer at the appropriate interval so the change takes effect immediately.
     func setBasicMode(_ enabled: Bool) {
-        let newInterval: TimeInterval = enabled ? 4.0 : 1.0
-        guard newInterval != monitoringInterval else { return }
-        monitoringInterval = newInterval
-        // Restart timer only if monitoring is already running
-        guard timer != nil else { return }
-        timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: monitoringInterval, repeats: true) { [weak self] _ in
-            self?.updateReadings()
-        }
-        if let timer {
-            timer.tolerance = monitoringInterval * 0.15
-            RunLoop.current.add(timer, forMode: .common)
-        }
+        preferredMonitoringInterval = enabled ? 30.0 : 1.0
+        applyMonitoringIntervalIfNeeded()
     }
 
     private var previousCPULoadInfo = host_cpu_load_info_data_t()
@@ -269,10 +277,11 @@ final class SystemMonitor: ObservableObject {
     }
 
     func startMonitoring() {
+        isMonitoringActive = true
         _ = openSMCConnection()
         detectFans()
         updateReadings()
-        activitySampler.start()
+        updateActivitySamplingMode()
 
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: monitoringInterval, repeats: true) { [weak self] _ in
@@ -285,9 +294,46 @@ final class SystemMonitor: ObservableObject {
     }
 
     func stopMonitoring() {
+        isMonitoringActive = false
         timer?.invalidate()
         timer = nil
         activitySampler.stop()
+    }
+
+    func setDetailedSamplingEnabled(_ enabled: Bool, reason: String) {
+        guard !reason.isEmpty else { return }
+
+        if enabled {
+            detailedSamplingReasons.insert(reason)
+        } else {
+            detailedSamplingReasons.remove(reason)
+        }
+
+        updateActivitySamplingMode()
+    }
+
+    func setInteractiveMonitoringEnabled(_ enabled: Bool, reason: String) {
+        guard !reason.isEmpty else { return }
+
+        if enabled {
+            interactiveMonitoringReasons.insert(reason)
+        } else {
+            interactiveMonitoringReasons.remove(reason)
+        }
+
+        applyMonitoringIntervalIfNeeded()
+    }
+
+    func setMonitoringIntervalOverride(_ interval: TimeInterval?, reason: String) {
+        guard !reason.isEmpty else { return }
+
+        if let interval {
+            monitoringIntervalOverrides[reason] = interval
+        } else {
+            monitoringIntervalOverrides.removeValue(forKey: reason)
+        }
+
+        applyMonitoringIntervalIfNeeded()
     }
 
     private func openSMCConnection() -> Bool {
@@ -468,7 +514,36 @@ final class SystemMonitor: ObservableObject {
         var updatedSnapshot = snapshot
         updatedSnapshot.topProcesses = topProcesses
         snapshot = updatedSnapshot
-        NotificationCenter.default.post(name: .systemMonitorDidUpdate, object: self)
+    }
+
+    private func applyMonitoringIntervalIfNeeded() {
+        let desiredInteractiveInterval: TimeInterval = interactiveMonitoringReasons.isEmpty ? 30.0 : 1.0
+        let overrideInterval = monitoringIntervalOverrides.values.min() ?? 30.0
+        let desiredMonitoringInterval = min(desiredInteractiveInterval, overrideInterval)
+        let newInterval = max(preferredMonitoringInterval, desiredMonitoringInterval)
+        guard abs(newInterval - monitoringInterval) > .ulpOfOne else { return }
+
+        monitoringInterval = newInterval
+
+        guard timer != nil else { return }
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: monitoringInterval, repeats: true) { [weak self] _ in
+            self?.updateReadings()
+        }
+        if let timer {
+            timer.tolerance = monitoringInterval * 0.15
+            RunLoop.current.add(timer, forMode: .common)
+        }
+    }
+
+    private func updateActivitySamplingMode() {
+        guard isMonitoringActive else {
+            activitySampler.stop()
+            return
+        }
+
+        let mode: ActivitySamplingMode = detailedSamplingReasons.isEmpty ? .background : .detailed
+        activitySampler.start(interval: mode.interval)
     }
 
     private func readCPUTemperature() -> Double? {
