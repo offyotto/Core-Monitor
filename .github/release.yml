@@ -1,0 +1,21 @@
+changelog:
+  categories:
+    - title: Product
+      labels:
+        - product
+        - feature
+        - ui
+        - alerts
+    - title: Fan Control and Helper
+      labels:
+        - helper
+        - fan-control
+        - thermals
+    - title: Release and Ops
+      labels:
+        - release
+        - ci
+        - docs
+    - title: Everything Else
+      labels:
+        - "*"

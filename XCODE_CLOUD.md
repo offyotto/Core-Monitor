@@ -1,11 +1,13 @@
 # Xcode Cloud setup for Core-Monitor
 
-Core-Monitor is ready for the repo-side part of Xcode Cloud:
+Core-Monitor now has source-controlled GitHub Actions for CI and release automation. Use Xcode Cloud only if you specifically want Apple's hosted direct-distribution flow in parallel.
+
+For Xcode Cloud, the repo-side prerequisites are:
 
 - The shared scheme is `Core-Monitor`.
 - The archive action uses the `Release` configuration.
 - The `smc-helper` target is built as a dependency and embedded into `Core-Monitor.app`.
-- There are no XCTest targets yet, so the first workflow should archive only.
+- `Core-MonitorTests` exists and can run in cloud workflows before archive/notarize steps.
 
 Xcode Cloud workflows are stored in App Store Connect, not in a repository file. Use this checklist to create the workflow in Xcode or App Store Connect.
 
@@ -14,7 +16,7 @@ Xcode Cloud workflows are stored in App Store Connect, not in a repository file.
 Name the workflow:
 
 ```text
-Archive and Notarize
+Test, Archive, and Notarize
 ```
 
 Use these workflow settings:
@@ -23,15 +25,15 @@ Use these workflow settings:
 - Repository: this repository
 - Branch start condition: run on every push to the branch you use for releases, or all branches if you truly want every push archived
 - Environment: Latest stable Xcode and macOS, unless a specific Xcode version is required
-- Build action: `Archive`
+- Build action: `Test` followed by `Archive`
 - Scheme: `Core-Monitor`
 - Platform: `macOS`
 - Configuration: `Release`
 - Post action: `Notarize`
 - Distribution: `Direct Distribution`
-- Tests: disabled until the project has real XCTest targets
+- Tests: `Core-MonitorTests`
 
-For this app, prefer a push workflow on your release branch over all branches. Notarizing every experimental branch will burn the 25 monthly compute hours quickly and will also submit every branch build to Apple's notary service.
+For this app, prefer a push workflow on your release branch over all branches. Notarizing every experimental branch will burn the monthly compute hours quickly and will also submit every branch build to Apple's notary service.
 
 ## Signing
 

@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - codex/**
+      - feature/**
+      - release/**
+  pull_request:
+
+jobs:
+  macos-tests:
+    name: Build and Test
+    runs-on: macos-14
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Run macOS test suite
+        run: |
+          xcodebuild test \
+            -project Core-Monitor.xcodeproj \
+            -scheme Core-Monitor \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO

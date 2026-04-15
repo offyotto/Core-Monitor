@@ -1,0 +1,134 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing git tag to release, for example v14.0.0
+        required: true
+      create_release:
+        description: Create or update the GitHub Release after notarization
+        required: false
+        default: "true"
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  notarized-release:
+    name: Build, Notarize, and Publish
+    runs-on: macos-14
+    timeout-minutes: 60
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref }}
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Verify release tag exists
+        run: git rev-parse "${RELEASE_TAG}^{tag}"
+
+      - name: Run test suite before archiving
+        run: |
+          xcodebuild test \
+            -project Core-Monitor.xcodeproj \
+            -scheme Core-Monitor \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Import Developer ID certificate
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          if [[ -z "${BUILD_CERTIFICATE_BASE64}" || -z "${P12_PASSWORD}" || -z "${KEYCHAIN_PASSWORD}" ]]; then
+            echo "Missing signing secrets. Configure BUILD_CERTIFICATE_BASE64, P12_PASSWORD, and KEYCHAIN_PASSWORD." >&2
+            exit 1
+          fi
+
+          KEYCHAIN_PATH="$RUNNER_TEMP/core-monitor-release.keychain-db"
+          CERT_PATH="$RUNNER_TEMP/core-monitor-release.p12"
+
+          echo -n "${BUILD_CERTIFICATE_BASE64}" | base64 -D > "${CERT_PATH}"
+          security create-keychain -p "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}"
+          security set-keychain-settings -lut 21600 "${KEYCHAIN_PATH}"
+          security unlock-keychain -p "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}"
+          security import "${CERT_PATH}" -P "${P12_PASSWORD}" -A -t cert -f pkcs12 -k "${KEYCHAIN_PATH}"
+          security list-keychains -d user -s "${KEYCHAIN_PATH}" $(security list-keychains -d user | tr -d '"')
+          security set-key-partition-list -S apple-tool:,apple: -s -k "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}"
+
+      - name: Build release archive
+        run: ./scripts/release/build_release.sh
+
+      - name: Notarize and staple
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          NOTARYTOOL_PROFILE: ${{ secrets.NOTARYTOOL_PROFILE }}
+        run: ./scripts/release/notarize_release.sh build/release/Core-Monitor.zip build/release/export/Core-Monitor.app
+
+      - name: Collect release metadata
+        env:
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          APP_PATH="build/release/export/Core-Monitor.app"
+          VERSION="$(defaults read "${APP_PATH}/Contents/Info" CFBundleShortVersionString)"
+          BUILD_NUMBER="$(defaults read "${APP_PATH}/Contents/Info" CFBundleVersion)"
+          SHA256="$(shasum -a 256 build/release/Core-Monitor.zip | awk '{print $1}')"
+          DOWNLOAD_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/Core-Monitor.zip"
+
+          printf '%s  %s\n' "${SHA256}" "Core-Monitor.zip" > build/release/Core-Monitor.zip.sha256
+          ./scripts/release/generate_homebrew_cask.sh "${VERSION}" "${SHA256}" "${DOWNLOAD_URL}" build/release/core-monitor.rb
+
+          {
+            echo "VERSION=${VERSION}"
+            echo "BUILD_NUMBER=${BUILD_NUMBER}"
+            echo "SHA256=${SHA256}"
+            echo "DOWNLOAD_URL=${DOWNLOAD_URL}"
+          } >> "${GITHUB_ENV}"
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-monitor-release
+          path: |
+            build/release/Core-Monitor.zip
+            build/release/Core-Monitor.zip.sha256
+            build/release/core-monitor.rb
+            build/release/Core-Monitor.xcarchive
+
+      - name: Create or update GitHub Release
+        if: github.event_name == 'push' || github.event.inputs.create_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
+        run: |
+          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            gh release upload "${RELEASE_TAG}" \
+              build/release/Core-Monitor.zip \
+              build/release/Core-Monitor.zip.sha256 \
+              build/release/core-monitor.rb \
+              --clobber
+          else
+            gh release create "${RELEASE_TAG}" \
+              build/release/Core-Monitor.zip \
+              build/release/Core-Monitor.zip.sha256 \
+              build/release/core-monitor.rb \
+              --title "Core-Monitor ${VERSION}" \
+              --generate-notes
+          fi
