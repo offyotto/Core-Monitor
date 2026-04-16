@@ -145,13 +145,13 @@ struct HelpView: View {
                 }
             )),
             HelpSection(id: "menubar", title: "Menu Bar Items and Popovers", icon: "menubar.rectangle", keywords: [
-                "menu bar", "popover", "visible items", "cpu", "memory", "disk", "temperature",
+                "menu bar", "popover", "visible items", "cpu", "memory", "network", "disk", "temperature",
                 "allow in menu bar", "hidden icon", "missing icon", "macos 26", "menu bar access"
             ], content: AnyView(
                 HelpCard {
                     Text("Core Monitor menu bar items provide quick overview and access to system metrics.")
                     HelpBullet(text: "Click menu bar icons to open popovers with detailed info and controls.")
-                    HelpBullet(text: "Use `System` → `Menu Bar` to choose which of the CPU, Memory, Disk, and Temperature items stay visible.")
+                    HelpBullet(text: "Use `System` → `Menu Bar` to choose which of the CPU, Memory, Network, Disk, and Temperature items stay visible.")
                     HelpBullet(text: "At least one menu bar item must stay enabled so the app remains reachable after launch.")
                     HelpBullet(text: "If Core Monitor is running but its icons are still missing, open System Settings → Menu Bar and re-enable the app there on newer macOS releases before assuming monitoring failed.")
                 }
