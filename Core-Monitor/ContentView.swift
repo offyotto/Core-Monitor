@@ -365,7 +365,7 @@ private struct MonitoringTrendSection: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Load & Thermal Trends")
                         .font(.system(size: 18, weight: .bold))
-                    Text("Recent CPU, GPU, fan, power, memory, and swap history without leaving the dashboard.")
+                    Text("Recent CPU, GPU, fan, power, memory, network, and swap history without leaving the dashboard.")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -415,6 +415,24 @@ private struct MonitoringTrendSection: View {
                     values: systemMonitor.totalPowerTrend.values(for: selectedRange),
                     rangeTitle: selectedRange.title,
                     formatter: { String(format: "%.1f", $0) }
+                )
+                MonitoringTrendCard(
+                    title: "Download",
+                    unit: "",
+                    color: Color(red: 0.36, green: 0.77, blue: 1.0),
+                    summary: systemMonitor.networkDownloadTrend.summary(for: selectedRange),
+                    values: systemMonitor.networkDownloadTrend.values(for: selectedRange),
+                    rangeTitle: selectedRange.title,
+                    formatter: { NetworkThroughputFormatter.compactRate(bytesPerSecond: $0) }
+                )
+                MonitoringTrendCard(
+                    title: "Upload",
+                    unit: "",
+                    color: Color(red: 0.46, green: 0.90, blue: 0.66),
+                    summary: systemMonitor.networkUploadTrend.summary(for: selectedRange),
+                    values: systemMonitor.networkUploadTrend.values(for: selectedRange),
+                    rangeTitle: selectedRange.title,
+                    formatter: { NetworkThroughputFormatter.compactRate(bytesPerSecond: $0) }
                 )
                 MonitoringTrendCard(
                     title: "Memory Use",
@@ -1522,6 +1540,18 @@ private struct DetailPane: View {
                 if let w = snapshot.totalSystemWatts {
                     MetricTile(label: "Power", value: String(format: "%.1f", abs(w)), unit: " W", color: .purple)
                 }
+                MetricTile(
+                    label: "Download",
+                    value: NetworkThroughputFormatter.compactRate(bytesPerSecond: snapshot.networkStats.downloadBytesPerSec),
+                    unit: "",
+                    color: Color(red: 0.36, green: 0.77, blue: 1.0)
+                )
+                MetricTile(
+                    label: "Upload",
+                    value: NetworkThroughputFormatter.compactRate(bytesPerSecond: snapshot.networkStats.uploadBytesPerSec),
+                    unit: "",
+                    color: Color(red: 0.46, green: 0.90, blue: 0.66)
+                )
                 if snapshot.batteryInfo.hasBattery {
                     MetricTile(label: "Battery", value: "\(snapshot.batteryInfo.chargePercent ?? 0)", unit: "%",
                                color: battColor, gauge: battFrac,

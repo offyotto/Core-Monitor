@@ -41,12 +41,13 @@ struct HelpView: View {
     private var allSections: [HelpSection] {
         [
             HelpSection(id: "overview", title: "Overview Dashboard", icon: "gauge.medium", keywords: [
-                "dashboard", "cpu", "gpu", "memory", "thermal", "power", "history", "trends"
+                "dashboard", "cpu", "gpu", "memory", "thermal", "power", "network", "upload", "download", "throughput", "history", "trends"
             ], content: AnyView(
                 HelpCard {
-                    Text("The Overview Dashboard provides a comprehensive summary of your Mac’s current state including CPU, GPU, memory, and thermal information.")
+                    Text("The Overview Dashboard provides a comprehensive summary of your Mac’s current state including CPU, GPU, memory, thermal, power, and live network information.")
                     HelpBullet(text: "`CPU`, `GPU`, and `Memory` usage are shown with real-time graphs and numeric values.")
                     HelpBullet(text: "Thermal zones and sensor temperatures update continuously.")
+                    HelpBullet(text: "Download and upload tiles surface current throughput, and the trend section keeps short rolling history for sustained transfer spikes.")
                     HelpBullet(text: "Load and thermal trend cards keep rolling 1-minute, 5-minute, and 15-minute windows so you can spot sustained pressure instead of only point-in-time spikes.")
                     HelpBullet(text: "Use the dashboard to quickly assess system performance and health.")
                 }

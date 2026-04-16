@@ -295,3 +295,9 @@
 - Preserved the weather opt-in privacy posture by keeping launch-time location prompts off while retaining the fresh-location request path once access is already granted.
 - Re-verified the batch with targeted `WeatherViewModelTests`, `AlertEngineTests`, and `HelpViewSearchTests`, followed by two clean full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` passes.
 - Tried to re-run a first-launch dashboard screenshot after resetting `com.coremonitor.hasSeenWelcomeGuide.v1`, but the accessory app still would not reliably surface a frontmost dashboard window through local UI scripting; noted as a follow-up runtime-validation gap rather than blocking this code-quality batch.
+
+### Completed batch
+- Closed a visible product gap against Stats/iStat-style monitoring by surfacing the already-sampled network throughput in Core Monitor's main dashboard instead of leaving it effectively hidden behind Touch Bar internals.
+- Added overview `Download` and `Upload` tiles, retained upload/download trend history across the existing 1-minute, 5-minute, and 15-minute windows, and documented the new throughput surfaces in the in-app Help search model.
+- Added focused `NetworkThroughputFormatterTests`, expanded `HelpViewSearchTests`, and re-verified the batch with a fresh full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` pass using `/tmp/core-monitor-network-verify-dd`.
+- Tried to runtime-inspect the new overview cards through the debug app, but the same accessory-window scripting gap still prevented a reliable frontmost dashboard screenshot in this environment, so this batch is test-verified and build-verified with runtime UI capture still pending.
