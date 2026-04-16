@@ -1313,13 +1313,13 @@ private struct FanControlPanel: View {
 
 // MARK: - Sidebar items
 enum SidebarItem: String, CaseIterable, Identifiable {
-    case overview="Overview", alerts="Alerts", thermals="Thermals", memory="Memory", fans="Fans"
+    case overview="Overview", thermals="Thermals", memory="Memory", fans="Fans"
     case battery="Battery"
     case system="System", touchBar="Touch Bar", help="Help", about="About"
     var id: String { rawValue }
     var icon: String {
         switch self {
-        case .overview: return "gauge.medium"; case .alerts: return "bell.badge"; case .thermals: return "thermometer.medium"
+        case .overview: return "gauge.medium"; case .thermals: return "thermometer.medium"
         case .memory: return "memorychip"; case .fans: return "fanblades.fill"
         case .battery: return "battery.75"; case .system: return "gearshape"
         case .touchBar: return "rectangle.3.group"
@@ -1378,7 +1378,7 @@ private struct Sidebar: View {
     let modeState: AppModeState
 
     var visibleItems: [SidebarItem] {
-        var items: [SidebarItem] = [.overview, .alerts, .thermals, .memory, .fans]
+        var items: [SidebarItem] = [.overview, .thermals, .memory, .fans]
         if hasBattery {
             items.append(.battery)
         }
@@ -1460,7 +1460,6 @@ private struct Sidebar: View {
 private struct DetailPane: View {
     @Binding var selection: SidebarItem
     let snapshot: SystemMonitorSnapshot
-    let alertManager: AlertManager
     let fanController: FanController; let systemMonitor: SystemMonitor
     let startupManager: StartupManager
 
@@ -1468,7 +1467,6 @@ private struct DetailPane: View {
     private var selectedContent: some View {
         switch selection {
         case .overview:  overviewContent
-        case .alerts:    AlertsView(alertManager: alertManager, systemMonitor: systemMonitor, fanController: fanController)
         case .thermals:  thermalsContent
         case .memory:    memoryContent
         case .fans:      fansContent
@@ -2613,7 +2611,6 @@ struct ContentView: View {
     @StateObject private var appearanceSettings = AppAppearanceSettings.shared
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
-    @ObservedObject var alertManager: AlertManager
     @ObservedObject var startupManager: StartupManager
     @ObservedObject private var dashboardNavigationRouter = DashboardNavigationRouter.shared
 
@@ -2652,7 +2649,6 @@ struct ContentView: View {
             DetailPane(
                 selection: $sidebarSelection,
                 snapshot: systemMonitor.snapshot,
-                alertManager: alertManager,
                 fanController: fanController, systemMonitor: systemMonitor,
                 startupManager: startupManager
             )

@@ -101,17 +101,17 @@ final class DashboardNavigationRouterTests: XCTestCase {
     func testConsumeReturnsRequestedSelectionAndClearsRoute() throws {
         let router = DashboardNavigationRouter()
 
-        router.open(.alerts)
+        router.open(.fans)
 
         let route = try XCTUnwrap(router.route)
-        XCTAssertEqual(router.consume(route), .alerts)
+        XCTAssertEqual(router.consume(route), .fans)
         XCTAssertNil(router.route)
     }
 
     func testConsumeRejectsStaleRouteAfterNewRequest() throws {
         let router = DashboardNavigationRouter()
 
-        router.open(.alerts)
+        router.open(.fans)
         let staleRoute = try XCTUnwrap(router.route)
 
         router.open(.memory)

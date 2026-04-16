@@ -26,7 +26,6 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
         let rootView = ContentView(
             systemMonitor: coordinator.systemMonitor,
             fanController: coordinator.fanController,
-            alertManager: coordinator.alertManager,
             startupManager: startupManager
         )
         let hostingController = NSHostingController(rootView: rootView)
@@ -134,6 +133,12 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
 
         NSWindow.allowsAutomaticWindowTabbing = false
         launchPresentation = WelcomeGuideProgress.launchPresentation()
+        debugLaunch("bundleIdentifier=\(Bundle.main.bundleIdentifier ?? "nil")")
+        debugLaunch("standardHasSeenRaw=\(String(describing: UserDefaults.standard.object(forKey: WelcomeGuideProgress.hasSeenDefaultsKey)))")
+        if let bundleIdentifier = Bundle.main.bundleIdentifier {
+            debugLaunch("persistentDomainHasSeenRaw=\(String(describing: UserDefaults.standard.persistentDomain(forName: bundleIdentifier)?[WelcomeGuideProgress.hasSeenDefaultsKey]))")
+            debugLaunch("suiteHasSeenRaw=\(String(describing: UserDefaults(suiteName: bundleIdentifier)?.object(forKey: WelcomeGuideProgress.hasSeenDefaultsKey)))")
+        }
         applyInitialActivationPolicy()
         debugLaunch("didFinishLaunching launchPresentation=\(launchPresentation) activationPolicy=\(NSApp.activationPolicy().rawValue)")
         installApplicationMenuIfNeeded()

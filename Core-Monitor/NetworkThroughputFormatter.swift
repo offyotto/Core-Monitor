@@ -22,7 +22,6 @@ enum NetworkThroughputFormatter {
             value /= 1_000
             unitIndex += 1
         }
-
         let decimals: Int
         switch value {
         case 0..<10 where unitIndex > 0:

@@ -5,7 +5,7 @@
 	<key>CFBundleExecutable</key>
 	<string>smc-helper</string>
 	<key>CFBundleIdentifier</key>
-	<string>ventaphobia.smc-helper</string>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>

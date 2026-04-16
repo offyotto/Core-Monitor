@@ -117,13 +117,13 @@ private let guideSteps: [GuideStep] = [
         icon: "cpu",
         iconColor: .wgAmber,
         headline: "Welcome to Core Monitor",
-        subheadline: "Your M-series Mac, fully visible.",
-        body: "Core Monitor gives you deep, real-time insight into your Apple Silicon Mac: thermals, memory pressure, fan behavior, power draw, and a customizable Touch Bar surface.",
+        subheadline: "Thermals, power, and fan state in one place.",
+        body: "Core Monitor gives you deep, real-time insight into your Apple Silicon Mac: temperatures, memory pressure, fan behavior, power draw, and a menu bar presence that stays readable under sustained load.",
         bullets: [
             ("thermometer.medium",    .wgAmber,  "Live CPU, GPU & memory readings"),
-            ("fan.fill",              .wgBlue,   "Intelligent fan speed control"),
-            ("rectangle.on.rectangle", .wgGreen, "Configurable Touch Bar widgets"),
-            ("bolt.fill",             .wgPurple, "Power, battery, brightness and system controls"),
+            ("menubar.rectangle",     .wgBlue,   "Readable menu bar monitoring"),
+            ("lock.shield",           .wgGreen,  "Helper-optional fan control"),
+            ("hand.raised",           .wgPurple, "Local diagnostics and privacy controls"),
         ]
     ),
     GuideStep(
@@ -132,7 +132,7 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgAmber,
         headline: "Thermals & Metrics",
         subheadline: "See what's really heating up.",
-        body: "The dashboard streams CPU, GPU, and memory data at 1-second resolution. Spark-line histories let you spot transient spikes that Activity Monitor smooths over, while the system status cards and alerts flow keep monitoring health visible and actionable.",
+        body: "The dashboard streams CPU, GPU, and memory data at 1-second resolution. Spark-line histories let you spot transient spikes that Activity Monitor smooths over, and the system status cards keep monitoring freshness, helper health, and privacy controls visible in one place.",
         bullets: [
             ("cpu.fill",              .wgAmber,  "P-core and E-core usage, plus CPU temperature"),
             ("memorychip",            .wgBlue,   "Memory pressure with wired/active breakdown"),
