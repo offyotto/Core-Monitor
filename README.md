@@ -5,7 +5,21 @@
 <h1 align="center">Core-Monitor</h1>
 
 <p align="center">
-  Thermal-first monitoring for Apple Silicon Macs, with optional helper-backed fan control.
+  A native system monitor for macOS, built for Apple Silicon Macs.
+</p>
+
+<p align="center">
+  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">
+    <img src="https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge" alt="Download latest release">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Latest release</a>
+  ·
+  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases">All releases</a>
+  ·
+  <a href="./LICENSE">License</a>
 </p>
 
 <p align="center">
@@ -13,21 +27,19 @@
     <img src="https://img.shields.io/badge/Website-Core--Monitor-8A2BE2?style=flat" alt="Website">
   </a>
   <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">
-    <img src="https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=flat" alt="Download latest">
+    <img src="https://img.shields.io/badge/Download-latest-brightgreen?style=flat" alt="Download latest">
   </a>
   <a href="./LICENSE">
     <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=flat" alt="GPL-3.0 license">
   </a>
-  <img src="https://img.shields.io/badge/macOS-13%2B-black?style=flat&logo=apple" alt="macOS 13+">
+  <img src="https://img.shields.io/badge/macOS-12%2B-black?style=flat&logo=apple" alt="macOS 12+">
 </p>
 
 ---
 
-Core-Monitor reads sensor data from AppleSMC and standard macOS system APIs, then presents it in the menu bar, dashboard, alerts surface, and, on supported hardware, the Touch Bar. CPU, GPU, memory, battery, temperatures, power draw, and fan speeds update continuously in a native macOS app.
+Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs, then presents it in the menu bar, dashboard, and, on supported hardware, the Touch Bar. CPU, GPU, memory, battery, temperatures, power draw, and fan speeds update continuously in the native app.
 
-It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. Sensor reads stay local to your Mac. The optional fan-control helper is the only additional process, and it is only needed when you want privileged fan writes.
-
-The `System` tab can also register an optional `Option-Command-M` dashboard shortcut so you still have a reliable way back into Core-Monitor when menu bar visibility or macOS reopen behavior gets in the way.
+It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. Sensor reads stay local to your Mac. The optional fan control helper is the only additional process, and it is only needed if you want write access for fan control.
 
 Public builds are available through GitHub Releases.
 
@@ -36,7 +48,7 @@ Public builds are available through GitHub Releases.
 - **Thermal-first by default.** Core-Monitor is built for people who care about heat, fan behavior, throttling risk, and sustained load more than decorative desktop stats.
 - **Monitoring first, helper optional.** Fresh installs start in system-owned cooling. You only need the privileged helper if you explicitly choose a fan mode that writes RPM targets.
 - **Readable menu bar defaults.** New installs start with the balanced three-item layout instead of trying to occupy the entire menu bar at once.
-- **Local diagnostics, no accounts.** Sensor reads and helper diagnostics stay on-device. There are no cloud dashboards, required logins, or telemetry dependencies for core monitoring.
+- **Local diagnostics, no accounts.** Sensor reads, alert history, and helper diagnostics stay on-device. There are no cloud dashboards, required logins, or telemetry dependencies for core monitoring.
 - **Open-source trust surface.** The repo includes helper diagnostics docs, architecture notes, contributor guidance, and a current public-source competitor matrix instead of hiding the hard parts behind marketing copy.
 
 If you want the broader market context, see [`docs/COMPETITOR_MATRIX_2026.md`](./docs/COMPETITOR_MATRIX_2026.md) and [`docs/CORE_MONITOR_AUDIT_2026.md`](./docs/CORE_MONITOR_AUDIT_2026.md).
@@ -55,12 +67,10 @@ brew tap --custom-remote offyotto-sl3/core-monitor https://github.com/offyotto-s
 brew install --cask offyotto-sl3/core-monitor/core-monitor
 ```
 
-Monitoring works immediately after launch. Install the helper later from the in-app fan-control flow only if you want manual or managed fan writes.
-
 ## UI Preview
 
 <p align="center">
-  <img src="./docs/images/ui/overview-2026.png" alt="Core-Monitor overview screen showing alert state, monitoring freshness, and CPU and memory load cards." width="900">
+  <img src="./docs/images/ui/overview-2026.png" alt="Core-Monitor overview screen showing CPU, memory, temperature, and power cards." width="900">
 </p>
 
 <p align="center">
@@ -94,11 +104,12 @@ The helper is bundled at `Core-Monitor.app/Contents/Library/LaunchServices/venta
 | Mode | Behavior |
 |------|----------|
 | Smart | Temperature + power-aware curve. Blends CPU/GPU temps with system watt draw, scales against a configurable aggressiveness from 0.0 (always minimum) to 3.0 (always maximum). |
+| Silent | Delegates entirely to the firmware's automatic curve. |
 | Balanced | Fixed at 60% of the fan's reported maximum. |
 | Performance | Fixed at 85%. |
 | Max | Fixed at 100%. |
 | Manual | You pick the RPM. |
-| System | Restores automatic SMC control with `F{n}Md = 0` immediately and leaves fan control fully with macOS. |
+| System | Restores automatic SMC control with `F{n}Md = 0`. |
 
 The Smart curve accounts for system power draw as a temperature boost — at 40 W it adds up to 8°C to the effective temperature before mapping to a fan speed. Fan settings persist across sleep/wake via `NSWorkspace.didWakeNotification`.
 
@@ -251,27 +262,19 @@ The new customization system is intentionally practical rather than unlimited. R
 
 **Download:** Get the latest public build from [Releases](https://github.com/offyotto-sl3/Core-Monitor/releases/latest) and move it to `/Applications`.
 
-Monitoring is available immediately after launch. If you later decide you want helper-backed fan control, install the bundled helper from the app’s `Fans` or `System` flow instead of having to bless it up front.
-
 **Build from source:**
 
 ```bash
 git clone https://github.com/offyotto-sl3/Core-Monitor.git
 ```
 
-Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc-helper` is a separate target. You can build and run Core-Monitor without it; only helper-backed fan control is unavailable until it is installed and trusted.
-
-## Support and diagnostics
-
-- Use the in-app `System` tab to recheck helper state, launch-at-login state, and menu bar visibility.
-- Export the helper diagnostics report before filing fan-control, signing, or startup-visibility issues.
-- Include the report when opening a GitHub issue so support does not depend on screenshots and guesswork.
+Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc-helper` is a separate target. You can build and run Core-Monitor without it, but fan control will not be available.
 
 ## Compatibility
 
-- macOS 13 or later
+- macOS 12 or later
 - Apple Silicon is the primary target; Intel Macs are not part of the current test path
-- Launch at login, helper-backed fan control, and the current app shell all target macOS 13+
+- Fan control requires macOS 13+ (XPC with code-signing requirements)
 - Core-Monitor is not available on the Mac App Store
 
 ## Privacy
@@ -280,7 +283,7 @@ Core-Monitor does not include analytics, ad SDKs, or account features. Sensor re
 
 ## WeatherKit
 
-The optional Touch Bar weather item uses Apple WeatherKit and location access to show local conditions. It is only available in builds signed with the WeatherKit entitlement; the default direct-download release keeps the rest of Core-Monitor working even when WeatherKit is not enabled. Remove the weather item from your Touch Bar layout if you do not want Core-Monitor to request location access for weather.
+The optional Touch Bar weather item uses Apple WeatherKit and location access to show local conditions. Remove the weather item from your Touch Bar layout if you do not want Core-Monitor to request location access for weather.
 
 ## License
 
