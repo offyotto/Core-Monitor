@@ -41,12 +41,13 @@ struct HelpView: View {
     private var allSections: [HelpSection] {
         [
             HelpSection(id: "overview", title: "Overview Dashboard", icon: "gauge.medium", keywords: [
-                "dashboard", "cpu", "gpu", "memory", "thermal", "power"
+                "dashboard", "cpu", "gpu", "memory", "thermal", "power", "history", "trends"
             ], content: AnyView(
                 HelpCard {
                     Text("The Overview Dashboard provides a comprehensive summary of your Mac’s current state including CPU, GPU, memory, and thermal information.")
                     HelpBullet(text: "`CPU`, `GPU`, and `Memory` usage are shown with real-time graphs and numeric values.")
                     HelpBullet(text: "Thermal zones and sensor temperatures update continuously.")
+                    HelpBullet(text: "Load and thermal trend cards keep rolling 1-minute, 5-minute, and 15-minute windows so you can spot sustained pressure instead of only point-in-time spikes.")
                     HelpBullet(text: "Use the dashboard to quickly assess system performance and health.")
                 }
             )),
@@ -98,12 +99,14 @@ struct HelpView: View {
                 }
             )),
             HelpSection(id: "battery", title: "Battery", icon: "battery.100", keywords: [
-                "cycles", "health", "charge", "capacity", "temperature"
+                "cycles", "health", "charge", "capacity", "temperature", "time remaining",
+                "time to full", "voltage", "current", "amperage", "power adapter"
             ], content: AnyView(
                 HelpCard {
-                    Text("Battery monitoring shows charge cycles, current charge, health status, and battery temperature.")
-                    HelpBullet(text: "Track battery capacity relative to design capacity and receive health warnings.")
-                    HelpBullet(text: "Some details vary by Mac model.")
+                    Text("Battery monitoring now combines battery health with live runtime and electrical details.")
+                    HelpBullet(text: "The `Battery` tab shows charge, health, cycle count, temperature, voltage, current, and live power draw when those readings are available.")
+                    HelpBullet(text: "Runtime copy changes with the source: `Time Remaining` while discharging and `Time to Full` while charging on adapter power.")
+                    HelpBullet(text: "Source and electrical values come from macOS power-source APIs and `AppleSmartBattery`, so some fields still vary by Mac model.")
                 }
             )),
             HelpSection(id: "system", title: "System Controls", icon: "gearshape", keywords: [

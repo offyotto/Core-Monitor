@@ -162,3 +162,8 @@
 - Removed the dashboard’s extra copy-state layer so `ContentView` now renders directly from `SystemMonitor.snapshot` and the monitor-owned history buffers instead of rebuilding a second shadow model on every sample.
 - Expanded the Battery tab with clearer power-state diagnostics: source, time-to-full or time-remaining, temperature, voltage, and current are now surfaced from the existing sampler instead of being hidden behind the raw data model.
 - Added `BatteryDetailFormatterTests` coverage and verified the batch with a fresh macOS build, a targeted battery formatter test run, and a full `xcodebuild ... test` pass.
+
+### Completed batch
+- Brought the in-app Help copy back in sync with the product by documenting the newer 1-minute, 5-minute, and 15-minute trend windows in the Overview topic instead of leaving the older “point-in-time dashboard” explanation.
+- Expanded the Battery help topic and search keywords so users can now find runtime, adapter/source, voltage, current, and amperage guidance from the shipped help instead of guessing from the UI.
+- Added `HelpViewSearchTests` coverage for the new battery keywords and re-verified the full macOS suite with `xcodebuild ... test`.
