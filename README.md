@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.zip">
+  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest/">
     Download
   </a>
 </p>
