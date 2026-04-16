@@ -1,4 +1,4 @@
-# Core Monitor: Monitor thermals, power, memory, alerts, and fan state on Apple silicon
+# Core Monitor: macOS system monitor for apple silicon macs
 
 ## Overview
 
