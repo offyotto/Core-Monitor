@@ -38,21 +38,23 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
         fatalError("init(coder:) has not been implemented")
     }
 
+    var isDashboardVisible: Bool {
+        window?.isVisible == true
+    }
+
     func showDashboard() {
         guard let window else { return }
 
         configure(window)
         coordinator.attachTouchBar(to: window)
-        NSApp.activate(ignoringOtherApps: true)
-
-        showWindow(nil)
         if hasPositionedWindow == false || DashboardWindowLayout.shouldResetFrame(windowFrame: window.frame, visibleFrame: window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame) {
             window.setContentSize(DashboardWindowLayout.targetContentSize(for: window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame))
             window.center()
         }
         hasPositionedWindow = true
-        window.makeKeyAndOrderFront(nil)
-        window.orderFrontRegardless()
+
+        showWindow(nil)
+        promoteVisibility(of: window)
     }
 
     func windowWillClose(_ notification: Notification) {
@@ -85,6 +87,22 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
             window.setContentSize(DashboardWindowLayout.targetContentSize(for: window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame))
         }
     }
+
+    private func promoteVisibility(of window: NSWindow) {
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+        NSApp.activate(ignoringOtherApps: true)
+        NSRunningApplication.current.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+
+        DispatchQueue.main.async { [weak window] in
+            guard let window, window.isVisible == false || NSApp.isActive == false else { return }
+
+            window.orderFrontRegardless()
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            NSRunningApplication.current.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+        }
+    }
 }
 
 @available(macOS 13.0, *)
@@ -97,6 +115,7 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     private var menuBarController: MenuBarController?
     private var dashboardController: DashboardWindowController?
     private var hasPresentedInitialDashboard = false
+    private var pendingInitialDashboardAttempts: [DispatchWorkItem] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSWindow.allowsAutomaticWindowTabbing = false
@@ -107,6 +126,7 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        cancelInitialDashboardAttempts()
         coordinator.stop()
     }
 
@@ -133,7 +153,12 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     func openDashboard() {
-        dashboardControllerIfNeeded().showDashboard()
+        setDashboardActivationPolicy()
+        let controller = dashboardControllerIfNeeded()
+        controller.showDashboard()
+        if controller.isDashboardVisible {
+            cancelInitialDashboardAttempts()
+        }
     }
 
     private func installMenuBarIfNeeded() {
@@ -166,6 +191,7 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
             startupManager: startupManager
         ) { [weak self] in
             self?.dashboardController = nil
+            self?.restoreAccessoryActivationPolicyIfNeeded()
         }
         dashboardController = controller
         return controller
@@ -176,26 +202,71 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         guard WelcomeGuideProgress.shouldAutoOpenDashboardOnLaunch() else { return }
 
         hasPresentedInitialDashboard = true
-        DispatchQueue.main.async { [weak self] in
-            self?.openDashboard()
+        scheduleInitialDashboardAttempts(after: [0, 0.35, 1.0, 2.0])
+    }
+
+    private func scheduleInitialDashboardAttempts(after delays: [TimeInterval]) {
+        cancelInitialDashboardAttempts()
+
+        for delay in delays {
+            let workItem = DispatchWorkItem { [weak self] in
+                self?.attemptInitialDashboardPresentation()
+            }
+            pendingInitialDashboardAttempts.append(workItem)
+
+            if delay == 0 {
+                DispatchQueue.main.async(execute: workItem)
+            } else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
+            }
+        }
+    }
+
+    private func attemptInitialDashboardPresentation() {
+        guard WelcomeGuideProgress.shouldAutoOpenDashboardOnLaunch() else {
+            cancelInitialDashboardAttempts()
+            return
+        }
+
+        if dashboardController?.isDashboardVisible == true {
+            cancelInitialDashboardAttempts()
+            return
+        }
+
+        openDashboard()
+    }
+
+    private func cancelInitialDashboardAttempts() {
+        pendingInitialDashboardAttempts.forEach { $0.cancel() }
+        pendingInitialDashboardAttempts.removeAll()
+    }
+
+    private func setDashboardActivationPolicy() {
+        if NSApp.activationPolicy() != .regular {
+            NSApp.setActivationPolicy(.regular)
+        }
+    }
+
+    private func restoreAccessoryActivationPolicyIfNeeded() {
+        guard dashboardController?.isDashboardVisible != true else { return }
+        if NSApp.activationPolicy() != .accessory {
+            NSApp.setActivationPolicy(.accessory)
         }
     }
 
     private func purgeLegacyWindowStateIfNeeded() {
         let defaults = UserDefaults.standard
-        let domainName = Bundle.main.bundleIdentifier ?? "CoreTools.Core-Monitor"
-        var domain = defaults.persistentDomain(forName: domainName) ?? defaults.dictionaryRepresentation()
+        guard defaults.bool(forKey: legacyWindowStateResetKey) == false else { return }
 
-        guard (domain[legacyWindowStateResetKey] as? Bool) != true else { return }
-
-        for key in domain.keys {
+        let persistedKeys = defaults
+            .persistentDomain(forName: Bundle.main.bundleIdentifier ?? "CoreTools.Core-Monitor")
+            .map { Array($0.keys) } ?? []
+        for key in persistedKeys {
             if key.hasPrefix("NSWindow Frame SwiftUI.") || key == "NSWindow Frame CoreMonitorMainWindow" {
-                domain.removeValue(forKey: key)
+                defaults.removeObject(forKey: key)
             }
         }
 
-        domain[legacyWindowStateResetKey] = true
-        defaults.setPersistentDomain(domain, forName: domainName)
-        defaults.synchronize()
+        defaults.set(true, forKey: legacyWindowStateResetKey)
     }
 }

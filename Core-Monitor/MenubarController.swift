@@ -43,6 +43,7 @@ enum MenuBarItemKind: CaseIterable {
 }
 
 // MARK: - MenuBarController  (public facade — same init signature as before)
+@MainActor
 final class MenuBarController: NSObject {
     private var itemControllers: [SingleMenuBarItemController] = []
     private var snapshotCancellable: AnyCancellable?
@@ -77,7 +78,7 @@ final class MenuBarController: NSObject {
             .removeDuplicates()
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
-                self?.itemControllers.forEach { $0.refresh() }
+                self?.scheduleRefreshAllItems()
             }
 
         settingsObserver = NotificationCenter.default.addObserver(
@@ -85,13 +86,13 @@ final class MenuBarController: NSObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.itemControllers.forEach { $0.refresh() }
+            self?.scheduleRefreshAllItems()
         }
 
         alertCancellable = alertManager.$activeAlerts
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
-                self?.itemControllers.forEach { $0.refresh() }
+                self?.scheduleRefreshAllItems()
             }
     }
 
@@ -100,9 +101,20 @@ final class MenuBarController: NSObject {
             NotificationCenter.default.removeObserver(obs)
         }
     }
+
+    private nonisolated func scheduleRefreshAllItems() {
+        Task { @MainActor [weak self] in
+            self?.refreshAllItems()
+        }
+    }
+
+    private func refreshAllItems() {
+        itemControllers.forEach { $0.refresh() }
+    }
 }
 
 // MARK: - SingleMenuBarItemController
+@MainActor
 final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
     private enum StatusTone: Equatable {
         case normal
@@ -314,29 +326,71 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         switch kind {
         case .cpu:
             return AnyView(
-                CPUMenuPopoverView(systemMonitor: systemMonitor, alertManager: alertManager, openDashboardAction: { [weak self] in
-                    self?.popover?.performClose(nil); self?.openDashboardAction()
-                })
+                CPUMenuPopoverView(
+                    systemMonitor: systemMonitor,
+                    alertManager: alertManager,
+                    openDashboardAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openDashboardAction()
+                    },
+                    openAlertsAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openAlertsFromPopover()
+                    }
+                )
             )
         case .memory:
             return AnyView(
-                MemoryMenuPopoverView(systemMonitor: systemMonitor, alertManager: alertManager, openDashboardAction: { [weak self] in
-                    self?.popover?.performClose(nil); self?.openDashboardAction()
-                })
+                MemoryMenuPopoverView(
+                    systemMonitor: systemMonitor,
+                    alertManager: alertManager,
+                    openDashboardAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openDashboardAction()
+                    },
+                    openAlertsAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openAlertsFromPopover()
+                    }
+                )
             )
         case .disk:
             return AnyView(
-                DiskMenuPopoverView(systemMonitor: systemMonitor, alertManager: alertManager, openDashboardAction: { [weak self] in
-                    self?.popover?.performClose(nil); self?.openDashboardAction()
-                })
+                DiskMenuPopoverView(
+                    systemMonitor: systemMonitor,
+                    alertManager: alertManager,
+                    openDashboardAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openDashboardAction()
+                    },
+                    openAlertsAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openAlertsFromPopover()
+                    }
+                )
             )
         case .temperature:
             return AnyView(
-                TemperatureMenuPopoverView(systemMonitor: systemMonitor, fanController: fanController, alertManager: alertManager, openDashboardAction: { [weak self] in
-                    self?.popover?.performClose(nil); self?.openDashboardAction()
-                })
+                TemperatureMenuPopoverView(
+                    systemMonitor: systemMonitor,
+                    fanController: fanController,
+                    alertManager: alertManager,
+                    openDashboardAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openDashboardAction()
+                    },
+                    openAlertsAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openAlertsFromPopover()
+                    }
+                )
             )
         }
+    }
+
+    private func openAlertsFromPopover() {
+        DashboardNavigationRouter.shared.open(.alerts)
+        openDashboardAction()
     }
 
     private func ensurePopover() {

@@ -29,7 +29,7 @@ struct AlertEvaluationOutcome {
 }
 
 enum AlertEvaluator {
-    nonisolated static func evaluate(
+    static func evaluate(
         config: AlertRuleConfig,
         runtime: AlertRuleRuntime,
         input: AlertEvaluationInput
@@ -210,7 +210,7 @@ enum AlertEvaluator {
         )
     }
 
-    nonisolated static func availabilityReason(
+    static func availabilityReason(
         for kind: AlertRuleKind,
         snapshot: SystemMonitorSnapshot
     ) -> String? {
@@ -230,7 +230,7 @@ enum AlertEvaluator {
         ).unavailableReason
     }
 
-    nonisolated private static func measurement(
+    private static func measurement(
         for kind: AlertRuleKind,
         config: AlertRuleConfig,
         input: AlertEvaluationInput,
@@ -494,7 +494,7 @@ enum AlertEvaluator {
         }
     }
 
-    nonisolated private static func unavailable(_ kind: AlertRuleKind, reason: String) -> AlertMeasurement {
+    private static func unavailable(_ kind: AlertRuleKind, reason: String) -> AlertMeasurement {
         AlertMeasurement(
             severity: .none,
             metricValue: nil,
@@ -506,7 +506,7 @@ enum AlertEvaluator {
         )
     }
 
-    nonisolated private static func makeActiveState(
+    private static func makeActiveState(
         kind: AlertRuleKind,
         severity: AlertSeverity,
         measurement: AlertMeasurement,
@@ -525,7 +525,7 @@ enum AlertEvaluator {
         )
     }
 
-    nonisolated private static func runtimeReset(from runtime: AlertRuleRuntime) -> AlertRuleRuntime {
+    private static func runtimeReset(from runtime: AlertRuleRuntime) -> AlertRuleRuntime {
         var nextRuntime = runtime
         nextRuntime.activeSeverity = .none
         nextRuntime.pendingSeverity = .none
@@ -535,7 +535,7 @@ enum AlertEvaluator {
         return nextRuntime
     }
 
-    nonisolated private static func shouldNotify(
+    private static func shouldNotify(
         config: AlertRuleConfig,
         runtime: AlertRuleRuntime,
         severity: AlertSeverity,
@@ -560,7 +560,7 @@ enum AlertEvaluator {
         }
     }
 
-    nonisolated private static func shouldRepeatEvent(
+    private static func shouldRepeatEvent(
         config: AlertRuleConfig,
         runtime: AlertRuleRuntime,
         input: AlertEvaluationInput
@@ -570,7 +570,7 @@ enum AlertEvaluator {
         return input.now.timeIntervalSince(lastEventDate) >= Double(config.cooldownMinutes * 60)
     }
 
-    nonisolated private static func severityForHighValue(
+    private static func severityForHighValue(
         _ value: Double,
         threshold: AlertThreshold,
         activeSeverity: AlertSeverity
@@ -597,7 +597,7 @@ enum AlertEvaluator {
         return .none
     }
 
-    nonisolated private static func severityForLowValue(
+    private static func severityForLowValue(
         _ value: Double,
         threshold: AlertThreshold,
         activeSeverity: AlertSeverity
@@ -624,19 +624,19 @@ enum AlertEvaluator {
         return .none
     }
 
-    nonisolated private static func topCPUContext(from topProcesses: TopProcessSnapshot, enabled: Bool) -> String? {
+    private static func topCPUContext(from topProcesses: TopProcessSnapshot, enabled: Bool) -> String? {
         guard enabled else { return nil }
         guard let process = topProcesses.topCPU.first, process.cpuPercent > 0 else { return nil }
         return String(format: "Top CPU: %@ (%.0f%%)", process.name, process.cpuPercent)
     }
 
-    nonisolated private static func topMemoryContext(from topProcesses: TopProcessSnapshot, enabled: Bool) -> String? {
+    private static func topMemoryContext(from topProcesses: TopProcessSnapshot, enabled: Bool) -> String? {
         guard enabled else { return nil }
         guard let process = topProcesses.topMemory.first, process.memoryBytes > 0 else { return nil }
         return String(format: "Top Memory: %@ (%.1f GB)", process.name, process.memoryGB)
     }
 
-    nonisolated private static func thermalStateLevel(_ thermalState: ProcessInfo.ThermalState) -> Int {
+    private static func thermalStateLevel(_ thermalState: ProcessInfo.ThermalState) -> Int {
         switch thermalState {
         case .nominal: return 0
         case .fair: return 1
@@ -646,7 +646,7 @@ enum AlertEvaluator {
         }
     }
 
-    nonisolated static func thermalStateLabel(_ thermalState: ProcessInfo.ThermalState) -> String {
+    static func thermalStateLabel(_ thermalState: ProcessInfo.ThermalState) -> String {
         switch thermalState {
         case .nominal: return "Nominal"
         case .fair: return "Fair"
@@ -656,7 +656,7 @@ enum AlertEvaluator {
         }
     }
 
-    nonisolated private static func memoryPressureLevel(_ pressure: MemoryPressureLevel) -> Int {
+    private static func memoryPressureLevel(_ pressure: MemoryPressureLevel) -> Int {
         switch pressure {
         case .green: return 0
         case .yellow: return 1
@@ -664,7 +664,7 @@ enum AlertEvaluator {
         }
     }
 
-    nonisolated static func memoryPressureLabel(_ pressure: MemoryPressureLevel) -> String {
+    static func memoryPressureLabel(_ pressure: MemoryPressureLevel) -> String {
         switch pressure {
         case .green: return "Normal"
         case .yellow: return "Elevated"

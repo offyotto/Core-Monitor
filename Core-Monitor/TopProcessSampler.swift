@@ -23,6 +23,7 @@ final class TopProcessSampler {
     private var interval: TimeInterval
     private let limit: Int
     private var timer: Timer?
+    private var isRunning = false
     private var previousCPUTimeByPID: [pid_t: UInt64] = [:]
     private var previousSampleDate = Date()
     private var isSampling = false
@@ -33,10 +34,20 @@ final class TopProcessSampler {
     }
 
     func start(interval: TimeInterval? = nil) {
-        if let interval {
-            self.interval = interval
+        let requestedInterval = interval ?? self.interval
+        guard Self.shouldRestartTimer(
+            isRunning: isRunning,
+            currentInterval: self.interval,
+            requestedInterval: requestedInterval
+        ) else {
+            return
         }
-        stop()
+
+        self.interval = requestedInterval
+        timer?.invalidate()
+        timer = nil
+        isRunning = true
+
         sample()
 
         timer = Timer.scheduledTimer(withTimeInterval: self.interval, repeats: true) { [weak self] _ in
@@ -58,6 +69,16 @@ final class TopProcessSampler {
     func stop() {
         timer?.invalidate()
         timer = nil
+        isRunning = false
+    }
+
+    static func shouldRestartTimer(
+        isRunning: Bool,
+        currentInterval: TimeInterval,
+        requestedInterval: TimeInterval
+    ) -> Bool {
+        guard isRunning else { return true }
+        return abs(currentInterval - requestedInterval) > .ulpOfOne
     }
 
     private func sample() {
@@ -103,7 +124,7 @@ final class TopProcessSampler {
         }
     }
 
-    nonisolated private func collectProcesses(
+    private func collectProcesses(
         elapsed: TimeInterval,
         processorCount: Int,
         previousCPUTimeByPID: [pid_t: UInt64]
@@ -143,7 +164,7 @@ final class TopProcessSampler {
             }
     }
 
-    nonisolated private func aggregateProcesses(_ processes: [SampledProcess]) -> [AggregatedProcess] {
+    private func aggregateProcesses(_ processes: [SampledProcess]) -> [AggregatedProcess] {
         var grouped: [String: AggregatedProcess] = [:]
 
         for process in processes {
@@ -163,7 +184,7 @@ final class TopProcessSampler {
             .filter { $0.cpuPercent >= 0.5 || $0.memoryBytes > 0 }
     }
 
-    nonisolated private func taskInfo(for pid: pid_t) -> proc_taskinfo? {
+    private func taskInfo(for pid: pid_t) -> proc_taskinfo? {
         var info = proc_taskinfo()
         let result = withUnsafeMutablePointer(to: &info) { pointer -> Int32 in
             pointer.withMemoryRebound(to: Int8.self, capacity: MemoryLayout<proc_taskinfo>.stride) { rebounded in
@@ -175,7 +196,7 @@ final class TopProcessSampler {
         return info
     }
 
-    nonisolated private func cpuTime(for pid: pid_t) -> UInt64? {
+    private func cpuTime(for pid: pid_t) -> UInt64? {
         var usage = rusage_info_current()
         let status = withUnsafeMutablePointer(to: &usage) { pointer -> Int32 in
             pointer.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) { rebounded in
@@ -187,7 +208,7 @@ final class TopProcessSampler {
         return usage.ri_user_time + usage.ri_system_time
     }
 
-    nonisolated private func displayName(for pid: pid_t) -> String {
+    private func displayName(for pid: pid_t) -> String {
         if let runningApp = NSRunningApplication(processIdentifier: pid) {
             let localizedName = runningApp.localizedName ?? ""
             if !localizedName.isEmpty {

@@ -1,6 +1,7 @@
 import XCTest
 @testable import Core_Monitor
 
+@MainActor
 final class AlertEngineTests: XCTestCase {
     func testThresholdCrossingEscalatesFromWarningToCritical() {
         let config = AlertRuleConfig(

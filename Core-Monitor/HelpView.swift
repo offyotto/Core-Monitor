@@ -9,7 +9,7 @@ import SwiftUI
 import AppKit
 
 struct HelpView: View {
-    @AppStorage(WelcomeGuideProgress.hasSeenDefaultsKey) private var hasSeenWelcomeGuide: Bool = true
+    @AppStorage(WelcomeGuideProgress.hasSeenDefaultsKey) private var hasSeenWelcomeGuide: Bool = false
     @State private var searchText: String = ""
 
     // MARK: - Help Section Model

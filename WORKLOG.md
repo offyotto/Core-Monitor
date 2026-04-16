@@ -63,6 +63,40 @@
 ## 2026-04-16
 
 ### Completed batch
+- Revalidated the competitor matrix against current public sources instead of leaving the repo on stale competitor assumptions; corrected the Stats release signal and folded TG Pro’s current startup-polish notes back into Core Monitor’s product bar.
+- Kept the README rewrite scoped to a sharper thermal-first story, clearer install channels, and a more explicit “monitoring first, helper optional” trust posture so the repo presentation matches the product lane documented in `docs/COMPETITOR_MATRIX_2026.md`.
+
+### Completed batch
+- Fixed a real first-launch regression in the accessory-style app: the onboarding/dashboard open decision was being poisoned by defaults-layer state before the welcome-guide preference had actually been persisted.
+- Hardened `WelcomeGuideProgress` to read the app’s persisted defaults domain directly, stopped the legacy window-frame cleanup from rewriting unrelated defaults, aligned the Help screen’s welcome-guide fallback with first-run behavior, and kept the app in `.regular` activation while the dashboard window is open so the onboarding surface no longer vanishes a second after launch.
+- Finished the in-progress dashboard navigation router by exposing the shared sidebar selection type, which makes the new menu bar `Open Alerts` deep link build and work instead of leaving the branch in a compile-broken state.
+- Verified the batch with a full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` pass and repeated clean-launch polling after deleting `com.coremonitor.hasSeenWelcomeGuide.v1`; the dashboard window now stays present through the first 10 seconds of launch instead of disappearing after roughly two.
+
+### Completed batch
+- Cleaned up the current compiler warnings in the menu bar refresh path and weather location-access controller instead of leaving actor-isolation and no-op annotation noise in the baseline build.
+- Switched menu bar item refresh fan-out onto a main-actor hop helper so Combine and notification callbacks no longer touch actor-isolated state directly.
+- Re-verified the app with a fresh macOS build and a serialized `xcodebuild ... test` pass after the initial concurrent-build lock collision.
+
+### Completed batch
+- Tightened the test target’s Swift 6 actor-isolation posture by marking the alert and fan-preset suites as main-actor tests instead of leaving warnings around Codable and static access on main-isolated types.
+- Re-ran the full macOS test suite for this batch in a clean detached worktree because an unrelated local edit in `Core_MonitorApp.swift` currently breaks the active checkout’s build.
+
+### Completed batch
+- Added a lightweight dashboard-navigation router so menu bar alert surfaces can deep-link straight into the `Alerts` tab instead of always dumping users into `Overview`.
+- Wired active-alert menu bar popovers to show an `Open Alerts` action only when it is relevant, and added focused routing tests to lock the request/consume behavior down.
+- Verified the batch in a clean detached worktree again because the active checkout still contains an unrelated compile-breaking local edit in `Core_MonitorApp.swift`.
+
+### Completed batch
+- Shifted fresh menu bar defaults back toward a balanced three-item layout so new installs and reset flows do not start in the noisiest possible configuration.
+- Marked the Balanced preset as the recommended daily layout and tightened the restore path so corrupted all-off states recover into a reachable, readable baseline.
+- Added menu bar settings coverage for default, reset, and inaccessible-state recovery behavior.
+
+### Completed batch
+- Made top-process sampling restarts idempotent so reasserting the same activity-sampling interval no longer tears down the sampler and forces an immediate extra process scan.
+- This reduces avoidable process enumeration churn when dashboard and menu bar surfaces add or remove overlapping “detailed sampling” reasons while the effective interval stays the same.
+- Added focused scheduling coverage so future refactors keep the sampler’s start/restart policy cheap and predictable.
+
+### Completed batch
 - Fixed the first-launch discoverability gap for the accessory-style app: if the welcome guide has never been seen, Core Monitor now opens the dashboard automatically instead of launching invisibly into the menu bar.
 - Centralized the welcome-guide completion flag so launch behavior and onboarding sheet state use the same source of truth.
 - Added `WelcomeGuideProgressTests` to lock the launch decision down, rebuilt the macOS app, and confirmed at runtime that a fresh launch now shows the onboarding sheet over a visible dashboard window.
@@ -208,6 +242,6 @@
 - Rebuilt the macOS app, reran the full `xcodebuild ... test` suite, and runtime-smoke-tested the Debug build by relaunching it and confirming the live menu bar items still update (`CPU`, `MEM`, `SSD`, and temperature).
 
 ### Completed batch
-- Marked the monitoring snapshot value layer as explicitly `nonisolated` so pure telemetry models no longer inherit the app target's default `MainActor` isolation by accident.
-- Extended the same cleanup to `BatteryInfo`, `DiskStats`, `MemoryStats`, `NetworkStats`, and the related monitoring enums, which removes a cluster of Swift 6 concurrency warnings from the build.
-- Re-ran the full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` suite and confirmed the earlier actor-isolation warnings no longer appear in the compile output.
+- Reverted invalid `nonisolated` annotations from the fan and monitoring value-model layer so the project still compiles on GitHub Actions' Xcode 16.2 runner.
+- Kept the truly actor-crossing cases explicit by leaving helper probe methods nonisolated, moving the Touch Bar slider presenter onto the main actor, and making the process sampler itself plain so `SystemMonitor` can construct it synchronously.
+- Re-ran `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` and confirmed the repo is back to a green local build before pushing the CI repair.

@@ -44,7 +44,7 @@ protocol WeatherLocationAccessControlling: AnyObject {
 }
 
 @MainActor
-final class WeatherLocationAccessController: NSObject, ObservableObject, @preconcurrency CLLocationManagerDelegate, WeatherLocationAccessControlling {
+final class WeatherLocationAccessController: NSObject, ObservableObject, CLLocationManagerDelegate, WeatherLocationAccessControlling {
     static let shared = WeatherLocationAccessController()
 
     @Published private(set) var authorizationStatus: CLAuthorizationStatus
@@ -72,8 +72,11 @@ final class WeatherLocationAccessController: NSObject, ObservableObject, @precon
         authorizationStatus = locationManager.authorizationStatus
     }
 
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        authorizationStatus = manager.authorizationStatus
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
+        Task { @MainActor [weak self] in
+            self?.authorizationStatus = status
+        }
     }
 }
 
