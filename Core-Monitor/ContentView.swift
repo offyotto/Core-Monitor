@@ -1572,7 +1572,7 @@ private struct DetailPane: View {
                     }
                 }
             }
-            TopMemoryProcessesPanel(snapshot: snapshot.topProcesses)
+            TopMemoryProcessesPanel(systemMonitor: systemMonitor, snapshot: snapshot.topProcesses)
         }
     }
 
@@ -2596,7 +2596,6 @@ struct ContentView: View {
         .onAppear {
             systemMonitor.setBasicMode(modeState.isBasicMode)
             systemMonitor.setInteractiveMonitoringEnabled(true, reason: "dashboard")
-            systemMonitor.setDetailedSamplingEnabled(true, reason: "dashboard")
             applyPendingDashboardRouteIfNeeded()
         }
         .onChange(of: dashboardNavigationRouter.route) { _ in
@@ -2604,7 +2603,6 @@ struct ContentView: View {
         }
         .onDisappear {
             systemMonitor.setInteractiveMonitoringEnabled(false, reason: "dashboard")
-            systemMonitor.setDetailedSamplingEnabled(false, reason: "dashboard")
         }
     }
 

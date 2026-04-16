@@ -295,6 +295,7 @@ final class SystemMonitor: ObservableObject {
         detectFans()
         updateReadings()
         updateActivitySamplingMode()
+        applyMonitoringIntervalIfNeeded()
 
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: monitoringInterval, repeats: true) { [weak self] _ in

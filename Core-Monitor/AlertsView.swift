@@ -79,6 +79,7 @@ struct AlertsDashboardStrip: View {
 }
 
 struct TopMemoryProcessesPanel: View {
+    @ObservedObject var systemMonitor: SystemMonitor
     let snapshot: TopProcessSnapshot
     @ObservedObject private var privacySettings = PrivacySettings.shared
 
@@ -88,7 +89,7 @@ struct TopMemoryProcessesPanel: View {
                 Text("Top Memory Pressure")
                     .font(.system(size: 16, weight: .bold))
                 if privacySettings.processInsightsEnabled == false {
-                    Text("Process insights are off. Memory alerts still work without collecting app names.")
+                    Text("Process insights are off. Memory views stay local without collecting app names.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
                 } else if snapshot.topMemory.isEmpty {
@@ -114,6 +115,12 @@ struct TopMemoryProcessesPanel: View {
                 }
             }
         }
+        .onAppear {
+            systemMonitor.setDetailedSamplingEnabled(true, reason: "dashboard.memory")
+        }
+        .onDisappear {
+            systemMonitor.setDetailedSamplingEnabled(false, reason: "dashboard.memory")
+        }
     }
 }
 
@@ -123,7 +130,16 @@ struct SystemStatusBoard: View {
     @ObservedObject private var helperManager = SMCHelperManager.shared
 
     var body: some View {
+        let health = systemMonitor.snapshotHealth()
+
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+            statusCard(
+                title: "Monitoring",
+                value: health.statusLabel,
+                detail: "\(health.ageDescription). \(health.cadenceDescription).",
+                icon: "waveform.path.ecg.rectangle",
+                color: monitoringColor(health)
+            )
             statusCard(
                 title: "Notifications",
                 value: notificationLabel,
@@ -135,7 +151,7 @@ struct SystemStatusBoard: View {
                 title: "Overall Thermal",
                 value: AlertEvaluator.thermalStateLabel(systemMonitor.thermalState),
                 detail: "macOS thermal pressure on Apple Silicon.",
-                icon: "waveform.path.ecg",
+                icon: "thermometer.medium",
                 color: thermalColor
             )
             statusCard(
@@ -154,28 +170,6 @@ struct SystemStatusBoard: View {
                 icon: "cpu.fill",
                 color: systemMonitor.hasSMCAccess ? .green : .red
             )
-        }
-    }
-
-    private func statusCard(title: String, value: String, detail: String, icon: String, color: Color) -> some View {
-        AlertSurfaceCard {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Image(systemName: icon)
-                        .foregroundStyle(color)
-                    Text(title)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                }
-                Text(value)
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundStyle(color)
-                Text(detail)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -223,6 +217,41 @@ struct SystemStatusBoard: View {
             return Color.bdAccent
         @unknown default:
             return .secondary
+        }
+    }
+
+    private func statusCard(title: String, value: String, detail: String, icon: String, color: Color) -> some View {
+        AlertSurfaceCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Image(systemName: icon)
+                        .foregroundStyle(color)
+                    Text(title)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+                Text(value)
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundStyle(color)
+                Text(detail)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func monitoringColor(_ health: MonitoringSnapshotHealth) -> Color {
+        switch health.freshness {
+        case .waiting:
+            return Color.bdAccent
+        case .live:
+            return .green
+        case .delayed:
+            return .orange
+        case .stale:
+            return .red
         }
     }
 
@@ -297,6 +326,12 @@ struct AlertsView: View {
             activeAlertsCard
             ruleGroups
             historyCard
+        }
+        .onAppear {
+            systemMonitor.setDetailedSamplingEnabled(true, reason: "dashboard.alerts")
+        }
+        .onDisappear {
+            systemMonitor.setDetailedSamplingEnabled(false, reason: "dashboard.alerts")
         }
     }
 

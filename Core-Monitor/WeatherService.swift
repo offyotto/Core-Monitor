@@ -418,7 +418,6 @@ final class WeatherViewModel: ObservableObject {
 
     func refreshNow() async {
         locationAccess.refreshStatus()
-
         switch locationAccess.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
             break

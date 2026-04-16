@@ -124,16 +124,16 @@ private struct MenuBarAlertSummarySection: View {
                         .foregroundStyle(Color.mbTint)
                         .mbTracking(1.2)
                     Spacer()
-                    Text(alertManager.highestActiveSeverity.title.uppercased())
+                    Text(statusBadgeLabel.uppercased())
                         .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(severityColor(alertManager.highestActiveSeverity))
+                        .foregroundStyle(statusBadgeColor(health))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(severityColor(alertManager.highestActiveSeverity).opacity(0.18))
+                        .background(statusBadgeColor(health).opacity(0.18))
                         .clipShape(Capsule())
                 }
 
-                Text(alertManager.summaryLine)
+                Text(summaryLine)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.84))
                     .fixedSize(horizontal: false, vertical: true)
@@ -175,12 +175,43 @@ private struct MenuBarAlertSummarySection: View {
             .clipShape(Capsule())
     }
 
-    private func severityColor(_ severity: AlertSeverity) -> Color {
-        switch severity {
-        case .none: return .white.opacity(0.55)
-        case .info: return Color.mbBlue
-        case .warning: return Color.mbOrange
-        case .critical: return .red
+    private var summaryLine: String {
+        if alertManager.activeAlerts.isEmpty == false {
+            return alertManager.summaryLine
+        }
+        if systemMonitor.hasSMCAccess {
+            return "Core Monitor is sampling live hardware metrics."
+        }
+        if let lastError = systemMonitor.lastError, lastError.isEmpty == false {
+            return lastError
+        }
+        return "Waiting for AppleSMC access."
+    }
+
+    private var statusBadgeLabel: String {
+        alertManager.highestActiveSeverity == .none
+            ? monitoringStatusLabel
+            : alertManager.highestActiveSeverity.title
+    }
+
+    private var monitoringStatusLabel: String {
+        let health = systemMonitor.snapshotHealth()
+        return health.statusLabel
+    }
+
+    private func statusBadgeColor(_ health: MonitoringSnapshotHealth) -> Color {
+        if alertManager.highestActiveSeverity == .none {
+            return freshnessColor(health)
+        }
+        switch alertManager.highestActiveSeverity {
+        case .none:
+            return freshnessColor(health)
+        case .info:
+            return Color.mbBlue
+        case .warning:
+            return Color.mbOrange
+        case .critical:
+            return .red
         }
     }
 

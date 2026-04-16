@@ -283,3 +283,10 @@
 ### Completed batch
 - Added real app-menu commands for the accessory-style app so users can reopen the dashboard, jump to Help, and relaunch the welcome guide without depending on a visible Dock icon or guessing which menu bar item to click.
 - Rebuilt the macOS app and verified the live app menu now exposes `Open Dashboard`, `Open Help`, `Show Welcome Guide`, and `Quit Core-Monitor`.
+
+### Completed batch
+- Narrowed high-frequency top-process sampling so Core Monitor only enters detailed process mode when the `Memory` or `Alerts` surfaces are actually visible, instead of burning a 5-second process sampler across the whole dashboard session.
+- Kept the user-facing alert product intact while still improving status clarity: the Alerts and menu bar summary cards now surface monitoring cadence alongside notification/helper/thermal state, and active alerts still retain direct routing and critical-state affordances.
+- Preserved the weather opt-in privacy posture by keeping launch-time location prompts off while retaining the fresh-location request path once access is already granted.
+- Re-verified the batch with targeted `WeatherViewModelTests`, `AlertEngineTests`, and `HelpViewSearchTests`, followed by two clean full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` passes.
+- Tried to re-run a first-launch dashboard screenshot after resetting `com.coremonitor.hasSeenWelcomeGuide.v1`, but the accessory app still would not reliably surface a frontmost dashboard window through local UI scripting; noted as a follow-up runtime-validation gap rather than blocking this code-quality batch.
