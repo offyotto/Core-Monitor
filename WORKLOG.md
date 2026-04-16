@@ -328,3 +328,7 @@
 - Hardened the macOS app host for unit-test runs so `xctest` no longer boots the full menu bar, dashboard, Touch Bar, and monitoring stack just to execute model-level suites.
 - Added a small `AppRuntimeContext` gate plus focused regression coverage for the XCTest environment detection path, keeping interactive startup behavior unchanged for normal launches while removing the test-host bootstrap race.
 - Verified the batch with a fresh full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' -derivedDataPath /tmp/core-monitor-hourly-test-guard CODE_SIGNING_ALLOWED=NO test` pass after reproducing the prior early-exit failure, then launched `/tmp/core-monitor-hourly-test-guard/Build/Products/Debug/Core-Monitor.app` manually and captured `/tmp/core-monitor-hourly-dashboard.png` to confirm the normal dashboard/welcome flow still appears outside tests.
+
+### Completed batch
+- Refreshed the competitor matrix against current official sources where the repo had gone stale, updating Stats to its current `v2.12.9` release signal and spelling out TG Pro’s stronger support-package/export posture.
+- Tightened the competitive implications so Core Monitor’s roadmap explicitly treats scoped diagnostics exports and supportability as product features, not just support afterthoughts.
