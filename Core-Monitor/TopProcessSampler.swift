@@ -2,7 +2,6 @@ import AppKit
 import Darwin
 import Foundation
 
-@MainActor
 final class TopProcessSampler {
     private struct SampledProcess {
         let pid: pid_t

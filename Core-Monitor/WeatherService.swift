@@ -35,6 +35,7 @@ protocol WeatherProviding: AnyObject {
     func currentWeather(for location: CLLocation) async throws -> WeatherSnapshot
 }
 
+@MainActor
 protocol WeatherLocationAccessControlling: AnyObject {
     var authorizationStatus: CLAuthorizationStatus { get }
     var currentLocation: CLLocation? { get }
@@ -43,7 +44,7 @@ protocol WeatherLocationAccessControlling: AnyObject {
 }
 
 @MainActor
-final class WeatherLocationAccessController: NSObject, ObservableObject, CLLocationManagerDelegate, WeatherLocationAccessControlling {
+final class WeatherLocationAccessController: NSObject, ObservableObject, @preconcurrency CLLocationManagerDelegate, WeatherLocationAccessControlling {
     static let shared = WeatherLocationAccessController()
 
     @Published private(set) var authorizationStatus: CLAuthorizationStatus
