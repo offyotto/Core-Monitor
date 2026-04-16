@@ -121,3 +121,35 @@ final class DashboardNavigationRouterTests: XCTestCase {
         XCTAssertNil(router.route)
     }
 }
+
+@MainActor
+final class TouchBarCustomizationSettingsTests: XCTestCase {
+    func testFreshSettingsDefaultToSystemPresentationMode() {
+        let defaults = makeDefaults()
+
+        let settings = TouchBarCustomizationSettings(defaults: defaults)
+
+        XCTAssertEqual(settings.presentationMode, .system)
+        XCTAssertEqual(settings.items, TouchBarPreset.classic.items)
+        XCTAssertEqual(settings.theme, TouchBarPreset.classic.theme)
+    }
+
+    func testLegacyPresentationModeStillMigratesForwardWhenStored() {
+        let defaults = makeDefaults()
+        defaults.set(TouchBarPresentationMode.app.rawValue, forKey: "coremonitor.touchBarMode")
+
+        let settings = TouchBarCustomizationSettings(defaults: defaults)
+
+        XCTAssertEqual(settings.presentationMode, .app)
+    }
+
+    private func makeDefaults() -> UserDefaults {
+        let suiteName = "TouchBarCustomizationSettingsTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        addTeardownBlock {
+            defaults.removePersistentDomain(forName: suiteName)
+        }
+        return defaults
+    }
+}
