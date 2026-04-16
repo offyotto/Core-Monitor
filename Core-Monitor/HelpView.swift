@@ -91,14 +91,15 @@ struct HelpView: View {
                 HelpCard {
                     Text("Manage your Mac’s fans with advanced controls and profiles.")
                     HelpBullet(text: "Fresh installs start in System mode so monitoring, alerts, and menu bar readings work normally before you opt into helper-backed fan control.")
-                    HelpBullet(text: "Silent and System leave the firmware curve in charge. Smart, Balanced, Performance, Max, Manual, and Custom actively write targets through the helper.")
+                    HelpBullet(text: "System immediately restores the firmware curve without keeping an active profile selected. Silent uses the helper once to hand fan ownership back to the firmware curve, then stays passive while monitoring continues.")
+                    HelpBullet(text: "Smart, Balanced, Performance, Max, Manual, and Custom actively write fan targets through the helper while those modes stay selected.")
                     HelpBullet(text: "The helper tool must be installed and trusted before managed fan control is reliable.")
                     HelpBullet(text: "Use `Reset to System Auto` or quit Core Monitor to hand control back to macOS.")
                     HelpBullet(text: "The `Scan Fan Keys` action checks which fan-related SMC keys respond on the current Mac. It does not calibrate RPM accuracy.")
                     HelpBullet(text: "On some Apple Silicon notebooks, manual targets only take effect after macOS has already activated the fan.")
-                        HelpBullet(text: "Safety features prevent unsafe fan speeds and protect hardware integrity.")
-                        Text("Use the `Fans` tab to switch profiles or adjust settings.")
-                            .font(.subheadline)
+                    HelpBullet(text: "Safety features prevent unsafe fan speeds and protect hardware integrity.")
+                    Text("Use the `Fans` tab to switch profiles or adjust settings.")
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
             )),

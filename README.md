@@ -80,12 +80,12 @@ The helper is bundled at `Core-Monitor.app/Contents/Library/LaunchServices/venta
 | Mode | Behavior |
 |------|----------|
 | Smart | Temperature + power-aware curve. Blends CPU/GPU temps with system watt draw, scales against a configurable aggressiveness from 0.0 (always minimum) to 3.0 (always maximum). |
-| Silent | Delegates entirely to the firmware's automatic curve. |
+| Silent | Uses the helper once to return fans to the firmware's automatic curve, then keeps monitoring without holding a custom RPM target. |
 | Balanced | Fixed at 60% of the fan's reported maximum. |
 | Performance | Fixed at 85%. |
 | Max | Fixed at 100%. |
 | Manual | You pick the RPM. |
-| System | Restores automatic SMC control with `F{n}Md = 0`. |
+| System | Restores automatic SMC control with `F{n}Md = 0` immediately and leaves fan control fully with macOS. |
 
 The Smart curve accounts for system power draw as a temperature boost — at 40 W it adds up to 8°C to the effective temperature before mapping to a fan speed. Fan settings persist across sleep/wake via `NSWorkspace.didWakeNotification`.
 
