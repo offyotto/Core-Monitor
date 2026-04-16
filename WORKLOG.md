@@ -270,3 +270,8 @@
 - Stopped the dashboard from forcing high-churn process sampling on every sidebar surface, and now only enable the faster top-process cadence where it materially helps: `Alerts` and `Memory` in the full dashboard.
 - Added `DashboardProcessSamplingPolicyTests` coverage so Basic Mode and the low-value surfaces stay on the cheaper background cadence instead of drifting back to always-on detailed sampling.
 - Re-verified the change with a full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' -derivedDataPath .deriveddata CODE_SIGNING_ALLOWED=NO test` pass, plus a debug-app runtime check confirming the monitoring-status copy now reflects the scoped sampling behavior.
+
+### Completed batch
+- Hardened startup against duplicate launches by detecting an already-running Core Monitor instance, handing dashboard focus back to that process, and terminating the new copy before it can publish another set of menu bar extras.
+- Added `CoreMonitorSingleInstancePolicyTests` coverage for the handoff-target selection rules and exempted the path under XCTest so the host app does not terminate itself during unit-test bootstrapping.
+- Re-verified the batch with the same clean full macOS test pass, then forced a second launch from the built executable and confirmed the process count stays at one for the Debug app path instead of stacking a duplicate instance.

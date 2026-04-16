@@ -1,6 +1,36 @@
 import AppKit
 import SwiftUI
 
+struct CoreMonitorRunningInstance: Equatable {
+    let processIdentifier: pid_t
+    let launchDate: Date?
+    let isFinishedLaunching: Bool
+    let isTerminated: Bool
+}
+
+enum CoreMonitorSingleInstancePolicy {
+    static func handoffTarget(
+        from runningInstances: [CoreMonitorRunningInstance],
+        currentPID: pid_t
+    ) -> CoreMonitorRunningInstance? {
+        runningInstances
+            .filter { instance in
+                instance.processIdentifier != currentPID &&
+                instance.isFinishedLaunching &&
+                instance.isTerminated == false
+            }
+            .sorted { lhs, rhs in
+                let lhsLaunchDate = lhs.launchDate ?? .distantPast
+                let rhsLaunchDate = rhs.launchDate ?? .distantPast
+                if lhsLaunchDate != rhsLaunchDate {
+                    return lhsLaunchDate < rhsLaunchDate
+                }
+                return lhs.processIdentifier < rhs.processIdentifier
+            }
+            .first
+    }
+}
+
 @available(macOS 13.0, *)
 @MainActor
 private final class DashboardWindowController: NSWindowController, NSWindowDelegate {
@@ -108,6 +138,8 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
 @available(macOS 13.0, *)
 @MainActor
 final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
+    private static let openDashboardRequestNotification = Notification.Name("CoreMonitorOpenDashboardRequest")
+
     private lazy var coordinator = AppCoordinator()
     private lazy var startupManager = StartupManager()
 
@@ -116,11 +148,15 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     private var hasPresentedInitialDashboard = false
     private var pendingInitialDashboardAttempts: [DispatchWorkItem] = []
     private var quitShortcutMonitor: Any?
+    private var distributedDashboardRequestObserver: NSObjectProtocol?
+    private let isRunningUnderXCTest = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSWindow.allowsAutomaticWindowTabbing = false
+        guard handOffToRunningInstanceIfNeeded() == false else { return }
         installApplicationMenuIfNeeded()
         installQuitShortcutMonitorIfNeeded()
+        installDistributedDashboardRequestObserverIfNeeded()
         NSApp.setActivationPolicy(.accessory)
         CoreMonitorDefaultsMaintenance.purgeDeprecatedState()
         installMenuBarIfNeeded()
@@ -131,6 +167,10 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         if let quitShortcutMonitor {
             NSEvent.removeMonitor(quitShortcutMonitor)
             self.quitShortcutMonitor = nil
+        }
+        if let distributedDashboardRequestObserver {
+            DistributedNotificationCenter.default().removeObserver(distributedDashboardRequestObserver)
+            self.distributedDashboardRequestObserver = nil
         }
         cancelInitialDashboardAttempts()
         coordinator.stop()
@@ -215,6 +255,27 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         NSApp.mainMenu = mainMenu
     }
 
+    private func installDistributedDashboardRequestObserverIfNeeded() {
+        guard distributedDashboardRequestObserver == nil,
+              let bundleIdentifier = Bundle.main.bundleIdentifier else {
+            return
+        }
+
+        distributedDashboardRequestObserver = DistributedNotificationCenter.default().addObserver(
+            forName: Self.openDashboardRequestNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            let requestedBundleIdentifier = notification.userInfo?["bundleIdentifier"] as? String
+            guard requestedBundleIdentifier == nil || requestedBundleIdentifier == bundleIdentifier else {
+                return
+            }
+            Task { @MainActor [weak self] in
+                self?.openDashboard()
+            }
+        }
+    }
+
     private func installQuitShortcutMonitorIfNeeded() {
         guard quitShortcutMonitor == nil else { return }
 
@@ -252,6 +313,42 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
 
         hasPresentedInitialDashboard = true
         scheduleInitialDashboardAttempts(after: [0, 0.35, 1.0, 2.0])
+    }
+
+    private func handOffToRunningInstanceIfNeeded() -> Bool {
+        guard isRunningUnderXCTest == false else { return false }
+        guard let bundleIdentifier = Bundle.main.bundleIdentifier else { return false }
+
+        let currentPID = ProcessInfo.processInfo.processIdentifier
+        let runningApplications = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier)
+        let runningInstances = runningApplications.map {
+            CoreMonitorRunningInstance(
+                processIdentifier: $0.processIdentifier,
+                launchDate: $0.launchDate,
+                isFinishedLaunching: $0.isFinishedLaunching,
+                isTerminated: $0.isTerminated
+            )
+        }
+
+        guard let target = CoreMonitorSingleInstancePolicy.handoffTarget(
+            from: runningInstances,
+            currentPID: currentPID
+        ), let targetApplication = runningApplications.first(where: { $0.processIdentifier == target.processIdentifier }) else {
+            return false
+        }
+
+        DistributedNotificationCenter.default().postNotificationName(
+            Self.openDashboardRequestNotification,
+            object: nil,
+            userInfo: ["bundleIdentifier": bundleIdentifier],
+            deliverImmediately: true
+        )
+        _ = targetApplication.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+        NSApp.setActivationPolicy(.accessory)
+        DispatchQueue.main.async {
+            NSApp.terminate(nil)
+        }
+        return true
     }
 
     private func scheduleInitialDashboardAttempts(after delays: [TimeInterval]) {
