@@ -108,6 +108,7 @@ private struct MBDivider: View {
 
 private struct MenuBarAlertSummarySection: View {
     @ObservedObject var systemMonitor: SystemMonitor
+    @ObservedObject var fanController: FanController
     @ObservedObject var alertManager: AlertManager
     @ObservedObject private var helperManager = SMCHelperManager.shared
     var openAlertsAction: (() -> Void)? = nil
@@ -149,10 +150,8 @@ private struct MenuBarAlertSummarySection: View {
                 }
 
                 HStack(spacing: 8) {
-                    summaryPill(helperSummaryLabel, color: helperSummaryColor)
-                    if let recent = alertManager.history.first {
-                        summaryPill(recent.kind.title, color: severityColor(recent.severity))
-                    }
+                    summaryPill(fanModeSummary.label, color: pillColor(for: fanModeSummary.tone))
+                    summaryPill(helperSummary.label, color: pillColor(for: helperSummary.tone))
                 }
 
                 if alertManager.activeAlerts.isEmpty == false, let openAlertsAction {
@@ -208,33 +207,30 @@ private struct MenuBarAlertSummarySection: View {
         }
     }
 
-    private var helperSummaryLabel: String {
-        switch helperManager.connectionState {
-        case .reachable:
-            return "Helper Ready"
-        case .checking:
-            return "Helper Checking"
-        case .unreachable:
-            return "Helper Attention"
-        case .unknown where helperManager.isInstalled:
-            return "Helper Pending"
-        case .unknown, .missing:
-            return "Helper Missing"
-        }
+    private var fanModeSummary: MenuBarStatusPillSummary {
+        MenuBarStatusSummary.fanModeSummary(for: fanController.mode)
     }
 
-    private var helperSummaryColor: Color {
-        switch helperManager.connectionState {
-        case .reachable:
+    private var helperSummary: MenuBarStatusPillSummary {
+        MenuBarStatusSummary.helperSummary(
+            for: fanController.mode,
+            connectionState: helperManager.connectionState,
+            isInstalled: helperManager.isInstalled
+        )
+    }
+
+    private func pillColor(for tone: MenuBarStatusPillTone) -> Color {
+        switch tone {
+        case .neutral:
+            return .white.opacity(0.58)
+        case .accent:
             return Color.mbBlue
-        case .checking:
-            return Color.mbTint
-        case .unreachable:
+        case .good:
+            return Color.mbGreen
+        case .warning:
+            return Color.mbOrange
+        case .critical:
             return .red
-        case .unknown where helperManager.isInstalled:
-            return Color.mbOrange
-        case .unknown, .missing:
-            return Color.mbOrange
         }
     }
 }
@@ -378,6 +374,7 @@ private struct DonutChart: View {
 
 struct CPUMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
+    @ObservedObject var fanController: FanController
     @ObservedObject var alertManager: AlertManager
     var openDashboardAction: () -> Void = {}
     var openAlertsAction: () -> Void = {}
@@ -391,7 +388,7 @@ struct CPUMenuPopoverView: View {
                 VStack(spacing: 0) {
                     cpuHeader
                     MBDivider()
-                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager, openAlertsAction: openAlertsAction)
+                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, fanController: fanController, alertManager: alertManager, openAlertsAction: openAlertsAction)
                     MBDivider()
                     graphSection
                     MBDivider()
@@ -564,6 +561,7 @@ struct CPUMenuPopoverView: View {
 
 struct MemoryMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
+    @ObservedObject var fanController: FanController
     @ObservedObject var alertManager: AlertManager
     @ObservedObject private var privacySettings = PrivacySettings.shared
     var openDashboardAction: () -> Void = {}
@@ -575,7 +573,7 @@ struct MemoryMenuPopoverView: View {
                 VStack(spacing: 0) {
                     memHeader
                     MBDivider()
-                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager, openAlertsAction: openAlertsAction)
+                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, fanController: fanController, alertManager: alertManager, openAlertsAction: openAlertsAction)
                     MBDivider()
                     breakdownSection
                     MBDivider()
@@ -744,6 +742,7 @@ struct MemoryMenuPopoverView: View {
 
 struct DiskMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
+    @ObservedObject var fanController: FanController
     @ObservedObject var alertManager: AlertManager
     @ObservedObject private var privacySettings = PrivacySettings.shared
     var openDashboardAction: () -> Void = {}
@@ -755,7 +754,7 @@ struct DiskMenuPopoverView: View {
                 VStack(spacing: 0) {
                     diskHeader
                     MBDivider()
-                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager, openAlertsAction: openAlertsAction)
+                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, fanController: fanController, alertManager: alertManager, openAlertsAction: openAlertsAction)
                     MBDivider()
                     diskDonutSection
                     MBDivider()
@@ -979,6 +978,7 @@ struct TemperatureMenuPopoverView: View {
     @ObservedObject var fanController: FanController
     @ObservedObject var alertManager: AlertManager
     var openDashboardAction: () -> Void = {}
+    var openFansAction: () -> Void = {}
     var openAlertsAction: () -> Void = {}
 
     var body: some View {
@@ -987,7 +987,7 @@ struct TemperatureMenuPopoverView: View {
                 VStack(spacing: 0) {
                     tempHeader
                     MBDivider()
-                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager, openAlertsAction: openAlertsAction)
+                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, fanController: fanController, alertManager: alertManager, openAlertsAction: openAlertsAction)
                     MBDivider()
                     temperatureSection
                     MBDivider()
@@ -997,6 +997,10 @@ struct TemperatureMenuPopoverView: View {
                     MBDivider()
                     frequencySection
                     MBDivider()
+                    if fanController.mode.requiresPrivilegedHelper {
+                        MBActionButton(label: "Open Fans", icon: "fanblades.fill") { openFansAction() }
+                        MBDivider()
+                    }
                     MBActionButton(label: "Open Dashboard", icon: "gauge.medium") { openDashboardAction() }
                         .padding(.vertical, 4)
                 }

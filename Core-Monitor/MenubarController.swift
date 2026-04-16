@@ -328,6 +328,7 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
             return AnyView(
                 CPUMenuPopoverView(
                     systemMonitor: systemMonitor,
+                    fanController: fanController,
                     alertManager: alertManager,
                     openDashboardAction: { [weak self] in
                         self?.popover?.performClose(nil)
@@ -343,6 +344,7 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
             return AnyView(
                 MemoryMenuPopoverView(
                     systemMonitor: systemMonitor,
+                    fanController: fanController,
                     alertManager: alertManager,
                     openDashboardAction: { [weak self] in
                         self?.popover?.performClose(nil)
@@ -358,6 +360,7 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
             return AnyView(
                 DiskMenuPopoverView(
                     systemMonitor: systemMonitor,
+                    fanController: fanController,
                     alertManager: alertManager,
                     openDashboardAction: { [weak self] in
                         self?.popover?.performClose(nil)
@@ -379,6 +382,10 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                         self?.popover?.performClose(nil)
                         self?.openDashboardAction()
                     },
+                    openFansAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openSelectionFromPopover(.fans)
+                    },
                     openAlertsAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openAlertsFromPopover()
@@ -389,7 +396,11 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
     }
 
     private func openAlertsFromPopover() {
-        DashboardNavigationRouter.shared.open(.alerts)
+        openSelectionFromPopover(.alerts)
+    }
+
+    private func openSelectionFromPopover(_ selection: SidebarItem) {
+        DashboardNavigationRouter.shared.open(selection)
         openDashboardAction()
     }
 

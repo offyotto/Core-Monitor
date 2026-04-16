@@ -245,3 +245,8 @@
 - Reverted invalid `nonisolated` annotations from the fan and monitoring value-model layer so the project still compiles on GitHub Actions' Xcode 16.2 runner.
 - Kept the truly actor-crossing cases explicit by leaving helper probe methods nonisolated, moving the Touch Bar slider presenter onto the main actor, and making the process sampler itself plain so `SystemMonitor` can construct it synchronously.
 - Re-ran `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` and confirmed the repo is back to a green local build before pushing the CI repair.
+
+### Completed batch
+- Tightened the menu bar popover status model so it now shows the active fan mode alongside helper state instead of surfacing stale recent-alert badges that made a healthy monitoring session look unhealthy.
+- Added explicit menu bar summary logic for the important trust distinction between `Helper Optional` in system-owned cooling and real helper problems in managed fan modes, then covered that logic with focused unit tests.
+- Added a direct `Open Fans` path from the temperature popover whenever the current fan mode is helper-backed, rebuilt the macOS app, re-ran the full `xcodebuild ... test` suite, and runtime-checked the updated popovers with fresh screenshots.
