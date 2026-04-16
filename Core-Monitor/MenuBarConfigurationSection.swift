@@ -49,7 +49,7 @@ struct MenuBarSettingsCard: View {
 
             Spacer(minLength: 12)
 
-            Button("Restore Defaults") {
+            Button("Restore Balanced") {
                 menuBarSettings.restoreDefaults()
             }
             .buttonStyle(.bordered)
@@ -71,6 +71,7 @@ struct MenuBarSettingsCard: View {
                         MenuBarPresetChip(
                             title: preset.title,
                             detail: preset.detail,
+                            isRecommended: preset.isRecommended,
                             isSelected: menuBarSettings.activePreset == preset
                         )
                     }
@@ -159,6 +160,7 @@ struct MenuBarSettingsCard: View {
 private struct MenuBarPresetChip: View {
     let title: String
     let detail: String
+    let isRecommended: Bool
     let isSelected: Bool
 
     var body: some View {
@@ -171,6 +173,16 @@ private struct MenuBarPresetChip: View {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(isSelected ? Color.bdAccent : .secondary)
+            }
+
+            if isRecommended {
+                Text("Recommended")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(Color.bdAccent)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Color.bdAccent.opacity(0.14))
+                    .clipShape(Capsule())
             }
 
             Text(detail)
