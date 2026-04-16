@@ -39,8 +39,10 @@ protocol WeatherProviding: AnyObject {
 protocol WeatherLocationAccessControlling: AnyObject {
     var authorizationStatus: CLAuthorizationStatus { get }
     var currentLocation: CLLocation? { get }
+    var changePublisher: AnyPublisher<Void, Never> { get }
     func requestAccess()
     func refreshStatus()
+    func requestCurrentLocation() async -> CLLocation?
 }
 
 @MainActor
@@ -48,19 +50,25 @@ final class WeatherLocationAccessController: NSObject, ObservableObject, CLLocat
     static let shared = WeatherLocationAccessController()
 
     @Published private(set) var authorizationStatus: CLAuthorizationStatus
+    private(set) var currentLocation: CLLocation?
 
+    private let changeSubject = PassthroughSubject<Void, Never>()
     private let locationManager: CLLocationManager
+    private var pendingLocationContinuations: [CheckedContinuation<CLLocation?, Never>] = []
+    private var locationRequestTimeoutTask: Task<Void, Never>?
+    private var isRequestingLocation = false
 
     private override init() {
         let locationManager = CLLocationManager()
         self.locationManager = locationManager
         self.authorizationStatus = locationManager.authorizationStatus
+        self.currentLocation = locationManager.location
         super.init()
         locationManager.delegate = self
     }
 
-    var currentLocation: CLLocation? {
-        locationManager.location
+    var changePublisher: AnyPublisher<Void, Never> {
+        changeSubject.eraseToAnyPublisher()
     }
 
     func requestAccess() {
@@ -69,13 +77,138 @@ final class WeatherLocationAccessController: NSObject, ObservableObject, CLLocat
     }
 
     func refreshStatus() {
-        authorizationStatus = locationManager.authorizationStatus
+        applyLocationManagerState(from: locationManager, emitChanges: false)
+    }
+
+    func requestCurrentLocation() async -> CLLocation? {
+        refreshStatus()
+
+        if let currentLocation, Self.isLocationFresh(currentLocation) {
+            return currentLocation
+        }
+
+        guard Self.isAuthorized(authorizationStatus) else {
+            return nil
+        }
+
+        return await withCheckedContinuation { continuation in
+            pendingLocationContinuations.append(continuation)
+            requestLocationIfNeeded(force: true)
+        }
     }
 
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        let status = manager.authorizationStatus
         Task { @MainActor [weak self] in
-            self?.authorizationStatus = status
+            self?.applyLocationManagerState(from: manager, emitChanges: true)
+        }
+    }
+
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        let latestLocation = locations.last ?? manager.location
+        Task { @MainActor [weak self] in
+            self?.applyResolvedLocation(latestLocation)
+        }
+    }
+
+    nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            if let clError = error as? CLError, clError.code == .locationUnknown {
+                return
+            }
+            self.finishLocationRequests(with: self.currentLocation)
+        }
+    }
+
+    private func applyLocationManagerState(from manager: CLLocationManager, emitChanges: Bool) {
+        let nextStatus = manager.authorizationStatus
+        let nextLocation = Self.isAuthorized(nextStatus) ? manager.location : nil
+        var didChange = false
+
+        if authorizationStatus != nextStatus {
+            authorizationStatus = nextStatus
+            didChange = true
+        }
+
+        if Self.locationsMatch(currentLocation, nextLocation) == false {
+            currentLocation = nextLocation
+            didChange = true
+        }
+
+        if Self.isAuthorized(nextStatus) {
+            requestLocationIfNeeded()
+        } else {
+            finishLocationRequests(with: nil)
+        }
+
+        if emitChanges && didChange {
+            changeSubject.send()
+        }
+    }
+
+    private func applyResolvedLocation(_ location: CLLocation?) {
+        let didChange = Self.locationsMatch(currentLocation, location) == false
+        currentLocation = location
+        finishLocationRequests(with: location)
+        if didChange {
+            changeSubject.send()
+        }
+    }
+
+    private func requestLocationIfNeeded(force: Bool = false) {
+        guard Self.isAuthorized(authorizationStatus) else {
+            finishLocationRequests(with: nil)
+            return
+        }
+        if force == false, let currentLocation, Self.isLocationFresh(currentLocation) {
+            return
+        }
+        guard isRequestingLocation == false else { return }
+
+        isRequestingLocation = true
+        locationManager.requestLocation()
+
+        locationRequestTimeoutTask?.cancel()
+        locationRequestTimeoutTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            guard let self else { return }
+            self.finishLocationRequests(with: self.currentLocation)
+        }
+    }
+
+    private func finishLocationRequests(with location: CLLocation?) {
+        isRequestingLocation = false
+        locationRequestTimeoutTask?.cancel()
+        locationRequestTimeoutTask = nil
+
+        let continuations = pendingLocationContinuations
+        pendingLocationContinuations.removeAll()
+        for continuation in continuations {
+            continuation.resume(returning: location)
+        }
+    }
+
+    private nonisolated static func isAuthorized(_ status: CLAuthorizationStatus) -> Bool {
+        switch status {
+        case .authorizedAlways, .authorizedWhenInUse:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private nonisolated static func isLocationFresh(_ location: CLLocation) -> Bool {
+        abs(location.timestamp.timeIntervalSinceNow) < 900
+    }
+
+    private nonisolated static func locationsMatch(_ lhs: CLLocation?, _ rhs: CLLocation?) -> Bool {
+        switch (lhs, rhs) {
+        case (nil, nil):
+            return true
+        case let (lhs?, rhs?):
+            return lhs.distance(from: rhs) < 1
+        default:
+            return false
         }
     }
 }
@@ -221,6 +354,7 @@ final class WeatherViewModel: ObservableObject {
 
     private let provider: WeatherProviding
     private let locationAccess: WeatherLocationAccessControlling
+    private var cancellables = Set<AnyCancellable>()
     private var refreshTask: Task<Void, Never>?
     private var isRunning = false
 
@@ -230,6 +364,7 @@ final class WeatherViewModel: ObservableObject {
     init(provider: WeatherProviding) {
         self.provider = provider
         self.locationAccess = WeatherLocationAccessController.shared
+        bindLocationAccess()
     }
 
     init(
@@ -238,6 +373,7 @@ final class WeatherViewModel: ObservableObject {
     ) {
         self.provider = provider
         self.locationAccess = locationAccess
+        bindLocationAccess()
     }
 
     func start() {
@@ -256,6 +392,18 @@ final class WeatherViewModel: ObservableObject {
     }
 
     // MARK: Private
+
+    private func bindLocationAccess() {
+        locationAccess.changePublisher
+            .debounce(for: .milliseconds(150), scheduler: RunLoop.main)
+            .sink { [weak self] in
+                guard let self, self.isRunning else { return }
+                Task { @MainActor [weak self] in
+                    await self?.refreshNow()
+                }
+            }
+            .store(in: &cancellables)
+    }
 
     private func scheduleRefresh() {
         refreshTask?.cancel()
@@ -287,9 +435,14 @@ final class WeatherViewModel: ObservableObject {
 
         state = .loading
 
-        // Use last known location or a default (Cupertino) for simulator
-        let location: CLLocation = locationAccess.currentLocation
-            ?? CLLocation(latitude: 37.3346, longitude: -122.0090)
+        // Prefer a real location fix, but keep the Cupertino fallback for simulator and offline cases.
+        let resolvedLocation: CLLocation?
+        if let currentLocation = locationAccess.currentLocation {
+            resolvedLocation = currentLocation
+        } else {
+            resolvedLocation = await locationAccess.requestCurrentLocation()
+        }
+        let location = resolvedLocation ?? CLLocation(latitude: 37.3346, longitude: -122.0090)
 
         do {
             let snapshot = try await provider.currentWeather(for: location)
