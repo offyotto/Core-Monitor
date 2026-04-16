@@ -13,10 +13,6 @@ final class SystemMonitorSupplementalSamplingTests: XCTestCase {
         XCTAssertTrue(state.shouldRefreshSystemControls(now: start, monitoringInterval: 1))
         XCTAssertFalse(state.shouldRefreshSystemControls(now: start.addingTimeInterval(4.9), monitoringInterval: 1))
         XCTAssertTrue(state.shouldRefreshSystemControls(now: start.addingTimeInterval(5.0), monitoringInterval: 1))
-
-        XCTAssertTrue(state.shouldRefreshDiskStats(now: start, monitoringInterval: 1))
-        XCTAssertFalse(state.shouldRefreshDiskStats(now: start.addingTimeInterval(14.9), monitoringInterval: 1))
-        XCTAssertTrue(state.shouldRefreshDiskStats(now: start.addingTimeInterval(15.0), monitoringInterval: 1))
     }
 
     func testBackgroundMonitoringDoesNotRefreshSupplementalReadingsFasterThanMonitorCadence() {

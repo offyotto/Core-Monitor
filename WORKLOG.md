@@ -262,6 +262,11 @@
 - Re-verified the batch against the same clean macOS build and full `xcodebuild ... test` pass used for the weather work, then pushed the weather changes separately to keep the runtime/accessory polish commit atomic.
 
 ### Completed batch
+- Finished the silent-mode cleanup by removing the last `Cool Down` / `Silent` presentation leftovers from Basic Mode, fan-mode metadata, menu bar status copy, Help, and onboarding while keeping the legacy `.silent` persisted value as a safe alias to `System`.
+- Rebased that cleanup onto the much newer shared branch state, repaired an upstream `SystemMonitor` merge regression where two disk-refresh strategies had been partially combined, and kept disk throttling on the newer dedicated `DiskStatsRefreshPolicy` path while battery and volume/brightness stay on the supplemental cadence gates.
+- Re-verified the batch with targeted `CustomFanPresetTests`, `SystemMonitorSupplementalSamplingTests`, and `DiskStatsRefreshPolicyTests`, then ran a fresh full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` pass successfully.
+
+### Completed batch
 - Centralized startup defaults maintenance in a testable helper instead of leaving one-off cleanup logic inside the app delegate, then extended it to purge the now-deprecated `coremonitor.launchDiagnostics.*` and `coremonitor.didShowFirstLaunchDashboard` residue alongside the older legacy window-frame cleanup.
 - Added focused `WelcomeGuideProgressTests` coverage so both the launch-state purge and the legacy window-frame purge are locked down against a real suite-backed `UserDefaults` domain rather than only through app-launch side effects.
 - Verified the batch with targeted `WelcomeGuideProgressTests`, a full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` pass, and a debug-app launch check against `/Users/bookme/Library/Preferences/CoreTools.Core-Monitor.plist` confirming the deprecated launch-state keys no longer persist on disk.
@@ -275,7 +280,6 @@
 - Retired the legacy `Silent` fan mode from the active UI so users now see one clear firmware-owned cooling option instead of two overlapping system-controlled modes.
 - Canonicalized persisted `silent` selections back to `automatic` on load/save and helper checks, which keeps older preferences compatible without leaving the redundant alias visible in quick modes, onboarding, help copy, or README tables.
 - Verified the batch with `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' -derivedDataPath /tmp/CoreMonitor-6b5d-pass2 CODE_SIGNING_ALLOWED=NO test -only-testing:Core-MonitorTests/CustomFanPresetTests` and a full macOS `xcodebuild ... test` pass on the same derived-data path.
-:)
 
 ### Completed batch
 - Finished the silent-mode retirement by replacing the lingering Basic Mode `Cool Down` shortcut with an explicit `System Auto` action and aligning the menu bar status pill with the same automatic-cooling presentation.

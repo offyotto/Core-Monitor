@@ -144,7 +144,7 @@ final class SystemMonitor: ObservableObject {
     var swapUsedBytes: UInt64 { snapshot.swapUsedBytes }
     var swapTotalBytes: UInt64 { snapshot.swapTotalBytes }
 
-    // System volume and display brightness (0–1), polled each cycle.
+    // System volume and display brightness (0–1), refreshed on a slower supplemental cadence.
     var currentVolume: Float { snapshot.currentVolume }
     var currentBrightness: Float { snapshot.currentBrightness }
 
@@ -234,7 +234,6 @@ final class SystemMonitor: ObservableObject {
     private var supplementalSamplingState = SystemMonitorSupplementalSamplingState()
     private var cachedBatteryInfo = BatteryInfo()
     private var cachedSystemControls: (volume: Float, brightness: Float) = (0.5, 1.0)
-    private var cachedDiskStats = DiskStats()
     private var detailedSamplingReasons = Set<String>()
     private var interactiveMonitoringReasons = Set<String>()
     private var monitoringIntervalOverrides: [String: TimeInterval] = [:]
@@ -438,11 +437,7 @@ final class SystemMonitor: ObservableObject {
             let memoryStats = self.readMemoryStats()
             let batteryInfo = self.readBatteryInfoIfNeeded(sampledAt: sampledAt, monitoringInterval: activeMonitoringInterval)
             let systemControls = self.readSystemControlsIfNeeded(sampledAt: sampledAt, monitoringInterval: activeMonitoringInterval)
-            let diskStats = self.readDiskStatsIfNeeded(sampledAt: sampledAt, monitoringInterval: activeMonitoringInterval)
-            let batteryInfo = self.readBatteryInfo()
-            let systemControls = self.readSystemControls()
-            let sampleDate = Date()
-            let diskStats = self.readDiskStats(now: sampleDate)
+            let diskStats = self.readDiskStats(now: sampledAt)
             let cpuPowerWatts = self.readSMCValue(key: "PCPU")
             let gpuPowerWatts = self.readSMCValue(key: "PGPU")
             let ssdTemperature = self.readSSDTemperature()
@@ -451,7 +446,6 @@ final class SystemMonitor: ObservableObject {
 
             var snapshot = SystemMonitorSnapshot(
                 sampledAt: sampledAt,
-                sampledAt: sampleDate,
                 cpuTemperature: cpuTemperature,
                 gpuTemperature: gpuTemperature,
                 fanSpeeds: fanReadings.speeds,
@@ -527,13 +521,6 @@ final class SystemMonitor: ObservableObject {
             cachedSystemControls = readSystemControls()
         }
         return cachedSystemControls
-    }
-
-    private func readDiskStatsIfNeeded(sampledAt now: Date, monitoringInterval: TimeInterval) -> DiskStats {
-        if supplementalSamplingState.shouldRefreshDiskStats(now: now, monitoringInterval: monitoringInterval) {
-            cachedDiskStats = readDiskStats()
-        }
-        return cachedDiskStats
     }
 
     private func updateTopProcesses(_ topProcesses: TopProcessSnapshot) {

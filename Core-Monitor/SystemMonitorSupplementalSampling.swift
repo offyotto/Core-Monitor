@@ -32,7 +32,6 @@ struct SystemMonitorRefreshGate {
 struct SystemMonitorSupplementalSamplingState {
     private var batteryRefreshGate = SystemMonitorRefreshGate(minimumInterval: 10.0)
     private var systemControlsRefreshGate = SystemMonitorRefreshGate(minimumInterval: 5.0)
-    private var diskRefreshGate = SystemMonitorRefreshGate(minimumInterval: 15.0)
 
     mutating func shouldRefreshBattery(now: Date, monitoringInterval: TimeInterval) -> Bool {
         batteryRefreshGate.shouldRefresh(now: now, monitoringInterval: monitoringInterval)
@@ -42,13 +41,8 @@ struct SystemMonitorSupplementalSamplingState {
         systemControlsRefreshGate.shouldRefresh(now: now, monitoringInterval: monitoringInterval)
     }
 
-    mutating func shouldRefreshDiskStats(now: Date, monitoringInterval: TimeInterval) -> Bool {
-        diskRefreshGate.shouldRefresh(now: now, monitoringInterval: monitoringInterval)
-    }
-
     mutating func reset() {
         batteryRefreshGate.reset()
         systemControlsRefreshGate.reset()
-        diskRefreshGate.reset()
     }
 }
