@@ -41,6 +41,8 @@ Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs
 
 It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. Sensor reads stay local to your Mac. The optional fan control helper is the only additional process, and it is only needed if you want write access for fan control.
 
+The `System` tab can also register an optional `Option-Command-M` dashboard shortcut so you still have a reliable way back into Core-Monitor when menu bar visibility or macOS reopen behavior gets in the way.
+
 Public builds are available through GitHub Releases.
 
 ## Why Core-Monitor
@@ -108,7 +110,7 @@ The helper is bundled at `Core-Monitor.app/Contents/Library/LaunchServices/venta
 | Performance | Fixed at 85%. |
 | Max | Fixed at 100%. |
 | Manual | You pick the RPM. |
-| System | Restores automatic SMC control with `F{n}Md = 0`. |
+| System | Restores automatic SMC control with `F{n}Md = 0` immediately and leaves fan control fully with macOS. |
 
 The Smart curve accounts for system power draw as a temperature boost — at 40 W it adds up to 8°C to the effective temperature before mapping to a fan speed. Fan settings persist across sleep/wake via `NSWorkspace.didWakeNotification`.
 

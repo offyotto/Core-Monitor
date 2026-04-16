@@ -158,6 +158,7 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     private var pendingInitialDashboardAttempts: [DispatchWorkItem] = []
     private var quitShortcutMonitor: Any?
     private var distributedDashboardRequestObserver: NSObjectProtocol?
+    private var dashboardShortcutObserver: NSObjectProtocol?
     private let isRunningUnderXCTest = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     private var shouldAutoOpenInitialDashboard = false
 
@@ -171,6 +172,8 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         installApplicationMenuIfNeeded()
         installQuitShortcutMonitorIfNeeded()
         installDistributedDashboardRequestObserverIfNeeded()
+        installDashboardShortcutObserverIfNeeded()
+        _ = DashboardShortcutManager.shared
         if shouldAutoOpenInitialDashboard {
             NSApp.setActivationPolicy(.regular)
         } else {
@@ -191,6 +194,10 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         if let distributedDashboardRequestObserver {
             DistributedNotificationCenter.default().removeObserver(distributedDashboardRequestObserver)
             self.distributedDashboardRequestObserver = nil
+        }
+        if let dashboardShortcutObserver {
+            NotificationCenter.default.removeObserver(dashboardShortcutObserver)
+            self.dashboardShortcutObserver = nil
         }
         cancelInitialDashboardAttempts()
         coordinator.stop()
@@ -275,20 +282,22 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func installApplicationMenuIfNeeded() {
-        guard NSApp.mainMenu == nil else { return }
-
         let appName = Bundle.main.object(forInfoDictionaryKey: kCFBundleNameKey as String) as? String ?? "Core Monitor"
-        let mainMenu = NSMenu()
-        let appMenuItem = NSMenuItem()
-        appMenuItem.title = appName
+        let mainMenu = NSApp.mainMenu ?? NSMenu()
+        let appMenuItem = mainMenu.items.first ?? {
+            let item = NSMenuItem()
+            mainMenu.insertItem(item, at: 0)
+            return item
+        }()
 
+        appMenuItem.title = appName
         let appMenu = NSMenu(title: appName)
         let openDashboardItem = NSMenuItem(
             title: "Open Dashboard",
             action: #selector(openDashboardFromMenu(_:)),
-            keyEquivalent: "o"
+            keyEquivalent: DashboardShortcutConfiguration.keyEquivalent
         )
-        openDashboardItem.keyEquivalentModifierMask = [.command]
+        openDashboardItem.keyEquivalentModifierMask = DashboardShortcutConfiguration.modifierFlags
         openDashboardItem.target = self
         appMenu.addItem(openDashboardItem)
 
@@ -320,7 +329,6 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         appMenu.addItem(quitMenuItem)
 
         appMenuItem.submenu = appMenu
-        mainMenu.addItem(appMenuItem)
         NSApp.mainMenu = mainMenu
     }
 
@@ -352,6 +360,20 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
             guard self?.isQuitShortcut(event) == true else { return event }
             NSApp.terminate(nil)
             return nil
+        }
+    }
+
+    private func installDashboardShortcutObserverIfNeeded() {
+        guard dashboardShortcutObserver == nil else { return }
+
+        dashboardShortcutObserver = NotificationCenter.default.addObserver(
+            forName: .dashboardShortcutDidActivate,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.openDashboard()
+            }
         }
     }
 

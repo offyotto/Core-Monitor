@@ -63,16 +63,16 @@ enum FanControlMode: String, CaseIterable {
                 summary: "Blends the hottest CPU or GPU reading with system watt draw and keeps adjusting while Core Monitor runs.",
                 detail: "Best daily default for sustained mixed workloads that need extra cooling before throttling shows up.",
                 ownership: .coreMonitor,
-                requiresHelper: true,
+                helperRequirement: .managedControl,
                 restoresSystemAutomaticOnExit: true,
                 showsAppleSiliconDelayedResponseNote: true
             )
         case .silent:
             return FanModeGuidance(
-                summary: "Leaves the firmware curve in charge instead of holding a custom RPM target.",
-                detail: "Best when you want monitoring and alerts without an ongoing fan override.",
+                summary: "Uses the helper once to hand fan ownership back to the firmware curve, then keeps monitoring without holding a custom RPM target.",
+                detail: "Best when you want monitoring and alerts without ongoing fan overrides, but still want Core Monitor to confirm the handoff back to macOS first.",
                 ownership: .system,
-                requiresHelper: false,
+                helperRequirement: .handoff,
                 restoresSystemAutomaticOnExit: false,
                 showsAppleSiliconDelayedResponseNote: false
             )
@@ -81,7 +81,7 @@ enum FanControlMode: String, CaseIterable {
                 summary: "Pins every controllable fan close to 60% of its reported maximum.",
                 detail: "Useful for longer compile, render, and emulator sessions where steady cooling matters more than acoustics.",
                 ownership: .coreMonitor,
-                requiresHelper: true,
+                helperRequirement: .managedControl,
                 restoresSystemAutomaticOnExit: true,
                 showsAppleSiliconDelayedResponseNote: true
             )
@@ -90,7 +90,7 @@ enum FanControlMode: String, CaseIterable {
                 summary: "Pins every controllable fan close to 85% for aggressive sustained cooling.",
                 detail: "Good for heavy GPU or all-core work when you want lower temperatures without going full blast.",
                 ownership: .coreMonitor,
-                requiresHelper: true,
+                helperRequirement: .managedControl,
                 restoresSystemAutomaticOnExit: true,
                 showsAppleSiliconDelayedResponseNote: true
             )
@@ -99,7 +99,7 @@ enum FanControlMode: String, CaseIterable {
                 summary: "Pins every controllable fan at the reported maximum RPM.",
                 detail: "Use only when you want the strongest possible cooling and do not care about noise.",
                 ownership: .coreMonitor,
-                requiresHelper: true,
+                helperRequirement: .managedControl,
                 restoresSystemAutomaticOnExit: true,
                 showsAppleSiliconDelayedResponseNote: true
             )
@@ -108,7 +108,7 @@ enum FanControlMode: String, CaseIterable {
                 summary: "Writes one fixed RPM target across every controllable fan until you reset or quit.",
                 detail: "Best for short debugging sessions when you know the exact airflow target you want.",
                 ownership: .coreMonitor,
-                requiresHelper: true,
+                helperRequirement: .managedControl,
                 restoresSystemAutomaticOnExit: true,
                 showsAppleSiliconDelayedResponseNote: true
             )
@@ -117,7 +117,7 @@ enum FanControlMode: String, CaseIterable {
                 summary: "Follows your saved temperature curve with optional power-based boost and smoothing.",
                 detail: "Best when you want repeatable ramp behavior that matches one machine and one workload profile.",
                 ownership: .coreMonitor,
-                requiresHelper: true,
+                helperRequirement: .managedControl,
                 restoresSystemAutomaticOnExit: true,
                 showsAppleSiliconDelayedResponseNote: true
             )
@@ -126,7 +126,7 @@ enum FanControlMode: String, CaseIterable {
                 summary: "Restores every fan to the firmware's automatic curve.",
                 detail: "Use this any time you want macOS to own cooling again immediately.",
                 ownership: .system,
-                requiresHelper: false,
+                helperRequirement: .none,
                 restoresSystemAutomaticOnExit: false,
                 showsAppleSiliconDelayedResponseNote: false
             )
@@ -139,13 +139,27 @@ enum FanControlOwnership: Equatable {
     case coreMonitor
 }
 
+enum FanModeHelperRequirement: Equatable {
+    case none
+    case handoff
+    case managedControl
+
+    var requiresPrivilegedHelper: Bool {
+        self != .none
+    }
+}
+
 struct FanModeGuidance: Equatable {
     let summary: String
     let detail: String
     let ownership: FanControlOwnership
-    let requiresHelper: Bool
+    let helperRequirement: FanModeHelperRequirement
     let restoresSystemAutomaticOnExit: Bool
     let showsAppleSiliconDelayedResponseNote: Bool
+
+    var requiresHelper: Bool {
+        helperRequirement.requiresPrivilegedHelper
+    }
 }
 
 // MARK: - Custom Fan Preset Model

@@ -36,7 +36,7 @@ struct FanModeGuidanceCard: View {
             }
 
             HStack(spacing: 8) {
-                guidancePill(guidance.requiresHelper ? "Helper Path" : "Monitoring Only", color: guidance.requiresHelper ? .orange : .green)
+                guidancePill(helperRequirementLabel, color: helperRequirementColor)
                 if guidance.restoresSystemAutomaticOnExit {
                     guidancePill("Auto On Quit", color: .green)
                 }
@@ -106,46 +106,83 @@ struct FanModeGuidanceCard: View {
             return "macOS owns the fan curve in this mode. Core Monitor keeps monitoring, alerts, and trend history active."
         }
 
-        switch helperManager.connectionState {
-        case .reachable:
-            if mode.guidance.ownership == .system {
-                return "The helper is ready if you need to switch back into a managed profile later."
+        switch mode.guidance.helperRequirement {
+        case .none:
+            return "macOS owns the fan curve in this mode. Core Monitor keeps monitoring, alerts, and trend history active."
+        case .handoff:
+            switch helperManager.connectionState {
+            case .reachable:
+                return "Silent mode uses the helper once to return fan ownership to the firmware curve, then Core Monitor stays passive and keeps monitoring."
+            case .checking:
+                return "The helper trust check is still running. Wait for Ready before relying on Silent mode to confirm the handoff back to the firmware curve."
+            case .unreachable:
+                return helperManager.statusMessage ?? "Silent mode could not confirm the handoff back to the firmware curve because the installed helper is rejecting this app build."
+            case .missing, .unknown:
+                return "Silent mode still needs one successful helper handoff to guarantee the firmware curve is restored before Core Monitor becomes passive."
             }
-            return "Core Monitor will return fans to system automatic when you press Reset to System Auto and again when the app quits."
-        case .checking:
-            return "The helper trust check is still running. Wait for Ready before relying on managed fan control."
-        case .unreachable:
-            return helperManager.statusMessage ?? "The installed helper is rejecting this app build, so managed fan writes are not trustworthy yet."
-        case .missing, .unknown:
-            return "Install and verify the helper before trusting this mode for sustained workloads."
+        case .managedControl:
+            switch helperManager.connectionState {
+            case .reachable:
+                return "Core Monitor will return fans to system automatic when you press Reset to System Auto and again when the app quits."
+            case .checking:
+                return "The helper trust check is still running. Wait for Ready before relying on managed fan control."
+            case .unreachable:
+                return helperManager.statusMessage ?? "The installed helper is rejecting this app build, so managed fan writes are not trustworthy yet."
+            case .missing, .unknown:
+                return "Install and verify the helper before trusting this mode for sustained workloads."
+            }
         }
     }
 
     private var runtimeIcon: String {
-        switch helperManager.connectionState {
-        case .reachable where mode.guidance.ownership == .coreMonitor:
+        switch (mode.guidance.helperRequirement, helperManager.connectionState) {
+        case (.handoff, .reachable):
+            return "arrow.trianglehead.clockwise"
+        case (_, .reachable) where mode.guidance.ownership == .coreMonitor:
             return "checkmark.shield"
-        case .reachable:
+        case (_, .reachable):
             return "leaf"
-        case .checking:
+        case (_, .checking):
             return "arrow.triangle.2.circlepath"
-        case .unreachable:
+        case (_, .unreachable):
             return "xmark.shield"
-        case .missing, .unknown:
+        case (_, .missing), (_, .unknown):
             return "lock.shield"
         }
     }
 
     private var runtimeColor: Color {
-        switch helperManager.connectionState {
-        case .reachable:
-            return mode.guidance.ownership == .coreMonitor ? .green : .secondary
-        case .checking:
-            return Color.bdAccent
-        case .unreachable:
+        switch (mode.guidance.helperRequirement, helperManager.connectionState) {
+        case (.handoff, .reachable):
             return .orange
-        case .missing, .unknown:
+        case (_, .reachable):
+            return mode.guidance.ownership == .coreMonitor ? .green : .secondary
+        case (_, .checking):
+            return Color.bdAccent
+        case (_, .unreachable):
+            return .orange
+        case (_, .missing), (_, .unknown):
             return .secondary
+        }
+    }
+
+    private var helperRequirementLabel: String {
+        switch mode.guidance.helperRequirement {
+        case .none:
+            return "Monitoring Only"
+        case .handoff:
+            return "Helper Handoff"
+        case .managedControl:
+            return "Managed Fans"
+        }
+    }
+
+    private var helperRequirementColor: Color {
+        switch mode.guidance.helperRequirement {
+        case .none:
+            return .green
+        case .handoff, .managedControl:
+            return .orange
         }
     }
 

@@ -198,6 +198,7 @@ private struct WelcomeGuideSheet: View {
     @StateObject private var startupManager = StartupManager()
     @ObservedObject private var helperManager = SMCHelperManager.shared
     @ObservedObject private var menuBarSettings = MenuBarSettings.shared
+    @ObservedObject private var dashboardShortcutManager = DashboardShortcutManager.shared
 
     @State private var currentStep   = 0
     @State private var stepVisible   = false     // drives per-step fade
@@ -251,10 +252,12 @@ private struct WelcomeGuideSheet: View {
             if currentStep == guideSteps.count - 1 {
                 WelcomeGuideReadinessPanel(
                     menuBarStatus: menuBarStatus,
+                    dashboardShortcutStatus: dashboardShortcutStatus,
                     loginStatus: loginStatus,
                     helperStatus: helperStatus,
                     installHelper: installHelperIfNeeded,
                     performLaunchAtLoginAction: performLaunchAtLoginAction,
+                    enableDashboardShortcut: enableDashboardShortcut,
                     applyBalancedPreset: applyBalancedPreset,
                     refreshHelperDiagnostics: refreshHelperDiagnostics,
                     exportHelperDiagnostics: exportHelperDiagnostics,
@@ -421,6 +424,10 @@ private struct WelcomeGuideSheet: View {
         }
     }
 
+    private func enableDashboardShortcut() {
+        dashboardShortcutManager.setEnabled(true)
+    }
+
     private func installHelperIfNeeded() {
         helperManager.installFromApp()
     }
@@ -490,6 +497,37 @@ private struct WelcomeGuideSheet: View {
         case .caution:
             return .caution
         }
+    }
+
+    private var dashboardShortcutStatus: WelcomeGuideChecklistStatus {
+        if dashboardShortcutManager.isEnabled {
+            return WelcomeGuideChecklistStatus(
+                title: "Dashboard Shortcut",
+                symbol: "command",
+                tone: .positive,
+                badge: "Enabled",
+                detail: "\(DashboardShortcutConfiguration.displayLabel) can reopen Core Monitor even if menu bar items are hidden or hard to reach."
+            )
+        }
+
+        if let registrationError = dashboardShortcutManager.registrationError, registrationError.isEmpty == false {
+            return WelcomeGuideChecklistStatus(
+                title: "Dashboard Shortcut",
+                symbol: "command",
+                tone: .caution,
+                badge: "Unavailable",
+                detail: registrationError
+            )
+        }
+
+        return WelcomeGuideChecklistStatus(
+            title: "Dashboard Shortcut",
+            symbol: "command",
+            tone: .neutral,
+            badge: "Optional",
+            detail: "Enable this if you want a fallback path back into the dashboard without depending on menu bar visibility.",
+            actionTitle: "Enable"
+        )
     }
 
     private var helperStatus: WelcomeGuideChecklistStatus {
@@ -683,10 +721,12 @@ private enum WelcomeGuideChecklistTone {
 
 private struct WelcomeGuideReadinessPanel: View {
     let menuBarStatus: WelcomeGuideChecklistStatus
+    let dashboardShortcutStatus: WelcomeGuideChecklistStatus
     let loginStatus: WelcomeGuideChecklistStatus
     let helperStatus: WelcomeGuideChecklistStatus
     let installHelper: () -> Void
     let performLaunchAtLoginAction: () -> Void
+    let enableDashboardShortcut: () -> Void
     let applyBalancedPreset: () -> Void
     let refreshHelperDiagnostics: () -> Void
     let exportHelperDiagnostics: () -> Void
@@ -698,13 +738,14 @@ private struct WelcomeGuideReadinessPanel: View {
                 Text("Quick Setup Checklist")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.wgText)
-                Text("Everything below is optional except keeping one menu bar item visible.")
+                Text("Keep at least one menu bar item visible, or enable the dashboard shortcut as a fallback.")
                     .font(.system(size: 12, weight: .regular))
                     .foregroundColor(.wgTextSub)
             }
 
             VStack(spacing: 8) {
                 WelcomeGuideChecklistRow(status: menuBarStatus, action: applyBalancedPreset)
+                WelcomeGuideChecklistRow(status: dashboardShortcutStatus, action: enableDashboardShortcut)
                 WelcomeGuideChecklistRow(status: loginStatus, action: performLaunchAtLoginAction)
                 WelcomeGuideChecklistRow(
                     status: helperStatus,

@@ -93,14 +93,15 @@ struct HelpView: View {
                 HelpCard {
                     Text("Manage your Mac’s fans with advanced controls and profiles.")
                     HelpBullet(text: "Fresh installs start in System mode so monitoring, alerts, and menu bar readings work normally before you opt into helper-backed fan control.")
-                    HelpBullet(text: "System leaves the firmware curve in charge. Smart, Balanced, Performance, Max, Manual, and Custom actively write targets through the helper.")
+                    HelpBullet(text: "System immediately restores the firmware curve without keeping an active profile selected. Silent uses the helper once to hand fan ownership back to the firmware curve, then stays passive while monitoring continues.")
+                    HelpBullet(text: "Smart, Balanced, Performance, Max, Manual, and Custom actively write fan targets through the helper while those modes stay selected.")
                     HelpBullet(text: "The helper tool must be installed and trusted before managed fan control is reliable.")
                     HelpBullet(text: "Use `Reset to System Auto` or quit Core Monitor to hand control back to macOS.")
                     HelpBullet(text: "The `Scan Fan Keys` action checks which fan-related SMC keys respond on the current Mac. It does not calibrate RPM accuracy.")
                     HelpBullet(text: "On some Apple Silicon notebooks, manual targets only take effect after macOS has already activated the fan.")
-                        HelpBullet(text: "Safety features prevent unsafe fan speeds and protect hardware integrity.")
-                        Text("Use the `Fans` tab to switch profiles or adjust settings.")
-                            .font(.subheadline)
+                    HelpBullet(text: "Safety features prevent unsafe fan speeds and protect hardware integrity.")
+                    Text("Use the `Fans` tab to switch profiles or adjust settings.")
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
             )),
@@ -116,7 +117,7 @@ struct HelpView: View {
                 }
             )),
             HelpSection(id: "system", title: "System Controls", icon: "gearshape", keywords: [
-                "volume", "brightness", "launch at login", "login items", "helper diagnostics", "notifications", "privacy", "process names", "alert history"
+                "volume", "brightness", "launch at login", "login items", "helper diagnostics", "notifications", "privacy", "process names", "alert history", "dashboard shortcut", "dashboard hotkey", "option command m"
             ], content: AnyView(
                 HelpCard {
                     Text("System controls enable adjusting volume, screen brightness, and launch-at-login behavior.")
@@ -124,6 +125,7 @@ struct HelpView: View {
                     HelpBullet(text: "Toggle `Launch at Login` to start Core Monitor automatically.")
                     HelpBullet(text: "The `System` tab now also surfaces helper state, SMC access, overall thermal pressure, and notification permission status in dedicated status cards.")
                     HelpBullet(text: "Privacy Controls also live in the `System` tab so you can disable process-name capture without hunting through alert rules first.")
+                    HelpBullet(text: "An optional global dashboard shortcut can register `Option-Command-M` so you can reopen Core Monitor even if menu bar items are hidden or hard to reach.")
                 }
             )),
             HelpSection(id: "touchbar", title: "Touch Bar Customization", icon: "rectangle.3.group", keywords: [

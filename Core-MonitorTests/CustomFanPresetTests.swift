@@ -206,6 +206,15 @@ final class CustomFanPresetTests: XCTestCase {
         XCTAssertFalse(FanControlMode.silent.guidance.requiresHelper)
     }
 
+    func testFanModeGuidanceDifferentiatesMonitoringHandoffAndManagedModes() {
+        XCTAssertEqual(FanControlMode.automatic.guidance.helperRequirement, .none)
+        XCTAssertEqual(FanControlMode.silent.guidance.helperRequirement, .handoff)
+        XCTAssertEqual(FanControlMode.smart.guidance.helperRequirement, .managedControl)
+        XCTAssertFalse(FanControlMode.automatic.guidance.requiresHelper)
+        XCTAssertTrue(FanControlMode.silent.guidance.requiresHelper)
+        XCTAssertTrue(FanControlMode.smart.guidance.requiresHelper)
+    }
+
     func testAppleSiliconCaveatOnlyAppearsForManagedModes() {
         XCTAssertTrue(FanControlMode.smart.guidance.showsAppleSiliconDelayedResponseNote)
         XCTAssertTrue(FanControlMode.manual.guidance.showsAppleSiliconDelayedResponseNote)
