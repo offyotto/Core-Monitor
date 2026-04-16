@@ -218,6 +218,11 @@
 
 ### Completed batch
 - Removed the app’s persistent dashboard-launch diagnostics path so Core Monitor no longer records local open/visible window behavior for support exports.
+
+### Completed batch
+- Hardened the Touch Bar customization model so duplicate built-in widgets and repeated pinned app/folder shortcuts collapse automatically instead of producing cluttered or unstable layouts.
+- Made the Touch Bar settings store testable with injected `UserDefaults`, added explicit default/restore behavior, surfaced the active preset in the panel, and added one-click recovery actions for custom layouts that overflow the Touch Bar width.
+- Added `TouchBarCustomizationSettingsTests`, re-ran the targeted touch-bar suite, and finished with a full macOS test pass using a fresh DerivedData path after an Xcode build-database lock collision.
 - Tightened the privacy story across the app and repo: the welcome guide, menu bar popover, helper diagnostics docs, and README now make the local-only monitoring model explicit and stop using telemetry-heavy wording for core hardware readings.
 - Made quit easier to reach from the menu bar popover with a dedicated red control instead of burying termination as a low-emphasis action row.
 

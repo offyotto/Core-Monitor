@@ -354,9 +354,13 @@ final class WeatherViewModel: ObservableObject {
 
     private let provider: WeatherProviding
     private let locationAccess: WeatherLocationAccessControlling
+    private let fallbackProvider: WeatherProviding?
     private var cancellables = Set<AnyCancellable>()
     private var refreshTask: Task<Void, Never>?
     private var isRunning = false
+    private var lastSnapshot: WeatherSnapshot?
+
+    private static let fallbackLocation = CLLocation(latitude: 37.3346, longitude: -122.0090)
 
     /// Refresh interval in seconds (default 10 min)
     var refreshInterval: TimeInterval = 600
@@ -364,15 +368,18 @@ final class WeatherViewModel: ObservableObject {
     init(provider: WeatherProviding) {
         self.provider = provider
         self.locationAccess = WeatherLocationAccessController.shared
+        self.fallbackProvider = provider is MockWeatherService ? nil : MockWeatherService()
         bindLocationAccess()
     }
 
     init(
         provider: WeatherProviding,
-        locationAccess: WeatherLocationAccessControlling
+        locationAccess: WeatherLocationAccessControlling,
+        fallbackProvider: WeatherProviding? = nil
     ) {
         self.provider = provider
         self.locationAccess = locationAccess
+        self.fallbackProvider = fallbackProvider
         bindLocationAccess()
     }
 
@@ -418,36 +425,57 @@ final class WeatherViewModel: ObservableObject {
 
     func refreshNow() async {
         locationAccess.refreshStatus()
-        switch locationAccess.authorizationStatus {
+
+        let authorizationStatus = locationAccess.authorizationStatus
+        let location: CLLocation
+
+        switch authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
-            break
-        case .notDetermined:
-            state = .error("Location access is optional. Request it from Touch Bar settings for live local weather.")
-            return
-        case .denied, .restricted:
-            state = .error("Location access is off. Enable it in System Settings for live local weather.")
-            return
+            if let currentLocation = locationAccess.currentLocation {
+                location = currentLocation
+            } else {
+                location = await locationAccess.requestCurrentLocation() ?? Self.fallbackLocation
+            }
+        case .notDetermined, .denied, .restricted:
+            location = Self.fallbackLocation
         @unknown default:
-            state = .error("Location access is unavailable right now.")
-            return
+            location = Self.fallbackLocation
         }
 
         state = .loading
 
-        // Prefer a real location fix, but keep the Cupertino fallback for simulator and offline cases.
-        let resolvedLocation: CLLocation?
-        if let currentLocation = locationAccess.currentLocation {
-            resolvedLocation = currentLocation
-        } else {
-            resolvedLocation = await locationAccess.requestCurrentLocation()
-        }
-        let location = resolvedLocation ?? CLLocation(latitude: 37.3346, longitude: -122.0090)
-
         do {
             let snapshot = try await provider.currentWeather(for: location)
+            lastSnapshot = snapshot
             state = .loaded(snapshot)
         } catch {
-            state = .error(error.localizedDescription)
+            if let lastSnapshot {
+                state = .loaded(lastSnapshot)
+                return
+            }
+
+            if let fallbackProvider,
+               let fallbackSnapshot = try? await fallbackProvider.currentWeather(for: Self.fallbackLocation) {
+                lastSnapshot = fallbackSnapshot
+                state = .loaded(fallbackSnapshot)
+                return
+            }
+
+            state = .error(errorMessage(for: authorizationStatus, underlyingError: error))
+        }
+    }
+
+    private func errorMessage(
+        for authorizationStatus: CLAuthorizationStatus,
+        underlyingError: Error
+    ) -> String {
+        switch authorizationStatus {
+        case .notDetermined:
+            return "Weather fallback is unavailable right now. Request location from Touch Bar settings for live local weather."
+        case .denied, .restricted:
+            return "Weather fallback is unavailable right now. Enable location in System Settings for live local weather."
+        default:
+            return underlyingError.localizedDescription
         }
     }
 }

@@ -5,13 +5,14 @@ import Foundation
 
 @MainActor
 final class CoreMonTouchBarController: NSObject {
-    let touchBar: NSTouchBar
-    let weatherViewModel: WeatherViewModel
+    private static let customizationIdentifier = NSTouchBar.CustomizationIdentifier("com.coremonitor.touchbar.main")
 
-    private static let customizationNotification = Notification.Name("TouchBarCustomizationDidChange")
+    private(set) var touchBar: NSTouchBar
+    let weatherViewModel: WeatherViewModel
 
     private let systemMonitor: SystemMonitor
     private let ownsSystemMonitor: Bool
+    private let customizationSettings: TouchBarCustomizationSettings
 
     private var cancellables = Set<AnyCancellable>()
     private var widgets: [NSTouchBarItem.Identifier: PKWidgetInfo] = [:]
@@ -34,21 +35,23 @@ final class CoreMonTouchBarController: NSObject {
         return formatter
     }()
 
-    init(weatherProvider: WeatherProviding? = nil, monitor: SystemMonitor? = nil) {
+    init(
+        weatherProvider: WeatherProviding? = nil,
+        monitor: SystemMonitor? = nil,
+        customizationSettings: TouchBarCustomizationSettings? = nil
+    ) {
         let provider = weatherProvider ?? Self.defaultWeatherProvider()
         self.weatherViewModel = WeatherViewModel(provider: provider)
         self.systemMonitor = monitor ?? SystemMonitor()
         self.ownsSystemMonitor = monitor == nil
+        self.customizationSettings = customizationSettings ?? .shared
         self.touchBar = NSTouchBar()
         super.init()
 
         widgets = PKCoreMonWidgetCatalog.allWidgets()
-        touchBar.delegate = self
-        touchBar.customizationIdentifier = NSTouchBar.CustomizationIdentifier("com.coremonitor.touchbar.main")
 
         bindWeather()
         bindSystem()
-        bindCustomization()
         applyCustomization()
         refreshViews(force: true)
     }
@@ -97,6 +100,10 @@ final class CoreMonTouchBarController: NSObject {
         window.touchBar = touchBar
     }
 
+    func reloadCustomization() {
+        applyCustomization()
+    }
+
     private static func defaultWeatherProvider() -> WeatherProviding {
         if #available(macOS 13.0, *) {
             return LiveWeatherService()
@@ -124,27 +131,27 @@ final class CoreMonTouchBarController: NSObject {
             .store(in: &cancellables)
     }
 
-    private func bindCustomization() {
-        NotificationCenter.default.publisher(for: Self.customizationNotification)
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.applyCustomization()
-                self?.refreshViews(force: true)
-            }
-            .store(in: &cancellables)
-    }
-
     private func applyCustomization() {
         let customization = loadCustomization()
         widgets = PKCoreMonWidgetCatalog.allWidgets()
         configuredItems = Dictionary(uniqueKeysWithValues: customization.items.map { ($0.touchBarIdentifier, $0) })
         cachedItems.removeAll()
         let identifiers = customization.items.map(\.touchBarIdentifier)
+        touchBar = Self.makeTouchBar(delegate: self, identifiers: identifiers)
+        updateWeatherMonitoring()
+    }
+
+    private static func makeTouchBar(
+        delegate: NSTouchBarDelegate,
+        identifiers: [NSTouchBarItem.Identifier]
+    ) -> NSTouchBar {
+        let touchBar = NSTouchBar()
+        touchBar.delegate = delegate
+        touchBar.customizationIdentifier = customizationIdentifier
         touchBar.customizationAllowedItemIdentifiers = identifiers
         touchBar.defaultItemIdentifiers = identifiers
         touchBar.principalItemIdentifier = nil
-        applyThemeToCachedWidgets(customization.theme)
-        updateWeatherMonitoring()
+        return touchBar
     }
 
     private func startRefreshTimer() {
@@ -288,16 +295,6 @@ final class CoreMonTouchBarController: NSObject {
         loadCustomization().theme
     }
 
-    private func applyThemeToCachedWidgets(_ theme: TouchBarTheme) {
-        for item in cachedItems.values {
-            guard let widget = (item as? PKWidgetTouchBarItem)?.widget,
-                  let pillWidget = widget as? PKPillWidget else {
-                continue
-            }
-            pillWidget.theme = theme
-        }
-    }
-
     private func configure(_ item: PKWidgetTouchBarItem) {
         guard let widget = item.widget else {
             return
@@ -315,10 +312,9 @@ final class CoreMonTouchBarController: NSObject {
     }
 
     private func loadCustomization() -> (theme: TouchBarTheme, items: [TouchBarItemConfiguration]) {
-        let settings = TouchBarCustomizationSettings.shared
         return (
-            theme: settings.theme,
-            items: settings.items.isEmpty ? TouchBarPreset.classic.items : settings.items
+            theme: customizationSettings.theme,
+            items: customizationSettings.items.isEmpty ? TouchBarPreset.classic.items : customizationSettings.items
         )
     }
 }
