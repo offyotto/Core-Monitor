@@ -41,11 +41,77 @@ private struct AlertSeverityBadge: View {
     }
 }
 
+struct AlertsDashboardStripPresentation: Equatable {
+    struct Action: Equatable {
+        enum Style: Equatable {
+            case prominent
+            case standard
+        }
+
+        let title: String
+        let icon: String
+        let style: Style
+    }
+
+    let detail: String
+    let action: Action?
+
+    init(alertManager: AlertManager) {
+        self.init(
+            activeAlertCount: alertManager.activeAlerts.count,
+            authorizationStatus: alertManager.authorizationStatus,
+            desktopNotificationsEnabled: alertManager.desktopNotificationsEnabled,
+            notificationsMutedUntil: alertManager.notificationsMutedUntil
+        )
+    }
+
+    init(
+        activeAlertCount: Int,
+        authorizationStatus: UNAuthorizationStatus,
+        desktopNotificationsEnabled: Bool,
+        notificationsMutedUntil: Date?,
+        now: Date = Date()
+    ) {
+        if activeAlertCount > 0 {
+            detail = "\(activeAlertCount) active alert\(activeAlertCount == 1 ? "" : "s")"
+            action = Action(title: "Open Alerts", icon: "bell.badge", style: .prominent)
+            return
+        }
+
+        let notificationsMuted = notificationsMutedUntil.map { $0 > now } ?? false
+
+        switch authorizationStatus {
+        case .notDetermined:
+            detail = "Desktop notifications are not set up yet. In-app history already records every alert."
+            action = Action(title: "Set Up Alerts", icon: "bell.badge", style: .standard)
+        case .denied:
+            detail = "Desktop notifications are off in System Settings. In-app history still records every alert."
+            action = Action(title: "Alert Settings", icon: "bell.slash", style: .standard)
+        case .authorized, .provisional:
+            if notificationsMuted {
+                detail = "Desktop notifications are muted for now. In-app history still records every alert."
+                action = Action(title: "Alert Settings", icon: "bell.slash", style: .standard)
+            } else if desktopNotificationsEnabled == false {
+                detail = "Desktop banners are off. In-app history still records every alert."
+                action = Action(title: "Alert Settings", icon: "bell.slash", style: .standard)
+            } else {
+                detail = "Alert thresholds and recent history stay available from the Alerts screen."
+                action = nil
+            }
+        @unknown default:
+            detail = "Alert thresholds and recent history stay available from the Alerts screen."
+            action = nil
+        }
+    }
+}
+
 struct AlertsDashboardStrip: View {
     @ObservedObject var alertManager: AlertManager
     var openAlerts: (() -> Void)? = nil
 
     var body: some View {
+        let presentation = AlertsDashboardStripPresentation(alertManager: alertManager)
+
         AlertSurfaceCard {
             HStack(alignment: .top, spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
@@ -54,24 +120,25 @@ struct AlertsDashboardStrip: View {
                         Text(alertManager.summaryLine)
                             .font(.system(size: 14, weight: .semibold))
                     }
-                    if alertManager.activeAlerts.isEmpty {
-                        Text("In-app history stays available even when desktop notifications are muted.")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Text("\(alertManager.activeAlerts.count) active alert\(alertManager.activeAlerts.count == 1 ? "" : "s")")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
+                    Text(presentation.detail)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer(minLength: 12)
 
-                if let openAlerts {
-                    Button(action: openAlerts) {
-                        Label("Open Alerts", systemImage: "bell.badge")
+                if let openAlerts, let action = presentation.action {
+                    if action.style == .prominent {
+                        Button(action: openAlerts) {
+                            Label(action.title, systemImage: action.icon)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    } else {
+                        Button(action: openAlerts) {
+                            Label(action.title, systemImage: action.icon)
+                        }
+                        .buttonStyle(.bordered)
                     }
-                    .buttonStyle(.borderedProminent)
                 }
             }
         }

@@ -29,7 +29,7 @@ enum FanControlMode: String, CaseIterable {
     var title: String {
         switch self {
         case .smart:       return "SMART"
-        case .silent:      return "SILENT"
+        case .silent:      return "SYSTEM"
         case .balanced:    return "BALANCED"
         case .performance: return "PERFORMANCE"
         case .max:         return "MAX"
@@ -42,7 +42,7 @@ enum FanControlMode: String, CaseIterable {
     var shortTitle: String {
         switch self {
         case .smart:       return "SMART"
-        case .silent:      return "SILENT"
+        case .silent:      return "SYSTEM"
         case .balanced:    return "BAL"
         case .performance: return "PERF"
         case .max:         return "MAX"
@@ -53,8 +53,8 @@ enum FanControlMode: String, CaseIterable {
     }
 
     var usesManualSlider: Bool { self == .manual }
-    var isManagedProfile: Bool { guidance.ownership == .coreMonitor }
-    var requiresPrivilegedHelper: Bool { guidance.requiresHelper }
+    var isManagedProfile: Bool { canonicalMode.guidance.ownership == .coreMonitor }
+    var requiresPrivilegedHelper: Bool { canonicalMode.guidance.requiresHelper }
 
     var guidance: FanModeGuidance {
         switch self {
@@ -705,11 +705,9 @@ final class FanController: ObservableObject {
         if force { stopControlLoop() }
 
         switch mode {
-        case .automatic:
+        case .automatic, .silent:
             resetToSystemAutomatic()
             statusMessage = "System automatic control restored"
-        case .silent:
-            updateManagedControl()
         case .manual:
             applyFanSpeed(manualSpeed)
             lastAppliedSpeed = manualSpeed
@@ -731,19 +729,12 @@ final class FanController: ObservableObject {
             }
             statusMessage = "Manual: \(manualSpeed) RPM"
 
-        case .automatic:
-            break
-
-        case .silent:
-            if helperManager.isInstalled, lastAppliedSpeed > 0 {
+        case .automatic, .silent:
+            if lastAppliedSpeed != -1 {
                 resetToSystemAutomatic()
-                if statusMessage == "System automatic control restored" {
-                    statusMessage = "Silent: system automatic"
-                }
-            } else {
-                statusMessage = helperManager.isInstalled ? "Silent: system automatic" : "Silent: monitoring only"
             }
             lastAppliedSpeed = -1
+            statusMessage = "System automatic mode is active"
 
         case .balanced:
             applyFixedPercentProfile(0.60, label: "Balanced")
@@ -1005,10 +996,8 @@ final class FanController: ObservableObject {
 
     private func passiveStatusMessage(for mode: FanControlMode) -> String {
         switch mode {
-        case .automatic:
+        case .automatic, .silent:
             return "System automatic mode is active"
-        case .silent:
-            return "Silent mode keeps the firmware fan curve in charge"
         case .balanced:
             return "Balanced mode is ready to target 60% fan speed"
         case .performance:
