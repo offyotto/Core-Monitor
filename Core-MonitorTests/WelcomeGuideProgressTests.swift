@@ -57,6 +57,27 @@ final class WelcomeGuideProgressTests: XCTestCase {
         XCTAssertTrue(defaults.bool(forKey: CoreMonitorDefaultsMaintenance.legacyWindowStateResetKey))
     }
 
+    func testWelcomeGuidePresentationKeepsGuidePendingAfterUnexpectedDismissal() {
+        var presentation = WelcomeGuidePresentationController(hasSeen: false)
+
+        let dismissAction = presentation.handlePresentationChange(false)
+
+        XCTAssertEqual(dismissAction, .none)
+        XCTAssertFalse(presentation.didCompleteGuide)
+        XCTAssertTrue(presentation.isSheetPresented)
+    }
+
+    func testWelcomeGuidePresentationPersistsCompletionAfterGuideFinishes() {
+        var presentation = WelcomeGuidePresentationController(hasSeen: false)
+        presentation.syncStoredPreference(hasSeen: true)
+
+        let dismissAction = presentation.handlePresentationChange(false)
+
+        XCTAssertEqual(dismissAction, .persistCompletion)
+        XCTAssertTrue(presentation.didCompleteGuide)
+        XCTAssertFalse(presentation.isSheetPresented)
+    }
+
     private func makeDefaults() -> UserDefaults {
         let suiteName = "WelcomeGuideProgressTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!

@@ -270,3 +270,8 @@
 - Fixed a fan-control trust mismatch by making `Silent` a true system-owned mode instead of still treating it like a helper-backed managed profile; users can now switch into `Silent` without being blocked by helper state when they just want firmware control plus monitoring.
 - Aligned the helper-dependent UI and alert surfaces with that behavior so `Silent` now reads as `Helper Optional` in status contexts, stops tripping helper-unavailable alerts, and no longer implies Core Monitor is actively managing fans while the firmware owns the curve.
 - Verified the batch with targeted `CustomFanPresetTests` and `AlertEngineTests`, then a fresh full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` pass.
+
+### Completed batch
+- Reproduced a live first-launch onboarding regression instead of trusting stale prefs: accessory-mode launches with leftover `Core-Monitor` processes were masking whether the dashboard and guide actually appeared from a clean state.
+- Reworked the welcome-guide sheet state so only an explicit completion can mark onboarding as seen; transient SwiftUI presentation churn no longer silently burns the one-time guide state.
+- Added focused `WelcomeGuideProgressTests` coverage for the unexpected-dismissal path, reran the full macOS test suite, and revalidated the real app by clearing the persisted welcome flag from `~/Library/Preferences/CoreTools.Core-Monitor.plist`, relaunching the debug app, and capturing a fresh first-launch screenshot that now shows the dashboard plus onboarding sheet again.
