@@ -72,6 +72,7 @@ extension View {
 
     @ViewBuilder
     func cmLiquidGlassCard(cornerRadius: CGFloat = 14) -> some View {
+#if swift(>=6.3)
         if #available(macOS 26.0, *) {
             glassEffect(.regular, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
                 .overlay(
@@ -90,6 +91,18 @@ extension View {
                 }
             )
         }
+#else
+        background(
+            ZStack {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(Color.white.opacity(0.006))
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.12), lineWidth: 0.8)
+            }
+        )
+#endif
     }
 
     @ViewBuilder
