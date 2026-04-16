@@ -114,7 +114,9 @@ final class CoreMonTouchBarController: NSObject {
     }
 
     private func bindSystem() {
-        NotificationCenter.default.publisher(for: .systemMonitorDidUpdate, object: systemMonitor)
+        systemMonitor.$snapshot
+            .map(\.sampledAt)
+            .removeDuplicates()
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.refreshViews()

@@ -5,10 +5,6 @@ import IOKit.ps
 import Darwin
 import CoreAudio
 
-extension Notification.Name {
-    static let systemMonitorDidUpdate = Notification.Name("SystemMonitorDidUpdate")
-}
-
 struct CPUStats {
     let usagePercent: Double
     let performanceCoreUsagePercent: Double?
@@ -495,9 +491,7 @@ final class SystemMonitor: ObservableObject {
                 self.memoryUsageTrend.append(snapshot.memoryUsagePercent, at: sampleTimestamp)
                 self.swapUsedTrend.append(Double(snapshot.swapUsedBytes) / 1_073_741_824.0, at: sampleTimestamp)
                 self.snapshot = snapshot
-
                 self.isSampling = false
-                NotificationCenter.default.post(name: .systemMonitorDidUpdate, object: self)
             }
         }
     }

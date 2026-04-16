@@ -475,18 +475,15 @@ final class RAMPressureTouchBarWidget: NSStackView, TouchBarThemable {
 
     private let iconView = NSImageView()
     let meter = MeterControl()
-    private var observer: NSObjectProtocol?
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setup()
-        setupObserver()
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setup()
-        setupObserver()
     }
 
     private func setup() {
@@ -504,21 +501,6 @@ final class RAMPressureTouchBarWidget: NSStackView, TouchBarThemable {
         
         applyTheme()
     }
-
-    private func setupObserver() {
-        observer = NotificationCenter.default.addObserver(
-            forName: .systemMonitorDidUpdate,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            guard let self = self, 
-                  let monitor = notification.object as? SystemMonitor else { return }
-            
-            let usage = Float(monitor.memoryUsagePercent / 100.0)
-            self.update(usage: usage, pressure: monitor.memoryPressure)
-        }
-    }
-
     func update(usage: Float, pressure: MemoryPressureLevel) {
         meter.set(value: usage)
         
@@ -535,12 +517,6 @@ final class RAMPressureTouchBarWidget: NSStackView, TouchBarThemable {
     private func applyTheme() {
         iconView.contentTintColor = theme.primaryTextColor
         meter.theme = theme
-    }
-
-    deinit {
-        if let observer = observer {
-            NotificationCenter.default.removeObserver(observer)
-        }
     }
 }
 

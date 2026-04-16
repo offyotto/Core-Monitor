@@ -45,7 +45,7 @@ enum MenuBarItemKind: CaseIterable {
 // MARK: - MenuBarController  (public facade — same init signature as before)
 final class MenuBarController: NSObject {
     private var itemControllers: [SingleMenuBarItemController] = []
-    private var updateObserver: Any?
+    private var snapshotCancellable: AnyCancellable?
     private var settingsObserver: Any?
     private var alertCancellable: AnyCancellable?
 
@@ -72,13 +72,13 @@ final class MenuBarController: NSObject {
             itemControllers.append(ctrl)
         }
 
-        updateObserver = NotificationCenter.default.addObserver(
-            forName: .systemMonitorDidUpdate,
-            object:  systemMonitor,
-            queue:   .main
-        ) { [weak self] _ in
-            self?.itemControllers.forEach { $0.refresh() }
-        }
+        snapshotCancellable = systemMonitor.$snapshot
+            .map(\.sampledAt)
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.itemControllers.forEach { $0.refresh() }
+            }
 
         settingsObserver = NotificationCenter.default.addObserver(
             forName: .menuBarSettingsDidChange,
@@ -96,9 +96,6 @@ final class MenuBarController: NSObject {
     }
 
     deinit {
-        if let obs = updateObserver {
-            NotificationCenter.default.removeObserver(obs)
-        }
         if let obs = settingsObserver {
             NotificationCenter.default.removeObserver(obs)
         }
