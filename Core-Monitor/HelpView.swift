@@ -72,6 +72,7 @@ struct HelpView: View {
                     HelpBullet(text: "CPU and memory alerts include top-process context so you can see likely culprits without configuring per-process rules.")
                     HelpBullet(text: "Privacy Controls can remove app names from alerts and recent history while still keeping the thresholds active.")
                     HelpBullet(text: "The same privacy toggle now appears in both the `Alerts` tab and the `System` tab so it is easier to find during setup.")
+                    HelpBullet(text: "The status cards above the rules also show monitoring cadence, thermal pressure, helper health, and notification readiness in one place.")
                     HelpBullet(text: "Helper availability alerts matter once you opt into a helper-backed fan mode. Monitoring-only setups can stay healthy without the helper installed.")
                     HelpBullet(text: "Snooze suppresses desktop notifications for a rule, while `Hide For Now` clears the current alert card until conditions change again.")
                 }
