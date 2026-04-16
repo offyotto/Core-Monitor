@@ -126,6 +126,8 @@ struct MenuBarSettingsCard: View {
             return "Core load at a glance."
         case .memory:
             return "Unified memory pressure and usage."
+        case .network:
+            return "Live download and upload throughput."
         case .disk:
             return "Startup disk capacity, not I/O throughput."
         case .temperature:
@@ -139,6 +141,8 @@ struct MenuBarSettingsCard: View {
             return "CPU \(Int(snapshot.cpuUsagePercent.rounded()))%"
         case .memory:
             return "MEM \(Int(snapshot.memoryUsagePercent.rounded()))%"
+        case .network:
+            return "NET Live"
         case .disk:
             return "SSD \(Int(snapshot.diskUsagePercent.rounded()))%"
         case .temperature:

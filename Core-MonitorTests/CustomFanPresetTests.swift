@@ -300,6 +300,7 @@ final class MenuBarSettingsTests: XCTestCase {
         XCTAssertEqual(settings.activePreset, .balanced)
         XCTAssertTrue(settings.isEnabled(.cpu))
         XCTAssertTrue(settings.isEnabled(.memory))
+        XCTAssertFalse(settings.isEnabled(.network))
         XCTAssertFalse(settings.isEnabled(.disk))
         XCTAssertTrue(settings.isEnabled(.temperature))
     }
@@ -313,6 +314,7 @@ final class MenuBarSettingsTests: XCTestCase {
         settings.restoreDefaults()
 
         XCTAssertEqual(settings.activePreset, .balanced)
+        XCTAssertFalse(settings.isEnabled(.network))
         XCTAssertFalse(settings.isEnabled(.disk))
     }
 
@@ -327,6 +329,15 @@ final class MenuBarSettingsTests: XCTestCase {
             settings.lastWarning,
             "Core Monitor restored the Balanced menu bar preset so the app stays reachable."
         )
+    }
+
+    func testFullPresetEnablesNetworkItem() {
+        let settings = MenuBarSettings(defaults: makeDefaults())
+
+        settings.applyPreset(.full)
+
+        XCTAssertTrue(settings.isEnabled(.network))
+        XCTAssertTrue(settings.isEnabled(.disk))
     }
 
     private func makeDefaults() -> UserDefaults {

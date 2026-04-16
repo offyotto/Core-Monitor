@@ -12,4 +12,10 @@ final class NetworkThroughputFormatterTests: XCTestCase {
     func testFormatterUsesAbsoluteValueForTrendDeltas() {
         XCTAssertEqual(NetworkThroughputFormatter.compactRate(bytesPerSecond: -8_400), "8.4 KB/s")
     }
+
+    func testAbbreviatedFormatterProducesMenuBarFriendlyUnits() {
+        XCTAssertEqual(NetworkThroughputFormatter.abbreviatedRate(bytesPerSecond: 925), "925 B")
+        XCTAssertEqual(NetworkThroughputFormatter.abbreviatedRate(bytesPerSecond: 12_400), "12 K")
+        XCTAssertEqual(NetworkThroughputFormatter.abbreviatedRate(bytesPerSecond: 1_550_000), "1.6 M")
+    }
 }

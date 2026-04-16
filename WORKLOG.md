@@ -220,6 +220,10 @@
 - Removed the app’s persistent dashboard-launch diagnostics path so Core Monitor no longer records local open/visible window behavior for support exports.
 
 ### Completed batch
+- Added a dedicated Network menu bar item with its own popover, plus menu bar preset/settings support so live throughput can stay visible without opening the full dashboard.
+- Verified the batch with a fresh macOS build, a full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` pass, and a runtime launch check confirming the freshly built app boots from `/tmp/core-monitor-menubar-network-build-dd2/Build/Products/Debug/Core-Monitor.app`.
+
+### Completed batch
 - Hardened the Touch Bar customization model so duplicate built-in widgets and repeated pinned app/folder shortcuts collapse automatically instead of producing cluttered or unstable layouts.
 - Made the Touch Bar settings store testable with injected `UserDefaults`, added explicit default/restore behavior, surfaced the active preset in the panel, and added one-click recovery actions for custom layouts that overflow the Touch Bar width.
 - Added `TouchBarCustomizationSettingsTests`, re-ran the targeted touch-bar suite, and finished with a full macOS test pass using a fresh DerivedData path after an Xcode build-database lock collision.
