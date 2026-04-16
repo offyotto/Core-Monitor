@@ -108,7 +108,7 @@ final class WeatherTouchBarView: NSView {
     private func estimatedWidth() -> CGFloat {
         switch state {
         case .idle:
-            return 56
+            return 82
         case .loading:
             return 80
         case .loaded(let s):
@@ -119,7 +119,7 @@ final class WeatherTouchBarView: NSView {
             return WeatherTBLayout.hPad * 2 + WeatherTBLayout.iconSize + WeatherTBLayout.spacing
                  + tempW + WeatherTBLayout.spacing + timeW + 4
         case .error:
-            return 80
+            return 96
         }
     }
 
@@ -137,10 +137,19 @@ final class WeatherTouchBarView: NSView {
         switch state {
         case .idle:
             hideAll()
+            tempLabel.stringValue = "Waiting"
+            tempLabel.isHidden = false
+            tempLabel.sizeToFit()
+            tempLabel.frame = NSRect(
+                x: x,
+                y: cy - tempLabel.frame.height / 2,
+                width: tempLabel.frame.width,
+                height: tempLabel.frame.height
+            )
 
         case .loading:
             hideAll()
-            tempLabel.stringValue = "Loading…"
+            tempLabel.stringValue = "Updating…"
             tempLabel.isHidden    = false
             tempLabel.sizeToFit()
             tempLabel.frame = NSRect(

@@ -4,9 +4,6 @@ import SwiftUI
 @available(macOS 13.0, *)
 @MainActor
 private final class DashboardWindowController: NSWindowController, NSWindowDelegate {
-    private static let defaultContentSize = NSSize(width: 980, height: 640)
-    private static let minimumContentSize = NSSize(width: 820, height: 560)
-
     private let coordinator: AppCoordinator
     private let startupManager: StartupManager
     private let onClose: () -> Void
@@ -49,8 +46,8 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
         NSApp.activate(ignoringOtherApps: true)
 
         showWindow(nil)
-        if hasPositionedWindow == false || Self.shouldResetFrame(for: window) {
-            window.setContentSize(Self.targetContentSize(for: window.screen))
+        if hasPositionedWindow == false || DashboardWindowLayout.shouldResetFrame(windowFrame: window.frame, visibleFrame: window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame) {
+            window.setContentSize(DashboardWindowLayout.targetContentSize(for: window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame))
             window.center()
         }
         hasPositionedWindow = true
@@ -81,39 +78,12 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
         window.styleMask.insert(.fullSizeContentView)
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        window.minSize = Self.minimumContentSize
+        window.minSize = DashboardWindowLayout.minimumContentSize
         window.titlebarSeparatorStyle = .none
 
-        if Self.shouldResetFrame(for: window) {
-            window.setContentSize(Self.targetContentSize(for: window.screen))
+        if DashboardWindowLayout.shouldResetFrame(windowFrame: window.frame, visibleFrame: window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame) {
+            window.setContentSize(DashboardWindowLayout.targetContentSize(for: window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame))
         }
-    }
-
-    private static func targetContentSize(for screen: NSScreen?) -> NSSize {
-        guard let visibleFrame = (screen ?? NSScreen.main)?.visibleFrame,
-              visibleFrame.width > 0,
-              visibleFrame.height > 0 else {
-            return defaultContentSize
-        }
-
-        return NSSize(
-            width: min(defaultContentSize.width, max(minimumContentSize.width, visibleFrame.width * 0.74)),
-            height: min(defaultContentSize.height, max(minimumContentSize.height, visibleFrame.height * 0.78))
-        )
-    }
-
-    private static func shouldResetFrame(for window: NSWindow) -> Bool {
-        let frame = window.frame
-        guard let visibleFrame = (window.screen ?? NSScreen.main)?.visibleFrame,
-              visibleFrame.width > 0,
-              visibleFrame.height > 0 else {
-            return frame.width < minimumContentSize.width || frame.height < minimumContentSize.height
-        }
-
-        return frame.width < minimumContentSize.width ||
-            frame.height < minimumContentSize.height ||
-            frame.width > visibleFrame.width * 0.92 ||
-            frame.height > visibleFrame.height * 0.92
     }
 }
 

@@ -18,6 +18,7 @@ final class CoreMonTouchBarController: NSObject {
     private var configuredItems: [NSTouchBarItem.Identifier: TouchBarItemConfiguration] = [:]
     private var cachedItems: [NSTouchBarItem.Identifier: NSTouchBarItem] = [:]
     private var isStarted = false
+    private var isWeatherRunning = false
     private var refreshTimer: Timer?
     private var lastRefreshDate = Date.distantPast
     private lazy var timeFormatter: DateFormatter = {
@@ -67,6 +68,7 @@ final class CoreMonTouchBarController: NSObject {
 
     func start() {
         guard !isStarted else {
+            updateWeatherMonitoring()
             refreshViews(force: true)
             return
         }
@@ -74,9 +76,7 @@ final class CoreMonTouchBarController: NSObject {
         if ownsSystemMonitor {
             systemMonitor.startMonitoring()
         }
-        if configuredItems.values.contains(where: { $0.builtInKind == .weather }) {
-            weatherViewModel.start()
-        }
+        updateWeatherMonitoring()
         startRefreshTimer()
         refreshViews(force: true)
     }
@@ -87,7 +87,7 @@ final class CoreMonTouchBarController: NSObject {
         refreshTimer?.invalidate()
         refreshTimer = nil
         lastRefreshDate = .distantPast
-        weatherViewModel.stop()
+        updateWeatherMonitoring()
         if ownsSystemMonitor {
             systemMonitor.stopMonitoring()
         }
@@ -142,9 +142,7 @@ final class CoreMonTouchBarController: NSObject {
         touchBar.defaultItemIdentifiers = identifiers
         touchBar.principalItemIdentifier = nil
         applyThemeToCachedWidgets(customization.theme)
-        if customization.items.contains(where: { $0.builtInKind == .weather }) == false {
-            weatherViewModel.stop()
-        }
+        updateWeatherMonitoring()
     }
 
     private func startRefreshTimer() {
@@ -157,6 +155,18 @@ final class CoreMonTouchBarController: NSObject {
         timer.tolerance = TB.refreshInterval * 0.2
         RunLoop.main.add(timer, forMode: .common)
         refreshTimer = timer
+    }
+
+    private func updateWeatherMonitoring() {
+        let shouldRunWeather = isStarted && configuredItems.values.contains(where: { $0.builtInKind == .weather })
+        guard shouldRunWeather != isWeatherRunning else { return }
+
+        isWeatherRunning = shouldRunWeather
+        if shouldRunWeather {
+            weatherViewModel.start()
+        } else {
+            weatherViewModel.stop()
+        }
     }
 
     private func refreshViews(force: Bool = false) {
@@ -206,7 +216,7 @@ final class CoreMonTouchBarController: NSObject {
             wifiName: currentWiFiName(),
             detailedClockTitle: parisTime.title,
             detailedClockSubtitle: parisTime.subtitle,
-            memoryPressure: systemMonitor.memoryPressure // Add this
+            memoryPressure: systemMonitor.memoryPressure
         )
     }
 
@@ -323,9 +333,6 @@ extension CoreMonTouchBarController: NSTouchBarDelegate {
                 widgets: widgets,
                 theme: currentTheme()
            ) {
-            if configuration.builtInKind == .weather {
-                weatherViewModel.start()
-            }
             cachedItems[identifier] = item
             if isStarted, let widgetItem = item as? PKWidgetTouchBarItem {
                 configure(widgetItem)

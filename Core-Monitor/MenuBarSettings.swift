@@ -82,7 +82,7 @@ final class MenuBarSettings: ObservableObject {
 
     func setEnabled(_ enabled: Bool, for kind: MenuBarItemKind) {
         if enabled == false, enabledItemCount <= 1, isEnabled(kind) {
-            lastWarning = "At least one menu bar item must remain visible so Core Monitor stays accessible."
+            lastWarning = "At least one menu bar item must remain visible so Core-Monitor stays accessible."
             return
         }
 

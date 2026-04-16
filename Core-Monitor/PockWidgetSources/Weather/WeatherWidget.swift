@@ -21,9 +21,9 @@ final class WeatherWidget: NSView, TouchBarThemable {
     private let compactIconView = NSImageView(frame: .zero)
     private let expandedIconView = NSImageView(frame: .zero)
     private let compactTitleLabel = NSTextField(labelWithString: "Weather")
-    private let compactSubtitleLabel = NSTextField(labelWithString: "Fetching data")
+    private let compactSubtitleLabel = NSTextField(labelWithString: "Updating weather")
     private let expandedTitleLabel = NSTextField(labelWithString: "Weather")
-    private let expandedSubtitleLabel = NSTextField(labelWithString: "Fetching data")
+    private let expandedSubtitleLabel = NSTextField(labelWithString: "Updating weather")
     private let detailLabel = NSTextField(labelWithString: "")
     private let compactLabelsStack = NSStackView(frame: .zero)
     private let expandedLabelsStack = NSStackView(frame: .zero)
@@ -50,22 +50,22 @@ final class WeatherWidget: NSView, TouchBarThemable {
         switch state {
         case .idle:
             compactTitleLabel.stringValue = "Weather"
-            compactSubtitleLabel.stringValue = "Waiting"
+            compactSubtitleLabel.stringValue = "Waiting for location"
             expandedTitleLabel.stringValue = "Weather"
-            expandedSubtitleLabel.stringValue = "Waiting"
+            expandedSubtitleLabel.stringValue = "Waiting for location"
             detailLabel.stringValue = ""
             compactIconView.image = defaultImage()
             expandedIconView.image = defaultImage()
-            tooltip = "Waiting for weather data"
+            tooltip = "Waiting for location"
         case .loading:
             compactTitleLabel.stringValue = "Weather"
-            compactSubtitleLabel.stringValue = "Fetching data"
+            compactSubtitleLabel.stringValue = "Updating weather"
             expandedTitleLabel.stringValue = "Weather"
-            expandedSubtitleLabel.stringValue = "Fetching data"
+            expandedSubtitleLabel.stringValue = "Updating weather"
             detailLabel.stringValue = ""
             compactIconView.image = defaultImage()
             expandedIconView.image = defaultImage()
-            tooltip = "Fetching live weather"
+            tooltip = "Updating weather"
         case .loaded(let snapshot):
             compactTitleLabel.stringValue = snapshot.locationName
             compactSubtitleLabel.stringValue = "\(Int(snapshot.temperature.rounded()))°, \(snapshot.condition)"

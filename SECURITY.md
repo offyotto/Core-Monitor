@@ -4,7 +4,7 @@
 
 Please do not open a public GitHub issue for security vulnerabilities.
 
-If you find a vulnerability in Core-Monitor, report it privately by contacting the maintainer through the GitHub repository owner profile or by opening a private security advisory if available.
+If you find a vulnerability in Core-Monitor, report it privately through the repository owner profile or by opening a private security advisory if that option is available.
 
 Include:
 
@@ -23,10 +23,10 @@ Security-sensitive areas include:
 - Fan control and SMC access
 - Permission handling
 - Local data exposure
-- Code signing, packaging, and update flow
+- Code signing and release packaging
 
 General crashes, UI bugs, feature requests, and unsupported hardware behavior should be reported as normal GitHub issues instead.
 
 ## Supported Versions
 
-Only the latest public release and the current `main` branch are actively considered for security fixes. 
+Only the latest public release and the current `main` branch are actively considered for security fixes.
