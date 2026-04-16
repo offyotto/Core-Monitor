@@ -276,3 +276,8 @@
 - Canonicalized persisted `silent` selections back to `automatic` on load/save and helper checks, which keeps older preferences compatible without leaving the redundant alias visible in quick modes, onboarding, help copy, or README tables.
 - Verified the batch with `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' -derivedDataPath /tmp/CoreMonitor-6b5d-pass2 CODE_SIGNING_ALLOWED=NO test -only-testing:Core-MonitorTests/CustomFanPresetTests` and a full macOS `xcodebuild ... test` pass on the same derived-data path.
 :)
+
+### Completed batch
+- Finished the silent-mode retirement by replacing the lingering Basic Mode `Cool Down` shortcut with an explicit `System Auto` action and aligning the menu bar status pill with the same automatic-cooling presentation.
+- Tightened the compatibility alias so any remaining in-memory `.silent` state now behaves, labels, and reports helper requirements exactly like `automatic`, instead of leaking legacy copy such as `Mode SILENT`.
+- Re-verified the batch with `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' -derivedDataPath /tmp/CoreMonitor-6b5d-pass4 CODE_SIGNING_ALLOWED=NO test -only-testing:Core-MonitorTests/CustomFanPresetTests` and a warmed full macOS `xcodebuild ... test` pass on the same derived-data path.
