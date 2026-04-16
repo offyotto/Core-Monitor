@@ -234,6 +234,8 @@ final class SystemMonitor: ObservableObject {
     private var detailedSamplingReasons = Set<String>()
     private var interactiveMonitoringReasons = Set<String>()
     private var monitoringIntervalOverrides: [String: TimeInterval] = [:]
+    private let privacySettings: PrivacySettings
+    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Basic mode adaptive polling
     /// Called by ContentView when the user toggles Basic Mode.
@@ -271,11 +273,19 @@ final class SystemMonitor: ObservableObject {
     private let kernelIndexSmc: UInt32 = 2
     private let maxFanProbeCount = 12
 
-    init() {
+    init(privacySettings: PrivacySettings? = nil) {
+        self.privacySettings = privacySettings ?? .shared
         _ = openSMCConnection()
         activitySampler.onUpdate = { [weak self] topProcesses in
             self?.updateTopProcesses(topProcesses)
         }
+
+        self.privacySettings.$processInsightsEnabled
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.handleProcessInsightsChange()
+            }
+            .store(in: &cancellables)
     }
 
     deinit {
@@ -524,8 +534,28 @@ final class SystemMonitor: ObservableObject {
             return
         }
 
+        guard privacySettings.processInsightsEnabled else {
+            activitySampler.stop()
+            clearTopProcesses()
+            return
+        }
+
         let mode: ActivitySamplingMode = detailedSamplingReasons.isEmpty ? .background : .detailed
         activitySampler.start(interval: mode.interval)
+    }
+
+    private func handleProcessInsightsChange() {
+        if privacySettings.processInsightsEnabled == false {
+            clearTopProcesses()
+        }
+        updateActivitySamplingMode()
+    }
+
+    private func clearTopProcesses() {
+        guard snapshot.topProcesses != .empty else { return }
+        var updatedSnapshot = snapshot
+        updatedSnapshot.topProcesses = .empty
+        snapshot = updatedSnapshot
     }
 
     private func readCPUTemperature() -> Double? {

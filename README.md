@@ -5,7 +5,15 @@
 <h1 align="center">Core-Monitor</h1>
 
 <p align="center">
-  Native Apple Silicon monitoring with readable menu bar telemetry, local alerts, and SMC-backed fan control.
+  Thermals. Power. Memory. Fans.
+</p>
+
+<p align="center">
+  Core Monitor gives Apple silicon Macs a clear view of the hardware state that matters.
+</p>
+
+<p align="center">
+  Hardware readings stay on your Mac. No telemetry. No account. No subscription wall.
 </p>
 
 <p align="center">
@@ -23,52 +31,35 @@
   ·
   <a href="https://github.com/offyotto-sl3/Core-Monitor/releases">All releases</a>
   ·
+  <a href="https://offyotto-sl3.github.io/Core-Monitor/">Website</a>
+  ·
   <a href="./LICENSE">License</a>
-</p>
-
-<p align="center">
-  <a href="https://offyotto-sl3.github.io/Core-Monitor/">
-    <img src="https://img.shields.io/badge/Website-Core--Monitor-8A2BE2?style=flat" alt="Website">
-  </a>
-  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.zip">
-    <img src="https://img.shields.io/badge/Download-latest-brightgreen?style=flat" alt="Download latest">
-  </a>
-  <a href="./LICENSE">
-    <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=flat" alt="GPL-3.0 license">
-  </a>
-  <img src="https://img.shields.io/badge/macOS-12%2B-black?style=flat&logo=apple" alt="macOS 12+">
 </p>
 
 ---
 
-Core Monitor reads sensor data directly from the Apple SMC and surfaces it in your menu bar and dashboard. CPU, GPU, memory, battery, temperatures, power draw, and fan speeds update every second via IOKit.
+Core Monitor is a native Mac monitor built for one job: show heat, performance, power, battery, and fan state with clarity.
 
-It is written in Swift, built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. No updater, no telemetry, and no cloud alerting. Disk, network, and process activity sampling stay local on your Mac. The only extra process is the fan control helper, which is optional and described below.
+It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. There is no account system, no analytics pipeline, no cloud alerting, and no updater framework. Disk and network reads stay local. Process insights are optional and can be turned off from Privacy Controls. The only extra process is the optional fan-control helper described below.
 
-The product direction is now explicit: Core-Monitor is being rebuilt around one job, not ten. It should be the most trustworthy Apple Silicon thermal command center for people who care about heat, sustained performance, and keeping their menu bar readable under load.
+## Private By Design
 
-## Product identity
+Core Monitor keeps the core experience on-device. Alerts run locally. Weather stays optional. Helper diagnostics export only when you choose to save a local report. If you prefer a quieter footprint, Privacy Controls can keep alert history free of app names while leaving threshold detection active.
 
-- **Hook:** Monitor heat, catch trouble early, and control your fans without turning your menu bar into noise.
-- **Primary users:** developers, creators, gamers, emulator users, and power users pushing Apple Silicon laptops or desktops for long sessions.
-- **Unfair advantages:** open-source transparency, native SwiftUI UI, local alerts, and a clearer fan-control trust story than most free alternatives.
+## Why Core Monitor
 
-The concrete roadmap and brutal audit live here:
+- A focused dashboard instead of a noisy utility drawer.
+- Menu bar stats that stay readable under load.
+- Local alerts that work without cloud services.
+- Optional helper-backed fan control when you want deeper control.
+
+## Project notes
+
+The roadmap and supporting audits live here:
 
 - [2026 audit and reinvention plan](./docs/CORE_MONITOR_AUDIT_2026.md)
 - [2026 competitor matrix](./docs/COMPETITOR_MATRIX_2026.md)
 - [Release and notarization playbook](./RELEASING.md)
-
-## Where Core Monitor fits
-
-Core Monitor is intentionally not trying to out-sprawl iStat Menus or out-admin TG Pro.
-
-- If you want the broadest possible menu bar module surface, iStat Menus and Stats are still the clearest references.
-- If you want the most rule-heavy fan control and hardware-diagnostics posture, TG Pro is still the strongest benchmark.
-- If you want the simplest fan-control mental model, Macs Fan Control is still the easiest comparison point.
-- Core Monitor’s lane is narrower and more deliberate: thermal awareness, readable menu bar telemetry, local alerts, and optional helper-backed fan control with an auditable open-source codebase.
-
-That positioning is deliberate. The project should feel more focused than the “show everything” tools and more transparent than the closed-source fan-control utilities.
 
 ## UI Preview
 
@@ -102,7 +93,7 @@ Core Monitor now includes a local alerts engine that runs off the same monitor s
 
 - Desktop notifications are optional. In-app alert history and active alert state continue to work even if you disable banners.
 - Presets (`Default`, `Quiet`, `Performance`, and `Aggressive Thermal Safety`) change thresholds, debounce, and repeat timing in one step.
-- CPU and memory alerts include top-process context so you can see likely culprits without building per-process rules.
+- CPU and memory alerts can include top-process context so you can see likely culprits without building per-process rules, and Privacy Controls can turn that context off.
 - `Overall Thermal` uses `ProcessInfo.processInfo.thermalState`, which reflects macOS thermal pressure instead of a guessed package sensor.
 
 ## Fan control
@@ -303,10 +294,11 @@ For release automation, signing, notarization, and distribution channels, use [R
 
 ## Privacy
 
-Core Monitor does not ship with updater frameworks, telemetry, analytics, or accounts. Sensor reads are local IOKit calls, and the optional fan helper only talks to the local privileged XPC service. 
+Core Monitor keeps hardware readings on-device. The app does not include analytics, tracking beacons, accounts, or cloud reporting. Helper diagnostics are exported only when you choose to save a local report. Weather is optional and only uses Apple WeatherKit when you enable the weather widget. Process insights for alerts and memory views can be switched off if you do not want app names retained in local history.
 
-## WeatherKit 
-Core-Monitor communicates with Apple's weatherkit to show you the weather. For best results, we recommend turning on location for the app.
+## Weather
+
+Core Monitor can show weather in the Touch Bar through Apple WeatherKit. For local conditions, turn on Location Services for the app. If you never enable the weather widget, Core Monitor never needs location access.
 
 ## License
 

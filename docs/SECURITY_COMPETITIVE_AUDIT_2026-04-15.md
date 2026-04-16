@@ -66,7 +66,7 @@ Why this matters:
 
 - The Touch Bar path still uses private API for the app-over-system presentation mode. That is primarily a platform and distribution risk, but it also weakens the “boring and trustworthy” story compared with competitors that stay inside supported APIs.
 - Custom command widgets are inherently user-executable code. They are safer now, but they are still a deliberate power-user feature and should continue to be described as such.
-- Alert history persists local process names in user defaults. That is still local-only, but privacy-sensitive users may want a future “ephemeral process context” mode.
+- Alert history can now redact app names through Privacy Controls. That keeps threshold detection intact while avoiding retained local process-name context for privacy-sensitive users.
 
 ## Competitor comparison
 
@@ -135,7 +135,7 @@ If execution stays disciplined, Core-Monitor can become better than the main alt
 ### Next security moves
 
 - add a visible helper diagnostics screen showing install state, code-signing identity, connection state, and last helper error
-- add a privacy option to disable top-process capture in alerts while keeping threshold detection
+- keep Privacy Controls visible and well-tested so users can disable top-process capture in alerts without losing threshold detection
 - add dedicated tests around helper client authorization and malformed XPC requests
 
 ### Next product moves
