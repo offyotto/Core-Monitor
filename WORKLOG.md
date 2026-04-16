@@ -143,3 +143,8 @@
 - Added persistent dashboard-launch diagnostics so exported helper/support reports now capture whether onboarding was expected to auto-open the dashboard, which source requested it, the last activation policy seen, and whether a visible dashboard window was ever recorded.
 - Updated the `System` support copy and `docs/HELPER_DIAGNOSTICS.md` so startup-visibility issues are explicitly part of the diagnostics workflow instead of being lumped into vague “app didn’t launch” reports.
 - Added `HelperDiagnosticsReportTests` coverage for the missing-visible-window case, re-verified the full macOS suite with `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test`, and runtime-checked that a clean first launch still records `autoOpenEligible=1` plus `launch` as the open source while `System Events` reports zero Core Monitor windows.
+
+### Completed batch
+- Fixed the Touch Bar weather widget so it stays inside the real Touch Bar vertical budget instead of asking Auto Layout for a taller three-line stack and logging a runtime height violation.
+- Collapsed the expanded weather copy into a single compact summary line, reduced label sizing to match the pill surface, and set the widget’s intrinsic height to `TB.pillH` so pill and strip renderers agree on its footprint.
+- Added `WeatherWidgetLayoutTests` coverage for compact and expanded sizing, re-ran the full macOS suite, and confirmed a fresh app launch no longer logs the old `Expected min height ... WeatherWidget` warning.

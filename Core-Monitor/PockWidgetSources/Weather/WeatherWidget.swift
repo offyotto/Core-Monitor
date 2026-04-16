@@ -70,7 +70,7 @@ final class WeatherWidget: NSView, TouchBarThemable {
             compactTitleLabel.stringValue = snapshot.locationName
             compactSubtitleLabel.stringValue = "\(Int(snapshot.temperature.rounded()))°, \(snapshot.condition)"
             expandedTitleLabel.stringValue = snapshot.locationName
-            expandedSubtitleLabel.stringValue = "\(Int(snapshot.temperature.rounded()))°, \(snapshot.condition)"
+            expandedSubtitleLabel.stringValue = expandedSummary(for: snapshot)
             detailLabel.stringValue = snapshot.nextRainSummary
             let icon = icon(for: snapshot)
             compactIconView.image = icon
@@ -106,11 +106,11 @@ final class WeatherWidget: NSView, TouchBarThemable {
         expandedIconView.imageScaling = .scaleProportionallyUpOrDown
         expandedIconView.image = defaultImage()
 
-        compactTitleLabel.font = NSFont.systemFont(ofSize: 12, weight: .semibold)
-        compactSubtitleLabel.font = NSFont.systemFont(ofSize: 11, weight: .regular)
-        expandedTitleLabel.font = NSFont.systemFont(ofSize: 12, weight: .semibold)
-        expandedSubtitleLabel.font = NSFont.systemFont(ofSize: 11, weight: .regular)
-        detailLabel.font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        compactTitleLabel.font = NSFont.systemFont(ofSize: 10, weight: .semibold)
+        compactSubtitleLabel.font = NSFont.systemFont(ofSize: 8, weight: .regular)
+        expandedTitleLabel.font = NSFont.systemFont(ofSize: 10, weight: .semibold)
+        expandedSubtitleLabel.font = NSFont.systemFont(ofSize: 8, weight: .regular)
+        detailLabel.font = NSFont.systemFont(ofSize: 8, weight: .regular)
         compactTitleLabel.lineBreakMode = .byTruncatingTail
         compactSubtitleLabel.lineBreakMode = .byTruncatingTail
         expandedTitleLabel.lineBreakMode = .byTruncatingTail
@@ -142,10 +142,9 @@ final class WeatherWidget: NSView, TouchBarThemable {
 
         expandedTextStack.orientation = .vertical
         expandedTextStack.alignment = .leading
-        expandedTextStack.spacing = 1
+        expandedTextStack.spacing = 0
         expandedTextStack.translatesAutoresizingMaskIntoConstraints = false
         expandedTextStack.addArrangedSubview(expandedLabelsStack)
-        expandedTextStack.addArrangedSubview(detailLabel)
 
         expandedStack.orientation = .horizontal
         expandedStack.alignment = .centerY
@@ -217,6 +216,7 @@ final class WeatherWidget: NSView, TouchBarThemable {
 
         expandedStack.isHidden = !expandedVisible
         compactStack.isHidden = expandedVisible
+        detailLabel.isHidden = true
 
         if animated {
             let transition = CATransition()
@@ -233,7 +233,7 @@ final class WeatherWidget: NSView, TouchBarThemable {
     }
 
     override var intrinsicContentSize: NSSize {
-        NSSize(width: estimatedWidth(), height: 30)
+        NSSize(width: estimatedWidth(), height: TB.pillH)
     }
 
     private func estimatedWidth() -> CGFloat {
@@ -314,6 +314,15 @@ final class WeatherWidget: NSView, TouchBarThemable {
         let low = Int(snapshot.low.rounded())
         let feelsLike = Int(snapshot.feelsLike.rounded())
         return "\(snapshot.locationName) • \(snapshot.condition)\n\(snapshot.nextRainSummary)\nH \(high)° / L \(low)° • Feels like \(feelsLike)° • Humidity \(snapshot.humidity)%"
+    }
+
+    private func expandedSummary(for snapshot: WeatherSnapshot) -> String {
+        let headline = "\(Int(snapshot.temperature.rounded()))°, \(snapshot.condition)"
+        guard snapshot.nextRainSummary.isEmpty == false else {
+            return headline
+        }
+
+        return "\(headline) • \(snapshot.nextRainSummary)"
     }
 
     private func weatherErrorPresentation(for message: String) -> (subtitle: String, detail: String) {
