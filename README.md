@@ -32,7 +32,7 @@
   <a href="./LICENSE">
     <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=flat" alt="GPL-3.0 license">
   </a>
-  <img src="https://img.shields.io/badge/macOS-12%2B-black?style=flat&logo=apple" alt="macOS 12+">
+  <img src="https://img.shields.io/badge/macOS-13%2B-black?style=flat&logo=apple" alt="macOS 13+">
 </p>
 
 ---
@@ -248,9 +248,9 @@ Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc
 
 ## Compatibility
 
-- macOS 12 or later
+- macOS 13 or later
 - Apple Silicon is the primary target; Intel Macs are not part of the current test path
-- Fan control requires macOS 13+ (XPC with code-signing requirements)
+- Launch at login, helper-backed fan control, and the current app shell all target macOS 13+
 - Core-Monitor is not available on the Mac App Store
 
 ## Privacy

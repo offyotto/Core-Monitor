@@ -69,6 +69,10 @@
 - Added targeted `WeatherViewModelTests` coverage for the no-WeatherKit-entitlement state, re-ran the focused weather suite plus the full macOS test suite, and verified a successful Developer ID release export at `/tmp/core-monitor-release-verified/export/Core-Monitor.app`.
 
 ### Completed batch
+- Raised the project deployment target to macOS 13 so Xcode settings finally match the app’s actual `main.swift` launch gate and the existing macOS 13-only launch-at-login/helper paths.
+- Updated the README compatibility badge and support wording so the repo stops advertising macOS 12 support that the shipped app does not provide.
+
+### Completed batch
 - Revalidated the competitor matrix against current public sources instead of leaving the repo on stale competitor assumptions; corrected the Stats release signal and folded TG Pro’s current startup-polish notes back into Core Monitor’s product bar.
 - Kept the README rewrite scoped to a sharper thermal-first story, clearer install channels, and a more explicit “monitoring first, helper optional” trust posture so the repo presentation matches the product lane documented in `docs/COMPETITOR_MATRIX_2026.md`.
 
