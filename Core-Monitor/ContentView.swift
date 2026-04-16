@@ -1403,7 +1403,26 @@ private struct Sidebar: View {
             }
             .buttonStyle(SoftPressButtonStyle())
             .padding(.horizontal, 10)
-            .padding(.vertical, 14)
+            .padding(.top, 14)
+
+            Button { NSApp.terminate(nil) } label: {
+                Label("Quit Core Monitor", systemImage: "power")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.red.opacity(0.92))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 9)
+                    .background(Color.red.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.red.opacity(0.16), lineWidth: 1)
+                    )
+            }
+            .buttonStyle(SoftPressButtonStyle())
+            .padding(.horizontal, 10)
+            .padding(.top, 8)
+            .padding(.bottom, 14)
         }
         .frame(width: 228)
         .frame(maxHeight: .infinity)
@@ -2434,11 +2453,25 @@ struct BasicModeView: View {
             Label("Core Monitor", systemImage: "fanblades.fill")
                 .font(.system(size: 12, weight: .bold)).foregroundStyle(.primary)
             Spacer()
-            Button { withAnimation(.spring(duration: 0.2)) { modeState.isBasicMode = false } } label: {
-                Text("Full UI").font(.system(size: 11, weight: .semibold))
-                    .padding(.horizontal, 10).padding(.vertical, 4)
-                    .background(Color.white.opacity(0.08)).clipShape(Capsule())
-            }.buttonStyle(SoftPressButtonStyle())
+            HStack(spacing: 8) {
+                Button { withAnimation(.spring(duration: 0.2)) { modeState.isBasicMode = false } } label: {
+                    Text("Full UI").font(.system(size: 11, weight: .semibold))
+                        .padding(.horizontal, 10).padding(.vertical, 4)
+                        .background(Color.white.opacity(0.08)).clipShape(Capsule())
+                }
+                .buttonStyle(SoftPressButtonStyle())
+
+                Button { NSApp.terminate(nil) } label: {
+                    Label("Quit", systemImage: "power")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.red.opacity(0.92))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color.red.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(SoftPressButtonStyle())
+            }
         }.padding(.horizontal, 16).padding(.vertical, 12)
     }
 

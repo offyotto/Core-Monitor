@@ -255,3 +255,8 @@
 - Tightened the weather opt-in path so an authorized weather widget now asks Core Location for a fresh on-device fix before dropping to the Cupertino fallback, which keeps “enabled but still showing Cupertino” from looking broken after access is granted.
 - Added focused `WeatherViewModelTests` coverage for live-location refresh, fallback behavior when no fix is available, and automatic refresh when location authorization or the current fix changes while the weather module is running.
 - Verified the batch with a fresh macOS build and a full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` pass.
+
+### Completed batch
+- Restored standard quit affordances for the accessory-style app by installing a real app menu with `Quit Core Monitor` and handling `⌘Q` locally even when the app is running without a normal Dock presence.
+- Added explicit quit controls to both the main sidebar and Basic Mode header so users are not forced to hunt for the menu bar popover just to terminate the app.
+- Re-verified the batch against the same clean macOS build and full `xcodebuild ... test` pass used for the weather work, then pushed the weather changes separately to keep the runtime/accessory polish commit atomic.
