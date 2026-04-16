@@ -63,6 +63,12 @@
 ## 2026-04-16
 
 ### Completed batch
+- Fixed a real first-launch regression in the accessory-style app: the onboarding/dashboard open decision was being poisoned by defaults-layer state before the welcome-guide preference had actually been persisted.
+- Hardened `WelcomeGuideProgress` to read the app’s persisted defaults domain directly, stopped the legacy window-frame cleanup from rewriting unrelated defaults, aligned the Help screen’s welcome-guide fallback with first-run behavior, and kept the app in `.regular` activation while the dashboard window is open so the onboarding surface no longer vanishes a second after launch.
+- Finished the in-progress dashboard navigation router by exposing the shared sidebar selection type, which makes the new menu bar `Open Alerts` deep link build and work instead of leaving the branch in a compile-broken state.
+- Verified the batch with a full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` pass and repeated clean-launch polling after deleting `com.coremonitor.hasSeenWelcomeGuide.v1`; the dashboard window now stays present through the first 10 seconds of launch instead of disappearing after roughly two.
+
+### Completed batch
 - Cleaned up the current compiler warnings in the menu bar refresh path and weather location-access controller instead of leaving actor-isolation and no-op annotation noise in the baseline build.
 - Switched menu bar item refresh fan-out onto a main-actor hop helper so Combine and notification callbacks no longer touch actor-isolated state directly.
 - Re-verified the app with a fresh macOS build and a serialized `xcodebuild ... test` pass after the initial concurrent-build lock collision.
@@ -75,6 +81,11 @@
 - Added a lightweight dashboard-navigation router so menu bar alert surfaces can deep-link straight into the `Alerts` tab instead of always dumping users into `Overview`.
 - Wired active-alert menu bar popovers to show an `Open Alerts` action only when it is relevant, and added focused routing tests to lock the request/consume behavior down.
 - Verified the batch in a clean detached worktree again because the active checkout still contains an unrelated compile-breaking local edit in `Core_MonitorApp.swift`.
+
+### Completed batch
+- Shifted fresh menu bar defaults back toward a balanced three-item layout so new installs and reset flows do not start in the noisiest possible configuration.
+- Marked the Balanced preset as the recommended daily layout and tightened the restore path so corrupted all-off states recover into a reachable, readable baseline.
+- Added menu bar settings coverage for default, reset, and inaccessible-state recovery behavior.
 
 ### Completed batch
 - Fixed the first-launch discoverability gap for the accessory-style app: if the welcome guide has never been seen, Core Monitor now opens the dashboard automatically instead of launching invisibly into the menu bar.
