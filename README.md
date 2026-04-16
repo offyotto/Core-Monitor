@@ -5,17 +5,17 @@
 <h1 align="center">Core-Monitor</h1>
 
 <p align="center">
-  Native Apple Silicon monitoring with readable menu bar telemetry, local alerts, and SMC-backed fan control.
+  A system monitor for Apple Silicon Macs. It sits in your menu bar, reads SMC data, and stays out of your way.
 </p>
 
 <p align="center">
-  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.zip">
-    <img src="https://img.shields.io/badge/Download-Latest%20Zip-2ea44f?style=for-the-badge" alt="Download latest release zip">
+  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">
+    <img src="https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge" alt="Download latest release">
   </a>
 </p>
 
 <p align="center">
-  <strong>Public releases are intended to ship signed, notarized, and ready for direct download outside the App Store.</strong>
+  <strong>Core-Monitor v12 is officially notarized by Apple.</strong>
 </p>
 
 <p align="center">
@@ -30,7 +30,7 @@
   <a href="https://offyotto-sl3.github.io/Core-Monitor/">
     <img src="https://img.shields.io/badge/Website-Core--Monitor-8A2BE2?style=flat" alt="Website">
   </a>
-  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.zip">
+  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">
     <img src="https://img.shields.io/badge/Download-latest-brightgreen?style=flat" alt="Download latest">
   </a>
   <a href="./LICENSE">
@@ -43,32 +43,9 @@
 
 Core Monitor reads sensor data directly from the Apple SMC and surfaces it in your menu bar and dashboard. CPU, GPU, memory, battery, temperatures, power draw, and fan speeds update every second via IOKit.
 
-It is written in Swift, built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. No updater, no telemetry, and no cloud alerting. Disk, network, and process activity sampling stay local on your Mac. The only extra process is the fan control helper, which is optional and described below.
+It is written in Swift, built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. No updater, no telemetry, and no network or disk throughput polling. The only extra process is the fan control helper, which is optional and described below.
 
-The product direction is now explicit: Core-Monitor is being rebuilt around one job, not ten. It should be the most trustworthy Apple Silicon thermal command center for people who care about heat, sustained performance, and keeping their menu bar readable under load.
-
-## Product identity
-
-- **Hook:** Monitor heat, catch trouble early, and control your fans without turning your menu bar into noise.
-- **Primary users:** developers, creators, gamers, emulator users, and power users pushing Apple Silicon laptops or desktops for long sessions.
-- **Unfair advantages:** open-source transparency, native SwiftUI UI, local alerts, and a clearer fan-control trust story than most free alternatives.
-
-The concrete roadmap and brutal audit live here:
-
-- [2026 audit and reinvention plan](./docs/CORE_MONITOR_AUDIT_2026.md)
-- [2026 competitor matrix](./docs/COMPETITOR_MATRIX_2026.md)
-- [Release and notarization playbook](./RELEASING.md)
-
-## Where Core Monitor fits
-
-Core Monitor is intentionally not trying to out-sprawl iStat Menus or out-admin TG Pro.
-
-- If you want the broadest possible menu bar module surface, iStat Menus and Stats are still the clearest references.
-- If you want the most rule-heavy fan control and hardware-diagnostics posture, TG Pro is still the strongest benchmark.
-- If you want the simplest fan-control mental model, Macs Fan Control is still the easiest comparison point.
-- Core Monitor’s lane is narrower and more deliberate: thermal awareness, readable menu bar telemetry, local alerts, and optional helper-backed fan control with an auditable open-source codebase.
-
-That positioning is deliberate. The project should feel more focused than the “show everything” tools and more transparent than the closed-source fan-control utilities.
+Version 12 is the officially notarized release. The distributed app is signed and notarized for macOS Gatekeeper, so the standard download-and-run experience is as smooth as possible on supported systems.
 
 ## UI Preview
 
@@ -96,20 +73,9 @@ That positioning is deliberate. The project should feel more focused than the �
 
 **Thermals** — CPU die temperature from `TC0P`, `Tp09`, `TCXC`, and fallbacks, GPU from `Tg0e`/`Tg0f`. You can also browse all readable SMC keys from the sensor explorer.
 
-## Alerts
-
-Core Monitor now includes a local alerts engine that runs off the same monitor snapshot used by the dashboard and menu bar. Alerts cover CPU and GPU temperature, macOS thermal pressure, CPU usage, memory pressure, swap growth, fan safety, battery temperature, battery health, low battery while discharging, SMC availability, and helper availability.
-
-- Desktop notifications are optional. In-app alert history and active alert state continue to work even if you disable banners.
-- Presets (`Default`, `Quiet`, `Performance`, and `Aggressive Thermal Safety`) change thresholds, debounce, and repeat timing in one step.
-- CPU and memory alerts include top-process context so you can see likely culprits without building per-process rules.
-- `Overall Thermal` uses `ProcessInfo.processInfo.thermalState`, which reflects macOS thermal pressure instead of a guessed package sensor.
-
 ## Fan control
 
 Fan control is optional and requires a privileged helper called `smc-helper`. If you don't need it, you don't need the helper — everything else works without it.
-
-Fresh installs now start in `System` mode, so Core Monitor behaves as a monitoring-first app until you explicitly opt into helper-backed fan control.
 
 The helper is bundled at `Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper`, installed to `/Library/PrivilegedHelperTools/ventaphobia.smc-helper` via `SMJobBless`, and registered as a launchd XPC service. The app owns the helper through `SMPrivilegedExecutables`; the helper authorizes the app through its embedded `SMAuthorizedClients` requirement.
 
@@ -127,15 +93,25 @@ The helper is bundled at `Core-Monitor.app/Contents/Library/LaunchServices/venta
 
 The Smart curve accounts for system power draw as a temperature boost — at 40 W it adds up to 8°C to the effective temperature before mapping to a fan speed. Fan settings persist across sleep/wake via `NSWorkspace.didWakeNotification`.
 
-Core Monitor now also makes a best-effort pass to return every controllable fan to firmware automatic mode when the app quits, so managed profiles do not outlive the app process.
-
-On some Apple Silicon notebooks, manual or profile-based targets may only take effect after macOS has already decided the machine needs airflow. Core Monitor surfaces that limitation in-app instead of pretending every target will move the fan immediately.
-
 **Helper commands** (also usable directly from the terminal):
 smc-helper set <fanID> <rpm>   # override fan speed
 smc-helper auto <fanID>        # return fan to firmware
 smc-helper read <key>          # read any 4-character SMC key
 Supported SMC value types: `sp78`, `fpe2`, `flt`, `ui8`, `ui16`.
+
+## Installation
+
+**Download:** Get the latest build from [Releases](https://github.com/offyotto-sl3/Core-Monitor/releases/latest) and move it to `/Applications`.
+
+The v12 release is officially notarized, so it should open normally on supported macOS versions without extra Gatekeeper friction.
+
+**Build from source:**
+
+```bash
+git clone https://github.com/offyotto-sl3/Core-Monitor.git
+```
+
+Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc-helper` is a separate target. You can build and run Core Monitor without it — fan control simply won't be available.
 
 ## Touch Bar customization
 
@@ -272,33 +248,12 @@ The new customization system is intentionally practical rather than unlimited. R
 - custom widgets launch commands but do not yet show dynamic script output
 - very wide layouts can still exceed the physical Touch Bar width, so use the width meter as the guardrail
 
-## Installation
-
-**Direct download:** Get the latest notarized zip from [Direct Download](https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.zip) and move `Core-Monitor.app` to `/Applications`.
-
-**GitHub release page:** [Latest Release Notes](https://github.com/offyotto-sl3/Core-Monitor/releases/latest)
-
-**Homebrew:**
-
-```bash
-brew install --cask https://raw.githubusercontent.com/offyotto-sl3/Core-Monitor/main/Casks/core-monitor.rb
-```
-
-**Build from source:**
-
-```bash
-git clone https://github.com/offyotto-sl3/Core-Monitor.git
-```
-
-Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc-helper` is a separate target. You can build and run Core Monitor without it — fan control simply won't be available.
-
-For release automation, signing, notarization, and distribution channels, use [RELEASING.md](./RELEASING.md).
-
 ## Compatibility
 
 - macOS 12 or later
 - Apple Silicon is the primary target; Intel Macs are not tested
 - Fan control requires macOS 13+ (XPC with code-signing requirements)
+- v12 is officially notarized by Apple
 - Core Monitor is not available on the Mac App Store
 
 ## Privacy
