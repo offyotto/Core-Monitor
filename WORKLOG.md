@@ -225,6 +225,11 @@
 - Re-verified with a fresh `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' -derivedDataPath /tmp/CoreMonitorBatch2TestData CODE_SIGNING_ALLOWED=NO test` pass after clearing stale manual app instances, then runtime-checked that launching the Batch 2 build while another Core Monitor instance was already running did not leave the Batch 2 process resident.
 
 ### Completed batch
+- Removed Apple-Silicon-only phrasing from onboarding and thermal-status UI paths that can also appear on Intel Macs, so the app no longer speaks as if every install is on an M-series machine.
+- Centralized that architecture-aware copy in `CoreMonitorPlatformCopy`, updated the welcome guide and alerts status board to use it, and added focused tests for both Apple Silicon and Intel wording.
+- Re-verified with a full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' -derivedDataPath /tmp/CoreMonitorBatch3TestData CODE_SIGNING_ALLOWED=NO test` pass while other Core Monitor instances were still running on the machine, which confirms the hosted-test launch guard still holds under noisy local conditions.
+
+### Completed batch
 - Tightened the launch-at-login UX so Core Monitor no longer drops user-triggered login-item errors on the floor after a refresh.
 - Centralized launch-at-login state into a reusable summary model, added direct `Open Login Items` actions via `SMAppService.openSystemSettingsLoginItems()`, and extracted the System-tab card into its own SwiftUI file instead of keeping more inline startup UI inside `ContentView`.
 - Reused the same launch-at-login status/action logic in the welcome-guide checklist so onboarding can send users straight to Login Items when approval is required instead of only showing passive copy.

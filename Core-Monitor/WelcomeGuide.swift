@@ -68,8 +68,8 @@ private let guideSteps: [GuideStep] = [
         icon: "cpu",
         iconColor: .wgAmber,
         headline: "Welcome to Core Monitor",
-        subheadline: "Your M-series Mac, fully visible.",
-        body: "Core Monitor gives you deep, real-time insight into your Apple Silicon Mac: thermals, memory pressure, fan behavior, power draw, and a customizable Touch Bar surface.",
+        subheadline: CoreMonitorPlatformCopy.welcomeIntroSubheadline(),
+        body: CoreMonitorPlatformCopy.welcomeIntroBody(),
         bullets: [
             ("thermometer.medium",    .wgAmber,  "Live CPU, GPU & memory readings"),
             ("fan.fill",              .wgBlue,   "Intelligent fan speed control"),
@@ -85,7 +85,7 @@ private let guideSteps: [GuideStep] = [
         subheadline: "See what's really heating up.",
         body: "The dashboard streams CPU, GPU, and memory data at 1-second resolution. Spark-line histories let you spot transient spikes that Activity Monitor smooths over, and the Alerts screen turns those readings into actual warning rules.",
         bullets: [
-            ("cpu.fill",              .wgAmber,  "P-core and E-core usage, plus CPU temperature"),
+            ("cpu.fill",              .wgAmber,  CoreMonitorPlatformCopy.thermalMetricsBullet()),
             ("memorychip",            .wgBlue,   "Memory pressure with wired/active breakdown"),
             ("chart.line.uptrend.xyaxis", .wgGreen, "60-second rolling history graphs"),
             ("thermometer.medium",    .wgRed,    "Live CPU, GPU, SSD, and battery temperatures when available"),
