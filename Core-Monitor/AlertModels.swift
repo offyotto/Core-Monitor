@@ -7,9 +7,9 @@ enum AlertCategory: String, Codable, CaseIterable, Identifiable {
     case battery
     case services
 
-    nonisolated var id: String { rawValue }
+    var id: String { rawValue }
 
-    nonisolated var title: String {
+    var title: String {
         switch self {
         case .thermal: return "Thermal"
         case .performance: return "Performance"
@@ -26,13 +26,13 @@ enum AlertSeverity: Int, Codable, CaseIterable, Comparable, Identifiable {
     case warning = 2
     case critical = 3
 
-    nonisolated var id: Int { rawValue }
+    var id: Int { rawValue }
 
-    nonisolated static func < (lhs: AlertSeverity, rhs: AlertSeverity) -> Bool {
+    static func < (lhs: AlertSeverity, rhs: AlertSeverity) -> Bool {
         lhs.rawValue < rhs.rawValue
     }
 
-    nonisolated var title: String {
+    var title: String {
         switch self {
         case .none: return "Stable"
         case .info: return "Info"
@@ -56,9 +56,9 @@ enum AlertRuleKind: String, Codable, CaseIterable, Identifiable {
     case smcUnavailable
     case helperUnavailable
 
-    nonisolated var id: String { rawValue }
+    var id: String { rawValue }
 
-    nonisolated var category: AlertCategory {
+    var category: AlertCategory {
         switch self {
         case .cpuTemperature, .gpuTemperature, .overallThermalState:
             return .thermal
@@ -73,7 +73,7 @@ enum AlertRuleKind: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    nonisolated var title: String {
+    var title: String {
         switch self {
         case .cpuTemperature: return "CPU Temperature"
         case .gpuTemperature: return "GPU Temperature"
@@ -90,7 +90,7 @@ enum AlertRuleKind: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    nonisolated var subtitle: String {
+    var subtitle: String {
         switch self {
         case .cpuTemperature: return "Protect against sustained CPU heat."
         case .gpuTemperature: return "Protect against sustained GPU heat."
@@ -107,7 +107,7 @@ enum AlertRuleKind: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    nonisolated var systemImageName: String {
+    var systemImageName: String {
         switch self {
         case .cpuTemperature, .gpuTemperature, .batteryTemperature:
             return "thermometer.medium"
@@ -130,7 +130,7 @@ enum AlertRuleKind: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    nonisolated var unitLabel: String? {
+    var unitLabel: String? {
         switch self {
         case .cpuTemperature, .gpuTemperature, .batteryTemperature:
             return "°C"
@@ -145,7 +145,7 @@ enum AlertRuleKind: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    nonisolated var supportsThresholdEditing: Bool {
+    var supportsThresholdEditing: Bool {
         switch self {
         case .cpuTemperature, .gpuTemperature, .cpuUsage, .swapUsage, .batteryTemperature, .batteryHealth, .lowBatteryDischarging:
             return true
@@ -154,7 +154,7 @@ enum AlertRuleKind: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    nonisolated var supportsDesktopNotifications: Bool {
+    var supportsDesktopNotifications: Bool {
         switch self {
         case .batteryHealth:
             return false
@@ -169,7 +169,7 @@ struct AlertThreshold: Codable, Equatable {
     var critical: Double?
     var hysteresis: Double
 
-    nonisolated static let disabled = AlertThreshold(warning: nil, critical: nil, hysteresis: 0)
+    static let disabled = AlertThreshold(warning: nil, critical: nil, hysteresis: 0)
 }
 
 struct AlertRuleConfig: Codable, Equatable, Identifiable {
@@ -180,7 +180,7 @@ struct AlertRuleConfig: Codable, Equatable, Identifiable {
     var debounceSamples: Int
     var desktopNotificationsEnabled: Bool
 
-    nonisolated var id: String { kind.rawValue }
+    var id: String { kind.rawValue }
 }
 
 enum AlertPreset: String, Codable, CaseIterable, Identifiable {
@@ -189,9 +189,9 @@ enum AlertPreset: String, Codable, CaseIterable, Identifiable {
     case performance
     case aggressiveThermalSafety
 
-    nonisolated var id: String { rawValue }
+    var id: String { rawValue }
 
-    nonisolated var title: String {
+    var title: String {
         switch self {
         case .default: return "Default"
         case .quiet: return "Quiet"
@@ -200,7 +200,7 @@ enum AlertPreset: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    nonisolated var subtitle: String {
+    var subtitle: String {
         switch self {
         case .default: return "Balanced thresholds with critical desktop alerts."
         case .quiet: return "Fewer desktop notifications and longer repeat windows."
@@ -215,9 +215,9 @@ enum AlertNotificationPolicy: String, Codable, CaseIterable, Identifiable {
     case criticalOnly
     case warningsAndCritical
 
-    nonisolated var id: String { rawValue }
+    var id: String { rawValue }
 
-    nonisolated var title: String {
+    var title: String {
         switch self {
         case .inAppOnly: return "In-App Only"
         case .criticalOnly: return "Critical Only"
@@ -248,7 +248,7 @@ struct AlertRuleRuntime: Codable, Equatable {
     var dismissUntilRecovery: Bool
     var lastMetricValue: Double?
 
-    nonisolated static func initial(for kind: AlertRuleKind) -> AlertRuleRuntime {
+    static func initial(for kind: AlertRuleKind) -> AlertRuleRuntime {
         AlertRuleRuntime(
             kind: kind,
             activeSeverity: .none,
@@ -273,7 +273,7 @@ struct AlertActiveState: Equatable, Identifiable {
     let updatedAt: Date
     let metricValue: Double?
 
-    nonisolated var id: String { kind.rawValue }
+    var id: String { kind.rawValue }
 }
 
 struct AlertStore: Codable {
@@ -285,9 +285,9 @@ struct AlertStore: Codable {
     var runtimes: [AlertRuleRuntime]
     var history: [AlertEvent]
 
-    nonisolated static let historyLimit = 120
+    static let historyLimit = 120
 
-    nonisolated static func `default`() -> AlertStore {
+    static func `default`() -> AlertStore {
         let configs = AlertPreset.default.configurations()
         return AlertStore(
             selectedPreset: .default,
@@ -302,7 +302,7 @@ struct AlertStore: Codable {
 }
 
 extension AlertPreset {
-    nonisolated func configurations() -> [AlertRuleConfig] {
+    func configurations() -> [AlertRuleConfig] {
         AlertRuleKind.allCases.map { kind in
             switch (self, kind) {
             case (.default, .cpuTemperature):
