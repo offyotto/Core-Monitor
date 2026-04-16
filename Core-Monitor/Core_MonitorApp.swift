@@ -124,8 +124,14 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     private var hasPresentedInitialDashboard = false
     private var pendingInitialDashboardAttempts: [DispatchWorkItem] = []
     private var quitShortcutMonitor: Any?
+    private let shouldBootstrapInteractiveApp = AppRuntimeContext.shouldBootstrapInteractiveApp()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        guard shouldBootstrapInteractiveApp else {
+            debugLaunch("didFinishLaunching skipping interactive bootstrap for unit-test host")
+            return
+        }
+
         NSWindow.allowsAutomaticWindowTabbing = false
         launchPresentation = WelcomeGuideProgress.launchPresentation()
         applyInitialActivationPolicy()
@@ -142,6 +148,9 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
             NSEvent.removeMonitor(quitShortcutMonitor)
             self.quitShortcutMonitor = nil
         }
+
+        guard shouldBootstrapInteractiveApp else { return }
+
         cancelInitialDashboardAttempts()
         coordinator.stop()
     }
@@ -191,6 +200,7 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     func openDashboard() {
+        guard shouldBootstrapInteractiveApp else { return }
         setDashboardActivationPolicy()
         debugLaunch("openDashboard activationPolicy=\(NSApp.activationPolicy().rawValue)")
         let controller = dashboardControllerIfNeeded()
