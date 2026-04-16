@@ -259,7 +259,7 @@ Core-Monitor does not include analytics, ad SDKs, or account features. Sensor re
 
 ## WeatherKit
 
-The optional Touch Bar weather item uses Apple WeatherKit and location access to show local conditions. Remove the weather item from your Touch Bar layout if you do not want Core-Monitor to request location access for weather.
+The optional Touch Bar weather item uses Apple WeatherKit and location access to show local conditions. It is only available in builds signed with the WeatherKit entitlement; the default direct-download release keeps the rest of Core-Monitor working even when WeatherKit is not enabled. Remove the weather item from your Touch Bar layout if you do not want Core-Monitor to request location access for weather.
 
 ## License
 

@@ -7,15 +7,23 @@ ARCHIVE_PATH="${ARCHIVE_PATH:-${BUILD_DIR}/Core-Monitor.xcarchive}"
 EXPORT_DIR="${EXPORT_DIR:-${BUILD_DIR}/export}"
 APP_PATH="${EXPORT_DIR}/Core-Monitor.app"
 ZIP_PATH="${ZIP_PATH:-${BUILD_DIR}/Core-Monitor.zip}"
+DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-${ROOT_DIR}/build/DerivedData/release}"
+DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM:-6VDP675K4L}"
+RELEASE_CODE_SIGN_IDENTITY="${RELEASE_CODE_SIGN_IDENTITY:-Developer ID Application}"
 
 rm -rf "${BUILD_DIR}"
 mkdir -p "${EXPORT_DIR}"
+mkdir -p "${DERIVED_DATA_PATH}"
 
 xcodebuild \
   -project "${ROOT_DIR}/Core-Monitor.xcodeproj" \
   -scheme Core-Monitor \
   -configuration Release \
   -destination 'generic/platform=macOS' \
+  -derivedDataPath "${DERIVED_DATA_PATH}" \
+  DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}" \
+  CODE_SIGN_STYLE=Manual \
+  CODE_SIGN_IDENTITY="${RELEASE_CODE_SIGN_IDENTITY}" \
   -archivePath "${ARCHIVE_PATH}" \
   archive
 

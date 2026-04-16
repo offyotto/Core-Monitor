@@ -167,10 +167,10 @@ struct HelpView: View {
                 "location", "weatherkit", "permission", "location services", "forecast"
             ], content: AnyView(
                 HelpCard {
-                    Text("Core Monitor uses WeatherKit data which may require location permission.")
+                    Text("Core Monitor uses WeatherKit data in WeatherKit-enabled builds, which may also require location permission.")
                     HelpBullet(text: "Core Monitor only requests location after the live weather widget is shown.")
                     HelpBullet(text: "Grant Core Monitor access to your location in System Settings → Privacy & Security → Location Services.")
-                    HelpBullet(text: "If weather data fails to load, ensure WeatherKit is enabled for your signed build.")
+                    HelpBullet(text: "If weather data fails to load, ensure the current Core Monitor build is signed with the WeatherKit entitlement.")
                 }
             )),
             HelpSection(id: "smc", title: "SMC Access and Helper Install", icon: "cpu.fill", keywords: [
