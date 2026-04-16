@@ -10,6 +10,7 @@ final class HelperDiagnosticsReportTests: XCTestCase {
             appBuild: "1410",
             macOSVersion: "macOS 15.5",
             hostModelIdentifier: "Mac16,7",
+            hostModelName: "MacBook Pro (16-inch, 2024, M4 Pro/Max)",
             chipName: "Apple M4 Pro",
             helperLabel: "ventaphobia.smc-helper",
             bundledHelperPath: "/Applications/Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper",
@@ -36,6 +37,7 @@ final class HelperDiagnosticsReportTests: XCTestCase {
         XCTAssertEqual(report.summary, "Monitoring-only configuration. The privileged helper is not installed.")
         XCTAssertTrue(report.recommendedActions.contains("Monitoring already works without the helper. Install it only if you want manual or profile-based fan control."))
         XCTAssertEqual(report.helper.connectionState, .missing)
+        XCTAssertEqual(report.app.hostModelName, "MacBook Pro (16-inch, 2024, M4 Pro/Max)")
         XCTAssertTrue(report.recommendedActions.contains("Keep at least one menu bar item enabled so Core Monitor stays reachable after launch."))
     }
 
@@ -47,6 +49,7 @@ final class HelperDiagnosticsReportTests: XCTestCase {
             appBuild: "1410",
             macOSVersion: "macOS 15.5",
             hostModelIdentifier: "Mac16,7",
+            hostModelName: "MacBook Pro (16-inch, 2024, M4 Pro/Max)",
             chipName: "Apple M4 Pro",
             helperLabel: "ventaphobia.smc-helper",
             bundledHelperPath: "/Applications/Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper",
@@ -83,6 +86,7 @@ final class HelperDiagnosticsReportTests: XCTestCase {
             appBuild: "1410",
             macOSVersion: "macOS 15.5",
             hostModelIdentifier: "Mac16,7",
+            hostModelName: "MacBook Pro (16-inch, 2024, M4 Pro/Max)",
             chipName: "Apple M4 Pro",
             helperLabel: "ventaphobia.smc-helper",
             bundledHelperPath: "/Applications/Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper",
@@ -119,6 +123,7 @@ final class HelperDiagnosticsReportTests: XCTestCase {
             appBuild: "1410",
             macOSVersion: "macOS 15.5",
             hostModelIdentifier: "Mac16,7",
+            hostModelName: "MacBook Pro (16-inch, 2024, M4 Pro/Max)",
             chipName: "Apple M4 Pro",
             helperLabel: "ventaphobia.smc-helper",
             bundledHelperPath: "/Applications/Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper",

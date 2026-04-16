@@ -24,7 +24,7 @@ The app reveals the saved file in Finder after export.
 ## What the report includes
 
 - Core Monitor bundle identifier, version, build, and macOS version
-- Mac model identifier and chip name
+- Mac model identifier, friendly name, and chip name
 - app signing identity details relevant to helper trust
 - bundled helper path and installed helper path
 - helper install state and current connectivity state

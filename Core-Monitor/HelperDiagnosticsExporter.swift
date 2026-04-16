@@ -25,6 +25,7 @@ struct HelperDiagnosticsContext: Equatable {
     let appBuild: String
     let macOSVersion: String
     let hostModelIdentifier: String
+    let hostModelName: String
     let chipName: String
     let helperLabel: String
     let bundledHelperPath: String
@@ -48,6 +49,7 @@ struct HelperDiagnosticsReport: Codable, Equatable {
         let build: String
         let macOSVersion: String
         let hostModelIdentifier: String
+        let hostModelName: String
         let chipName: String
         let signing: HelperDiagnosticsSigningInfo
     }
@@ -141,6 +143,7 @@ enum HelperDiagnosticsExporter {
             .appendingPathComponent("Contents/Library/LaunchServices/\(helperLabel)")
         let installedHelperPath = "/Library/PrivilegedHelperTools/\(helperLabel)"
         let fileManager = FileManager.default
+        let hostModelIdentifier = SystemMonitor.hostModelIdentifier()
 
         return HelperDiagnosticsContext(
             generatedAt: Date(),
@@ -148,7 +151,8 @@ enum HelperDiagnosticsExporter {
             appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown",
             appBuild: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown",
             macOSVersion: ProcessInfo.processInfo.operatingSystemVersionString,
-            hostModelIdentifier: SystemMonitor.hostModelIdentifier(),
+            hostModelIdentifier: hostModelIdentifier,
+            hostModelName: MacModelRegistry.displayName(for: hostModelIdentifier),
             chipName: SystemMonitor.chipName(),
             helperLabel: helperLabel,
             bundledHelperPath: bundledHelperURL.path,
@@ -177,6 +181,7 @@ enum HelperDiagnosticsExporter {
                 build: context.appBuild,
                 macOSVersion: context.macOSVersion,
                 hostModelIdentifier: context.hostModelIdentifier,
+                hostModelName: context.hostModelName,
                 chipName: context.chipName,
                 signing: context.signingInfo
             ),
