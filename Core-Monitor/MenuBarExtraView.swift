@@ -7,16 +7,7 @@ private let kProcPidPathMaxSize = max(Int(PATH_MAX), 1024)
 private extension View {
     @ViewBuilder
     func mbTracking(_ value: CGFloat) -> some View {
-        if #available(macOS 13.0, *) {
-            self.tracking(value)
-        } else {
-            // Fallback for older macOS: use kerning as an approximation
-            if #available(macOS 13.0, *) {
-                self.kerning(value)
-            } else {
-                // Fallback on earlier versions
-            }
-        }
+        self.tracking(value)
     }
 }
 
