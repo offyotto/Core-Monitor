@@ -195,6 +195,7 @@ private struct WelcomeGuideSheet: View {
         return WelcomeGuideStepContent(
             step: step,
             stepVisible: stepVisible,
+            usesCompactFeatureGrid: currentStep == guideSteps.count - 1,
             badge: { iconBadge(for: step) }
         ) {
             if currentStep == guideSteps.count - 1 {
@@ -209,7 +210,7 @@ private struct WelcomeGuideSheet: View {
                     exportHelperDiagnostics: exportHelperDiagnostics,
                     diagnosticsExportMessage: diagnosticsExportMessage
                 )
-                .padding(.top, 22)
+                .padding(.top, 12)
             }
         }
     }
@@ -310,6 +311,13 @@ private struct WelcomeGuideSheet: View {
     }
 
     private func prepareSheet() {
+        currentStep = 0
+        stepVisible = false
+        sheetVisible = false
+        headerGlow = false
+        progressPulse = false
+        diagnosticsExportMessage = nil
+
         startupManager.refreshState()
         refreshHelperDiagnostics()
 
@@ -482,14 +490,41 @@ private struct WelcomeGuideSheet: View {
 private struct WelcomeGuideStepContent<TrailingContent: View, Badge: View>: View {
     let step: GuideStep
     let stepVisible: Bool
+    let usesCompactFeatureGrid: Bool
     @ViewBuilder let badge: () -> Badge
     @ViewBuilder let trailingContent: () -> TrailingContent
 
     var body: some View {
+        Group {
+            if #available(macOS 13.0, *) {
+                ViewThatFits(in: .vertical) {
+                    contentLayout(includesSpacer: true)
+
+                    scrollableContent
+                }
+            } else {
+                scrollableContent
+            }
+        }
+        .id(step.id)
+        .opacity(stepVisible ? 1 : 0)
+        .animation(.easeOut(duration: 0.28), value: stepVisible)
+    }
+
+    private var scrollableContent: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            contentLayout(includesSpacer: false)
+                .padding(.bottom, 28)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    @ViewBuilder
+    private func contentLayout(includesSpacer: Bool) -> some View {
         VStack(spacing: 0) {
-            VStack(spacing: 14) {
+            VStack(spacing: usesCompactFeatureGrid ? 12 : 14) {
                 badge()
-                    .padding(.top, 36)
+                    .padding(.top, usesCompactFeatureGrid ? 24 : 36)
 
                 VStack(spacing: 6) {
                     Text(step.headline)
@@ -503,7 +538,7 @@ private struct WelcomeGuideStepContent<TrailingContent: View, Badge: View>: View
                         .multilineTextAlignment(.center)
                 }
             }
-            .padding(.bottom, 20)
+            .padding(.bottom, usesCompactFeatureGrid ? 14 : 20)
 
             Text(step.body)
                 .font(.system(size: 13.5, weight: .regular, design: .default))
@@ -512,8 +547,23 @@ private struct WelcomeGuideStepContent<TrailingContent: View, Badge: View>: View
                 .lineSpacing(4)
                 .frame(maxWidth: 500)
                 .padding(.horizontal, 40)
-                .padding(.bottom, 22)
+                .padding(.bottom, usesCompactFeatureGrid ? 10 : 22)
 
+            bulletSection
+
+            trailingContent()
+
+            if includesSpacer {
+                Spacer(minLength: 0)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var bulletSection: some View {
+        if usesCompactFeatureGrid {
+            EmptyView()
+        } else {
             VStack(alignment: .leading, spacing: 10) {
                 ForEach(Array(step.bullets.enumerated()), id: \.offset) { idx, bullet in
                     WelcomeGuideBulletRow(icon: bullet.icon, color: bullet.color, text: bullet.text)
@@ -528,13 +578,7 @@ private struct WelcomeGuideStepContent<TrailingContent: View, Badge: View>: View
             }
             .frame(maxWidth: 500)
             .padding(.horizontal, 40)
-
-            trailingContent()
-
-            Spacer()
         }
-        .opacity(stepVisible ? 1 : 0)
-        .animation(.easeOut(duration: 0.28), value: stepVisible)
     }
 }
 
@@ -599,18 +643,17 @@ private struct WelcomeGuideReadinessPanel: View {
     let diagnosticsExportMessage: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("Quick Setup Checklist")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.wgText)
-                Text("Everything below is optional except keeping one menu bar item visible. Core Monitor already monitors safely by default.")
-                    .font(.system(size: 12.5, weight: .regular))
+                Text("Everything below is optional except keeping one menu bar item visible.")
+                    .font(.system(size: 12, weight: .regular))
                     .foregroundColor(.wgTextSub)
-                    .lineSpacing(3)
             }
 
-            VStack(spacing: 10) {
+            VStack(spacing: 8) {
                 WelcomeGuideChecklistRow(status: menuBarStatus, action: applyBalancedPreset)
                 WelcomeGuideChecklistRow(status: loginStatus, action: enableLaunchAtLogin)
                 WelcomeGuideChecklistRow(
@@ -624,7 +667,7 @@ private struct WelcomeGuideReadinessPanel: View {
                 exportHelperDiagnostics: exportHelperDiagnostics
             )
         }
-        .padding(16)
+        .padding(14)
         .frame(maxWidth: 520, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -648,22 +691,14 @@ private struct WelcomeGuideDiagnosticsExportRow: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             Divider()
                 .background(Color.wgBorder)
 
             HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Need support or fan-control troubleshooting?")
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .foregroundColor(.wgText)
-                    Text("Export a helper diagnostics report with app signing, helper state, login-item status, and menu bar configuration before filing an issue.")
-                        .font(.system(size: 11.5, weight: .regular))
-                        .foregroundColor(.wgTextSub)
-                        .lineSpacing(3)
-                }
-
-                Spacer(minLength: 12)
+                Text("Need support or fan-control troubleshooting?")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.wgText)
 
                 Button("Export Report", action: exportHelperDiagnostics)
                     .buttonStyle(.plain)
@@ -695,17 +730,17 @@ private struct WelcomeGuideChecklistRow: View {
     let action: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: 10) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(status.tone.badgeColor.opacity(0.14))
-                    .frame(width: 34, height: 34)
+                    .frame(width: 30, height: 30)
                 Image(systemName: status.symbol)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(status.tone.badgeColor)
             }
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 8) {
                     Text(status.title)
                         .font(.system(size: 13, weight: .semibold))
@@ -721,9 +756,9 @@ private struct WelcomeGuideChecklistRow: View {
                 }
 
                 Text(status.detail)
-                    .font(.system(size: 12, weight: .regular))
+                    .font(.system(size: 11.5, weight: .regular))
                     .foregroundColor(.wgTextSub)
-                    .lineSpacing(3)
+                    .lineLimit(2)
             }
 
             Spacer(minLength: 12)
