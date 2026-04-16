@@ -18,7 +18,7 @@ final class DashboardWindowLayoutTests: XCTestCase {
         let size = DashboardWindowLayout.targetContentSize(for: visibleFrame)
 
         XCTAssertEqual(size.width, 944, accuracy: 0.001)
-        XCTAssertEqual(size.height, 620, accuracy: 0.001)
+        XCTAssertEqual(size.height, 640, accuracy: 0.001)
     }
 
     func testShouldResetFrameWhenWindowIsTooShortForDashboard() {

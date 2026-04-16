@@ -2,7 +2,7 @@ import AppKit
 
 enum DashboardWindowLayout {
     static let defaultContentSize = NSSize(width: 1_080, height: 720)
-    static let minimumContentSize = NSSize(width: 900, height: 620)
+    static let minimumContentSize = NSSize(width: 900, height: 640)
 
     static func targetContentSize(for visibleFrame: CGRect?) -> NSSize {
         guard let visibleFrame,
@@ -16,7 +16,7 @@ enum DashboardWindowLayout {
 
         return NSSize(
             width: min(defaultContentSize.width, max(minimumContentSize.width, min(safeWidth, visibleFrame.width * 0.78))),
-            height: min(defaultContentSize.height, max(minimumContentSize.height, min(safeHeight, visibleFrame.height * 0.82)))
+            height: min(defaultContentSize.height, max(minimumContentSize.height, min(safeHeight, visibleFrame.height * 0.87)))
         )
     }
 
