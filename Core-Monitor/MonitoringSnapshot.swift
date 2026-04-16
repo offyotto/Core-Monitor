@@ -5,9 +5,9 @@ enum MonitoringTrendRange: String, CaseIterable, Identifiable {
     case fiveMinutes
     case fifteenMinutes
 
-    nonisolated var id: String { rawValue }
+    var id: String { rawValue }
 
-    nonisolated var title: String {
+    var title: String {
         switch self {
         case .oneMinute: return "1m"
         case .fiveMinutes: return "5m"
@@ -15,7 +15,7 @@ enum MonitoringTrendRange: String, CaseIterable, Identifiable {
         }
     }
 
-    nonisolated var duration: TimeInterval {
+    var duration: TimeInterval {
         switch self {
         case .oneMinute: return 60
         case .fiveMinutes: return 5 * 60
@@ -170,8 +170,8 @@ struct ProcessActivity: Codable, Equatable, Identifiable {
     let cpuPercent: Double
     let memoryBytes: UInt64
 
-    nonisolated var id: String { "\(pid)-\(name)" }
-    nonisolated var memoryGB: Double { Double(memoryBytes) / 1_073_741_824.0 }
+    var id: String { "\(pid)-\(name)" }
+    var memoryGB: Double { Double(memoryBytes) / 1_073_741_824.0 }
 }
 
 struct TopProcessSnapshot: Codable, Equatable {
@@ -179,7 +179,7 @@ struct TopProcessSnapshot: Codable, Equatable {
     var topCPU: [ProcessActivity]
     var topMemory: [ProcessActivity]
 
-    nonisolated static let empty = TopProcessSnapshot(sampledAt: .distantPast, topCPU: [], topMemory: [])
+    static let empty = TopProcessSnapshot(sampledAt: .distantPast, topCPU: [], topMemory: [])
 }
 
 struct SystemMonitorSnapshot {
@@ -219,5 +219,5 @@ struct SystemMonitorSnapshot {
     var hasSMCAccess: Bool = false
     var lastError: String?
 
-    nonisolated static let empty = SystemMonitorSnapshot()
+    static let empty = SystemMonitorSnapshot()
 }
