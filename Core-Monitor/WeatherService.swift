@@ -6,6 +6,7 @@ import Foundation
 import Combine
 import WeatherKit
 import CoreLocation
+import Security
 
 // MARK: - Domain model
 
@@ -27,6 +28,23 @@ struct WeatherAttributionSnapshot: Sendable {
     let markURL: URL
     let serviceName: String
     let legalText: String?
+}
+
+enum WeatherKitCapability {
+    private static let entitlementKey = "com.apple.developer.weatherkit"
+
+    static func isEnabled() -> Bool {
+        guard let task = SecTaskCreateFromSelf(nil),
+              let entitlement = SecTaskCopyValueForEntitlement(task, entitlementKey as CFString, nil) else {
+            return false
+        }
+
+        guard CFGetTypeID(entitlement) == CFBooleanGetTypeID() else {
+            return false
+        }
+
+        return CFBooleanGetValue((entitlement as! CFBoolean))
+    }
 }
 
 // MARK: - Protocol (enables mock injection)
@@ -355,6 +373,7 @@ final class WeatherViewModel: ObservableObject {
     private let provider: WeatherProviding
     private let locationAccess: WeatherLocationAccessControlling
     private let fallbackProvider: WeatherProviding?
+    private let weatherCapabilityEnabled: @MainActor @Sendable () -> Bool
     private var cancellables = Set<AnyCancellable>()
     private var refreshTask: Task<Void, Never>?
     private var isRunning = false
@@ -369,17 +388,20 @@ final class WeatherViewModel: ObservableObject {
         self.provider = provider
         self.locationAccess = WeatherLocationAccessController.shared
         self.fallbackProvider = provider is MockWeatherService ? nil : MockWeatherService()
+        self.weatherCapabilityEnabled = WeatherKitCapability.isEnabled
         bindLocationAccess()
     }
 
     init(
         provider: WeatherProviding,
         locationAccess: WeatherLocationAccessControlling,
-        fallbackProvider: WeatherProviding? = nil
+        fallbackProvider: WeatherProviding? = nil,
+        weatherCapabilityEnabled: @escaping @MainActor @Sendable () -> Bool = WeatherKitCapability.isEnabled
     ) {
         self.provider = provider
         self.locationAccess = locationAccess
         self.fallbackProvider = fallbackProvider
+        self.weatherCapabilityEnabled = weatherCapabilityEnabled
         bindLocationAccess()
     }
 
@@ -424,6 +446,11 @@ final class WeatherViewModel: ObservableObject {
     }
 
     func refreshNow() async {
+        guard weatherCapabilityEnabled() else {
+            state = .error("Weather is unavailable in this build. Use a WeatherKit-enabled signature to turn it on.")
+            return
+        }
+
         locationAccess.refreshStatus()
 
         let authorizationStatus = locationAccess.authorizationStatus

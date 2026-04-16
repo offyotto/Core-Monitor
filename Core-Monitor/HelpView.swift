@@ -148,13 +148,14 @@ struct HelpView: View {
                 }
             )),
             HelpSection(id: "menubar", title: "Menu Bar Items and Popovers", icon: "menubar.rectangle", keywords: [
-                "menu bar", "popover", "visible items", "cpu", "memory", "network", "disk", "temperature",
+                "menu bar", "popover", "visible items", "cpu", "fan", "rpm", "memory", "network", "disk", "temperature",
                 "allow in menu bar", "hidden icon", "missing icon", "macos 26", "menu bar access"
             ], content: AnyView(
                 HelpCard {
                     Text("Core Monitor menu bar items provide quick overview and access to system metrics.")
                     HelpBullet(text: "Click menu bar icons to open popovers with detailed info and controls.")
-                    HelpBullet(text: "Use `System` → `Menu Bar` to choose which of the CPU, Memory, Network, Disk, and Temperature items stay visible.")
+                    HelpBullet(text: "Use `System` → `Menu Bar` to choose which of the CPU, Fan, Memory, Network, Disk, and Temperature items stay visible.")
+                    HelpBullet(text: "The default Balanced preset keeps CPU load, live fan RPM, and temperature visible so thermal changes are easy to catch without filling the menu bar.")
                     HelpBullet(text: "At least one menu bar item must stay enabled so the app remains reachable after launch.")
                     HelpBullet(text: "If Core Monitor is running but its icons are still missing, open System Settings → Menu Bar and re-enable the app there on newer macOS releases before assuming monitoring failed.")
                 }
@@ -172,11 +173,11 @@ struct HelpView: View {
                 "location", "weatherkit", "permission", "location services", "forecast"
             ], content: AnyView(
                 HelpCard {
-                    Text("Core Monitor uses WeatherKit data, and location access upgrades the weather widget from a fallback forecast to your local conditions.")
+                    Text("Core Monitor uses WeatherKit data in WeatherKit-enabled builds, and location access upgrades the weather widget from a fallback forecast to your local conditions.")
                     HelpBullet(text: "Core Monitor only requests location after the live weather widget is shown.")
                     HelpBullet(text: "Without location access, the Touch Bar weather item can still fall back to a non-local forecast.")
                     HelpBullet(text: "Grant Core Monitor access to your location in System Settings → Privacy & Security → Location Services for local conditions and rain timing.")
-                    HelpBullet(text: "If weather data fails to load, ensure WeatherKit is enabled for your signed build.")
+                    HelpBullet(text: "If weather data fails to load, ensure the current build is signed with the WeatherKit entitlement.")
                 }
             )),
             HelpSection(id: "smc", title: "SMC Access and Helper Install", icon: "cpu.fill", keywords: [

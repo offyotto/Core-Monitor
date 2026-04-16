@@ -81,6 +81,25 @@
 - Re-verified the batch with a fresh macOS build and another full `xcodebuild ... test` pass.
 
 ### Completed batch
+- Reworked the local signing baseline so Debug/test builds use the installed Apple Development identity while the release script drives an explicit Developer ID archive/export path instead of inheriting conflicting project settings.
+- Split WeatherKit entitlements by lane: Debug keeps the WeatherKit entitlement for entitlement-enabled local builds, Release intentionally omits it so direct-download archives do not fail on a missing WeatherKit provisioning profile.
+- Updated the app, Touch Bar, Help, README, release docs, and site copy so weather clearly explains when a build signature does not include WeatherKit instead of surfacing a vague runtime failure.
+- Added targeted `WeatherViewModelTests` coverage for the no-WeatherKit-entitlement state, re-ran the focused weather suite plus the full macOS test suite, and verified a successful Developer ID release export at `/tmp/core-monitor-release-verified/export/Core-Monitor.app`.
+
+### Completed batch
+- Raised the project deployment target to macOS 13 so Xcode settings finally match the app’s actual `main.swift` launch gate and the existing macOS 13-only launch-at-login/helper paths.
+- Updated the README compatibility badge and support wording so the repo stops advertising macOS 12 support that the shipped app does not provide.
+
+### Completed batch
+- Added a dedicated menu bar fan item so the default `Balanced` layout now surfaces live RPM alongside CPU load and temperature, which better matches the app’s thermal-monitoring lane and competitor expectations.
+- Updated the menu bar settings card copy/previews plus regression coverage so the new fan-focused default stays intentional instead of silently drifting back toward a generic system monitor mix.
+
+### Completed batch
+- Synced the in-app Help search keywords and menu bar guidance with the new fan-aware Balanced preset so users can actually discover the RPM item from shipped support content.
+- Tightened the site/docs menu bar positioning copy to reflect the current product surface instead of the older generic “tiny numbers” wording.
+- Removed an obsolete pre-macOS 13 menu bar typography fallback so the raised deployment target also clears one more stale compiler warning.
+
+### Completed batch
 - Revalidated the competitor matrix against current public sources instead of leaving the repo on stale competitor assumptions; corrected the Stats release signal and folded TG Pro’s current startup-polish notes back into Core Monitor’s product bar.
 - Kept the README rewrite scoped to a sharper thermal-first story, clearer install channels, and a more explicit “monitoring first, helper optional” trust posture so the repo presentation matches the product lane documented in `docs/COMPETITOR_MATRIX_2026.md`.
 

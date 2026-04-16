@@ -3,6 +3,7 @@ import SwiftUI
 struct MenuBarSettingsCard: View {
     struct Snapshot {
         var cpuUsagePercent: Double
+        var fanSpeeds: [Int]
         var memoryUsagePercent: Double
         var networkDownloadBytesPerSecond: Double
         var networkUploadBytesPerSecond: Double
@@ -126,6 +127,8 @@ struct MenuBarSettingsCard: View {
         switch kind {
         case .cpu:
             return "Core load at a glance."
+        case .fan:
+            return "Highest live fan RPM from the current SMC sample."
         case .memory:
             return "Unified memory pressure and usage."
         case .network:
@@ -141,6 +144,11 @@ struct MenuBarSettingsCard: View {
         switch kind {
         case .cpu:
             return "CPU \(Int(snapshot.cpuUsagePercent.rounded()))%"
+        case .fan:
+            guard let highestRPM = snapshot.fanSpeeds.filter({ $0 > 0 }).max() else {
+                return "FAN --"
+            }
+            return "FAN \(highestRPM)"
         case .memory:
             return "MEM \(Int(snapshot.memoryUsagePercent.rounded()))%"
         case .network:
