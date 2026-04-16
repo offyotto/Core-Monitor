@@ -201,3 +201,8 @@
 - Pulled the process-history privacy controls into a shared `PrivacyControlsSectionContent` so the copy, toggle behavior, and history-clearing affordance no longer drift between different screens.
 - Surfaced the same privacy controls directly in the `System` tab instead of leaving them discoverable only from `Alerts`, which makes privacy setup easier during first-run configuration.
 - Updated Help search keywords and copy so `privacy`, `process names`, and `alert history` now point users to both the `Alerts` and `System` paths, then re-verified the full macOS test suite with `xcodebuild ... test`.
+
+### Completed batch
+- Removed the legacy `systemMonitorDidUpdate` broadcast and moved the menu bar and Touch Bar refresh path onto `SystemMonitor`'s published snapshot cadence instead of duplicating every sample through `NotificationCenter`.
+- Dropped the stale `RAMPressureTouchBarWidget` observer because the widget was already refreshed through the centralized Touch Bar state application path, which trims one more redundant monitor listener.
+- Rebuilt the macOS app, reran the full `xcodebuild ... test` suite, and runtime-smoke-tested the Debug build by relaunching it and confirming the live menu bar items still update (`CPU`, `MEM`, `SSD`, and temperature).
