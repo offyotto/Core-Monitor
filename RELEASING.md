@@ -64,6 +64,10 @@ Signed archive + zip:
 ./scripts/release/build_release.sh
 ```
 
+`build_release.sh` forces a manual `Developer ID Application` signing identity for the archive step so the release path does not depend on whichever automatic-signing identity Xcode happens to prefer locally.
+
+The repository's `Release` entitlements intentionally omit WeatherKit so the notarized direct-download path does not block on a separate provisioning profile. Use the Debug configuration or a custom release variant if you specifically need a WeatherKit-enabled signed build.
+
 Notarize and staple:
 
 ```bash

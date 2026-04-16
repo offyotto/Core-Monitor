@@ -1798,6 +1798,7 @@ private struct DetailPane: View {
             MenuBarSettingsCard(
                 snapshot: .init(
                     cpuUsagePercent: snapshot.cpuUsagePercent,
+                    fanSpeeds: snapshot.fanSpeeds,
                     memoryUsagePercent: snapshot.memoryUsagePercent,
                     networkDownloadBytesPerSecond: snapshot.networkStats.downloadBytesPerSec,
                     networkUploadBytesPerSecond: snapshot.networkStats.uploadBytesPerSec,
@@ -2367,7 +2368,7 @@ private struct TouchBarCustomizationPanel: View {
                     }
                     .pickerStyle(.segmented)
 
-                    Text("Weather uses Apple WeatherKit. Allow location access for Core Monitor so the live weather widget can show accurate conditions and rain timing.")
+                    Text("Weather uses Apple WeatherKit in WeatherKit-enabled builds. Allow location access for Core Monitor so the live weather widget can show accurate conditions and rain timing.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
 
@@ -2499,12 +2500,17 @@ private struct TouchBarCustomizationPanel: View {
         }
         .task(id: colorScheme) {
             guard #available(macOS 13.0, *) else { return }
+            guard WeatherKitCapability.isEnabled() else {
+                weatherAttribution = nil
+                weatherAttributionError = "Weather attribution is unavailable because this build is not signed with the WeatherKit entitlement."
+                return
+            }
             do {
                 weatherAttribution = try await loadWeatherAttribution(isDarkAppearance: colorScheme == .dark)
                 weatherAttributionError = nil
             } catch {
                 weatherAttribution = nil
-                weatherAttributionError = "Weather attribution is unavailable until WeatherKit is enabled for the signed app."
+                weatherAttributionError = "Weather attribution is unavailable until the current app signature includes WeatherKit."
             }
         }
     }

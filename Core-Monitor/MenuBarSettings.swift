@@ -28,9 +28,9 @@ enum MenuBarVisibilityPreset: CaseIterable, Identifiable {
         case .thermalFocus:
             return "Keep the menu bar heat-first with CPU load and temperature only."
         case .balanced:
-            return "Show core system pressure without turning the menu bar into noise."
+            return "Show CPU load, live fan RPM, and temperature without turning the menu bar into noise."
         case .full:
-            return "Expose CPU, memory, network, storage, and temperature all at once."
+            return "Expose CPU, fan, memory, network, storage, and temperature all at once."
         }
     }
 
@@ -43,7 +43,7 @@ enum MenuBarVisibilityPreset: CaseIterable, Identifiable {
         case .thermalFocus:
             return [.cpu, .temperature]
         case .balanced:
-            return [.cpu, .memory, .temperature]
+            return [.cpu, .fan, .temperature]
         case .full:
             return MenuBarItemKind.allCases
         }
@@ -56,6 +56,7 @@ final class MenuBarSettings: ObservableObject {
     static let defaultPreset: MenuBarVisibilityPreset = .balanced
 
     @Published private(set) var cpuEnabled: Bool
+    @Published private(set) var fanEnabled: Bool
     @Published private(set) var memoryEnabled: Bool
     @Published private(set) var networkEnabled: Bool
     @Published private(set) var diskEnabled: Bool
@@ -67,6 +68,7 @@ final class MenuBarSettings: ObservableObject {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         self.cpuEnabled = Self.boolValue(for: .cpu, defaults: defaults)
+        self.fanEnabled = Self.boolValue(for: .fan, defaults: defaults)
         self.memoryEnabled = Self.boolValue(for: .memory, defaults: defaults)
         self.networkEnabled = Self.boolValue(for: .network, defaults: defaults)
         self.diskEnabled = Self.boolValue(for: .disk, defaults: defaults)
@@ -78,6 +80,8 @@ final class MenuBarSettings: ObservableObject {
         switch kind {
         case .cpu:
             return cpuEnabled
+        case .fan:
+            return fanEnabled
         case .memory:
             return memoryEnabled
         case .network:
@@ -141,6 +145,8 @@ final class MenuBarSettings: ObservableObject {
         switch kind {
         case .cpu:
             cpuEnabled = enabled
+        case .fan:
+            fanEnabled = enabled
         case .memory:
             memoryEnabled = enabled
         case .network:

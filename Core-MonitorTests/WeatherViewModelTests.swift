@@ -30,6 +30,31 @@ final class WeatherViewModelTests: XCTestCase {
         XCTAssertEqual(locationAccess.requestCurrentLocationCallCount, 0)
     }
 
+    func testRefreshNowShowsSignedBuildRequirementWhenWeatherKitCapabilityIsMissing() async {
+        let provider = RecordingWeatherProvider()
+        let locationAccess = MockWeatherLocationAccess(status: .authorizedWhenInUse, currentLocation: nil)
+        let viewModel = WeatherViewModel(
+            provider: provider,
+            locationAccess: locationAccess,
+            weatherCapabilityEnabled: { false }
+        )
+
+        await viewModel.refreshNow()
+
+        switch viewModel.state {
+        case .error(let message):
+            XCTAssertEqual(
+                message,
+                "Weather is unavailable in this build. Use a WeatherKit-enabled signature to turn it on."
+            )
+        default:
+            XCTFail("Expected a signed-build requirement error state.")
+        }
+
+        XCTAssertNil(provider.requestedLocation)
+        XCTAssertEqual(locationAccess.refreshCallCount, 0)
+    }
+
     func testRefreshNowRequestsLiveLocationBeforeUsingFallback() async {
         let provider = RecordingWeatherProvider()
         let currentLocation = CLLocation(latitude: 24.8607, longitude: 67.0011)
