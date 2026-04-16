@@ -43,4 +43,18 @@ final class HelpViewSearchTests: XCTestCase {
         XCTAssertTrue(section.matches(query: "hidden icon"))
         XCTAssertTrue(section.matches(query: "macos 26"))
     }
+
+    func testHelpSectionMatchesBatteryRuntimeAndElectricalKeywords() {
+        let section = HelpView.HelpSection(
+            id: "battery",
+            title: "Battery",
+            icon: "battery.100",
+            keywords: ["time remaining", "time to full", "voltage", "current", "power adapter"],
+            content: AnyView(EmptyView())
+        )
+
+        XCTAssertTrue(section.matches(query: "time remaining"))
+        XCTAssertTrue(section.matches(query: "voltage current"))
+        XCTAssertFalse(section.matches(query: "voltage helper"))
+    }
 }
