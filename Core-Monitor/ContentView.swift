@@ -2122,10 +2122,16 @@ private struct TouchBarCustomizationPanel: View {
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
 
+                    if settings.presentationMode == .system {
+                        Text("You're still editing Core-Monitor's custom Touch Bar layout, but the hardware Touch Bar is showing the standard macOS strip. Switch back to Core-Monitor mode to apply these items live.")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.orange)
+                    }
+
                     Divider()
                         .overlay(Color.bdDivider)
 
-                    Text("Live layout preview")
+                    Text(settings.presentationMode == .app ? "Live layout preview" : "Core-Monitor layout preview")
                         .font(.system(size: 14, weight: .bold))
                     TouchBarPreviewStrip()
 
@@ -2174,9 +2180,25 @@ private struct TouchBarCustomizationPanel: View {
 
             DarkCard(padding: 16) {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Presets")
-                        .font(.system(size: 14, weight: .bold))
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Presets")
+                                .font(.system(size: 14, weight: .bold))
+                            Text(settings.activePreset?.title ?? "Custom layout")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+
+                        Button("Restore Defaults") {
+                            settings.restoreDefaults()
+                        }
+                        .buttonStyle(SoftPressButtonStyle())
+                    }
+
                     ForEach(TouchBarPreset.all) { preset in
+                        let isActive = settings.activePreset == preset
                         Button {
                             settings.applyPreset(preset)
                         } label: {
@@ -2189,6 +2211,20 @@ private struct TouchBarCustomizationPanel: View {
                                         .foregroundStyle(.secondary)
                                 }
                                 Spacer()
+                                if preset == TouchBarCustomizationSettings.defaultPreset {
+                                    Text("DEFAULT")
+                                        .font(.system(size: 9, weight: .bold))
+                                        .foregroundStyle(.secondary)
+                                        .padding(.horizontal, 7)
+                                        .padding(.vertical, 4)
+                                        .background(Color.white.opacity(0.06))
+                                        .clipShape(Capsule())
+                                }
+                                if isActive {
+                                    Label("Active", systemImage: "checkmark.circle.fill")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundStyle(Color.bdAccent)
+                                }
                                 Text(preset.theme.displayName)
                                     .font(.system(size: 10, weight: .bold))
                                     .foregroundStyle(.secondary)
@@ -2199,8 +2235,27 @@ private struct TouchBarCustomizationPanel: View {
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, 6)
+                            .padding(.horizontal, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(isActive ? Color.bdAccent.opacity(0.12) : Color.white.opacity(0.02))
+                            )
                         }
                         .buttonStyle(SoftPressButtonStyle())
+                    }
+
+                    if settings.widthOverflow > 0 {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("This layout is too wide for a full Touch Bar. Use a narrower preset to avoid clipped widgets.")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.secondary)
+
+                            Button("Use Compact Preset") {
+                                settings.applyPreset(.compact)
+                            }
+                            .buttonStyle(SoftPressButtonStyle())
+                        }
+                        .padding(.top, 4)
                     }
                 }
             }

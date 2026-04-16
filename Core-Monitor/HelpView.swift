@@ -168,9 +168,10 @@ struct HelpView: View {
                 "location", "weatherkit", "permission", "location services", "forecast"
             ], content: AnyView(
                 HelpCard {
-                    Text("Core Monitor uses WeatherKit data which may require location permission.")
+                    Text("Core Monitor uses WeatherKit data, and location access upgrades the weather widget from a fallback forecast to your local conditions.")
                     HelpBullet(text: "Core Monitor only requests location after the live weather widget is shown.")
-                    HelpBullet(text: "Grant Core Monitor access to your location in System Settings → Privacy & Security → Location Services.")
+                    HelpBullet(text: "Without location access, the Touch Bar weather item can still fall back to a non-local forecast.")
+                    HelpBullet(text: "Grant Core Monitor access to your location in System Settings → Privacy & Security → Location Services for local conditions and rain timing.")
                     HelpBullet(text: "If weather data fails to load, ensure WeatherKit is enabled for your signed build.")
                 }
             )),
