@@ -275,3 +275,8 @@
 - Hardened startup against duplicate launches by detecting an already-running Core Monitor instance, handing dashboard focus back to that process, and terminating the new copy before it can publish another set of menu bar extras.
 - Added `CoreMonitorSingleInstancePolicyTests` coverage for the handoff-target selection rules and exempted the path under XCTest so the host app does not terminate itself during unit-test bootstrapping.
 - Re-verified the batch with the same clean full macOS test pass, then forced a second launch from the built executable and confirmed the process count stays at one for the Debug app path instead of stacking a duplicate instance.
+
+### Completed batch
+- Throttled expensive disk-capacity refreshes behind a dedicated `DiskStatsRefreshPolicy` instead of recalculating purgeable and important-usage volume state on every 1-second dashboard sample.
+- Cached the last disk snapshot inside `SystemMonitor` and added focused `DiskStatsRefreshPolicyTests` coverage so future edits do not quietly reintroduce per-sample disk refresh churn.
+- Re-verified the batch with targeted policy tests, a fresh full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' -derivedDataPath .deriveddata CODE_SIGNING_ALLOWED=NO test` pass, and a short relaunch log check showing only a single `com.apple.cache_delete` timestamp in the post-launch window instead of a per-second pattern.
