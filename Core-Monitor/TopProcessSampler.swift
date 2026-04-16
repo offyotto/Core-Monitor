@@ -103,7 +103,7 @@ final class TopProcessSampler {
         }
     }
 
-    nonisolated private func collectProcesses(
+    private func collectProcesses(
         elapsed: TimeInterval,
         processorCount: Int,
         previousCPUTimeByPID: [pid_t: UInt64]
@@ -143,7 +143,7 @@ final class TopProcessSampler {
             }
     }
 
-    nonisolated private func aggregateProcesses(_ processes: [SampledProcess]) -> [AggregatedProcess] {
+    private func aggregateProcesses(_ processes: [SampledProcess]) -> [AggregatedProcess] {
         var grouped: [String: AggregatedProcess] = [:]
 
         for process in processes {
@@ -163,7 +163,7 @@ final class TopProcessSampler {
             .filter { $0.cpuPercent >= 0.5 || $0.memoryBytes > 0 }
     }
 
-    nonisolated private func taskInfo(for pid: pid_t) -> proc_taskinfo? {
+    private func taskInfo(for pid: pid_t) -> proc_taskinfo? {
         var info = proc_taskinfo()
         let result = withUnsafeMutablePointer(to: &info) { pointer -> Int32 in
             pointer.withMemoryRebound(to: Int8.self, capacity: MemoryLayout<proc_taskinfo>.stride) { rebounded in
@@ -175,7 +175,7 @@ final class TopProcessSampler {
         return info
     }
 
-    nonisolated private func cpuTime(for pid: pid_t) -> UInt64? {
+    private func cpuTime(for pid: pid_t) -> UInt64? {
         var usage = rusage_info_current()
         let status = withUnsafeMutablePointer(to: &usage) { pointer -> Int32 in
             pointer.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) { rebounded in
@@ -187,7 +187,7 @@ final class TopProcessSampler {
         return usage.ri_user_time + usage.ri_system_time
     }
 
-    nonisolated private func displayName(for pid: pid_t) -> String {
+    private func displayName(for pid: pid_t) -> String {
         if let runningApp = NSRunningApplication(processIdentifier: pid) {
             let localizedName = runningApp.localizedName ?? ""
             if !localizedName.isEmpty {

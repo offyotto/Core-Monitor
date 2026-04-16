@@ -72,8 +72,11 @@ final class WeatherLocationAccessController: NSObject, ObservableObject, @precon
         authorizationStatus = locationManager.authorizationStatus
     }
 
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        authorizationStatus = manager.authorizationStatus
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
+        Task { @MainActor [weak self] in
+            self?.authorizationStatus = status
+        }
     }
 }
 

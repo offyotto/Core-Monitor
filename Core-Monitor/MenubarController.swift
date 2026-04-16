@@ -43,6 +43,7 @@ enum MenuBarItemKind: CaseIterable {
 }
 
 // MARK: - MenuBarController  (public facade — same init signature as before)
+@MainActor
 final class MenuBarController: NSObject {
     private var itemControllers: [SingleMenuBarItemController] = []
     private var snapshotCancellable: AnyCancellable?
@@ -103,6 +104,7 @@ final class MenuBarController: NSObject {
 }
 
 // MARK: - SingleMenuBarItemController
+@MainActor
 final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
     private enum StatusTone: Equatable {
         case normal

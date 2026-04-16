@@ -14,11 +14,11 @@ enum FanControlMode: String, CaseIterable {
     case custom
     case automatic
 
-    nonisolated static var quickModes: [FanControlMode] {
+    static var quickModes: [FanControlMode] {
         [.smart, .silent, .balanced, .performance, .max, .manual, .custom, .automatic]
     }
 
-    nonisolated var title: String {
+    var title: String {
         switch self {
         case .smart:       return "SMART"
         case .silent:      return "SILENT"
@@ -31,7 +31,7 @@ enum FanControlMode: String, CaseIterable {
         }
     }
 
-    nonisolated var shortTitle: String {
+    var shortTitle: String {
         switch self {
         case .smart:       return "SMART"
         case .silent:      return "SILENT"
@@ -44,11 +44,11 @@ enum FanControlMode: String, CaseIterable {
         }
     }
 
-    nonisolated var usesManualSlider: Bool { self == .manual }
-    nonisolated var isManagedProfile: Bool { self != .manual && self != .automatic }
-    nonisolated var requiresPrivilegedHelper: Bool { self != .automatic }
+    var usesManualSlider: Bool { self == .manual }
+    var isManagedProfile: Bool { self != .manual && self != .automatic }
+    var requiresPrivilegedHelper: Bool { self != .automatic }
 
-    nonisolated var guidance: FanModeGuidance {
+    var guidance: FanModeGuidance {
         switch self {
         case .smart:
             return FanModeGuidance(
@@ -148,9 +148,9 @@ struct CustomFanPreset: Codable, Equatable {
         case gpu
         case max
 
-        nonisolated var id: String { rawValue }
+        var id: String { rawValue }
 
-        nonisolated var title: String {
+        var title: String {
             switch self {
             case .cpu: return "CPU"
             case .gpu: return "GPU"
@@ -207,7 +207,7 @@ struct CustomFanPreset: Codable, Equatable {
     var powerBoost: PowerBoost?
     var points: [CurvePoint]
 
-    nonisolated static let starter = CustomFanPreset(
+    static let starter = CustomFanPreset(
         name: "Quiet ramp with thermal boost",
         version: 1,
         sensor: .max,
@@ -351,7 +351,7 @@ enum CustomPresetSaveOutcome {
 
 @MainActor
 final class FanController: ObservableObject {
-    nonisolated static let defaultMode: FanControlMode = .automatic
+    static let defaultMode: FanControlMode = .automatic
 
     @Published var mode: FanControlMode = FanController.defaultMode
     @Published var manualSpeed: Int = 2200
