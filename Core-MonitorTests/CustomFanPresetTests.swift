@@ -239,6 +239,48 @@ final class CustomFanPresetTests: XCTestCase {
         XCTAssertEqual(MonitoringSnapshotHealth.compactDurationDescription(90), "1m 30s")
         XCTAssertEqual(MonitoringSnapshotHealth.compactDurationDescription(120), "2m")
     }
+
+    func testMenuBarStatusSummaryMakesHelperOptionalInSystemAutomaticMode() {
+        let summary = MenuBarStatusSummary.helperSummary(
+            for: .automatic,
+            connectionState: .missing,
+            isInstalled: false
+        )
+
+        XCTAssertEqual(summary.label, "Helper Optional")
+        XCTAssertEqual(summary.tone, .neutral)
+    }
+
+    func testMenuBarStatusSummaryKeepsManagedModesExplicitAboutHelperProblems() {
+        let missing = MenuBarStatusSummary.helperSummary(
+            for: .smart,
+            connectionState: .missing,
+            isInstalled: false
+        )
+        let reachable = MenuBarStatusSummary.helperSummary(
+            for: .smart,
+            connectionState: .reachable,
+            isInstalled: true
+        )
+
+        XCTAssertEqual(missing.label, "Helper Missing")
+        XCTAssertEqual(missing.tone, .warning)
+        XCTAssertEqual(reachable.label, "Helper Ready")
+        XCTAssertEqual(reachable.tone, .good)
+    }
+
+    func testMenuBarStatusSummaryReflectsFanOwnershipInModePill() {
+        let automatic = MenuBarStatusSummary.fanModeSummary(for: .automatic)
+        let silent = MenuBarStatusSummary.fanModeSummary(for: .silent)
+        let smart = MenuBarStatusSummary.fanModeSummary(for: .smart)
+
+        XCTAssertEqual(automatic.label, "System Cooling")
+        XCTAssertEqual(automatic.tone, .good)
+        XCTAssertEqual(silent.label, "Mode SILENT")
+        XCTAssertEqual(silent.tone, .good)
+        XCTAssertEqual(smart.label, "Mode SMART")
+        XCTAssertEqual(smart.tone, .accent)
+    }
 }
 
 @MainActor
