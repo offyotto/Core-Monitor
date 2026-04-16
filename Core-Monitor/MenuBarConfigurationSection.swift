@@ -4,6 +4,8 @@ struct MenuBarSettingsCard: View {
     struct Snapshot {
         var cpuUsagePercent: Double
         var memoryUsagePercent: Double
+        var networkDownloadBytesPerSecond: Double
+        var networkUploadBytesPerSecond: Double
         var diskUsagePercent: Double
         var cpuTemperature: Double?
     }
@@ -142,7 +144,11 @@ struct MenuBarSettingsCard: View {
         case .memory:
             return "MEM \(Int(snapshot.memoryUsagePercent.rounded()))%"
         case .network:
-            return "NET Live"
+            let down = NetworkThroughputFormatter.abbreviatedRate(bytesPerSecond: snapshot.networkDownloadBytesPerSecond)
+                .replacingOccurrences(of: " ", with: "")
+            let up = NetworkThroughputFormatter.abbreviatedRate(bytesPerSecond: snapshot.networkUploadBytesPerSecond)
+                .replacingOccurrences(of: " ", with: "")
+            return "↓\(down) ↑\(up)"
         case .disk:
             return "SSD \(Int(snapshot.diskUsagePercent.rounded()))%"
         case .temperature:
