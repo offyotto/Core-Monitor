@@ -1290,7 +1290,7 @@ private struct FanControlPanel: View {
     private func modeIcon(_ mode: FanControlMode) -> String {
         switch mode {
         case .smart: return "bolt.shield.fill"
-        case .silent: return "wind"
+        case .silent: return "cpu"
         case .balanced: return "dial.medium"
         case .performance: return "speedometer"
         case .max: return "tornado"
@@ -2575,8 +2575,8 @@ struct BasicModeView: View {
                 }.padding(.horizontal, 16).padding(.top, 12)
             }
             HStack(spacing: 10) {
-                basicFanBtn("Cool Down", icon: "wind",    active: fanController.mode == .silent) { fanController.setMode(.silent) }
-                basicFanBtn("Boost",     icon: "tornado", active: fanController.mode == .max)    { fanController.setMode(.max) }
+                basicFanBtn("System Auto", icon: "cpu",     active: fanController.mode == .automatic) { fanController.setMode(.automatic) }
+                basicFanBtn("Boost",       icon: "tornado", active: fanController.mode == .max)       { fanController.setMode(.max) }
             }.padding(.horizontal, 16)
             Button { fanController.setMode(.smart) } label: {
                 Label("Smart", systemImage: "bolt.shield.fill").font(.system(size: 12, weight: .semibold))

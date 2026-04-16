@@ -15,12 +15,14 @@ struct MenuBarStatusPillSummary: Equatable {
 
 enum MenuBarStatusSummary {
     static func fanModeSummary(for mode: FanControlMode) -> MenuBarStatusPillSummary {
-        if mode == .automatic {
+        let resolvedMode = mode.canonicalMode
+
+        if resolvedMode == .automatic {
             return MenuBarStatusPillSummary(label: "System Cooling", tone: .good)
         }
 
-        let tone: MenuBarStatusPillTone = mode.guidance.ownership == .system ? .good : .accent
-        return MenuBarStatusPillSummary(label: "Mode \(mode.title)", tone: tone)
+        let tone: MenuBarStatusPillTone = resolvedMode.guidance.ownership == .system ? .good : .accent
+        return MenuBarStatusPillSummary(label: "Mode \(resolvedMode.title)", tone: tone)
     }
 
     static func helperSummary(
