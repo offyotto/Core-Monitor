@@ -17,13 +17,19 @@ extension View {
 
 private struct WelcomeGuideModifier: ViewModifier {
     @AppStorage(WelcomeGuideProgress.hasSeenDefaultsKey) private var hasSeen = false
+    @State private var isGuidePresented = false
 
     func body(content: Content) -> some View {
         content
-            .sheet(isPresented: Binding(
-                get: { !hasSeen },
-                set: { if !$0 { hasSeen = true } }
-            )) {
+            .onAppear {
+                if hasSeen == false {
+                    isGuidePresented = true
+                }
+            }
+            .onChange(of: hasSeen) { hasSeen in
+                isGuidePresented = !hasSeen
+            }
+            .sheet(isPresented: $isGuidePresented) {
                 WelcomeGuideSheet { hasSeen = true }
                     .interactiveDismissDisabled(true)
             }

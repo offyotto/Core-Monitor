@@ -41,37 +41,54 @@ enum CoreMonitorDefaultsMaintenance {
         defaults: UserDefaults,
         bundleIdentifier: String?
     ) {
-        guard defaults.bool(forKey: legacyWindowStateResetKey) == false else { return }
-
-        for key in persistedKeys(defaults: defaults, bundleIdentifier: bundleIdentifier) {
-            if key.hasPrefix("NSWindow Frame SwiftUI.") || key == "NSWindow Frame CoreMonitorMainWindow" {
-                defaults.removeObject(forKey: key)
+        mutatePersistentDomain(defaults: defaults, bundleIdentifier: bundleIdentifier, resetKey: legacyWindowStateResetKey) { domain in
+            for key in Array(domain.keys) where key.hasPrefix("NSWindow Frame SwiftUI.") || key == "NSWindow Frame CoreMonitorMainWindow" {
+                domain.removeValue(forKey: key)
             }
         }
-
-        defaults.set(true, forKey: legacyWindowStateResetKey)
     }
 
     private static func purgeDeprecatedLaunchState(
         defaults: UserDefaults,
         bundleIdentifier: String?
     ) {
-        guard defaults.bool(forKey: deprecatedLaunchStateResetKey) == false else { return }
-
-        for key in persistedKeys(defaults: defaults, bundleIdentifier: bundleIdentifier) {
-            if deprecatedLaunchStateKeys.contains(key) || deprecatedLaunchStatePrefixes.contains(where: key.hasPrefix) {
-                defaults.removeObject(forKey: key)
+        mutatePersistentDomain(defaults: defaults, bundleIdentifier: bundleIdentifier, resetKey: deprecatedLaunchStateResetKey) { domain in
+            for key in Array(domain.keys) where deprecatedLaunchStateKeys.contains(key) || deprecatedLaunchStatePrefixes.contains(where: key.hasPrefix) {
+                domain.removeValue(forKey: key)
             }
         }
-
-        defaults.set(true, forKey: deprecatedLaunchStateResetKey)
     }
 
-    private static func persistedKeys(
+    private static func mutatePersistentDomain(
         defaults: UserDefaults,
-        bundleIdentifier: String?
-    ) -> [String] {
-        guard let bundleIdentifier else { return [] }
-        return defaults.persistentDomain(forName: bundleIdentifier).map { Array($0.keys) } ?? []
+        bundleIdentifier: String?,
+        resetKey: String,
+        mutate: (inout [String: Any]) -> Void
+    ) {
+        guard let bundleIdentifier else {
+            if defaults.bool(forKey: resetKey) {
+                return
+            }
+
+            var domain = defaults.dictionaryRepresentation()
+            mutate(&domain)
+            for key in Set(defaults.dictionaryRepresentation().keys).subtracting(domain.keys) {
+                defaults.removeObject(forKey: key)
+            }
+            for (key, value) in domain {
+                defaults.set(value, forKey: key)
+            }
+            defaults.set(true, forKey: resetKey)
+            return
+        }
+
+        var domain = defaults.persistentDomain(forName: bundleIdentifier) ?? [:]
+        if (domain[resetKey] as? Bool) == true {
+            return
+        }
+
+        mutate(&domain)
+        domain[resetKey] = true
+        defaults.setPersistentDomain(domain, forName: bundleIdentifier)
     }
 }
