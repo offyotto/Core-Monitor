@@ -351,7 +351,9 @@ nonisolated enum CustomPresetSaveOutcome {
 
 @MainActor
 final class FanController: ObservableObject {
-    @Published var mode: FanControlMode = .smart
+    nonisolated static let defaultMode: FanControlMode = .automatic
+
+    @Published var mode: FanControlMode = FanController.defaultMode
     @Published var manualSpeed: Int = 2200
     @Published var autoAggressiveness: Double = 1.5
     @Published var autoMaxSpeed: Int = 6500
@@ -377,6 +379,9 @@ final class FanController: ObservableObject {
         self.systemMonitor = systemMonitor
         loadSettings()
         loadCustomPresetFromDisk()
+        if statusMessage == "Idle" {
+            statusMessage = passiveStatusMessage(for: mode)
+        }
         registerForWakeNotifications()
     }
 
@@ -968,6 +973,27 @@ final class FanController: ObservableObject {
         return helperManager.statusMessage ?? "No fan detected"
     }
 
+    private func passiveStatusMessage(for mode: FanControlMode) -> String {
+        switch mode {
+        case .automatic:
+            return "System automatic mode is active"
+        case .silent:
+            return "Silent mode keeps the firmware fan curve in charge"
+        case .balanced:
+            return "Balanced mode is ready to target 60% fan speed"
+        case .performance:
+            return "Performance mode is ready to target 85% fan speed"
+        case .max:
+            return "Max mode is ready to target full fan speed"
+        case .manual:
+            return "Manual target: \(manualSpeed) RPM"
+        case .smart:
+            return "Smart mode is ready for helper-backed fan control"
+        case .custom:
+            return customPreset.map { "Custom preset ready: \($0.name)" } ?? "Custom mode needs a saved preset"
+        }
+    }
+
     private func fanCalibrationCandidateKeys() -> [String] {
         let fanSuffixes = [
             "Ac", "Mn", "Mx", "Tg", "Md", "Mt", "ID",
@@ -1087,6 +1113,8 @@ final class FanController: ObservableObject {
         if let raw = defaults.string(forKey: "fanControlMode"),
            let savedMode = FanControlMode(rawValue: raw) {
             mode = savedMode
+        } else {
+            mode = Self.defaultMode
         }
 
         let savedSpeed = defaults.integer(forKey: "manualFanSpeed")

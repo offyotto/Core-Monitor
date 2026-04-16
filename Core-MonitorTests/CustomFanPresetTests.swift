@@ -3,6 +3,10 @@ import CoreGraphics
 @testable import Core_Monitor
 
 final class CustomFanPresetTests: XCTestCase {
+    func testDefaultFanModeIsSystemAutomatic() {
+        XCTAssertEqual(FanController.defaultMode, .automatic)
+    }
+
     func testCurvePointDecodesLegacyJSONWithoutIdentifier() throws {
         let data = Data(
             """

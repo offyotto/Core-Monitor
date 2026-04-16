@@ -237,6 +237,24 @@ final class AlertEngineTests: XCTestCase {
         XCTAssertEqual(missing.activeState?.severity, .warning)
     }
 
+    func testHelperAvailabilityRuleStaysInactiveWhileSystemModeOwnsCooling() {
+        let config = AlertPreset.default.configurations().first(where: { $0.kind == .helperUnavailable })!
+
+        let outcome = AlertEvaluator.evaluate(
+            config: config,
+            runtime: .initial(for: .helperUnavailable),
+            input: makeInput(
+                fanMode: .automatic,
+                helperInstalled: false,
+                helperConnectionState: .unreachable,
+                helperStatusMessage: "The helper rejected this ad-hoc build."
+            ) { _ in }
+        )
+
+        XCTAssertNil(outcome.activeState)
+        XCTAssertNil(outcome.event)
+    }
+
     private func makeInput(
         fanMode: FanControlMode = .automatic,
         helperInstalled: Bool = true,

@@ -796,8 +796,22 @@ private struct BatteryBar: View {
 private struct FanHelperStatusCard: View {
     @ObservedObject private var helperManager = SMCHelperManager.shared
     let hasFans: Bool
+    let currentMode: FanControlMode
+
+    private var helperIsRequiredNow: Bool {
+        currentMode.requiresPrivilegedHelper
+    }
 
     private var statusColor: Color {
+        if helperIsRequiredNow == false {
+            switch helperManager.connectionState {
+            case .reachable where hasFans:
+                return .green
+            case .checking, .reachable, .unknown, .missing, .unreachable:
+                return .secondary
+            }
+        }
+
         switch helperManager.connectionState {
         case .reachable where hasFans:
             return .green
@@ -813,6 +827,17 @@ private struct FanHelperStatusCard: View {
     }
 
     private var statusLabel: String {
+        if helperIsRequiredNow == false {
+            switch helperManager.connectionState {
+            case .reachable where hasFans:
+                return "Ready Later"
+            case .checking:
+                return "Checking"
+            case .reachable, .unknown, .missing, .unreachable:
+                return "Optional"
+            }
+        }
+
         switch helperManager.connectionState {
         case .checking:
             return "Checking"
@@ -862,7 +887,7 @@ private struct FanHelperStatusCard: View {
                 if let statusMessage = helperManager.statusMessage, !statusMessage.isEmpty {
                     Text(statusMessage)
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(statusMessage == "Privileged helper installed. Fan control is ready." ? .green : .orange)
+                        .foregroundStyle(statusMessageColor)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -880,6 +905,13 @@ private struct FanHelperStatusCard: View {
     }
 
     private var helperDescription: String {
+        if helperIsRequiredNow == false {
+            if helperManager.connectionState == .reachable {
+                return "The helper is ready if you switch back into a managed fan mode later. System-owned cooling is active right now."
+            }
+            return "System mode keeps the firmware fan curve in charge right now. Install or repair the helper before switching into Smart, Manual, or other managed fan profiles."
+        }
+
         if helperManager.connectionState == .unreachable {
             return "Installed, but the XPC service rejected or could not reach this app build. Fan writes will fail until the signed app and helper match."
         }
@@ -890,6 +922,13 @@ private struct FanHelperStatusCard: View {
             return "Installed. Smart, Manual, Custom, and fixed fan profiles can talk to the local privileged helper on supported Macs."
         }
         return "Required for Smart, Silent, Balanced, Performance, Max, Manual, and Custom fan control. Monitoring works without it."
+    }
+
+    private var statusMessageColor: Color {
+        if helperManager.statusMessage == "Privileged helper installed. Fan control is ready." {
+            return .green
+        }
+        return helperIsRequiredNow ? .orange : .secondary
     }
 }
 
@@ -1057,7 +1096,10 @@ private struct FanControlPanel: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            FanHelperStatusCard(hasFans: snapshot.fanSpeeds.isEmpty == false)
+            FanHelperStatusCard(
+                hasFans: snapshot.fanSpeeds.isEmpty == false,
+                currentMode: fanController.mode
+            )
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(FanControlMode.quickModes, id: \.self) { mode in

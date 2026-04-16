@@ -70,6 +70,7 @@ struct HelpView: View {
                     HelpBullet(text: "Desktop notifications are optional. Turning them off does not disable in-app alert history.")
                     HelpBullet(text: "Presets let you trade off earlier warning thresholds against quieter notification behavior.")
                     HelpBullet(text: "CPU and memory alerts include top-process context so you can see likely culprits without configuring per-process rules.")
+                    HelpBullet(text: "Helper availability alerts matter once you opt into a helper-backed fan mode. Monitoring-only setups can stay healthy without the helper installed.")
                     HelpBullet(text: "Snooze suppresses desktop notifications for a rule, while `Hide For Now` clears the current alert card until conditions change again.")
                 }
             )),
@@ -87,6 +88,7 @@ struct HelpView: View {
             ], content: AnyView(
                     HelpCard {
                         Text("Manage your Mac’s fans with advanced controls and profiles.")
+                        HelpBullet(text: "Fresh installs start in System mode so monitoring, alerts, and menu bar telemetry work normally before you opt into helper-backed fan control.")
                         HelpBullet(text: "Silent and System leave the firmware curve in charge. Smart, Balanced, Performance, Max, Manual, and Custom actively write targets through the helper.")
                         HelpBullet(text: "The helper tool must be installed and trusted before managed fan control is reliable.")
                         HelpBullet(text: "Use `Reset to System Auto` or quit Core Monitor to hand control back to macOS.")
@@ -174,7 +176,7 @@ struct HelpView: View {
                 HelpCard {
                     Text("Core Monitor reads sensors via AppleSMC. Fan writes require the bundled helper.")
                     HelpBullet(text: "The helper is signed and uses the macOS authorization sheet on first use.")
-                    HelpBullet(text: "If the helper is missing or another utility owns fan control, Core Monitor raises a service alert instead of pretending writes are safe.")
+                    HelpBullet(text: "Core Monitor starts in system-owned cooling. Service alerts about helper availability become relevant after you switch into Smart, Balanced, Performance, Max, Manual, or Custom.")
                     HelpBullet(text: "Use the `System` tab’s `Helper Diagnostics` card to recheck helper trust or export a support report without reopening onboarding.")
                     HelpBullet(text: "Use `Reset to System Auto` in the Fans section to restore default behavior immediately; Core Monitor also best-effort restores system auto when the app quits.")
                 }

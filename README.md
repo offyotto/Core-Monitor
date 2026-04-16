@@ -109,6 +109,8 @@ Core Monitor now includes a local alerts engine that runs off the same monitor s
 
 Fan control is optional and requires a privileged helper called `smc-helper`. If you don't need it, you don't need the helper — everything else works without it.
 
+Fresh installs now start in `System` mode, so Core Monitor behaves as a monitoring-first app until you explicitly opt into helper-backed fan control.
+
 The helper is bundled at `Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper`, installed to `/Library/PrivilegedHelperTools/ventaphobia.smc-helper` via `SMJobBless`, and registered as a launchd XPC service. The app owns the helper through `SMPrivilegedExecutables`; the helper authorizes the app through its embedded `SMAuthorizedClients` requirement.
 
 **Fan modes:**
