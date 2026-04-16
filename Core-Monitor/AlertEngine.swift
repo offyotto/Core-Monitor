@@ -6,6 +6,7 @@ struct AlertEvaluationInput {
     let helperInstalled: Bool
     let helperConnectionState: SMCHelperManager.ConnectionState
     let helperStatusMessage: String?
+    let processInsightsEnabled: Bool
     let now: Date
 }
 
@@ -222,6 +223,7 @@ enum AlertEvaluator {
                 helperInstalled: true,
                 helperConnectionState: .reachable,
                 helperStatusMessage: nil,
+                processInsightsEnabled: true,
                 now: Date()
             ),
             runtime: .initial(for: kind)
@@ -245,7 +247,7 @@ enum AlertEvaluator {
                 metricValue: value,
                 title: severity == .critical ? "CPU temperature is critical" : "CPU temperature is elevated",
                 message: String(format: "CPU temperature reached %.0f°C.", value),
-                context: topCPUContext(from: input.snapshot.topProcesses),
+                context: topCPUContext(from: input.snapshot.topProcesses, enabled: input.processInsightsEnabled),
                 isAvailable: true,
                 unavailableReason: nil
             )
@@ -260,7 +262,7 @@ enum AlertEvaluator {
                 metricValue: value,
                 title: severity == .critical ? "GPU temperature is critical" : "GPU temperature is elevated",
                 message: String(format: "GPU temperature reached %.0f°C.", value),
-                context: topCPUContext(from: input.snapshot.topProcesses),
+                context: topCPUContext(from: input.snapshot.topProcesses, enabled: input.processInsightsEnabled),
                 isAvailable: true,
                 unavailableReason: nil
             )
@@ -273,7 +275,7 @@ enum AlertEvaluator {
                 metricValue: value,
                 title: severity == .critical ? "macOS reports critical thermal pressure" : "macOS reports elevated thermal pressure",
                 message: "Overall thermal state is \(thermalStateLabel(input.snapshot.thermalState)).",
-                context: topCPUContext(from: input.snapshot.topProcesses),
+                context: topCPUContext(from: input.snapshot.topProcesses, enabled: input.processInsightsEnabled),
                 isAvailable: true,
                 unavailableReason: nil
             )
@@ -286,7 +288,7 @@ enum AlertEvaluator {
                 metricValue: value,
                 title: severity == .critical ? "CPU usage is pinned" : "CPU usage is elevated",
                 message: String(format: "CPU usage is %.0f%%.", value),
-                context: topCPUContext(from: input.snapshot.topProcesses),
+                context: topCPUContext(from: input.snapshot.topProcesses, enabled: input.processInsightsEnabled),
                 isAvailable: true,
                 unavailableReason: nil
             )
@@ -299,7 +301,7 @@ enum AlertEvaluator {
                 metricValue: value,
                 title: severity == .critical ? "Memory pressure is critical" : "Memory pressure is elevated",
                 message: "Memory pressure is \(memoryPressureLabel(input.snapshot.memoryPressure)).",
-                context: topMemoryContext(from: input.snapshot.topProcesses),
+                context: topMemoryContext(from: input.snapshot.topProcesses, enabled: input.processInsightsEnabled),
                 isAvailable: true,
                 unavailableReason: nil
             )
@@ -312,7 +314,7 @@ enum AlertEvaluator {
                 metricValue: swapGB,
                 title: severity == .critical ? "Swap usage is heavy" : "Swap usage is growing",
                 message: String(format: "Swap usage reached %.1f GB.", swapGB),
-                context: topMemoryContext(from: input.snapshot.topProcesses),
+                context: topMemoryContext(from: input.snapshot.topProcesses, enabled: input.processInsightsEnabled),
                 isAvailable: true,
                 unavailableReason: nil
             )
@@ -622,12 +624,14 @@ enum AlertEvaluator {
         return .none
     }
 
-    nonisolated private static func topCPUContext(from topProcesses: TopProcessSnapshot) -> String? {
+    nonisolated private static func topCPUContext(from topProcesses: TopProcessSnapshot, enabled: Bool) -> String? {
+        guard enabled else { return nil }
         guard let process = topProcesses.topCPU.first, process.cpuPercent > 0 else { return nil }
         return String(format: "Top CPU: %@ (%.0f%%)", process.name, process.cpuPercent)
     }
 
-    nonisolated private static func topMemoryContext(from topProcesses: TopProcessSnapshot) -> String? {
+    nonisolated private static func topMemoryContext(from topProcesses: TopProcessSnapshot, enabled: Bool) -> String? {
+        guard enabled else { return nil }
         guard let process = topProcesses.topMemory.first, process.memoryBytes > 0 else { return nil }
         return String(format: "Top Memory: %@ (%.1f GB)", process.name, process.memoryGB)
     }

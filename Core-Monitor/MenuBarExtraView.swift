@@ -557,6 +557,7 @@ struct CPUMenuPopoverView: View {
 struct MemoryMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var alertManager: AlertManager
+    @ObservedObject private var privacySettings = PrivacySettings.shared
     var openDashboardAction: () -> Void = {}
 
     var body: some View {
@@ -629,7 +630,9 @@ struct MemoryMenuPopoverView: View {
         VStack(spacing: 0) {
             MBSectionHeader(title: "PROCESSES")
             let topProcesses = Array(systemMonitor.snapshot.topProcesses.topMemory.prefix(4))
-            if topProcesses.isEmpty {
+            if privacySettings.processInsightsEnabled == false {
+                MBRow(icon: "lock.shield", label: "Processes", value: "Private", color: Color.mbTint)
+            } else if topProcesses.isEmpty {
                 MBRow(icon: "app.fill", label: "Processes", value: "Unavailable", color: .white.opacity(0.5))
             } else {
                 ForEach(Array(topProcesses.enumerated()), id: \.offset) { _, process in
@@ -733,6 +736,7 @@ struct MemoryMenuPopoverView: View {
 struct DiskMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var alertManager: AlertManager
+    @ObservedObject private var privacySettings = PrivacySettings.shared
     var openDashboardAction: () -> Void = {}
 
     var body: some View {
@@ -832,8 +836,10 @@ struct DiskMenuPopoverView: View {
     private var processesSection: some View {
         VStack(spacing: 0) {
             MBSectionHeader(title: "PROCESS TOTALS  R / W")
-            let topProcesses = topDiskProcesses(limit: 4)
-            if topProcesses.isEmpty {
+            let topProcesses = privacySettings.processInsightsEnabled ? topDiskProcesses(limit: 4) : []
+            if privacySettings.processInsightsEnabled == false {
+                MBRow(icon: "lock.shield", label: "Processes", value: "Private", color: Color.mbTint)
+            } else if topProcesses.isEmpty {
                 MBRow(icon: "app.fill", label: "Processes", value: "Unavailable", color: .white.opacity(0.5))
             } else {
                 ForEach(Array(topProcesses.enumerated()), id: \.offset) { _, process in
@@ -1292,13 +1298,43 @@ struct MenuBarMenuView: View {
     }
 
     private var actionsSection: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             actionRow("Open Dashboard",             icon: "gauge.medium")     { openDashboardAction() }
             actionRow("Reset Fan to System Auto",   icon: "arrow.counterclockwise") { fanController.resetToSystemAutomatic() }
             actionRow("Restore App Touch Bar",      icon: "rectangle.on.rectangle") { restoreAppTouchBarAction() }
             actionRow("Revert to System Touch Bar", icon: "rectangle.3.group") { revertTouchBarAction() }
             mbDivider.padding(.horizontal, 14).padding(.vertical, 2)
-            actionRow("Quit Core Monitor", icon: "power", tint: .red) { NSApp.terminate(nil) }
+
+            Button(action: { NSApp.terminate(nil) }) {
+                HStack(spacing: 10) {
+                    Image(systemName: "power")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.red)
+                        .frame(width: 18)
+                    Text("Quit Core Monitor")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.92))
+                    Spacer()
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
+                .background(Color.red.opacity(0.12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Color.red.opacity(0.18), lineWidth: 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 14)
+            .padding(.top, 6)
+
+            Text("Hardware readings stay on your Mac. Weather and exported support reports stay opt in.")
+                .font(.system(size: 10.5, weight: .medium))
+                .foregroundStyle(.white.opacity(0.58))
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 14)
+                .padding(.top, 8)
         }
         .padding(.vertical, 4)
     }

@@ -255,11 +255,41 @@ final class AlertEngineTests: XCTestCase {
         XCTAssertNil(outcome.event)
     }
 
+    func testProcessInsightsDisabledRedactsTopProcessContext() {
+        let config = AlertRuleConfig(
+            kind: .cpuUsage,
+            isEnabled: true,
+            threshold: .init(warning: 80, critical: 95, hysteresis: 5),
+            cooldownMinutes: 10,
+            debounceSamples: 1,
+            desktopNotificationsEnabled: true
+        )
+
+        let outcome = AlertEvaluator.evaluate(
+            config: config,
+            runtime: .initial(for: .cpuUsage),
+            input: makeInput(processInsightsEnabled: false) { snapshot in
+                snapshot.cpuUsagePercent = 97
+                snapshot.topProcesses = TopProcessSnapshot(
+                    sampledAt: Date(timeIntervalSince1970: 1_000),
+                    topCPU: [
+                        ProcessActivity(pid: 42, name: "Xcode", cpuPercent: 97, memoryBytes: 1_024)
+                    ],
+                    topMemory: []
+                )
+            }
+        )
+
+        XCTAssertNil(outcome.activeState?.context)
+        XCTAssertNil(outcome.event?.context)
+    }
+
     private func makeInput(
         fanMode: FanControlMode = .automatic,
         helperInstalled: Bool = true,
         helperConnectionState: SMCHelperManager.ConnectionState = .reachable,
         helperStatusMessage: String? = nil,
+        processInsightsEnabled: Bool = true,
         now: Date = Date(timeIntervalSince1970: 1_000),
         configure: (inout SystemMonitorSnapshot) -> Void
     ) -> AlertEvaluationInput {
@@ -271,6 +301,7 @@ final class AlertEngineTests: XCTestCase {
             helperInstalled: helperInstalled,
             helperConnectionState: helperConnectionState,
             helperStatusMessage: helperStatusMessage,
+            processInsightsEnabled: processInsightsEnabled,
             now: now
         )
     }

@@ -80,13 +80,18 @@ struct AlertsDashboardStrip: View {
 
 struct TopMemoryProcessesPanel: View {
     let snapshot: TopProcessSnapshot
+    @ObservedObject private var privacySettings = PrivacySettings.shared
 
     var body: some View {
         AlertSurfaceCard {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Top Memory Pressure")
                     .font(.system(size: 16, weight: .bold))
-                if snapshot.topMemory.isEmpty {
+                if privacySettings.processInsightsEnabled == false {
+                    Text("Process insights are off. Memory alerts still work without collecting app names.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                } else if snapshot.topMemory.isEmpty {
                     Text("Top process context becomes available after a few samples.")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
@@ -288,6 +293,7 @@ struct AlertsView: View {
             summaryCards
             presetCard
             notificationCard
+            privacyCard
             activeAlertsCard
             ruleGroups
             historyCard
@@ -456,6 +462,45 @@ struct AlertsView: View {
         }
     }
 
+    private var privacyCard: some View {
+        AlertSurfaceCard {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Privacy Controls")
+                    .font(.system(size: 16, weight: .bold))
+
+                Toggle(
+                    "Include top app context in alerts and memory views",
+                    isOn: Binding(
+                        get: { alertManager.processInsightsEnabled },
+                        set: { alertManager.setProcessInsightsEnabled($0) }
+                    )
+                )
+                .toggleStyle(.switch)
+
+                Text(
+                    alertManager.processInsightsEnabled
+                        ? "Top app context stays on-device and helps explain CPU and memory spikes. Turn it off to keep alert history free of process names."
+                        : "Core Monitor still evaluates thresholds, but active alerts and recent history no longer retain process names."
+                )
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.secondary)
+
+                HStack(spacing: 10) {
+                    Button("Clear Alert History") {
+                        alertManager.clearHistory()
+                    }
+                    .buttonStyle(.bordered)
+
+                    if alertManager.processInsightsEnabled == false {
+                        Text("Private mode is on.")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Color.bdAccent)
+                    }
+                }
+            }
+        }
+    }
+
     private var ruleGroups: some View {
         VStack(alignment: .leading, spacing: 12) {
             ForEach(AlertCategory.allCases) { category in
@@ -488,6 +533,11 @@ struct AlertsView: View {
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
                 } else {
+                    if alertManager.processInsightsEnabled == false {
+                        Text("Process names are removed from recent history while privacy controls are on.")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
                     ForEach(alertManager.history.prefix(12)) { event in
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: event.kind.systemImageName)

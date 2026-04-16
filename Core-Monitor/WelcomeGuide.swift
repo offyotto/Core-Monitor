@@ -71,7 +71,7 @@ private let guideSteps: [GuideStep] = [
         subheadline: "Your M-series Mac, fully visible.",
         body: "Core Monitor gives you deep, real-time insight into your Apple Silicon Mac: thermals, memory pressure, fan behavior, power draw, and a customizable Touch Bar surface.",
         bullets: [
-            ("thermometer.medium",    .wgAmber,  "Live CPU, GPU & memory telemetry"),
+            ("thermometer.medium",    .wgAmber,  "Live CPU, GPU & memory readings"),
             ("fan.fill",              .wgBlue,   "Intelligent fan speed control"),
             ("rectangle.on.rectangle", .wgGreen, "Configurable Touch Bar widgets"),
             ("bolt.fill",             .wgPurple, "Power, battery, brightness and system controls"),
@@ -127,12 +127,13 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgGreen,
         headline: "You're all set.",
         subheadline: "Dive in whenever you're ready.",
-        body: "Core Monitor starts collecting telemetry immediately. Use the checklist below to confirm menu bar access, enable relaunch at login if you want persistent monitoring, and install the helper only if you want privileged fan control.",
+        body: "Core Monitor starts reading hardware state on your Mac immediately. Hardware data stays local. Weather and support exports remain optional. Use the checklist below to confirm menu bar access, enable relaunch at login if you want persistent monitoring, and install the helper only if you want privileged fan control.",
         bullets: [
             ("sidebar.left",          .wgAmber,  "Dashboard sections collapse with a click"),
             ("bell.badge",            .wgGreen,  "Alerts combines local history, presets, and notification controls"),
             ("menubar.rectangle",     .wgBlue,   "Balanced menu bar mode keeps the app visible without adding clutter"),
             ("lock.shield",           .wgPurple, "Monitoring works without the helper; only fan writes need it"),
+            ("hand.raised",           .wgAmber,  "Privacy Controls can keep alert history free of app names"),
             ("questionmark.circle",   .wgGreen,  "The Help tab can reopen this guide any time"),
         ]
     ),

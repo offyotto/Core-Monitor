@@ -13,6 +13,7 @@ final class AlertManager: NSObject, ObservableObject {
     @Published private(set) var notificationsMutedUntil: Date?
     @Published private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
     @Published private(set) var lastNotificationError: String?
+    @Published private(set) var processInsightsEnabled: Bool
 
     private let storageKey = "coremonitor.alertStore.v1"
     private let userDefaults: UserDefaults
@@ -20,6 +21,7 @@ final class AlertManager: NSObject, ObservableObject {
     private let systemMonitor: SystemMonitor
     private let fanController: FanController
     private let helperManager: SMCHelperManager
+    private let privacySettings: PrivacySettings
 
     private var store: AlertStore
     private var cancellables = Set<AnyCancellable>()
@@ -28,15 +30,22 @@ final class AlertManager: NSObject, ObservableObject {
         systemMonitor: SystemMonitor,
         fanController: FanController,
         helperManager: SMCHelperManager? = nil,
+        privacySettings: PrivacySettings? = nil,
         userDefaults: UserDefaults = .standard,
         notificationCenter: UNUserNotificationCenter = .current()
     ) {
+        let resolvedPrivacySettings = privacySettings ?? .shared
         self.systemMonitor = systemMonitor
         self.fanController = fanController
         self.helperManager = helperManager ?? .shared
+        self.privacySettings = resolvedPrivacySettings
         self.userDefaults = userDefaults
         self.notificationCenter = notificationCenter
         self.store = Self.loadStore(from: userDefaults, key: storageKey)
+        self.processInsightsEnabled = resolvedPrivacySettings.processInsightsEnabled
+        if resolvedPrivacySettings.processInsightsEnabled == false {
+            self.store = Self.redacted(store: self.store)
+        }
         self.selectedPreset = store.selectedPreset
         self.notificationPolicy = store.notificationPolicy
         self.desktopNotificationsEnabled = store.desktopNotificationsEnabled
@@ -137,6 +146,17 @@ final class AlertManager: NSObject, ObservableObject {
         notificationsMutedUntil = nil
     }
 
+    func setProcessInsightsEnabled(_ enabled: Bool) {
+        guard privacySettings.processInsightsEnabled != enabled else { return }
+        privacySettings.processInsightsEnabled = enabled
+    }
+
+    func clearHistory() {
+        store.history = []
+        persistStore()
+        history = []
+    }
+
     func snooze(_ kind: AlertRuleKind, for interval: TimeInterval) {
         updateRuntime(for: kind) { runtime in
             runtime.snoozedUntil = Date().addingTimeInterval(interval)
@@ -172,6 +192,7 @@ final class AlertManager: NSObject, ObservableObject {
             helperInstalled: helperManager.isInstalled,
             helperConnectionState: helperManager.connectionState,
             helperStatusMessage: helperManager.statusMessage,
+            processInsightsEnabled: processInsightsEnabled,
             now: Date()
         )
 
@@ -240,6 +261,21 @@ final class AlertManager: NSObject, ObservableObject {
         helperManager.$connectionState
             .sink { [weak self] _ in
                 self?.evaluateAlerts()
+            }
+            .store(in: &cancellables)
+
+        privacySettings.$processInsightsEnabled
+            .removeDuplicates()
+            .sink { [weak self] enabled in
+                guard let self else { return }
+                self.processInsightsEnabled = enabled
+                if enabled == false {
+                    self.store = Self.redacted(store: self.store)
+                    self.activeAlerts = self.activeAlerts.map(Self.redacted)
+                    self.history = self.store.history
+                    self.persistStore()
+                }
+                self.evaluateAlerts()
             }
             .store(in: &cancellables)
     }
@@ -349,6 +385,38 @@ final class AlertManager: NSObject, ObservableObject {
             },
             runtimes: AlertRuleKind.allCases.map { runtimeMap[$0] ?? .initial(for: $0) },
             history: Array(store.history.filter { !$0.isRecovery }.prefix(AlertStore.historyLimit))
+        )
+    }
+
+    private static func redacted(store: AlertStore) -> AlertStore {
+        var store = store
+        store.history = store.history.map(redacted)
+        return store
+    }
+
+    private static func redacted(_ event: AlertEvent) -> AlertEvent {
+        AlertEvent(
+            id: event.id,
+            kind: event.kind,
+            severity: event.severity,
+            title: event.title,
+            message: event.message,
+            context: nil,
+            timestamp: event.timestamp,
+            isRecovery: event.isRecovery
+        )
+    }
+
+    private static func redacted(_ state: AlertActiveState) -> AlertActiveState {
+        AlertActiveState(
+            kind: state.kind,
+            severity: state.severity,
+            title: state.title,
+            message: state.message,
+            context: nil,
+            startedAt: state.startedAt,
+            updatedAt: state.updatedAt,
+            metricValue: state.metricValue
         )
     }
 }

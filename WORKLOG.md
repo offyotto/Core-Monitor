@@ -181,3 +181,13 @@
 - Reworked the welcome-guide flow so each presentation resets to the first onboarding step instead of reopening on a stale later screen.
 - Added a vertical overflow fallback for long onboarding steps and tightened the final “Quick Setup Checklist” layout so the guide degrades to scrolling instead of silently clipping action rows.
 - Rebuilt the macOS app repeatedly and verified the welcome-guide flow visually from a clean first launch through the final step with fresh screenshots.
+
+### Completed batch
+- Removed the app’s persistent dashboard-launch diagnostics path so Core Monitor no longer records local open/visible window behavior for support exports.
+- Tightened the privacy story across the app and repo: the welcome guide, menu bar popover, helper diagnostics docs, and README now make the local-only monitoring model explicit and stop using telemetry-heavy wording for core hardware readings.
+- Made quit easier to reach from the menu bar popover with a dedicated red control instead of burying termination as a low-emphasis action row.
+
+### Completed batch
+- Added Privacy Controls for alerts and memory views so users can turn off process insights, scrub app names from local alert history, and still keep threshold detection active.
+- Stopped background top-process sampling when Privacy Controls are off, deleted the now-unused dashboard diagnostics file, and updated alert-engine coverage for the redacted path.
+- Rewrote the README and GitHub Pages presentation into a calmer Apple-inspired product voice with a lighter visual treatment and a stronger privacy-first story.

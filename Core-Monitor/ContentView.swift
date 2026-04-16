@@ -2359,7 +2359,7 @@ private struct BetterDisplayInspiredHero: View {
                 VStack(spacing: 6) {
                     Text("Core Monitor")
                         .font(.system(size: 22, weight: .bold))
-                    Text("Thermals, fans and live hardware telemetry.")
+                    Text("Thermals, fans, and live hardware readings.")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                 }

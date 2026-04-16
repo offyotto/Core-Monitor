@@ -59,16 +59,13 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
     }
 
     func windowWillClose(_ notification: Notification) {
-        DashboardLaunchDiagnostics.recordDashboardClosed()
         onClose()
     }
 
     func windowDidBecomeKey(_ notification: Notification) {
-        DashboardLaunchDiagnostics.recordDashboardDidBecomeVisible()
     }
 
     func windowDidBecomeMain(_ notification: Notification) {
-        DashboardLaunchDiagnostics.recordDashboardDidBecomeVisible()
     }
 
     private func configure(_ window: NSWindow) {
@@ -134,11 +131,6 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSWindow.allowsAutomaticWindowTabbing = false
         NSApp.setActivationPolicy(.accessory)
-        DashboardLaunchDiagnostics.recordLaunchState(
-            welcomeGuideSeen: WelcomeGuideProgress.hasSeen(),
-            autoOpenEligible: WelcomeGuideProgress.shouldAutoOpenDashboardOnLaunch(),
-            activationPolicyDescription: activationPolicyDescription(for: NSApp.activationPolicy())
-        )
         purgeLegacyWindowStateIfNeeded()
         installMenuBarIfNeeded()
         presentInitialDashboardIfNeeded()
@@ -166,15 +158,11 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         guard flag == false else { return false }
-        openDashboard(source: .reopen)
+        openDashboard()
         return true
     }
 
-    func openDashboard(source: DashboardOpenSource = .direct) {
-        DashboardLaunchDiagnostics.recordDashboardOpenRequested(
-            source: source,
-            activationPolicyDescription: activationPolicyDescription(for: NSApp.activationPolicy())
-        )
+    func openDashboard() {
         dashboardControllerIfNeeded().showDashboard()
     }
 
@@ -187,7 +175,7 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
             fanController: coordinator.fanController,
             alertManager: coordinator.alertManager,
             openDashboardAction: { [weak self] in
-                self?.openDashboard(source: .menuBar)
+                self?.openDashboard()
             },
             restoreAppTouchBarAction: { [weak self] in
                 self?.coordinator.revertToAppTouchBar()
@@ -219,7 +207,7 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
 
         hasPresentedInitialDashboard = true
         DispatchQueue.main.async { [weak self] in
-            self?.openDashboard(source: .launch)
+            self?.openDashboard()
         }
     }
 
@@ -239,18 +227,5 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         domain[legacyWindowStateResetKey] = true
         defaults.setPersistentDomain(domain, forName: domainName)
         defaults.synchronize()
-    }
-
-    private func activationPolicyDescription(for policy: NSApplication.ActivationPolicy) -> String {
-        switch policy {
-        case .regular:
-            return "regular"
-        case .accessory:
-            return "accessory"
-        case .prohibited:
-            return "prohibited"
-        @unknown default:
-            return "unknown"
-        }
     }
 }

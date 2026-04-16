@@ -70,6 +70,7 @@ struct HelpView: View {
                     HelpBullet(text: "Desktop notifications are optional. Turning them off does not disable in-app alert history.")
                     HelpBullet(text: "Presets let you trade off earlier warning thresholds against quieter notification behavior.")
                     HelpBullet(text: "CPU and memory alerts include top-process context so you can see likely culprits without configuring per-process rules.")
+                    HelpBullet(text: "Privacy Controls can remove app names from alerts and recent history while still keeping the thresholds active.")
                     HelpBullet(text: "Helper availability alerts matter once you opt into a helper-backed fan mode. Monitoring-only setups can stay healthy without the helper installed.")
                     HelpBullet(text: "Snooze suppresses desktop notifications for a rule, while `Hide For Now` clears the current alert card until conditions change again.")
                 }
@@ -86,14 +87,14 @@ struct HelpView: View {
             HelpSection(id: "fans", title: "Fans & Fan Control", icon: "fanblades.fill", keywords: [
                 "helper", "manual", "curve", "rpm", "scan fan keys", "automatic"
             ], content: AnyView(
-                    HelpCard {
-                        Text("Manage your Mac’s fans with advanced controls and profiles.")
-                        HelpBullet(text: "Fresh installs start in System mode so monitoring, alerts, and menu bar telemetry work normally before you opt into helper-backed fan control.")
-                        HelpBullet(text: "Silent and System leave the firmware curve in charge. Smart, Balanced, Performance, Max, Manual, and Custom actively write targets through the helper.")
-                        HelpBullet(text: "The helper tool must be installed and trusted before managed fan control is reliable.")
-                        HelpBullet(text: "Use `Reset to System Auto` or quit Core Monitor to hand control back to macOS.")
-                        HelpBullet(text: "The `Scan Fan Keys` action checks which fan-related SMC keys respond on the current Mac. It does not calibrate RPM accuracy.")
-                        HelpBullet(text: "On some Apple Silicon notebooks, manual targets only take effect after macOS has already activated the fan.")
+                HelpCard {
+                    Text("Manage your Mac’s fans with advanced controls and profiles.")
+                    HelpBullet(text: "Fresh installs start in System mode so monitoring, alerts, and menu bar readings work normally before you opt into helper-backed fan control.")
+                    HelpBullet(text: "Silent and System leave the firmware curve in charge. Smart, Balanced, Performance, Max, Manual, and Custom actively write targets through the helper.")
+                    HelpBullet(text: "The helper tool must be installed and trusted before managed fan control is reliable.")
+                    HelpBullet(text: "Use `Reset to System Auto` or quit Core Monitor to hand control back to macOS.")
+                    HelpBullet(text: "The `Scan Fan Keys` action checks which fan-related SMC keys respond on the current Mac. It does not calibrate RPM accuracy.")
+                    HelpBullet(text: "On some Apple Silicon notebooks, manual targets only take effect after macOS has already activated the fan.")
                         HelpBullet(text: "Safety features prevent unsafe fan speeds and protect hardware integrity.")
                         Text("Use the `Fans` tab to switch profiles or adjust settings.")
                             .font(.subheadline)

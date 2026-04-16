@@ -18,7 +18,7 @@ The main blocker is not raw feature count. It is trust and focus. Users trust TG
 ### High
 
 - Helper identity and signing assumptions were too hard-coded. That creates friction when preparing a clean Developer ID release flow.
-- Product positioning was blurred. Weather, Touch Bar, and broad stats collection diluted the sharper story users actually buy into: thermal awareness, fan control, alerts, and readable menu bar telemetry.
+- Product positioning was blurred. Weather, Touch Bar, and broad stats collection diluted the sharper story users actually buy into: thermal awareness, fan control, alerts, and readable menu bar status.
 - Website and release copy over-promised a smooth install path without repository evidence for how that path is produced.
 - There is still not enough narrow test coverage around helper-adjacent behavior, fan curves, and monitoring edge cases.
 
@@ -98,7 +98,7 @@ The main blocker is not raw feature count. It is trust and focus. Users trust TG
 
 ## Product identity
 
-- Positioning statement: Core-Monitor is the native Apple Silicon thermal command center for people who want trustworthy fan control, readable menu bar telemetry, and local alerts without subscriptions or surveillance.
+- Positioning statement: Core-Monitor is the native Apple Silicon thermal command center for people who want trustworthy fan control, readable menu bar status, and local alerts without subscriptions or surveillance.
 - One-line hook: Monitor heat, catch trouble early, and control your fans without turning your menu bar into noise.
 - Primary users:
 - developers compiling and containerizing all day
