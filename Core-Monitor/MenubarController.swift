@@ -353,6 +353,10 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                     openAlertsAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openAlertsFromPopover()
+                    },
+                    openHelpAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openSelectionFromPopover(.help)
                     }
                 )
             )
@@ -369,6 +373,10 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                     openAlertsAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openAlertsFromPopover()
+                    },
+                    openHelpAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openSelectionFromPopover(.help)
                     }
                 )
             )
@@ -385,6 +393,10 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                     openAlertsAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openAlertsFromPopover()
+                    },
+                    openHelpAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openSelectionFromPopover(.help)
                     }
                 )
             )
@@ -421,6 +433,10 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                     openAlertsAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openAlertsFromPopover()
+                    },
+                    openHelpAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openSelectionFromPopover(.help)
                     }
                 )
             )

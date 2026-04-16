@@ -62,6 +62,24 @@
 
 ## 2026-04-16
 
+### In progress
+- Reproduced a fresh-launch visibility failure against the current build product: the accessory app process started, but no dashboard window ever appeared on screen even though onboarding state still requested an auto-open.
+- Traced part of that startup failure to AppKit automatic termination: with no visible dashboard window yet, the debug app was being treated as windowless and exiting instead of staying resident like a real menu bar utility.
+- Tightening startup so onboarding launches begin in regular app mode, open the dashboard immediately before retrying, keep automatic termination disabled for the menu bar lifetime, and stop relying on loose `UserDefaults` removals for deprecated launch-state cleanup.
+- Corrected the launch diagnosis after broader process inspection: the built app bundle is actually remaining alive under Launch Services, but it is still running as a background-only app with no visible dashboard window.
+- Added targeted startup instrumentation and cached the first-run auto-open decision after defaults cleanup so launch behavior can be diagnosed and kept consistent across the entire first-launch flow.
+
+### Completed batch
+- Hardened startup-state debugging instead of continuing to infer first-launch failures from noisy system logs: the app now logs explicit launch and dashboard-open decisions under the `CoreTools.Core-Monitor:Startup` subsystem.
+- Moved deprecated-defaults cleanup ahead of the launch decision, cached the first-run auto-open state for the lifetime of the launch, and verified with a plist-backed first-run simulation that Core Monitor now launches into a visible `Core Monitor` window when onboarding is truly pending.
+- Fixed the welcome-guide modifier so it no longer marks onboarding as complete just because the sheet disappeared; only explicit completion now flips the persistent `hasSeen` flag.
+- Rebuilt the macOS app, ran the full `xcodebuild ... test` suite, temporarily forced the app plist into a fresh-launch state to verify the onboarding window path, and restored the original user preferences after the check.
+
+### Completed batch
+- Added a shared quick-actions footer to the live menu bar popovers so the dashboard and setup/help surfaces are reachable from every status item instead of only from the sidebar after the dashboard is already open.
+- Wired those popover actions through the existing dashboard navigation router, which keeps the menu bar affordance small while still deep-linking directly into the `Help` section when users need setup guidance or want to reopen onboarding from there.
+- Re-verified the batch with a fresh macOS build and another full `xcodebuild ... test` pass.
+
 ### Completed batch
 - Revalidated the competitor matrix against current public sources instead of leaving the repo on stale competitor assumptions; corrected the Stats release signal and folded TG Pro’s current startup-polish notes back into Core Monitor’s product bar.
 - Kept the README rewrite scoped to a sharper thermal-first story, clearer install channels, and a more explicit “monitoring first, helper optional” trust posture so the repo presentation matches the product lane documented in `docs/COMPETITOR_MATRIX_2026.md`.
