@@ -27,3 +27,30 @@ final class WelcomeGuideProgressTests: XCTestCase {
         return defaults
     }
 }
+
+@MainActor
+final class DashboardNavigationRouterTests: XCTestCase {
+    func testConsumeReturnsRequestedSelectionAndClearsRoute() throws {
+        let router = DashboardNavigationRouter()
+
+        router.open(.alerts)
+
+        let route = try XCTUnwrap(router.route)
+        XCTAssertEqual(router.consume(route), .alerts)
+        XCTAssertNil(router.route)
+    }
+
+    func testConsumeRejectsStaleRouteAfterNewRequest() throws {
+        let router = DashboardNavigationRouter()
+
+        router.open(.alerts)
+        let staleRoute = try XCTUnwrap(router.route)
+
+        router.open(.memory)
+        let currentRoute = try XCTUnwrap(router.route)
+
+        XCTAssertNil(router.consume(staleRoute))
+        XCTAssertEqual(router.consume(currentRoute), .memory)
+        XCTAssertNil(router.route)
+    }
+}
