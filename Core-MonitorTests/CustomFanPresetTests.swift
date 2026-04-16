@@ -188,6 +188,16 @@ final class CustomFanPresetTests: XCTestCase {
         XCTAssertFalse(FanControlMode.automatic.guidance.restoresSystemAutomaticOnExit)
     }
 
+    func testQuickModesHideLegacySilentAlias() {
+        XCTAssertFalse(FanControlMode.quickModes.contains(.silent))
+        XCTAssertEqual(FanControlMode.quickModes.last, .automatic)
+    }
+
+    func testSilentCanonicalizesToSystemAutomatic() {
+        XCTAssertEqual(FanControlMode.silent.canonicalMode, .automatic)
+        XCTAssertFalse(FanControlMode.silent.requiresPrivilegedHelper)
+    }
+
     func testSystemOwnedModesAreMarkedAsSystemControlled() {
         XCTAssertEqual(FanControlMode.automatic.guidance.ownership, .system)
         XCTAssertEqual(FanControlMode.silent.guidance.ownership, .system)

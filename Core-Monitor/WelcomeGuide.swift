@@ -97,7 +97,7 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgBlue,
         headline: "Fan Control",
         subheadline: "Quiet when idle. Aggressive when it counts.",
-        body: "The fan controller supports Smart, Silent, Balanced, Performance, Max, Manual, and System Auto modes. It can re-apply active profiles after wake and sends write commands through the blessed helper.",
+        body: "The fan controller supports Smart, Balanced, Performance, Max, Manual, Custom, and System Auto modes. It can re-apply active profiles after wake and sends write commands through the blessed helper.",
         bullets: [
             ("bolt.fill",             .wgAmber,  "Smart mode ramps earlier under sustained load"),
             ("fanblades.fill",        .wgBlue,   "Balanced / Performance / Max quick profiles"),

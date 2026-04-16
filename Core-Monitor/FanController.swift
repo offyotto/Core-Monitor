@@ -15,7 +15,16 @@ enum FanControlMode: String, CaseIterable {
     case automatic
 
     static var quickModes: [FanControlMode] {
-        [.smart, .silent, .balanced, .performance, .max, .manual, .custom, .automatic]
+        [.smart, .balanced, .performance, .max, .manual, .custom, .automatic]
+    }
+
+    var canonicalMode: FanControlMode {
+        switch self {
+        case .silent:
+            return .automatic
+        default:
+            return self
+        }
     }
 
     var title: String {
@@ -46,7 +55,7 @@ enum FanControlMode: String, CaseIterable {
 
     var usesManualSlider: Bool { self == .manual }
     var isManagedProfile: Bool { self != .manual && self != .automatic }
-    var requiresPrivilegedHelper: Bool { self != .automatic }
+    var requiresPrivilegedHelper: Bool { canonicalMode != .automatic }
 
     var guidance: FanModeGuidance {
         switch self {
@@ -424,10 +433,12 @@ final class FanController: ObservableObject {
     }
 
     func setMode(_ mode: FanControlMode) {
-        if mode.requiresPrivilegedHelper {
+        let resolvedMode = mode.canonicalMode
+
+        if resolvedMode.requiresPrivilegedHelper {
             guard canActivatePrivilegedMode() else { return }
         }
-        self.mode = mode
+        self.mode = resolvedMode
         lastAppliedSpeed = 0
         saveSettings()
         applyCurrentMode(force: true)
@@ -1112,7 +1123,7 @@ final class FanController: ObservableObject {
 
         if let raw = defaults.string(forKey: "fanControlMode"),
            let savedMode = FanControlMode(rawValue: raw) {
-            mode = savedMode
+            mode = savedMode.canonicalMode
         } else {
             mode = Self.defaultMode
         }
@@ -1135,7 +1146,7 @@ final class FanController: ObservableObject {
 
     private func saveSettings() {
         let defaults = UserDefaults.standard
-        defaults.set(mode.rawValue, forKey: "fanControlMode")
+        defaults.set(mode.canonicalMode.rawValue, forKey: "fanControlMode")
         defaults.set(manualSpeed, forKey: "manualFanSpeed")
         defaults.set(autoAggressiveness, forKey: "autoAggressiveness")
         defaults.set(autoMaxSpeed, forKey: "autoMaxSpeed")

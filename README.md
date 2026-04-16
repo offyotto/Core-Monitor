@@ -80,7 +80,6 @@ The helper is bundled at `Core-Monitor.app/Contents/Library/LaunchServices/venta
 | Mode | Behavior |
 |------|----------|
 | Smart | Temperature + power-aware curve. Blends CPU/GPU temps with system watt draw, scales against a configurable aggressiveness from 0.0 (always minimum) to 3.0 (always maximum). |
-| Silent | Delegates entirely to the firmware's automatic curve. |
 | Balanced | Fixed at 60% of the fan's reported maximum. |
 | Performance | Fixed at 85%. |
 | Max | Fixed at 100%. |
