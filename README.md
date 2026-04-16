@@ -55,6 +55,8 @@ brew tap --custom-remote offyotto-sl3/core-monitor https://github.com/offyotto-s
 brew install --cask offyotto-sl3/core-monitor/core-monitor
 ```
 
+Monitoring works immediately after launch. Install the helper later from the in-app fan-control flow only if you want manual or managed fan writes.
+
 ## UI Preview
 
 <p align="center">
@@ -248,6 +250,8 @@ The new customization system is intentionally practical rather than unlimited. R
 ## Installation
 
 **Download:** Get the latest public build from [Releases](https://github.com/offyotto-sl3/Core-Monitor/releases/latest) and move it to `/Applications`.
+
+Monitoring is available immediately after launch. If you later decide you want helper-backed fan control, install the bundled helper from the app’s `Fans` or `System` flow instead of having to bless it up front.
 
 **Build from source:**
 

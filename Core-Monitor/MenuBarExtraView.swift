@@ -1,8 +1,5 @@
 import SwiftUI
 import AppKit
-import Darwin
-
-private let kProcPidPathMaxSize = max(Int(PATH_MAX), 1024)
 
 private extension View {
     @ViewBuilder
@@ -804,6 +801,7 @@ struct DiskMenuPopoverView: View {
     @ObservedObject var fanController: FanController
     @ObservedObject var alertManager: AlertManager
     @ObservedObject private var privacySettings = PrivacySettings.shared
+    @StateObject private var diskProcessSampler = DiskProcessSampler()
     var openDashboardAction: () -> Void = {}
     var openAlertsAction: () -> Void = {}
     var openHelpAction: () -> Void = {}
@@ -831,6 +829,13 @@ struct DiskMenuPopoverView: View {
         }
         .preferredColorScheme(.dark)
         .frame(width: 320)
+        .onAppear(perform: syncDiskProcessSampling)
+        .onChange(of: privacySettings.processInsightsEnabled) { _ in
+            syncDiskProcessSampling()
+        }
+        .onDisappear {
+            diskProcessSampler.stop()
+        }
     }
 
     private var diskHeader: some View {
@@ -906,17 +911,35 @@ struct DiskMenuPopoverView: View {
 
     private var processesSection: some View {
         VStack(spacing: 0) {
-            MBSectionHeader(title: "PROCESS TOTALS  R / W")
-            let topProcesses = privacySettings.processInsightsEnabled ? topDiskProcesses(limit: 4) : []
+            MBSectionHeader(title: "PROCESS ACTIVITY  R / W")
+            let topProcesses = diskProcessSampler.processes
             if privacySettings.processInsightsEnabled == false {
                 MBRow(icon: "lock.shield", label: "Processes", value: "Private", color: Color.mbTint)
+            } else if diskProcessSampler.hasSample == false {
+                MBRow(icon: "waveform.path.ecg", label: "Processes", value: "Sampling", color: .white.opacity(0.58))
             } else if topProcesses.isEmpty {
-                MBRow(icon: "app.fill", label: "Processes", value: "Unavailable", color: .white.opacity(0.5))
+                MBRow(icon: "internaldrive.fill", label: "Processes", value: "Quiet", color: .white.opacity(0.5))
             } else {
                 ForEach(Array(topProcesses.enumerated()), id: \.offset) { _, process in
-                    diskProcessRow(process.name, r: process.readLabel, w: process.writeLabel, color: process.color)
+                    diskProcessRow(
+                        process.name,
+                        r: process.readLabel,
+                        w: process.writeLabel,
+                        color: diskProcessColor(for: process)
+                    )
                 }
             }
+        }
+    }
+
+    private func diskProcessColor(for process: DiskProcessActivity) -> Color {
+        switch process.totalBytes {
+        case 50_000_000...:
+            return .red
+        case 10_000_000...:
+            return Color.mbOrange
+        default:
+            return Color.mbBlue
         }
     }
 
@@ -931,103 +954,12 @@ struct DiskMenuPopoverView: View {
         .padding(.horizontal, 14).padding(.vertical, 4)
     }
 
-    private struct DiskProcess: Identifiable {
-        let pid: pid_t
-        let name: String
-        let readBytes: UInt64
-        let writtenBytes: UInt64
-
-        var id: pid_t { pid }
-        var totalBytes: UInt64 { readBytes + writtenBytes }
-        var readLabel: String { Self.formatBytes(readBytes) }
-        var writeLabel: String { Self.formatBytes(writtenBytes) }
-        var color: Color { totalBytes > 250_000_000 ? .red : totalBytes > 100_000_000 ? Color.mbOrange : Color.mbBlue }
-
-        private static func formatBytes(_ bytes: UInt64) -> String {
-            switch bytes {
-            case 0..<1024:
-                return "\(bytes)B"
-            case 1024..<1_048_576:
-                return String(format: "%.0fK", Double(bytes) / 1024.0)
-            case 1_048_576..<1_073_741_824:
-                return String(format: "%.1fM", Double(bytes) / 1_048_576.0)
-            default:
-                return String(format: "%.1fG", Double(bytes) / 1_073_741_824.0)
-            }
+    private func syncDiskProcessSampling() {
+        if privacySettings.processInsightsEnabled {
+            diskProcessSampler.start(interval: 5.0)
+        } else {
+            diskProcessSampler.stop()
         }
-    }
-
-    private func topDiskProcesses(limit: Int) -> [DiskProcess] {
-        let estimatedCount = Int(proc_listpids(UInt32(PROC_ALL_PIDS), 0, nil, 0))
-        guard estimatedCount > 0 else { return [] }
-
-        var pids = Array(repeating: pid_t(0), count: estimatedCount)
-        let bytesWritten = pids.withUnsafeMutableBytes { buffer -> Int32 in
-            guard let baseAddress = buffer.baseAddress else { return 0 }
-            return proc_listpids(UInt32(PROC_ALL_PIDS), 0, baseAddress, Int32(buffer.count))
-        }
-
-        guard bytesWritten > 0 else { return [] }
-
-        let actualCount = Int(bytesWritten) / MemoryLayout<pid_t>.stride
-        let validPIDs = pids.prefix(actualCount).filter { $0 > 0 }
-        var processes: [DiskProcess] = []
-
-        for pid in validPIDs {
-            let name = diskDisplayName(for: pid)
-
-            var usage = rusage_info_current()
-            let status = withUnsafeMutablePointer(to: &usage) { pointer -> Int32 in
-                pointer.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) { rebounded in
-                    proc_pid_rusage(pid, RUSAGE_INFO_CURRENT, rebounded)
-                }
-            }
-
-            guard status == 0 else { continue }
-            processes.append(
-                DiskProcess(
-                    pid: pid,
-                    name: name,
-                    readBytes: usage.ri_diskio_bytesread,
-                    writtenBytes: usage.ri_diskio_byteswritten
-                )
-            )
-        }
-
-        return processes
-            .sorted { $0.totalBytes > $1.totalBytes }
-            .prefix(limit)
-            .map { $0 }
-    }
-
-    private func diskDisplayName(for pid: pid_t) -> String {
-        if let runningApp = NSRunningApplication(processIdentifier: pid) {
-            let localizedName = runningApp.localizedName ?? ""
-            if !localizedName.isEmpty {
-                return localizedName
-            }
-        }
-
-        var nameBuffer = [CChar](repeating: 0, count: Int(MAXCOMLEN) + 1)
-        let procNameLength = proc_name(pid, &nameBuffer, UInt32(nameBuffer.count))
-        if procNameLength > 0 {
-            let name = String(cString: nameBuffer).trimmingCharacters(in: .whitespacesAndNewlines)
-            if !name.isEmpty {
-                return name
-            }
-        }
-
-        var pathBuffer = [CChar](repeating: 0, count: kProcPidPathMaxSize)
-        let pathLength = proc_pidpath(pid, &pathBuffer, UInt32(pathBuffer.count))
-        if pathLength > 0 {
-            let path = String(cString: pathBuffer)
-            let lastPathComponent = URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
-            if !lastPathComponent.isEmpty {
-                return lastPathComponent
-            }
-        }
-
-        return "PID \(pid)"
     }
 }
 
