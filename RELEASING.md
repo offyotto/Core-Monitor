@@ -10,7 +10,7 @@ Core-Monitor is not a throwaway unsigned zip anymore. The release path in this r
 
 - GitHub Releases: primary source of truth, public changelog, checksum, and pinned Homebrew cask artifact.
 - Website: the download buttons should point straight at `releases/latest/download/Core-Monitor.zip`.
-- Homebrew: users can install from the raw cask in [Casks/core-monitor.rb](./Casks/core-monitor.rb).
+- Homebrew: this repository acts as a custom tap; users should tap it first, then install `offyotto-sl3/core-monitor/core-monitor`.
 - Direct support/install docs: README, website, and release notes should all use the same install path.
 
 ## GitHub Actions secrets
@@ -42,7 +42,8 @@ If you already use `notarytool store-credentials` locally, you can mirror that p
 8. Test the Homebrew install path:
 
 ```bash
-brew install --cask https://raw.githubusercontent.com/offyotto-sl3/Core-Monitor/main/Casks/core-monitor.rb
+brew tap --custom-remote offyotto-sl3/core-monitor https://github.com/offyotto-sl3/Core-Monitor
+brew install --cask offyotto-sl3/core-monitor/core-monitor
 ```
 
 ## Local dry run
@@ -76,7 +77,7 @@ APPLE_TEAM_ID="TEAMID1234" \
 
 - GitHub Releases: already automated in this repo
 - GitHub Pages site: keep download/install copy aligned with the stable asset name
-- Homebrew: raw cask path is live; a dedicated tap can come later if install volume justifies it
+- Homebrew: keep the custom-tap install path working; a dedicated `homebrew-core-monitor` repo can come later if install volume justifies it
 - MacUpdate / AlternativeTo / Apple Silicon directories: submit after each major release and keep screenshots current
 - Setapp: viable only after the helper install and first-run flow feel invisible to a non-technical customer; do not prioritize it ahead of release trust and onboarding
 

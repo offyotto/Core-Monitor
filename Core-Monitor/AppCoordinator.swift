@@ -142,6 +142,7 @@ final class AppCoordinator: ObservableObject {
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
+                self.coreMonTouchBarController.reloadCustomization()
                 switch self.presentationMode {
                 case .app:
                     self.startAppTouchBar()

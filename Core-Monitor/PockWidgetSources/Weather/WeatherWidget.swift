@@ -327,10 +327,10 @@ final class WeatherWidget: NSView, TouchBarThemable {
 
     private func weatherErrorPresentation(for message: String) -> (subtitle: String, detail: String) {
         let lowered = message.lowercased()
-        if lowered.contains("optional") {
+        if lowered.contains("optional") || lowered.contains("request location") {
             return ("Location Optional", "Request access from Touch Bar settings")
         }
-        if lowered.contains("location") {
+        if lowered.contains("enable location") || lowered.contains("location") {
             return ("Location Off", "Enable access in System Settings")
         }
         return ("Unavailable", "")
