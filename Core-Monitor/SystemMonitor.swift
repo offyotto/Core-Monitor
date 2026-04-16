@@ -161,6 +161,8 @@ final class SystemMonitor: ObservableObject {
     var networkStats: NetworkStats { snapshot.networkStats }
     private var previousNetworkBytes: (sent: UInt64, received: UInt64) = (0, 0)
     private var previousNetworkTime: Date = Date()
+    private var cachedDiskStats = DiskStats()
+    private var lastDiskStatsRefreshAt: Date?
 
     // MARK: - History buffers (60 samples, used by menu bar popovers)
     private(set) var cpuHistory:     [Double] = Array(repeating: 0, count: 60)
@@ -426,7 +428,8 @@ final class SystemMonitor: ObservableObject {
             let memoryStats = self.readMemoryStats()
             let batteryInfo = self.readBatteryInfo()
             let systemControls = self.readSystemControls()
-            let diskStats = self.readDiskStats()
+            let sampleDate = Date()
+            let diskStats = self.readDiskStats(now: sampleDate)
             let cpuPowerWatts = self.readSMCValue(key: "PCPU")
             let gpuPowerWatts = self.readSMCValue(key: "PGPU")
             let ssdTemperature = self.readSSDTemperature()
@@ -434,7 +437,7 @@ final class SystemMonitor: ObservableObject {
             let thermalState = ProcessInfo.processInfo.thermalState
 
             var snapshot = SystemMonitorSnapshot(
-                sampledAt: Date(),
+                sampledAt: sampleDate,
                 cpuTemperature: cpuTemperature,
                 gpuTemperature: gpuTemperature,
                 fanSpeeds: fanReadings.speeds,
@@ -626,7 +629,11 @@ final class SystemMonitor: ObservableObject {
         )
     }
     // MARK: - Disk stats (via FileManager)
-    private func readDiskStats() -> DiskStats {
+    private func readDiskStats(now: Date = Date()) -> DiskStats {
+        guard DiskStatsRefreshPolicy.shouldRefresh(lastUpdatedAt: lastDiskStatsRefreshAt, now: now) else {
+            return cachedDiskStats
+        }
+
         var stats = DiskStats()
         do {
             let attrs = try FileManager.default.attributesOfFileSystem(forPath: NSHomeDirectory())
@@ -654,7 +661,9 @@ final class SystemMonitor: ObservableObject {
             stats.purgeableGB   = purgeableBytes   / 1_073_741_824
             stats.usagePercent  = totalBytes > 0 ? usedBytes / totalBytes * 100 : 0
         } catch {}
-        return stats
+        cachedDiskStats = stats
+        lastDiskStatsRefreshAt = now
+        return cachedDiskStats
     }
 
     private func readFanReadings() -> (speeds: [Int], mins: [Int], maxs: [Int]) {
