@@ -191,3 +191,13 @@
 - Added Privacy Controls for alerts and memory views so users can turn off process insights, scrub app names from local alert history, and still keep threshold detection active.
 - Stopped background top-process sampling when Privacy Controls are off, deleted the now-unused dashboard diagnostics file, and updated alert-engine coverage for the redacted path.
 - Rewrote the README and GitHub Pages presentation into a calmer Apple-inspired product voice with a lighter visual treatment and a stronger privacy-first story.
+
+### Completed batch
+- Extracted dashboard window sizing into a dedicated `DashboardWindowLayout` policy so the launch/reset heuristics are testable instead of being trapped inside the app delegate window controller.
+- Increased the default dashboard footprint and the minimum reset height after runtime inspection showed the overview opening visibly cramped on a laptop-sized screen.
+- Verified the batch with a fresh macOS build, targeted `DashboardWindowLayoutTests`, and repeated runtime screenshots; the dashboard now resets a previously cramped frame from `948×560` to `999×640`.
+
+### Completed batch
+- Pulled the process-history privacy controls into a shared `PrivacyControlsSectionContent` so the copy, toggle behavior, and history-clearing affordance no longer drift between different screens.
+- Surfaced the same privacy controls directly in the `System` tab instead of leaving them discoverable only from `Alerts`, which makes privacy setup easier during first-run configuration.
+- Updated Help search keywords and copy so `privacy`, `process names`, and `alert history` now point users to both the `Alerts` and `System` paths, then re-verified the full macOS test suite with `xcodebuild ... test`.
