@@ -160,7 +160,7 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgPurple,
         headline: "Touch Bar",
         subheadline: "OLED space should look intentional.",
-        body: "Core Monitor can replace the system Touch Bar with a full-width widget strip, including clocks, weather, network, combined stats, and hardware glyphs.",
+        body: "Core Monitor can replace the system Touch Bar with a full-width widget strip, including clocks, weather, network, combined stats, and hardware glyphs. Fresh installs leave the standard Touch Bar alone until you opt in.",
         bullets: [
             ("rectangle.on.rectangle", .wgGreen, "Light and dark widget themes"),
             ("rectangle.3.group",     .wgBlue,   "Reorder or disable widgets in-app"),

@@ -38,6 +38,28 @@ final class WelcomeGuideProgressTests: XCTestCase {
         XCTAssertTrue(defaults.bool(forKey: CoreMonitorDefaultsMaintenance.deprecatedLaunchStateResetKey))
     }
 
+    func testDefaultsMaintenanceRechecksDeprecatedLaunchDiagnosticsWhenResetMarkerAlreadyExists() {
+        let defaults = makeDefaults()
+        let bundleIdentifier = defaultsSuiteName(for: defaults)
+
+        defaults.set(true, forKey: CoreMonitorDefaultsMaintenance.deprecatedLaunchStateResetKey)
+        defaults.set("automation", forKey: "coremonitor.launchDiagnostics.lastOpenRequestSource")
+        defaults.set("2026-04-16T12:00:00Z", forKey: "coremonitor.launchDiagnostics.lastVisibleAt")
+        defaults.set(true, forKey: "coremonitor.didShowFirstLaunchDashboard")
+        defaults.set("keep", forKey: "coremonitor.unrelated")
+
+        CoreMonitorDefaultsMaintenance.purgeDeprecatedState(
+            defaults: defaults,
+            bundleIdentifier: bundleIdentifier
+        )
+
+        XCTAssertNil(defaults.object(forKey: "coremonitor.launchDiagnostics.lastOpenRequestSource"))
+        XCTAssertNil(defaults.object(forKey: "coremonitor.launchDiagnostics.lastVisibleAt"))
+        XCTAssertNil(defaults.object(forKey: "coremonitor.didShowFirstLaunchDashboard"))
+        XCTAssertEqual(defaults.string(forKey: "coremonitor.unrelated"), "keep")
+        XCTAssertTrue(defaults.bool(forKey: CoreMonitorDefaultsMaintenance.deprecatedLaunchStateResetKey))
+    }
+
     func testDefaultsMaintenanceRemovesLegacyWindowFrameKeysWithoutTouchingOtherState() {
         let defaults = makeDefaults()
         let bundleIdentifier = defaultsSuiteName(for: defaults)
@@ -118,5 +140,37 @@ final class DashboardNavigationRouterTests: XCTestCase {
         XCTAssertNil(router.consume(staleRoute))
         XCTAssertEqual(router.consume(currentRoute), .memory)
         XCTAssertNil(router.route)
+    }
+}
+
+@MainActor
+final class TouchBarCustomizationSettingsTests: XCTestCase {
+    func testFreshSettingsDefaultToSystemPresentationMode() {
+        let defaults = makeDefaults()
+
+        let settings = TouchBarCustomizationSettings(defaults: defaults)
+
+        XCTAssertEqual(settings.presentationMode, .system)
+        XCTAssertEqual(settings.items, TouchBarPreset.classic.items)
+        XCTAssertEqual(settings.theme, TouchBarPreset.classic.theme)
+    }
+
+    func testLegacyPresentationModeStillMigratesForwardWhenStored() {
+        let defaults = makeDefaults()
+        defaults.set(TouchBarPresentationMode.app.rawValue, forKey: "coremonitor.touchBarMode")
+
+        let settings = TouchBarCustomizationSettings(defaults: defaults)
+
+        XCTAssertEqual(settings.presentationMode, .app)
+    }
+
+    private func makeDefaults() -> UserDefaults {
+        let suiteName = "TouchBarCustomizationSettingsTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        addTeardownBlock {
+            defaults.removePersistentDomain(forName: suiteName)
+        }
+        return defaults
     }
 }

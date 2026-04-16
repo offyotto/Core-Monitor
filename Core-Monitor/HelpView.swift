@@ -132,6 +132,7 @@ struct HelpView: View {
                 HelpCard {
                     Text("Customize your MacBook's Touch Bar with Core Monitor widgets and controls.")
                     HelpBullet(text: "Presentation modes control how the app presents widgets on the Touch Bar.")
+                    HelpBullet(text: "Fresh installs stay in `System` mode until you explicitly switch Core Monitor’s Touch Bar on.")
                     HelpBullet(text: "Presets let you quickly switch between themed layouts.")
                     HelpBullet(text: "Built-in widgets include CPU usage, fan speed, battery, network, stats, and weather.")
                     HelpBullet(text: "Pin apps and folders for quick access directly from the Touch Bar.")

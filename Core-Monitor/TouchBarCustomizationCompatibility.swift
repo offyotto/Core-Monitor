@@ -364,8 +364,8 @@ final class TouchBarCustomizationSettings: ObservableObject {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         let fallbackPresentation = TouchBarPresentationMode(
-            rawValue: defaults.string(forKey: legacyPresentationModeKey) ?? TouchBarPresentationMode.app.rawValue
-        ) ?? .app
+            rawValue: defaults.string(forKey: legacyPresentationModeKey) ?? TouchBarPresentationMode.system.rawValue
+        ) ?? .system
 
         if let data = defaults.data(forKey: defaultsKey),
            let decoded = try? JSONDecoder().decode(PersistedTouchBarConfigurationV6.self, from: data) {
@@ -404,7 +404,7 @@ final class TouchBarCustomizationSettings: ObservableObject {
         applyConfiguration(
             theme: Self.defaultPreset.theme,
             items: Self.defaultPreset.items,
-            presentationMode: .app
+            presentationMode: .system
         )
     }
 
