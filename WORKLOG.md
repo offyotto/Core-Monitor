@@ -208,6 +208,6 @@
 - Rebuilt the macOS app, reran the full `xcodebuild ... test` suite, and runtime-smoke-tested the Debug build by relaunching it and confirming the live menu bar items still update (`CPU`, `MEM`, `SSD`, and temperature).
 
 ### Completed batch
-- Marked the monitoring snapshot value layer as explicitly `nonisolated` so pure telemetry models no longer inherit the app target's default `MainActor` isolation by accident.
-- Extended the same cleanup to `BatteryInfo`, `DiskStats`, `MemoryStats`, `NetworkStats`, and the related monitoring enums, which removes a cluster of Swift 6 concurrency warnings from the build.
-- Re-ran the full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` suite and confirmed the earlier actor-isolation warnings no longer appear in the compile output.
+- Reverted invalid `nonisolated` annotations from the fan and monitoring value-model layer so the project still compiles on GitHub Actions' Xcode 16.2 runner.
+- Kept the truly actor-crossing cases explicit by leaving helper probe methods nonisolated, moving the Touch Bar slider presenter onto the main actor, and making the process sampler itself plain so `SystemMonitor` can construct it synchronously.
+- Re-ran `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` and confirmed the repo is back to a green local build before pushing the CI repair.
