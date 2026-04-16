@@ -1675,6 +1675,7 @@ private struct DetailPane: View {
             MenuBarSettingsCard(
                 snapshot: .init(
                     cpuUsagePercent: snapshot.cpuUsagePercent,
+                    fanSpeeds: snapshot.fanSpeeds,
                     memoryUsagePercent: snapshot.memoryUsagePercent,
                     diskUsagePercent: snapshot.diskStats.usagePercent,
                     cpuTemperature: snapshot.cpuTemperature

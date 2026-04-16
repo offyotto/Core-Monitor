@@ -4,12 +4,14 @@ import SwiftUI
 
 // MARK: - MenuBarItemKind
 enum MenuBarItemKind: CaseIterable {
-    case cpu, memory, disk, temperature
+    case cpu, fan, memory, disk, temperature
 
     var systemImageName: String {
         switch self {
         case .cpu:
             return "cpu"
+        case .fan:
+            return "fanblades"
         case .memory:
             return "memorychip"
         case .disk:
@@ -23,6 +25,8 @@ enum MenuBarItemKind: CaseIterable {
         switch self {
         case .cpu:
             return "CPU"
+        case .fan:
+            return "Fan"
         case .memory:
             return "Memory"
         case .disk:
@@ -35,6 +39,7 @@ enum MenuBarItemKind: CaseIterable {
     var defaultsKey: String {
         switch self {
         case .cpu:         return "menubar.cpu.enabled"
+        case .fan:         return "menubar.fan.enabled"
         case .memory:      return "menubar.memory.enabled"
         case .disk:        return "menubar.disk.enabled"
         case .temperature: return "menubar.temperature.enabled"
@@ -261,6 +266,19 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
             let tone: StatusTone = pct > 80 ? .critical : pct > 50 ? .warning : .normal
             return ("CPU \(pct)%", tone)
 
+        case .fan:
+            let speeds = systemMonitor.fanSpeeds.filter { $0 > 0 }
+            guard let highestRPM = speeds.max() else {
+                return ("FAN --", .secondary)
+            }
+
+            let utilization = Double(highestRPM) / Double(max(fanController.maxSpeed, 1))
+            let tone: StatusTone = utilization > 0.85 ? .critical : utilization > 0.6 ? .warning : .normal
+            let formattedRPM = highestRPM >= 1000
+                ? String(format: "%.1fk", Double(highestRPM) / 1000.0).replacingOccurrences(of: ".0k", with: "k")
+                : "\(highestRPM)"
+            return ("FAN \(formattedRPM)", tone)
+
         case .memory:
             let pct = Int(systemMonitor.memoryUsagePercent.rounded())
             let tone: StatusTone = pct > 85 ? .critical : pct > 70 ? .warning : .normal
@@ -333,6 +351,26 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                     openDashboardAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openDashboardAction()
+                    },
+                    openAlertsAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openAlertsFromPopover()
+                    }
+                )
+            )
+        case .fan:
+            return AnyView(
+                TemperatureMenuPopoverView(
+                    systemMonitor: systemMonitor,
+                    fanController: fanController,
+                    alertManager: alertManager,
+                    openDashboardAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openDashboardAction()
+                    },
+                    openFansAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openSelectionFromPopover(.fans)
                     },
                     openAlertsAction: { [weak self] in
                         self?.popover?.performClose(nil)

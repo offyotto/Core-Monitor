@@ -290,7 +290,8 @@ final class MenuBarSettingsTests: XCTestCase {
 
         XCTAssertEqual(settings.activePreset, .balanced)
         XCTAssertTrue(settings.isEnabled(.cpu))
-        XCTAssertTrue(settings.isEnabled(.memory))
+        XCTAssertTrue(settings.isEnabled(.fan))
+        XCTAssertFalse(settings.isEnabled(.memory))
         XCTAssertFalse(settings.isEnabled(.disk))
         XCTAssertTrue(settings.isEnabled(.temperature))
     }
@@ -304,6 +305,7 @@ final class MenuBarSettingsTests: XCTestCase {
         settings.restoreDefaults()
 
         XCTAssertEqual(settings.activePreset, .balanced)
+        XCTAssertTrue(settings.isEnabled(.fan))
         XCTAssertFalse(settings.isEnabled(.disk))
     }
 
