@@ -2,6 +2,7 @@ import XCTest
 import CoreGraphics
 @testable import Core_Monitor
 
+@MainActor
 final class CustomFanPresetTests: XCTestCase {
     func testDefaultFanModeIsSystemAutomatic() {
         XCTAssertEqual(FanController.defaultMode, .automatic)
@@ -237,5 +238,83 @@ final class CustomFanPresetTests: XCTestCase {
         XCTAssertEqual(MonitoringSnapshotHealth.compactDurationDescription(30), "30s")
         XCTAssertEqual(MonitoringSnapshotHealth.compactDurationDescription(90), "1m 30s")
         XCTAssertEqual(MonitoringSnapshotHealth.compactDurationDescription(120), "2m")
+    }
+}
+
+@MainActor
+final class MenuBarSettingsTests: XCTestCase {
+    func testFreshSettingsDefaultToBalancedPreset() {
+        let settings = MenuBarSettings(defaults: makeDefaults())
+
+        XCTAssertEqual(settings.activePreset, .balanced)
+        XCTAssertTrue(settings.isEnabled(.cpu))
+        XCTAssertTrue(settings.isEnabled(.memory))
+        XCTAssertFalse(settings.isEnabled(.disk))
+        XCTAssertTrue(settings.isEnabled(.temperature))
+    }
+
+    func testRestoreDefaultsReturnsToBalancedPreset() {
+        let settings = MenuBarSettings(defaults: makeDefaults())
+
+        settings.applyPreset(.full)
+        XCTAssertEqual(settings.activePreset, .full)
+
+        settings.restoreDefaults()
+
+        XCTAssertEqual(settings.activePreset, .balanced)
+        XCTAssertFalse(settings.isEnabled(.disk))
+    }
+
+    func testInaccessibleConfigurationRestoresBalancedPreset() {
+        let defaults = makeDefaults()
+        MenuBarItemKind.allCases.forEach { defaults.set(false, forKey: $0.defaultsKey) }
+
+        let settings = MenuBarSettings(defaults: defaults)
+
+        XCTAssertEqual(settings.activePreset, .balanced)
+        XCTAssertEqual(
+            settings.lastWarning,
+            "Core Monitor restored the Balanced menu bar preset so the app stays reachable."
+        )
+    }
+
+    private func makeDefaults() -> UserDefaults {
+        let suiteName = "MenuBarSettingsTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        addTeardownBlock {
+            defaults.removePersistentDomain(forName: suiteName)
+        }
+        return defaults
+    }
+}
+
+@MainActor
+final class TopProcessSamplerTests: XCTestCase {
+    func testSamplerDoesNotRestartWhenSameIntervalIsAlreadyActive() {
+        XCTAssertFalse(
+            TopProcessSampler.shouldRestartTimer(
+                isRunning: true,
+                currentInterval: 5,
+                requestedInterval: 5
+            )
+        )
+    }
+
+    func testSamplerRestartsWhenStoppedOrIntervalChanges() {
+        XCTAssertTrue(
+            TopProcessSampler.shouldRestartTimer(
+                isRunning: false,
+                currentInterval: 5,
+                requestedInterval: 5
+            )
+        )
+        XCTAssertTrue(
+            TopProcessSampler.shouldRestartTimer(
+                isRunning: true,
+                currentInterval: 5,
+                requestedInterval: 30
+            )
+        )
     }
 }

@@ -1,13 +1,13 @@
 import Foundation
 
-nonisolated enum MonitoringTrendRange: String, CaseIterable, Identifiable {
+enum MonitoringTrendRange: String, CaseIterable, Identifiable {
     case oneMinute
     case fiveMinutes
     case fifteenMinutes
 
-    nonisolated var id: String { rawValue }
+    var id: String { rawValue }
 
-    nonisolated var title: String {
+    var title: String {
         switch self {
         case .oneMinute: return "1m"
         case .fiveMinutes: return "5m"
@@ -15,7 +15,7 @@ nonisolated enum MonitoringTrendRange: String, CaseIterable, Identifiable {
         }
     }
 
-    nonisolated var duration: TimeInterval {
+    var duration: TimeInterval {
         switch self {
         case .oneMinute: return 60
         case .fiveMinutes: return 5 * 60
@@ -24,14 +24,14 @@ nonisolated enum MonitoringTrendRange: String, CaseIterable, Identifiable {
     }
 }
 
-nonisolated enum MonitoringFreshness: Equatable {
+enum MonitoringFreshness: Equatable {
     case waiting
     case live
     case delayed
     case stale
 }
 
-nonisolated struct MonitoringSnapshotHealth: Equatable {
+struct MonitoringSnapshotHealth: Equatable {
     let freshness: MonitoringFreshness
     let sampledAt: Date?
     let age: TimeInterval?
@@ -100,12 +100,12 @@ nonisolated struct MonitoringSnapshotHealth: Equatable {
     }
 }
 
-nonisolated struct MonitoringTrendPoint: Equatable {
+struct MonitoringTrendPoint: Equatable {
     let timestamp: Date
     let value: Double
 }
 
-nonisolated struct MonitoringTrendSummary: Equatable {
+struct MonitoringTrendSummary: Equatable {
     let latest: Double
     let minimum: Double
     let maximum: Double
@@ -113,7 +113,7 @@ nonisolated struct MonitoringTrendSummary: Equatable {
     let delta: Double
 }
 
-nonisolated struct MonitoringTrendSeries {
+struct MonitoringTrendSeries {
     private(set) var points: [MonitoringTrendPoint] = []
     let retention: TimeInterval
 
@@ -164,25 +164,25 @@ nonisolated struct MonitoringTrendSeries {
     }
 }
 
-nonisolated struct ProcessActivity: Codable, Equatable, Identifiable {
+struct ProcessActivity: Codable, Equatable, Identifiable {
     let pid: Int32
     let name: String
     let cpuPercent: Double
     let memoryBytes: UInt64
 
-    nonisolated var id: String { "\(pid)-\(name)" }
-    nonisolated var memoryGB: Double { Double(memoryBytes) / 1_073_741_824.0 }
+    var id: String { "\(pid)-\(name)" }
+    var memoryGB: Double { Double(memoryBytes) / 1_073_741_824.0 }
 }
 
-nonisolated struct TopProcessSnapshot: Codable, Equatable {
+struct TopProcessSnapshot: Codable, Equatable {
     var sampledAt: Date
     var topCPU: [ProcessActivity]
     var topMemory: [ProcessActivity]
 
-    nonisolated static let empty = TopProcessSnapshot(sampledAt: .distantPast, topCPU: [], topMemory: [])
+    static let empty = TopProcessSnapshot(sampledAt: .distantPast, topCPU: [], topMemory: [])
 }
 
-nonisolated struct SystemMonitorSnapshot {
+struct SystemMonitorSnapshot {
     var sampledAt: Date = .distantPast
     var cpuTemperature: Double?
     var gpuTemperature: Double?
@@ -219,5 +219,5 @@ nonisolated struct SystemMonitorSnapshot {
     var hasSMCAccess: Bool = false
     var lastError: String?
 
-    nonisolated static let empty = SystemMonitorSnapshot()
+    static let empty = SystemMonitorSnapshot()
 }

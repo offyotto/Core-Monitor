@@ -15,7 +15,7 @@ enum MenuBarVisibilityPreset: CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .thermalFocus:
-            return "Thermal Focus"
+            return "Compact"
         case .balanced:
             return "Balanced"
         case .full:
@@ -26,12 +26,16 @@ enum MenuBarVisibilityPreset: CaseIterable, Identifiable {
     var detail: String {
         switch self {
         case .thermalFocus:
-            return "Keep the menu bar heat-first with CPU load and temperature."
+            return "Keep the menu bar heat-first with CPU load and temperature only."
         case .balanced:
             return "Show core system pressure without turning the menu bar into noise."
         case .full:
             return "Expose CPU, memory, storage, and temperature all at once."
         }
+    }
+
+    var isRecommended: Bool {
+        self == .balanced
     }
 
     var enabledItems: [MenuBarItemKind] {
@@ -49,6 +53,7 @@ enum MenuBarVisibilityPreset: CaseIterable, Identifiable {
 @MainActor
 final class MenuBarSettings: ObservableObject {
     static let shared = MenuBarSettings()
+    static let defaultPreset: MenuBarVisibilityPreset = .balanced
 
     @Published private(set) var cpuEnabled: Bool
     @Published private(set) var memoryEnabled: Bool
@@ -58,7 +63,7 @@ final class MenuBarSettings: ObservableObject {
 
     private let defaults: UserDefaults
 
-    private init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         self.cpuEnabled = Self.boolValue(for: .cpu, defaults: defaults)
         self.memoryEnabled = Self.boolValue(for: .memory, defaults: defaults)
@@ -96,10 +101,14 @@ final class MenuBarSettings: ObservableObject {
     }
 
     func restoreDefaults() {
-        applyPreset(.full)
+        applyPreset(Self.defaultPreset)
     }
 
     func applyPreset(_ preset: MenuBarVisibilityPreset) {
+        applyPreset(preset, shouldNotify: true)
+    }
+
+    private func applyPreset(_ preset: MenuBarVisibilityPreset, shouldNotify: Bool) {
         let enabledItems = Set(preset.enabledItems)
         for kind in MenuBarItemKind.allCases {
             let enabled = enabledItems.contains(kind)
@@ -107,7 +116,9 @@ final class MenuBarSettings: ObservableObject {
             assign(enabled, to: kind)
         }
         lastWarning = nil
-        NotificationCenter.default.post(name: .menuBarSettingsDidChange, object: nil)
+        if shouldNotify {
+            NotificationCenter.default.post(name: .menuBarSettingsDidChange, object: nil)
+        }
     }
 
     var enabledItemCount: Int {
@@ -137,14 +148,13 @@ final class MenuBarSettings: ObservableObject {
 
     private func ensureAccessibleConfiguration() {
         guard enabledItemCount == 0 else { return }
-        cpuEnabled = true
-        defaults.set(true, forKey: MenuBarItemKind.cpu.defaultsKey)
-        lastWarning = "Core Monitor restored the CPU menu bar item so the app stays reachable."
+        applyPreset(Self.defaultPreset, shouldNotify: false)
+        lastWarning = "Core Monitor restored the Balanced menu bar preset so the app stays reachable."
     }
 
     private static func boolValue(for kind: MenuBarItemKind, defaults: UserDefaults) -> Bool {
         if defaults.object(forKey: kind.defaultsKey) == nil {
-            return true
+            return defaultPreset.enabledItems.contains(kind)
         }
         return defaults.bool(forKey: kind.defaultsKey)
     }

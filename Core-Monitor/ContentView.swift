@@ -1294,7 +1294,7 @@ private struct FanControlPanel: View {
 }
 
 // MARK: - Sidebar items
-private enum SidebarItem: String, CaseIterable, Identifiable {
+enum SidebarItem: String, CaseIterable, Identifiable {
     case overview="Overview", alerts="Alerts", thermals="Thermals", memory="Memory", fans="Fans"
     case battery="Battery"
     case system="System", touchBar="Touch Bar", help="Help", about="About"
@@ -2546,6 +2546,7 @@ struct ContentView: View {
     @ObservedObject var fanController: FanController
     @ObservedObject var alertManager: AlertManager
     @ObservedObject var startupManager: StartupManager
+    @ObservedObject private var dashboardNavigationRouter = DashboardNavigationRouter.shared
 
     @StateObject private var modeState      = AppModeState()
     @State private var sidebarSelection: SidebarItem = .overview
@@ -2563,6 +2564,10 @@ struct ContentView: View {
             systemMonitor.setBasicMode(modeState.isBasicMode)
             systemMonitor.setInteractiveMonitoringEnabled(true, reason: "dashboard")
             systemMonitor.setDetailedSamplingEnabled(true, reason: "dashboard")
+            applyPendingDashboardRouteIfNeeded()
+        }
+        .onChange(of: dashboardNavigationRouter.route) { _ in
+            applyPendingDashboardRouteIfNeeded()
         }
         .onDisappear {
             systemMonitor.setInteractiveMonitoringEnabled(false, reason: "dashboard")
@@ -2603,5 +2608,17 @@ struct ContentView: View {
         }
         .preferredColorScheme(.dark)
         .welcomeGuide()
+    }
+
+    private func applyPendingDashboardRouteIfNeeded() {
+        guard let route = dashboardNavigationRouter.route,
+              let selection = dashboardNavigationRouter.consume(route) else {
+            return
+        }
+
+        if modeState.isBasicMode {
+            modeState.isBasicMode = false
+        }
+        sidebarSelection = selection
     }
 }
