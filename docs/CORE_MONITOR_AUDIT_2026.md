@@ -132,4 +132,4 @@ The main blocker is not raw feature count. It is trust and focus. Users trust TG
 
 - Launch on MacUpdate, AlternativeTo, and relevant Apple Silicon/macOS directories
 - Validate whether Setapp is worth the tradeoffs after onboarding, release cadence, and helper trust improve
-- Consider a dedicated Homebrew tap only if install volume makes raw-cask distribution too awkward
+- Keep the repo-as-tap Homebrew install path documented, or move to a dedicated tap if install volume justifies it

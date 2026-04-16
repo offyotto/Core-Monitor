@@ -43,6 +43,20 @@ It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCop
 
 Public builds are available through GitHub Releases.
 
+## Install
+
+Direct download:
+
+- Download [Core-Monitor.zip](https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.zip) from the latest GitHub release.
+- Move `Core-Monitor.app` into `/Applications`.
+
+Homebrew:
+
+```bash
+brew tap --custom-remote offyotto-sl3/core-monitor https://github.com/offyotto-sl3/Core-Monitor
+brew install --cask offyotto-sl3/core-monitor/core-monitor
+```
+
 ## UI Preview
 
 <p align="center">
