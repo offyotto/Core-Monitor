@@ -218,6 +218,12 @@
 
 ### Completed batch
 - Removed the app’s persistent dashboard-launch diagnostics path so Core Monitor no longer records local open/visible window behavior for support exports.
+
+### Completed batch
+- Tightened the launch-at-login UX so Core Monitor no longer drops user-triggered login-item errors on the floor after a refresh.
+- Centralized launch-at-login state into a reusable summary model, added direct `Open Login Items` actions via `SMAppService.openSystemSettingsLoginItems()`, and extracted the System-tab card into its own SwiftUI file instead of keeping more inline startup UI inside `ContentView`.
+- Reused the same launch-at-login status/action logic in the welcome-guide checklist so onboarding can send users straight to Login Items when approval is required instead of only showing passive copy.
+- Verified the batch with a full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' -derivedDataPath /tmp/CoreMonitorBatch1TestData CODE_SIGNING_ALLOWED=NO test` pass and a fresh debug-build launch plus screenshot capture from `/tmp/CoreMonitorBatch1TestData/Build/Products/Debug/Core-Monitor.app`.
 - Tightened the privacy story across the app and repo: the welcome guide, menu bar popover, helper diagnostics docs, and README now make the local-only monitoring model explicit and stop using telemetry-heavy wording for core hardware readings.
 - Made quit easier to reach from the menu bar popover with a dedicated red control instead of burying termination as a low-emphasis action row.
 
