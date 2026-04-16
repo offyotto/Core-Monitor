@@ -1642,6 +1642,9 @@ private struct DetailPane: View {
             SystemStatusBoard(alertManager: alertManager, systemMonitor: systemMonitor)
             HelperDiagnosticsSupportCard(startupManager: startupManager)
             DarkCard(padding: 16) {
+                PrivacyControlsSectionContent(alertManager: alertManager)
+            }
+            DarkCard(padding: 16) {
                 VStack(spacing: 8) {
                     levelRow(label: "Volume",     icon: snapshot.currentVolume < 0.01 ? "speaker.slash.fill" : "speaker.wave.2.fill",
                              fraction: Double(snapshot.currentVolume),      color: .yellow)

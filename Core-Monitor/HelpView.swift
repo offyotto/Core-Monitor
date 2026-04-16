@@ -63,7 +63,7 @@ struct HelpView: View {
                 }
             )),
             HelpSection(id: "alerts", title: "Alerts", icon: "bell.badge", keywords: [
-                "notifications", "thresholds", "warnings", "critical", "snooze", "history"
+                "notifications", "thresholds", "warnings", "critical", "snooze", "history", "privacy", "process names"
             ], content: AnyView(
                 HelpCard {
                     Text("Core Monitor ships local alerts for thermals, memory pressure, swap usage, battery state, fan safety, helper availability, and SMC access.")
@@ -71,6 +71,7 @@ struct HelpView: View {
                     HelpBullet(text: "Presets let you trade off earlier warning thresholds against quieter notification behavior.")
                     HelpBullet(text: "CPU and memory alerts include top-process context so you can see likely culprits without configuring per-process rules.")
                     HelpBullet(text: "Privacy Controls can remove app names from alerts and recent history while still keeping the thresholds active.")
+                    HelpBullet(text: "The same privacy toggle now appears in both the `Alerts` tab and the `System` tab so it is easier to find during setup.")
                     HelpBullet(text: "Helper availability alerts matter once you opt into a helper-backed fan mode. Monitoring-only setups can stay healthy without the helper installed.")
                     HelpBullet(text: "Snooze suppresses desktop notifications for a rule, while `Hide For Now` clears the current alert card until conditions change again.")
                 }
@@ -113,13 +114,14 @@ struct HelpView: View {
                 }
             )),
             HelpSection(id: "system", title: "System Controls", icon: "gearshape", keywords: [
-                "volume", "brightness", "launch at login", "login items", "helper diagnostics", "notifications"
+                "volume", "brightness", "launch at login", "login items", "helper diagnostics", "notifications", "privacy", "process names", "alert history"
             ], content: AnyView(
                 HelpCard {
                     Text("System controls enable adjusting volume, screen brightness, and launch-at-login behavior.")
                     HelpBullet(text: "Use the `System` tab or menu bar popovers to view current volume and brightness.")
                     HelpBullet(text: "Toggle `Launch at Login` to start Core Monitor automatically.")
                     HelpBullet(text: "The `System` tab now also surfaces helper state, SMC access, overall thermal pressure, and notification permission status in dedicated status cards.")
+                    HelpBullet(text: "Privacy Controls also live in the `System` tab so you can disable process-name capture without hunting through alert rules first.")
                 }
             )),
             HelpSection(id: "touchbar", title: "Touch Bar Customization", icon: "rectangle.3.group", keywords: [
