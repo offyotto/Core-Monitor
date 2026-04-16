@@ -265,3 +265,8 @@
 - Centralized startup defaults maintenance in a testable helper instead of leaving one-off cleanup logic inside the app delegate, then extended it to purge the now-deprecated `coremonitor.launchDiagnostics.*` and `coremonitor.didShowFirstLaunchDashboard` residue alongside the older legacy window-frame cleanup.
 - Added focused `WelcomeGuideProgressTests` coverage so both the launch-state purge and the legacy window-frame purge are locked down against a real suite-backed `UserDefaults` domain rather than only through app-launch side effects.
 - Verified the batch with targeted `WelcomeGuideProgressTests`, a full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` pass, and a debug-app launch check against `/Users/bookme/Library/Preferences/CoreTools.Core-Monitor.plist` confirming the deprecated launch-state keys no longer persist on disk.
+
+### Completed batch
+- Stopped the dashboard from forcing high-churn process sampling on every sidebar surface, and now only enable the faster top-process cadence where it materially helps: `Alerts` and `Memory` in the full dashboard.
+- Added `DashboardProcessSamplingPolicyTests` coverage so Basic Mode and the low-value surfaces stay on the cheaper background cadence instead of drifting back to always-on detailed sampling.
+- Re-verified the change with a full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' -derivedDataPath .deriveddata CODE_SIGNING_ALLOWED=NO test` pass, plus a debug-app runtime check confirming the monitoring-status copy now reflects the scoped sampling behavior.
