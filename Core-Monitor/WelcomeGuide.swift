@@ -17,16 +17,65 @@ extension View {
 
 private struct WelcomeGuideModifier: ViewModifier {
     @AppStorage(WelcomeGuideProgress.hasSeenDefaultsKey) private var hasSeen = false
+    @State private var presentation = WelcomeGuidePresentationController()
 
     func body(content: Content) -> some View {
         content
+            .onAppear {
+                presentation.syncStoredPreference(hasSeen: hasSeen)
+            }
+            .onChange(of: hasSeen) {
+                presentation.syncStoredPreference(hasSeen: $0)
+            }
             .sheet(isPresented: Binding(
-                get: { !hasSeen },
-                set: { if !$0 { hasSeen = true } }
+                get: { presentation.isSheetPresented },
+                set: { isPresented in
+                    let dismissAction = presentation.handlePresentationChange(isPresented)
+                    if dismissAction == .persistCompletion, hasSeen == false {
+                        hasSeen = true
+                    }
+                }
             )) {
                 WelcomeGuideSheet { hasSeen = true }
                     .interactiveDismissDisabled(true)
             }
+    }
+}
+
+enum WelcomeGuideDismissAction: Equatable {
+    case none
+    case persistCompletion
+}
+
+struct WelcomeGuidePresentationController: Equatable {
+    private(set) var didCompleteGuide = false
+    private(set) var isSheetPresented = true
+
+    init(hasSeen: Bool = false) {
+        syncStoredPreference(hasSeen: hasSeen)
+    }
+
+    mutating func syncStoredPreference(hasSeen: Bool) {
+        didCompleteGuide = hasSeen
+        isSheetPresented = !hasSeen
+    }
+
+    mutating func handlePresentationChange(_ isPresented: Bool) -> WelcomeGuideDismissAction {
+        if isPresented {
+            isSheetPresented = true
+            return .none
+        }
+
+        if didCompleteGuide {
+            isSheetPresented = false
+            return .persistCompletion
+        }
+
+        // SwiftUI can transiently dismiss the sheet while the first-launch
+        // window is still being promoted. Keep the guide pending until the user
+        // explicitly completes it.
+        isSheetPresented = true
+        return .none
     }
 }
 
@@ -205,7 +254,7 @@ private struct WelcomeGuideSheet: View {
                     loginStatus: loginStatus,
                     helperStatus: helperStatus,
                     installHelper: installHelperIfNeeded,
-                    enableLaunchAtLogin: enableLaunchAtLogin,
+                    performLaunchAtLoginAction: performLaunchAtLoginAction,
                     applyBalancedPreset: applyBalancedPreset,
                     refreshHelperDiagnostics: refreshHelperDiagnostics,
                     exportHelperDiagnostics: exportHelperDiagnostics,
@@ -363,6 +412,15 @@ private struct WelcomeGuideSheet: View {
         startupManager.refreshState()
     }
 
+    private func performLaunchAtLoginAction() {
+        switch startupManager.statusSummary.action {
+        case .openSystemSettings:
+            startupManager.openLoginItemsSettings()
+        case .enable, nil:
+            enableLaunchAtLogin()
+        }
+    }
+
     private func installHelperIfNeeded() {
         helperManager.installFromApp()
     }
@@ -412,35 +470,26 @@ private struct WelcomeGuideSheet: View {
     }
 
     private var loginStatus: WelcomeGuideChecklistStatus {
-        if startupManager.isEnabled {
-            return WelcomeGuideChecklistStatus(
-                title: "Launch at Login",
-                symbol: "power.circle",
-                tone: .positive,
-                badge: "Enabled",
-                detail: "Core Monitor will relaunch after sign-in so menu bar monitoring stays available."
-            )
-        }
-
-        if let errorMessage = startupManager.errorMessage, errorMessage.isEmpty == false {
-            let badge = errorMessage.localizedCaseInsensitiveContains("approval") ? "Approval Needed" : "Needs Attention"
-            return WelcomeGuideChecklistStatus(
-                title: "Launch at Login",
-                symbol: "power.circle",
-                tone: .caution,
-                badge: badge,
-                detail: errorMessage
-            )
-        }
-
+        let summary = startupManager.statusSummary
         return WelcomeGuideChecklistStatus(
             title: "Launch at Login",
             symbol: "power.circle",
-            tone: .neutral,
-            badge: "Optional",
-            detail: "Enable this if you rely on Core Monitor staying present in the menu bar after restart.",
-            actionTitle: "Enable"
+            tone: checklistTone(for: summary.tone),
+            badge: summary.badge,
+            detail: summary.detail,
+            actionTitle: summary.actionTitle
         )
+    }
+
+    private func checklistTone(for tone: LaunchAtLoginStatusTone) -> WelcomeGuideChecklistTone {
+        switch tone {
+        case .positive:
+            return .positive
+        case .neutral:
+            return .neutral
+        case .caution:
+            return .caution
+        }
     }
 
     private var helperStatus: WelcomeGuideChecklistStatus {
@@ -637,7 +686,7 @@ private struct WelcomeGuideReadinessPanel: View {
     let loginStatus: WelcomeGuideChecklistStatus
     let helperStatus: WelcomeGuideChecklistStatus
     let installHelper: () -> Void
-    let enableLaunchAtLogin: () -> Void
+    let performLaunchAtLoginAction: () -> Void
     let applyBalancedPreset: () -> Void
     let refreshHelperDiagnostics: () -> Void
     let exportHelperDiagnostics: () -> Void
@@ -656,7 +705,7 @@ private struct WelcomeGuideReadinessPanel: View {
 
             VStack(spacing: 8) {
                 WelcomeGuideChecklistRow(status: menuBarStatus, action: applyBalancedPreset)
-                WelcomeGuideChecklistRow(status: loginStatus, action: enableLaunchAtLogin)
+                WelcomeGuideChecklistRow(status: loginStatus, action: performLaunchAtLoginAction)
                 WelcomeGuideChecklistRow(
                     status: helperStatus,
                     action: helperStatus.actionTitle == "Install Helper" ? installHelper : refreshHelperDiagnostics

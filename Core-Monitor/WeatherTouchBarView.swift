@@ -249,10 +249,10 @@ final class WeatherTouchBarView: NSView {
 
     private func weatherErrorTitle(for message: String) -> String {
         let lowered = message.lowercased()
-        if lowered.contains("optional") {
+        if lowered.contains("optional") || lowered.contains("request location") {
             return "Location Optional"
         }
-        if lowered.contains("location") {
+        if lowered.contains("enable location") || lowered.contains("location") {
             return "Location Off"
         }
         return "Weather Unavailable"

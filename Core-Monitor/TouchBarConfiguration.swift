@@ -35,7 +35,7 @@ enum TouchBarWidgetKind: String, CaseIterable, Codable, Identifiable {
     var subtitle: String {
         switch self {
         case .worldClocks: return "Wi-Fi, battery, and clock"
-        case .weather: return "Local weather. Requires location access."
+        case .weather: return "Weather. Location access enables local conditions."
         case .controlCenter: return "Brightness and volume controls"
         case .dock: return "Running apps and pinned items"
         case .cpu: return "CPU load, temperature, and activity"

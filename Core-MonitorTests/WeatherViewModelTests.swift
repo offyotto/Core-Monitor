@@ -5,25 +5,29 @@ import Combine
 
 @MainActor
 final class WeatherViewModelTests: XCTestCase {
-    func testRefreshNowShowsOptionalLocationMessageWhenAccessIsNotDetermined() async {
+    func testRefreshNowUsesFallbackLocationWhenAccessIsNotDetermined() async {
         let provider = RecordingWeatherProvider()
         let locationAccess = MockWeatherLocationAccess(status: .notDetermined, currentLocation: nil)
         let viewModel = WeatherViewModel(provider: provider, locationAccess: locationAccess)
 
         await viewModel.refreshNow()
 
-        switch viewModel.state {
-        case .error(let message):
-            XCTAssertEqual(
-                message,
-                "Location access is optional. Request it from Touch Bar settings for live local weather."
-            )
-        default:
-            XCTFail("Expected an optional-location error state.")
+        guard let requestedLocation = provider.requestedLocation else {
+            return XCTFail("Expected the weather provider to receive a fallback location.")
         }
 
-        XCTAssertNil(provider.requestedLocation)
+        XCTAssertEqual(requestedLocation.coordinate.latitude, 37.3346, accuracy: 0.0001)
+        XCTAssertEqual(requestedLocation.coordinate.longitude, -122.0090, accuracy: 0.0001)
+
+        switch viewModel.state {
+        case .loaded(let snapshot):
+            XCTAssertEqual(snapshot.locationName, "Recorded")
+        default:
+            XCTFail("Expected a loaded fallback weather snapshot.")
+        }
+
         XCTAssertEqual(locationAccess.requestAccessCallCount, 0)
+        XCTAssertEqual(locationAccess.requestCurrentLocationCallCount, 0)
     }
 
     func testRefreshNowRequestsLiveLocationBeforeUsingFallback() async {
@@ -113,6 +117,33 @@ final class WeatherViewModelTests: XCTestCase {
 
         viewModel.stop()
     }
+
+    func testRefreshNowUsesFallbackProviderWhenLiveProviderFails() async {
+        let provider = FailingWeatherProvider()
+        let fallbackProvider = RecordingWeatherProvider()
+        let locationAccess = MockWeatherLocationAccess(status: .authorizedWhenInUse, currentLocation: nil)
+        let viewModel = WeatherViewModel(
+            provider: provider,
+            locationAccess: locationAccess,
+            fallbackProvider: fallbackProvider
+        )
+
+        await viewModel.refreshNow()
+
+        guard let requestedLocation = fallbackProvider.requestedLocation else {
+            return XCTFail("Expected the fallback weather provider to be used.")
+        }
+
+        XCTAssertEqual(requestedLocation.coordinate.latitude, 37.3346, accuracy: 0.0001)
+        XCTAssertEqual(requestedLocation.coordinate.longitude, -122.0090, accuracy: 0.0001)
+
+        switch viewModel.state {
+        case .loaded(let snapshot):
+            XCTAssertEqual(snapshot.locationName, "Recorded")
+        default:
+            XCTFail("Expected a loaded weather snapshot from the fallback provider.")
+        }
+    }
 }
 
 private final class RecordingWeatherProvider: WeatherProviding {
@@ -134,6 +165,16 @@ private final class RecordingWeatherProvider: WeatherProviding {
             humidity: 52,
             updatedAt: Date(timeIntervalSince1970: 1_000)
         )
+    }
+}
+
+private final class FailingWeatherProvider: WeatherProviding {
+    struct TestError: LocalizedError {
+        var errorDescription: String? { "Live weather failed." }
+    }
+
+    func currentWeather(for location: CLLocation) async throws -> WeatherSnapshot {
+        throw TestError()
     }
 }
 

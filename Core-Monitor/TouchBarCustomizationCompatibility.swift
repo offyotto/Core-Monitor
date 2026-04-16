@@ -21,8 +21,8 @@ enum TouchBarPresentationMode: String, Codable, CaseIterable, Identifiable {
 
     var subtitle: String {
         switch self {
-        case .app: return "Use the Core-Monitor Touch Bar layout"
-        case .system: return "Show the standard macOS Touch Bar"
+        case .app: return "Show the Core-Monitor Touch Bar layout on the hardware Touch Bar"
+        case .system: return "Keep editing the Core-Monitor layout, but show the standard macOS Touch Bar on the hardware"
         }
     }
 }
@@ -307,24 +307,36 @@ private struct LegacyPersistedTouchBarConfigurationV4: Codable {
 @MainActor
 final class TouchBarCustomizationSettings: ObservableObject {
     static let shared = TouchBarCustomizationSettings()
+    static let defaultPreset: TouchBarPreset = .classic
     static let recommendedTouchBarWidth: CGFloat = 1085
 
     @Published var theme: TouchBarTheme {
-        didSet { persistAndNotify() }
+        didSet {
+            guard isApplyingConfiguration == false else { return }
+            persistAndNotify()
+        }
     }
 
     @Published var items: [TouchBarItemConfiguration] {
         didSet {
-            if items.isEmpty {
-                items = TouchBarPreset.classic.items
-                return
+            guard isApplyingConfiguration == false else { return }
+
+            let normalizedItems = Self.normalizedItems(items)
+            if normalizedItems != items {
+                isApplyingConfiguration = true
+                items = normalizedItems
+                isApplyingConfiguration = false
             }
+
             persistAndNotify()
         }
     }
 
     @Published var presentationMode: TouchBarPresentationMode {
-        didSet { persistAndNotify() }
+        didSet {
+            guard isApplyingConfiguration == false else { return }
+            persistAndNotify()
+        }
     }
 
     var estimatedWidth: CGFloat {
@@ -336,13 +348,21 @@ final class TouchBarCustomizationSettings: ObservableObject {
         max(0, estimatedWidth - Self.recommendedTouchBarWidth)
     }
 
+    var activePreset: TouchBarPreset? {
+        TouchBarPreset.all.first { preset in
+            preset.theme == theme && preset.items == items
+        }
+    }
+
     private let defaultsKey = "coremonitor.touchBarConfiguration.v6"
     private let legacyDefaultsKey = "coremonitor.touchBarConfiguration.v5"
     private let legacyWidgetOnlyDefaultsKey = "coremonitor.touchBarConfiguration.v4"
     private let legacyPresentationModeKey = "coremonitor.touchBarMode"
+    private let defaults: UserDefaults
+    private var isApplyingConfiguration = false
 
-    private init() {
-        let defaults = UserDefaults.standard
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
         let fallbackPresentation = TouchBarPresentationMode(
             rawValue: defaults.string(forKey: legacyPresentationModeKey) ?? TouchBarPresentationMode.app.rawValue
         ) ?? .app
@@ -350,7 +370,7 @@ final class TouchBarCustomizationSettings: ObservableObject {
         if let data = defaults.data(forKey: defaultsKey),
            let decoded = try? JSONDecoder().decode(PersistedTouchBarConfigurationV6.self, from: data) {
             theme = decoded.theme.theme
-            items = decoded.items.isEmpty ? TouchBarPreset.classic.items : decoded.items
+            items = Self.normalizedItems(decoded.items)
             presentationMode = decoded.presentationMode
             return
         }
@@ -358,7 +378,7 @@ final class TouchBarCustomizationSettings: ObservableObject {
         if let data = defaults.data(forKey: legacyDefaultsKey),
            let decoded = try? JSONDecoder().decode(LegacyPersistedTouchBarConfigurationV5.self, from: data) {
             theme = decoded.theme.theme
-            items = decoded.items.isEmpty ? TouchBarPreset.classic.items : decoded.items
+            items = Self.normalizedItems(decoded.items)
             presentationMode = fallbackPresentation
             return
         }
@@ -366,19 +386,26 @@ final class TouchBarCustomizationSettings: ObservableObject {
         if let data = defaults.data(forKey: legacyWidgetOnlyDefaultsKey),
            let decoded = try? JSONDecoder().decode(LegacyPersistedTouchBarConfigurationV4.self, from: data) {
             theme = decoded.theme.theme
-            items = decoded.widgets.isEmpty ? TouchBarPreset.classic.items : decoded.widgets.map(TouchBarItemConfiguration.builtIn)
+            items = Self.normalizedItems(decoded.widgets.map(TouchBarItemConfiguration.builtIn))
             presentationMode = fallbackPresentation
             return
         }
 
-        theme = TouchBarPreset.classic.theme
-        items = TouchBarPreset.classic.items
+        theme = Self.defaultPreset.theme
+        items = Self.defaultPreset.items
         presentationMode = fallbackPresentation
     }
 
     func applyPreset(_ preset: TouchBarPreset) {
-        theme = preset.theme
-        items = preset.items
+        applyConfiguration(theme: preset.theme, items: preset.items)
+    }
+
+    func restoreDefaults() {
+        applyConfiguration(
+            theme: Self.defaultPreset.theme,
+            items: Self.defaultPreset.items,
+            presentationMode: .app
+        )
     }
 
     func contains(_ kind: TouchBarWidgetKind) -> Bool {
@@ -386,54 +413,70 @@ final class TouchBarCustomizationSettings: ObservableObject {
     }
 
     func toggle(_ kind: TouchBarWidgetKind) {
+        var updatedItems = items
         if let index = items.firstIndex(where: { $0.builtInKind == kind }) {
-            guard items.count > 1 else { return }
-            items.remove(at: index)
+            guard updatedItems.count > 1 else { return }
+            updatedItems.remove(at: index)
         } else {
-            items.append(.builtIn(kind))
+            updatedItems.append(.builtIn(kind))
         }
+        applyConfiguration(items: updatedItems)
     }
 
     func moveUp(_ item: TouchBarItemConfiguration) {
         guard let index = items.firstIndex(of: item), index > 0 else { return }
-        items.swapAt(index, index - 1)
+        var updatedItems = items
+        updatedItems.swapAt(index, index - 1)
+        applyConfiguration(items: updatedItems)
     }
 
     func moveDown(_ item: TouchBarItemConfiguration) {
         guard let index = items.firstIndex(of: item), index < items.count - 1 else { return }
-        items.swapAt(index, index + 1)
+        var updatedItems = items
+        updatedItems.swapAt(index, index + 1)
+        applyConfiguration(items: updatedItems)
     }
 
     func remove(_ item: TouchBarItemConfiguration) {
         guard let index = items.firstIndex(of: item), items.count > 1 else { return }
-        items.remove(at: index)
+        var updatedItems = items
+        updatedItems.remove(at: index)
+        applyConfiguration(items: updatedItems)
     }
 
     func addPinnedApps(urls: [URL]) {
-        let newItems = urls.map { url in
-            TouchBarItemConfiguration.pinnedApp(
+        var seenPinnedApps = Set(items.compactMap(\.pinnedAppPath))
+        let newItems = urls.compactMap { url -> TouchBarItemConfiguration? in
+            let normalizedPath = Self.standardizedPath(url.path)
+            guard seenPinnedApps.insert(normalizedPath).inserted else { return nil }
+
+            return .pinnedApp(
                 TouchBarPinnedApp(
                     id: UUID().uuidString,
-                    displayName: FileManager.default.displayName(atPath: url.path),
-                    filePath: url.path,
-                    bundleIdentifier: Bundle(url: url)?.bundleIdentifier
+                    displayName: FileManager.default.displayName(atPath: normalizedPath),
+                    filePath: normalizedPath,
+                    bundleIdentifier: Bundle(url: URL(fileURLWithPath: normalizedPath))?.bundleIdentifier
                 )
             )
         }
-        items.append(contentsOf: newItems)
+        applyConfiguration(items: items + newItems)
     }
 
     func addPinnedFolders(urls: [URL]) {
-        let newItems = urls.map { url in
-            TouchBarItemConfiguration.pinnedFolder(
+        var seenPinnedFolders = Set(items.compactMap(\.pinnedFolderPath))
+        let newItems = urls.compactMap { url -> TouchBarItemConfiguration? in
+            let normalizedPath = Self.standardizedPath(url.path)
+            guard seenPinnedFolders.insert(normalizedPath).inserted else { return nil }
+
+            return .pinnedFolder(
                 TouchBarPinnedFolder(
                     id: UUID().uuidString,
-                    displayName: FileManager.default.displayName(atPath: url.path),
-                    folderPath: url.path
+                    displayName: FileManager.default.displayName(atPath: normalizedPath),
+                    folderPath: normalizedPath
                 )
             )
         }
-        items.append(contentsOf: newItems)
+        applyConfiguration(items: items + newItems)
     }
 
     func addCustomWidget(title: String, symbolName: String, command: String, width: CGFloat = 96) {
@@ -443,16 +486,18 @@ final class TouchBarCustomizationSettings: ObservableObject {
 
         guard !trimmedTitle.isEmpty, !trimmedCommand.isEmpty else { return }
 
-        items.append(
-            .customWidget(
-                TouchBarCustomWidget(
-                    id: UUID().uuidString,
-                    title: trimmedTitle,
-                    symbolName: trimmedSymbol.isEmpty ? "terminal.fill" : trimmedSymbol,
-                    command: trimmedCommand,
-                    width: max(width, 72)
+        applyConfiguration(
+            items: items + [
+                .customWidget(
+                    TouchBarCustomWidget(
+                        id: UUID().uuidString,
+                        title: trimmedTitle,
+                        symbolName: trimmedSymbol.isEmpty ? "terminal.fill" : trimmedSymbol,
+                        command: trimmedCommand,
+                        width: max(width, 72)
+                    )
                 )
-            )
+            ]
         )
     }
 
@@ -464,10 +509,112 @@ final class TouchBarCustomizationSettings: ObservableObject {
         )
 
         if let data = try? JSONEncoder().encode(payload) {
-            UserDefaults.standard.set(data, forKey: defaultsKey)
+            defaults.set(data, forKey: defaultsKey)
         }
 
         NotificationCenter.default.post(name: .touchBarCustomizationDidChange, object: self)
+    }
+
+    private func applyConfiguration(
+        theme: TouchBarTheme? = nil,
+        items: [TouchBarItemConfiguration]? = nil,
+        presentationMode: TouchBarPresentationMode? = nil
+    ) {
+        let resolvedTheme = theme ?? self.theme
+        let resolvedItems = Self.normalizedItems(items ?? self.items)
+        let resolvedPresentationMode = presentationMode ?? self.presentationMode
+
+        guard resolvedTheme != self.theme
+            || resolvedItems != self.items
+            || resolvedPresentationMode != self.presentationMode else {
+            return
+        }
+
+        isApplyingConfiguration = true
+        self.theme = resolvedTheme
+        self.items = resolvedItems
+        self.presentationMode = resolvedPresentationMode
+        isApplyingConfiguration = false
+        persistAndNotify()
+    }
+
+    static func normalizedItems(_ items: [TouchBarItemConfiguration]) -> [TouchBarItemConfiguration] {
+        var normalized: [TouchBarItemConfiguration] = []
+        var seenBuiltIns = Set<TouchBarWidgetKind>()
+        var seenPinnedApps = Set<String>()
+        var seenPinnedFolders = Set<String>()
+
+        for item in items {
+            guard let sanitized = sanitized(item) else { continue }
+
+            switch sanitized {
+            case .builtIn(let kind):
+                guard seenBuiltIns.insert(kind).inserted else { continue }
+            case .pinnedApp(let app):
+                guard seenPinnedApps.insert(standardizedPath(app.filePath)).inserted else { continue }
+            case .pinnedFolder(let folder):
+                guard seenPinnedFolders.insert(standardizedPath(folder.folderPath)).inserted else { continue }
+            case .customWidget:
+                break
+            }
+
+            normalized.append(sanitized)
+        }
+
+        return normalized.isEmpty ? Self.defaultPreset.items : normalized
+    }
+
+    private static func sanitized(_ item: TouchBarItemConfiguration) -> TouchBarItemConfiguration? {
+        switch item {
+        case .builtIn:
+            return item
+        case .pinnedApp(var app):
+            let filePath = standardizedPath(app.filePath)
+            guard filePath.isEmpty == false else { return nil }
+            app.filePath = filePath
+            let trimmedName = app.displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+            app.displayName = trimmedName.isEmpty
+                ? FileManager.default.displayName(atPath: filePath)
+                : trimmedName
+            return .pinnedApp(app)
+        case .pinnedFolder(var folder):
+            let folderPath = standardizedPath(folder.folderPath)
+            guard folderPath.isEmpty == false else { return nil }
+            folder.folderPath = folderPath
+            let trimmedName = folder.displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+            folder.displayName = trimmedName.isEmpty
+                ? FileManager.default.displayName(atPath: folderPath)
+                : trimmedName
+            return .pinnedFolder(folder)
+        case .customWidget(var widget):
+            let trimmedCommand = widget.command.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard trimmedCommand.isEmpty == false else { return nil }
+            let trimmedTitle = widget.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedSymbol = widget.symbolName.trimmingCharacters(in: .whitespacesAndNewlines)
+            widget.command = trimmedCommand
+            widget.title = trimmedTitle.isEmpty ? "Command" : trimmedTitle
+            widget.symbolName = trimmedSymbol.isEmpty ? "terminal.fill" : trimmedSymbol
+            widget.width = min(max(widget.width, 72), 220)
+            return .customWidget(widget)
+        }
+    }
+
+    fileprivate static func standardizedPath(_ rawPath: String) -> String {
+        let trimmed = rawPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        let expanded = (trimmed as NSString).expandingTildeInPath
+        return (expanded as NSString).standardizingPath
+    }
+}
+
+private extension TouchBarItemConfiguration {
+    var pinnedAppPath: String? {
+        guard case .pinnedApp(let app) = self else { return nil }
+        return TouchBarCustomizationSettings.standardizedPath(app.filePath)
+    }
+
+    var pinnedFolderPath: String? {
+        guard case .pinnedFolder(let folder) = self else { return nil }
+        return TouchBarCustomizationSettings.standardizedPath(folder.folderPath)
     }
 }
 
