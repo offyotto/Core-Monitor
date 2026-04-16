@@ -78,7 +78,7 @@ final class MenuBarController: NSObject {
             .removeDuplicates()
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
-                self?.itemControllers.forEach { $0.refresh() }
+                self?.scheduleRefreshAllItems()
             }
 
         settingsObserver = NotificationCenter.default.addObserver(
@@ -86,13 +86,13 @@ final class MenuBarController: NSObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.itemControllers.forEach { $0.refresh() }
+            self?.scheduleRefreshAllItems()
         }
 
         alertCancellable = alertManager.$activeAlerts
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
-                self?.itemControllers.forEach { $0.refresh() }
+                self?.scheduleRefreshAllItems()
             }
     }
 
@@ -100,6 +100,16 @@ final class MenuBarController: NSObject {
         if let obs = settingsObserver {
             NotificationCenter.default.removeObserver(obs)
         }
+    }
+
+    private nonisolated func scheduleRefreshAllItems() {
+        Task { @MainActor [weak self] in
+            self?.refreshAllItems()
+        }
+    }
+
+    private func refreshAllItems() {
+        itemControllers.forEach { $0.refresh() }
     }
 }
 

@@ -44,7 +44,7 @@ protocol WeatherLocationAccessControlling: AnyObject {
 }
 
 @MainActor
-final class WeatherLocationAccessController: NSObject, ObservableObject, @preconcurrency CLLocationManagerDelegate, WeatherLocationAccessControlling {
+final class WeatherLocationAccessController: NSObject, ObservableObject, CLLocationManagerDelegate, WeatherLocationAccessControlling {
     static let shared = WeatherLocationAccessController()
 
     @Published private(set) var authorizationStatus: CLAuthorizationStatus
