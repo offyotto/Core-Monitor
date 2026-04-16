@@ -285,3 +285,18 @@
 - Changed fresh Touch Bar defaults to stay in `System` mode until the user explicitly opts into Core Monitor’s custom Touch Bar layout, which avoids surprising first-launch takeover on Touch Bar Macs while preserving existing saved presentation choices.
 - Made `TouchBarCustomizationSettings` injectable with a custom `UserDefaults` store so startup-mode behavior is testable instead of being locked behind the singleton.
 - Added dedicated defaults-migration coverage for fresh installs and legacy stored `app` mode, updated the onboarding/help copy to explain the opt-in behavior, and re-verified the full macOS suite with `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO test`.
+
+### Completed batch
+- Stopped the dashboard from forcing high-churn process sampling on every sidebar surface, and now only enable the faster top-process cadence where it materially helps: `Alerts` and `Memory` in the full dashboard.
+- Added `DashboardProcessSamplingPolicyTests` coverage so Basic Mode and the low-value surfaces stay on the cheaper background cadence instead of drifting back to always-on detailed sampling.
+- Re-verified the change with a full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' -derivedDataPath .deriveddata CODE_SIGNING_ALLOWED=NO test` pass, plus a debug-app runtime check confirming the monitoring-status copy now reflects the scoped sampling behavior.
+
+### Completed batch
+- Hardened startup against duplicate launches by detecting an already-running Core Monitor instance, handing dashboard focus back to that process, and terminating the new copy before it can publish another set of menu bar extras.
+- Added `CoreMonitorSingleInstancePolicyTests` coverage for the handoff-target selection rules and exempted the path under XCTest so the host app does not terminate itself during unit-test bootstrapping.
+- Re-verified the batch with the same clean full macOS test pass, then forced a second launch from the built executable and confirmed the process count stays at one for the Debug app path instead of stacking a duplicate instance.
+
+### Completed batch
+- Throttled expensive disk-capacity refreshes behind a dedicated `DiskStatsRefreshPolicy` instead of recalculating purgeable and important-usage volume state on every 1-second dashboard sample.
+- Cached the last disk snapshot inside `SystemMonitor` and added focused `DiskStatsRefreshPolicyTests` coverage so future edits do not quietly reintroduce per-sample disk refresh churn.
+- Re-verified the batch with targeted policy tests, a fresh full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' -derivedDataPath .deriveddata CODE_SIGNING_ALLOWED=NO test` pass, and a short relaunch log check showing only a single `com.apple.cache_delete` timestamp in the post-launch window instead of a per-second pattern.

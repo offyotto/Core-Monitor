@@ -234,7 +234,6 @@ final class SystemMonitor: ObservableObject {
     private var supplementalSamplingState = SystemMonitorSupplementalSamplingState()
     private var cachedBatteryInfo = BatteryInfo()
     private var cachedSystemControls: (volume: Float, brightness: Float) = (0.5, 1.0)
-    private var cachedDiskStats = DiskStats()
     private var detailedSamplingReasons = Set<String>()
     private var interactiveMonitoringReasons = Set<String>()
     private var monitoringIntervalOverrides: [String: TimeInterval] = [:]
@@ -439,10 +438,6 @@ final class SystemMonitor: ObservableObject {
             let batteryInfo = self.readBatteryInfoIfNeeded(sampledAt: sampledAt, monitoringInterval: activeMonitoringInterval)
             let systemControls = self.readSystemControlsIfNeeded(sampledAt: sampledAt, monitoringInterval: activeMonitoringInterval)
             let diskStats = self.readDiskStatsIfNeeded(sampledAt: sampledAt, monitoringInterval: activeMonitoringInterval)
-            let batteryInfo = self.readBatteryInfo()
-            let systemControls = self.readSystemControls()
-            let sampleDate = Date()
-            let diskStats = self.readDiskStats(now: sampleDate)
             let cpuPowerWatts = self.readSMCValue(key: "PCPU")
             let gpuPowerWatts = self.readSMCValue(key: "PGPU")
             let ssdTemperature = self.readSSDTemperature()
@@ -451,7 +446,6 @@ final class SystemMonitor: ObservableObject {
 
             var snapshot = SystemMonitorSnapshot(
                 sampledAt: sampledAt,
-                sampledAt: sampleDate,
                 cpuTemperature: cpuTemperature,
                 gpuTemperature: gpuTemperature,
                 fanSpeeds: fanReadings.speeds,

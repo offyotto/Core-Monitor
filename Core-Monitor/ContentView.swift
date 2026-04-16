@@ -677,7 +677,7 @@ private struct MonitoringStatusCard: View {
         case .waiting:
             return "Core Monitor is warming up the local sensor pipeline and will publish live readings as soon as the first sample completes."
         case .live:
-            return "The dashboard is receiving fresh sensor data on the active cadence. Background-heavy process detail stays adaptive to reduce idle overhead."
+            return "The dashboard is receiving fresh sensor data on the active cadence. Higher-churn process detail only speeds up on the Alerts and Memory surfaces to keep idle overhead lower elsewhere."
         case .delayed:
             return "The latest sample is slightly behind the active cadence, so values may briefly lag while the Mac is under load or waking from sleep."
         case .stale:
@@ -997,7 +997,7 @@ private struct HelperDiagnosticsSupportCard: View {
                         .controlSize(.small)
                 }
 
-                Text("The report captures app signing, helper install state, connectivity, launch-at-login approval, menu bar reachability, and recent dashboard-launch visibility so support issues can be triaged without guessing.")
+                Text("The report captures app signing, helper install state, connectivity, launch-at-login approval, and menu bar reachability so support issues can be triaged without guessing.")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -1327,6 +1327,22 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         case .help: return "questionmark.circle"
         case .about: return "info.circle"
         }
+    }
+
+    var prefersDetailedProcessSampling: Bool {
+        switch self {
+        case .alerts, .memory:
+            return true
+        case .overview, .thermals, .fans, .battery, .system, .touchBar, .help, .about:
+            return false
+        }
+    }
+}
+
+enum DashboardProcessSamplingPolicy {
+    static func shouldEnableDetailedSampling(selection: SidebarItem, isBasicMode: Bool) -> Bool {
+        guard isBasicMode == false else { return false }
+        return selection.prefersDetailedProcessSampling
     }
 }
 
