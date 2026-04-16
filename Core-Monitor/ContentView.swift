@@ -1712,38 +1712,8 @@ private struct DetailPane: View {
                     cpuTemperature: snapshot.cpuTemperature
                 )
             )
-            DarkCard(padding: 16) {
-                HStack(spacing: 14) {
-                    Image(systemName: "power").font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(startupManager.isEnabled ? .green : .secondary)
-                        .frame(width: 32, height: 32)
-                        .background((startupManager.isEnabled ? Color.green : Color.secondary).opacity(0.15))
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Launch at Login").font(.system(size: 13, weight: .semibold))
-                        Text(startupManager.isEnabled ? "Starts automatically with macOS" : "Start manually from Applications")
-                            .font(.system(size: 11)).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Toggle("", isOn: Binding(get: { startupManager.isEnabled },
-                                            set: { startupManager.setEnabled($0) }))
-                        .toggleStyle(.switch).tint(.green)
-                }
-            }
-            if let msg = startupManager.errorMessage {
-                DarkCard(padding: 14) {
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(msg).font(.system(size: 11)).foregroundStyle(.orange)
-                            Text("Open System Settings → General → Login Items to approve.")
-                                .font(.system(size: 10)).foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
+            LaunchAtLoginSection(startupManager: startupManager)
         }
-        .onAppear { startupManager.refreshState() }
     }
 
     private var touchBarContent: some View {
