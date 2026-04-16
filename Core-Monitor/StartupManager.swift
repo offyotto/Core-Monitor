@@ -66,3 +66,26 @@ final class StartupManager: ObservableObject {
         return nsError.localizedDescription
     }
 }
+
+@MainActor
+struct DashboardNavigationRoute: Equatable {
+    let id: UUID
+    let selection: SidebarItem
+}
+
+@MainActor
+final class DashboardNavigationRouter: ObservableObject {
+    static let shared = DashboardNavigationRouter()
+
+    @Published private(set) var route: DashboardNavigationRoute?
+
+    func open(_ selection: SidebarItem) {
+        route = DashboardNavigationRoute(id: UUID(), selection: selection)
+    }
+
+    func consume(_ route: DashboardNavigationRoute) -> SidebarItem? {
+        guard self.route?.id == route.id else { return nil }
+        self.route = nil
+        return route.selection
+    }
+}

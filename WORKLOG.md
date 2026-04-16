@@ -72,6 +72,11 @@
 - Re-ran the full macOS test suite for this batch in a clean detached worktree because an unrelated local edit in `Core_MonitorApp.swift` currently breaks the active checkout’s build.
 
 ### Completed batch
+- Added a lightweight dashboard-navigation router so menu bar alert surfaces can deep-link straight into the `Alerts` tab instead of always dumping users into `Overview`.
+- Wired active-alert menu bar popovers to show an `Open Alerts` action only when it is relevant, and added focused routing tests to lock the request/consume behavior down.
+- Verified the batch in a clean detached worktree again because the active checkout still contains an unrelated compile-breaking local edit in `Core_MonitorApp.swift`.
+
+### Completed batch
 - Fixed the first-launch discoverability gap for the accessory-style app: if the welcome guide has never been seen, Core Monitor now opens the dashboard automatically instead of launching invisibly into the menu bar.
 - Centralized the welcome-guide completion flag so launch behavior and onboarding sheet state use the same source of truth.
 - Added `WelcomeGuideProgressTests` to lock the launch decision down, rebuilt the macOS app, and confirmed at runtime that a fresh launch now shows the onboarding sheet over a visible dashboard window.

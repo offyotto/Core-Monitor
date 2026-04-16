@@ -110,6 +110,7 @@ private struct MenuBarAlertSummarySection: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var alertManager: AlertManager
     @ObservedObject private var helperManager = SMCHelperManager.shared
+    var openAlertsAction: (() -> Void)? = nil
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -151,6 +152,12 @@ private struct MenuBarAlertSummarySection: View {
                     summaryPill(helperSummaryLabel, color: helperSummaryColor)
                     if let recent = alertManager.history.first {
                         summaryPill(recent.kind.title, color: severityColor(recent.severity))
+                    }
+                }
+
+                if alertManager.activeAlerts.isEmpty == false, let openAlertsAction {
+                    MBActionButton(label: "Open Alerts", icon: "bell.badge") {
+                        openAlertsAction()
                     }
                 }
             }
@@ -373,6 +380,7 @@ struct CPUMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var alertManager: AlertManager
     var openDashboardAction: () -> Void = {}
+    var openAlertsAction: () -> Void = {}
 
     private var pCores: Int { SystemMonitor.performanceCoreCount() }
     private var eCores: Int { SystemMonitor.efficiencyCoreCount() }
@@ -383,7 +391,7 @@ struct CPUMenuPopoverView: View {
                 VStack(spacing: 0) {
                     cpuHeader
                     MBDivider()
-                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager)
+                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager, openAlertsAction: openAlertsAction)
                     MBDivider()
                     graphSection
                     MBDivider()
@@ -559,6 +567,7 @@ struct MemoryMenuPopoverView: View {
     @ObservedObject var alertManager: AlertManager
     @ObservedObject private var privacySettings = PrivacySettings.shared
     var openDashboardAction: () -> Void = {}
+    var openAlertsAction: () -> Void = {}
 
     var body: some View {
         MenuPopoverSurface {
@@ -566,7 +575,7 @@ struct MemoryMenuPopoverView: View {
                 VStack(spacing: 0) {
                     memHeader
                     MBDivider()
-                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager)
+                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager, openAlertsAction: openAlertsAction)
                     MBDivider()
                     breakdownSection
                     MBDivider()
@@ -738,6 +747,7 @@ struct DiskMenuPopoverView: View {
     @ObservedObject var alertManager: AlertManager
     @ObservedObject private var privacySettings = PrivacySettings.shared
     var openDashboardAction: () -> Void = {}
+    var openAlertsAction: () -> Void = {}
 
     var body: some View {
         MenuPopoverSurface {
@@ -745,7 +755,7 @@ struct DiskMenuPopoverView: View {
                 VStack(spacing: 0) {
                     diskHeader
                     MBDivider()
-                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager)
+                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager, openAlertsAction: openAlertsAction)
                     MBDivider()
                     diskDonutSection
                     MBDivider()
@@ -969,6 +979,7 @@ struct TemperatureMenuPopoverView: View {
     @ObservedObject var fanController: FanController
     @ObservedObject var alertManager: AlertManager
     var openDashboardAction: () -> Void = {}
+    var openAlertsAction: () -> Void = {}
 
     var body: some View {
         MenuPopoverSurface {
@@ -976,7 +987,7 @@ struct TemperatureMenuPopoverView: View {
                 VStack(spacing: 0) {
                     tempHeader
                     MBDivider()
-                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager)
+                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, alertManager: alertManager, openAlertsAction: openAlertsAction)
                     MBDivider()
                     temperatureSection
                     MBDivider()
