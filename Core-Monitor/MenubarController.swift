@@ -4,7 +4,7 @@ import SwiftUI
 
 // MARK: - MenuBarItemKind
 enum MenuBarItemKind: CaseIterable {
-    case cpu, memory, disk, temperature
+    case cpu, memory, network, disk, temperature
 
     var systemImageName: String {
         switch self {
@@ -12,6 +12,8 @@ enum MenuBarItemKind: CaseIterable {
             return "cpu"
         case .memory:
             return "memorychip"
+        case .network:
+            return "arrow.down.arrow.up"
         case .disk:
             return "internaldrive"
         case .temperature:
@@ -25,6 +27,8 @@ enum MenuBarItemKind: CaseIterable {
             return "CPU"
         case .memory:
             return "Memory"
+        case .network:
+            return "Network"
         case .disk:
             return "Disk"
         case .temperature:
@@ -36,6 +40,7 @@ enum MenuBarItemKind: CaseIterable {
         switch self {
         case .cpu:         return "menubar.cpu.enabled"
         case .memory:      return "menubar.memory.enabled"
+        case .network:     return "menubar.network.enabled"
         case .disk:        return "menubar.disk.enabled"
         case .temperature: return "menubar.temperature.enabled"
         }
@@ -266,6 +271,17 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
             let tone: StatusTone = pct > 85 ? .critical : pct > 70 ? .warning : .normal
             return ("MEM \(pct)%", tone)
 
+        case .network:
+            let download = systemMonitor.networkStats.downloadBytesPerSec
+            let upload = systemMonitor.networkStats.uploadBytesPerSec
+            let dominant = max(download, upload)
+            let arrow = download >= upload ? "↓" : "↑"
+            let label = NetworkThroughputFormatter
+                .abbreviatedRate(bytesPerSecond: dominant)
+                .replacingOccurrences(of: " ", with: "")
+            let tone: StatusTone = dominant < 1_000 ? .secondary : .normal
+            return ("NET \(arrow)\(label)", tone)
+
         case .disk:
             let pct = Int(systemMonitor.diskStats.usagePercent.rounded())
             let tone: StatusTone = pct > 90 ? .critical : pct > 75 ? .warning : .normal
@@ -359,6 +375,22 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         case .disk:
             return AnyView(
                 DiskMenuPopoverView(
+                    systemMonitor: systemMonitor,
+                    fanController: fanController,
+                    alertManager: alertManager,
+                    openDashboardAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openDashboardAction()
+                    },
+                    openAlertsAction: { [weak self] in
+                        self?.popover?.performClose(nil)
+                        self?.openAlertsFromPopover()
+                    }
+                )
+            )
+        case .network:
+            return AnyView(
+                NetworkMenuPopoverView(
                     systemMonitor: systemMonitor,
                     fanController: fanController,
                     alertManager: alertManager,

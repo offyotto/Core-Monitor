@@ -17,16 +17,65 @@ extension View {
 
 private struct WelcomeGuideModifier: ViewModifier {
     @AppStorage(WelcomeGuideProgress.hasSeenDefaultsKey) private var hasSeen = false
+    @State private var presentation = WelcomeGuidePresentationController()
 
     func body(content: Content) -> some View {
         content
+            .onAppear {
+                presentation.syncStoredPreference(hasSeen: hasSeen)
+            }
+            .onChange(of: hasSeen) {
+                presentation.syncStoredPreference(hasSeen: $0)
+            }
             .sheet(isPresented: Binding(
-                get: { !hasSeen },
-                set: { if !$0 { hasSeen = true } }
+                get: { presentation.isSheetPresented },
+                set: { isPresented in
+                    let dismissAction = presentation.handlePresentationChange(isPresented)
+                    if dismissAction == .persistCompletion, hasSeen == false {
+                        hasSeen = true
+                    }
+                }
             )) {
                 WelcomeGuideSheet { hasSeen = true }
                     .interactiveDismissDisabled(true)
             }
+    }
+}
+
+enum WelcomeGuideDismissAction: Equatable {
+    case none
+    case persistCompletion
+}
+
+struct WelcomeGuidePresentationController: Equatable {
+    private(set) var didCompleteGuide = false
+    private(set) var isSheetPresented = true
+
+    init(hasSeen: Bool = false) {
+        syncStoredPreference(hasSeen: hasSeen)
+    }
+
+    mutating func syncStoredPreference(hasSeen: Bool) {
+        didCompleteGuide = hasSeen
+        isSheetPresented = !hasSeen
+    }
+
+    mutating func handlePresentationChange(_ isPresented: Bool) -> WelcomeGuideDismissAction {
+        if isPresented {
+            isSheetPresented = true
+            return .none
+        }
+
+        if didCompleteGuide {
+            isSheetPresented = false
+            return .persistCompletion
+        }
+
+        // SwiftUI can transiently dismiss the sheet while the first-launch
+        // window is still being promoted. Keep the guide pending until the user
+        // explicitly completes it.
+        isSheetPresented = true
+        return .none
     }
 }
 

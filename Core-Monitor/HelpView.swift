@@ -41,12 +41,13 @@ struct HelpView: View {
     private var allSections: [HelpSection] {
         [
             HelpSection(id: "overview", title: "Overview Dashboard", icon: "gauge.medium", keywords: [
-                "dashboard", "cpu", "gpu", "memory", "thermal", "power", "history", "trends"
+                "dashboard", "cpu", "gpu", "memory", "thermal", "power", "network", "upload", "download", "throughput", "history", "trends"
             ], content: AnyView(
                 HelpCard {
-                    Text("The Overview Dashboard provides a comprehensive summary of your Mac’s current state including CPU, GPU, memory, and thermal information.")
+                    Text("The Overview Dashboard provides a comprehensive summary of your Mac’s current state including CPU, GPU, memory, thermal, power, and live network information.")
                     HelpBullet(text: "`CPU`, `GPU`, and `Memory` usage are shown with real-time graphs and numeric values.")
                     HelpBullet(text: "Thermal zones and sensor temperatures update continuously.")
+                    HelpBullet(text: "Download and upload tiles surface current throughput, and the trend section keeps short rolling history for sustained transfer spikes.")
                     HelpBullet(text: "Load and thermal trend cards keep rolling 1-minute, 5-minute, and 15-minute windows so you can spot sustained pressure instead of only point-in-time spikes.")
                     HelpBullet(text: "Use the dashboard to quickly assess system performance and health.")
                 }
@@ -72,6 +73,7 @@ struct HelpView: View {
                     HelpBullet(text: "CPU and memory alerts include top-process context so you can see likely culprits without configuring per-process rules.")
                     HelpBullet(text: "Privacy Controls can remove app names from alerts and recent history while still keeping the thresholds active.")
                     HelpBullet(text: "The same privacy toggle now appears in both the `Alerts` tab and the `System` tab so it is easier to find during setup.")
+                    HelpBullet(text: "The status cards above the rules also show monitoring cadence, thermal pressure, helper health, and notification readiness in one place.")
                     HelpBullet(text: "Helper availability alerts matter once you opt into a helper-backed fan mode. Monitoring-only setups can stay healthy without the helper installed.")
                     HelpBullet(text: "Snooze suppresses desktop notifications for a rule, while `Hide For Now` clears the current alert card until conditions change again.")
                 }
@@ -143,13 +145,13 @@ struct HelpView: View {
                 }
             )),
             HelpSection(id: "menubar", title: "Menu Bar Items and Popovers", icon: "menubar.rectangle", keywords: [
-                "menu bar", "popover", "visible items", "cpu", "memory", "disk", "temperature",
+                "menu bar", "popover", "visible items", "cpu", "memory", "network", "disk", "temperature",
                 "allow in menu bar", "hidden icon", "missing icon", "macos 26", "menu bar access"
             ], content: AnyView(
                 HelpCard {
                     Text("Core Monitor menu bar items provide quick overview and access to system metrics.")
                     HelpBullet(text: "Click menu bar icons to open popovers with detailed info and controls.")
-                    HelpBullet(text: "Use `System` → `Menu Bar` to choose which of the CPU, Memory, Disk, and Temperature items stay visible.")
+                    HelpBullet(text: "Use `System` → `Menu Bar` to choose which of the CPU, Memory, Network, Disk, and Temperature items stay visible.")
                     HelpBullet(text: "At least one menu bar item must stay enabled so the app remains reachable after launch.")
                     HelpBullet(text: "If Core Monitor is running but its icons are still missing, open System Settings → Menu Bar and re-enable the app there on newer macOS releases before assuming monitoring failed.")
                 }
@@ -167,9 +169,10 @@ struct HelpView: View {
                 "location", "weatherkit", "permission", "location services", "forecast"
             ], content: AnyView(
                 HelpCard {
-                    Text("Core Monitor uses WeatherKit data which may require location permission.")
+                    Text("Core Monitor uses WeatherKit data, and location access upgrades the weather widget from a fallback forecast to your local conditions.")
                     HelpBullet(text: "Core Monitor only requests location after the live weather widget is shown.")
-                    HelpBullet(text: "Grant Core Monitor access to your location in System Settings → Privacy & Security → Location Services.")
+                    HelpBullet(text: "Without location access, the Touch Bar weather item can still fall back to a non-local forecast.")
+                    HelpBullet(text: "Grant Core Monitor access to your location in System Settings → Privacy & Security → Location Services for local conditions and rain timing.")
                     HelpBullet(text: "If weather data fails to load, ensure WeatherKit is enabled for your signed build.")
                 }
             )),

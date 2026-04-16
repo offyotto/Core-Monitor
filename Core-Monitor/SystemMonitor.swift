@@ -174,6 +174,8 @@ final class SystemMonitor: ObservableObject {
     private(set) var primaryFanSpeedTrend = MonitoringTrendSeries()
     private(set) var memoryUsageTrend = MonitoringTrendSeries()
     private(set) var swapUsedTrend = MonitoringTrendSeries()
+    private(set) var networkUploadTrend = MonitoringTrendSeries()
+    private(set) var networkDownloadTrend = MonitoringTrendSeries()
     var thermalState: ProcessInfo.ThermalState { snapshot.thermalState }
     var activeMonitoringInterval: TimeInterval { monitoringInterval }
     var activitySamplingInterval: TimeInterval {
@@ -297,6 +299,7 @@ final class SystemMonitor: ObservableObject {
         detectFans()
         updateReadings()
         updateActivitySamplingMode()
+        applyMonitoringIntervalIfNeeded()
 
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: monitoringInterval, repeats: true) { [weak self] _ in
@@ -493,6 +496,8 @@ final class SystemMonitor: ObservableObject {
                 self.primaryFanSpeedTrend.append(snapshot.fanSpeeds.first.map(Double.init), at: sampleTimestamp)
                 self.memoryUsageTrend.append(snapshot.memoryUsagePercent, at: sampleTimestamp)
                 self.swapUsedTrend.append(Double(snapshot.swapUsedBytes) / 1_073_741_824.0, at: sampleTimestamp)
+                self.networkUploadTrend.append(snapshot.networkStats.uploadBytesPerSec, at: sampleTimestamp)
+                self.networkDownloadTrend.append(snapshot.networkStats.downloadBytesPerSec, at: sampleTimestamp)
                 self.snapshot = snapshot
                 self.isSampling = false
             }
