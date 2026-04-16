@@ -298,6 +298,77 @@ final class AlertEngineTests: XCTestCase {
         XCTAssertNil(outcome.event?.context)
     }
 
+    func testAlertsDashboardStripPresentationHighlightsActiveAlerts() {
+        let presentation = AlertsDashboardStripPresentation(
+            activeAlertCount: 2,
+            authorizationStatus: .authorized,
+            desktopNotificationsEnabled: true,
+            notificationsMutedUntil: nil,
+            now: Date(timeIntervalSince1970: 10_000)
+        )
+
+        XCTAssertEqual(presentation.detail, "2 active alerts")
+        XCTAssertEqual(
+            presentation.action,
+            .init(title: "Open Alerts", icon: "bell.badge", style: .prominent)
+        )
+    }
+
+    func testAlertsDashboardStripPresentationRequestsSetupWhenNotificationsArePending() {
+        let presentation = AlertsDashboardStripPresentation(
+            activeAlertCount: 0,
+            authorizationStatus: .notDetermined,
+            desktopNotificationsEnabled: true,
+            notificationsMutedUntil: nil,
+            now: Date(timeIntervalSince1970: 10_000)
+        )
+
+        XCTAssertEqual(
+            presentation.detail,
+            "Desktop notifications are not set up yet. In-app history already records every alert."
+        )
+        XCTAssertEqual(
+            presentation.action,
+            .init(title: "Set Up Alerts", icon: "bell.badge", style: .standard)
+        )
+    }
+
+    func testAlertsDashboardStripPresentationStaysQuietWhenSystemIsHealthy() {
+        let presentation = AlertsDashboardStripPresentation(
+            activeAlertCount: 0,
+            authorizationStatus: .authorized,
+            desktopNotificationsEnabled: true,
+            notificationsMutedUntil: nil,
+            now: Date(timeIntervalSince1970: 10_000)
+        )
+
+        XCTAssertEqual(
+            presentation.detail,
+            "Alert thresholds and recent history stay available from the Alerts screen."
+        )
+        XCTAssertNil(presentation.action)
+    }
+
+    func testAlertsDashboardStripPresentationRoutesMutedSessionsToAlertSettings() {
+        let now = Date(timeIntervalSince1970: 10_000)
+        let presentation = AlertsDashboardStripPresentation(
+            activeAlertCount: 0,
+            authorizationStatus: .authorized,
+            desktopNotificationsEnabled: true,
+            notificationsMutedUntil: now.addingTimeInterval(600),
+            now: now
+        )
+
+        XCTAssertEqual(
+            presentation.detail,
+            "Desktop notifications are muted for now. In-app history still records every alert."
+        )
+        XCTAssertEqual(
+            presentation.action,
+            .init(title: "Alert Settings", icon: "bell.slash", style: .standard)
+        )
+    }
+
     private func makeInput(
         fanMode: FanControlMode = .automatic,
         helperInstalled: Bool = true,

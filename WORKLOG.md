@@ -285,3 +285,8 @@
 - Finished the silent-mode retirement by replacing the lingering Basic Mode `Cool Down` shortcut with an explicit `System Auto` action and aligning the menu bar status pill with the same automatic-cooling presentation.
 - Tightened the compatibility alias so any remaining in-memory `.silent` state now behaves, labels, and reports helper requirements exactly like `automatic`, instead of leaking legacy copy such as `Mode SILENT`.
 - Re-verified the batch with `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' -derivedDataPath /tmp/CoreMonitor-6b5d-pass4 CODE_SIGNING_ALLOWED=NO test -only-testing:Core-MonitorTests/CustomFanPresetTests` and a warmed full macOS `xcodebuild ... test` pass on the same derived-data path.
+
+### Completed batch
+- Quieted the Overview alerts strip so healthy systems no longer show a high-emphasis `Open Alerts` button by default; the card now only surfaces a CTA when there is an active alert or an actual notifications/setup issue to address.
+- Added `AlertsDashboardStripPresentation` coverage for active alerts, pending notification setup, muted sessions, and the fully healthy no-action state so this UX policy stays intentional instead of regressing through copy churn.
+- Rebuilt and re-ran the full macOS test suite on `/tmp/CoreMonitor-6b5d-pass5`, then refreshed the README Overview screenshot from a live debug build so the repo UI preview matches the current dashboard instead of the older pre-alert-strip layout.

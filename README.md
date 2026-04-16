@@ -70,7 +70,7 @@ brew install --cask offyotto-sl3/core-monitor/core-monitor
 ## UI Preview
 
 <p align="center">
-  <img src="./docs/images/ui/overview-2026.png" alt="Core-Monitor overview screen showing CPU, memory, temperature, and power cards." width="900">
+  <img src="./docs/images/ui/overview-2026.png" alt="Core-Monitor overview screen showing alert state, monitoring freshness, and CPU and memory load cards." width="900">
 </p>
 
 <p align="center">
