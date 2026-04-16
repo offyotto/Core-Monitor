@@ -4,7 +4,7 @@ import AppKit
 
 // MARK: - Fan Control Modes
 
-nonisolated enum FanControlMode: String, CaseIterable {
+enum FanControlMode: String, CaseIterable {
     case smart
     case silent
     case balanced
@@ -126,12 +126,12 @@ nonisolated enum FanControlMode: String, CaseIterable {
     }
 }
 
-nonisolated enum FanControlOwnership: Equatable {
+enum FanControlOwnership: Equatable {
     case system
     case coreMonitor
 }
 
-nonisolated struct FanModeGuidance: Equatable {
+struct FanModeGuidance: Equatable {
     let summary: String
     let detail: String
     let ownership: FanControlOwnership
@@ -142,8 +142,8 @@ nonisolated struct FanModeGuidance: Equatable {
 
 // MARK: - Custom Fan Preset Model
 
-nonisolated struct CustomFanPreset: Codable, Equatable {
-    nonisolated enum Sensor: String, Codable, CaseIterable, Identifiable {
+struct CustomFanPreset: Codable, Equatable {
+    enum Sensor: String, Codable, CaseIterable, Identifiable {
         case cpu
         case gpu
         case max
@@ -159,7 +159,7 @@ nonisolated struct CustomFanPreset: Codable, Equatable {
         }
     }
 
-    nonisolated struct CurvePoint: Codable, Equatable, Identifiable {
+    struct CurvePoint: Codable, Equatable, Identifiable {
         let id: UUID
         var temperatureC: Double
         var speedPercent: Double
@@ -190,7 +190,7 @@ nonisolated struct CustomFanPreset: Codable, Equatable {
         }
     }
 
-    nonisolated struct PowerBoost: Codable, Equatable {
+    struct PowerBoost: Codable, Equatable {
         var enabled: Bool = true
         var wattsAtMaxBoost: Double = 40
         var maxAddedTemperatureC: Double = 8
@@ -342,7 +342,7 @@ nonisolated struct CustomFanPreset: Codable, Equatable {
     }
 }
 
-nonisolated enum CustomPresetSaveOutcome {
+enum CustomPresetSaveOutcome {
     case success(String)
     case failure([String])
 }
