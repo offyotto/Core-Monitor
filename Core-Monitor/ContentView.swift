@@ -939,7 +939,7 @@ private struct FanHelperStatusCard: View {
         if helperManager.isInstalled {
             return "Installed. Smart, Manual, Custom, and fixed fan profiles can talk to the local privileged helper on supported Macs."
         }
-        return "Required for Smart, Silent, Balanced, Performance, Max, Manual, and Custom fan control. Monitoring works without it."
+        return "Required for Smart, Balanced, Performance, Max, Manual, and Custom fan control. Monitoring works without it."
     }
 
     private var statusMessageColor: Color {

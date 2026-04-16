@@ -231,6 +231,10 @@ final class SystemMonitor: ObservableObject {
     private let samplingQueue = DispatchQueue(label: "CoreMonitor.SystemMonitorSampling", qos: .utility)
     private var isSampling = false
     private var isMonitoringActive = false
+    private var supplementalSamplingState = SystemMonitorSupplementalSamplingState()
+    private var cachedBatteryInfo = BatteryInfo()
+    private var cachedSystemControls: (volume: Float, brightness: Float) = (0.5, 1.0)
+    private var cachedDiskStats = DiskStats()
     private var detailedSamplingReasons = Set<String>()
     private var interactiveMonitoringReasons = Set<String>()
     private var monitoringIntervalOverrides: [String: TimeInterval] = [:]
@@ -295,6 +299,7 @@ final class SystemMonitor: ObservableObject {
 
     func startMonitoring() {
         isMonitoringActive = true
+        supplementalSamplingState.reset()
         _ = openSMCConnection()
         detectFans()
         updateReadings()
@@ -420,15 +425,20 @@ final class SystemMonitor: ObservableObject {
     private func updateReadings() {
         guard !isSampling else { return }
         isSampling = true
+        let activeMonitoringInterval = monitoringInterval
 
         samplingQueue.async { [weak self] in
             guard let self else { return }
 
+            let sampledAt = Date()
             let cpuTemperature = self.readCPUTemperature()
             let gpuTemperature = self.readGPUTemperature()
             let fanReadings = self.readFanReadings()
             let cpuStats = self.readCPUUsage()
             let memoryStats = self.readMemoryStats()
+            let batteryInfo = self.readBatteryInfoIfNeeded(sampledAt: sampledAt, monitoringInterval: activeMonitoringInterval)
+            let systemControls = self.readSystemControlsIfNeeded(sampledAt: sampledAt, monitoringInterval: activeMonitoringInterval)
+            let diskStats = self.readDiskStatsIfNeeded(sampledAt: sampledAt, monitoringInterval: activeMonitoringInterval)
             let batteryInfo = self.readBatteryInfo()
             let systemControls = self.readSystemControls()
             let sampleDate = Date()
@@ -440,6 +450,7 @@ final class SystemMonitor: ObservableObject {
             let thermalState = ProcessInfo.processInfo.thermalState
 
             var snapshot = SystemMonitorSnapshot(
+                sampledAt: sampledAt,
                 sampledAt: sampleDate,
                 cpuTemperature: cpuTemperature,
                 gpuTemperature: gpuTemperature,
@@ -502,6 +513,27 @@ final class SystemMonitor: ObservableObject {
                 self.isSampling = false
             }
         }
+    }
+
+    private func readBatteryInfoIfNeeded(sampledAt now: Date, monitoringInterval: TimeInterval) -> BatteryInfo {
+        if supplementalSamplingState.shouldRefreshBattery(now: now, monitoringInterval: monitoringInterval) {
+            cachedBatteryInfo = readBatteryInfo()
+        }
+        return cachedBatteryInfo
+    }
+
+    private func readSystemControlsIfNeeded(sampledAt now: Date, monitoringInterval: TimeInterval) -> (volume: Float, brightness: Float) {
+        if supplementalSamplingState.shouldRefreshSystemControls(now: now, monitoringInterval: monitoringInterval) {
+            cachedSystemControls = readSystemControls()
+        }
+        return cachedSystemControls
+    }
+
+    private func readDiskStatsIfNeeded(sampledAt now: Date, monitoringInterval: TimeInterval) -> DiskStats {
+        if supplementalSamplingState.shouldRefreshDiskStats(now: now, monitoringInterval: monitoringInterval) {
+            cachedDiskStats = readDiskStats()
+        }
+        return cachedDiskStats
     }
 
     private func updateTopProcesses(_ topProcesses: TopProcessSnapshot) {
