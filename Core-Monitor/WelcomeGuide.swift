@@ -254,7 +254,7 @@ private struct WelcomeGuideSheet: View {
                     loginStatus: loginStatus,
                     helperStatus: helperStatus,
                     installHelper: installHelperIfNeeded,
-                    enableLaunchAtLogin: enableLaunchAtLogin,
+                    performLaunchAtLoginAction: performLaunchAtLoginAction,
                     applyBalancedPreset: applyBalancedPreset,
                     refreshHelperDiagnostics: refreshHelperDiagnostics,
                     exportHelperDiagnostics: exportHelperDiagnostics,
@@ -412,6 +412,15 @@ private struct WelcomeGuideSheet: View {
         startupManager.refreshState()
     }
 
+    private func performLaunchAtLoginAction() {
+        switch startupManager.statusSummary.action {
+        case .openSystemSettings:
+            startupManager.openLoginItemsSettings()
+        case .enable, nil:
+            enableLaunchAtLogin()
+        }
+    }
+
     private func installHelperIfNeeded() {
         helperManager.installFromApp()
     }
@@ -461,35 +470,26 @@ private struct WelcomeGuideSheet: View {
     }
 
     private var loginStatus: WelcomeGuideChecklistStatus {
-        if startupManager.isEnabled {
-            return WelcomeGuideChecklistStatus(
-                title: "Launch at Login",
-                symbol: "power.circle",
-                tone: .positive,
-                badge: "Enabled",
-                detail: "Core Monitor will relaunch after sign-in so menu bar monitoring stays available."
-            )
-        }
-
-        if let errorMessage = startupManager.errorMessage, errorMessage.isEmpty == false {
-            let badge = errorMessage.localizedCaseInsensitiveContains("approval") ? "Approval Needed" : "Needs Attention"
-            return WelcomeGuideChecklistStatus(
-                title: "Launch at Login",
-                symbol: "power.circle",
-                tone: .caution,
-                badge: badge,
-                detail: errorMessage
-            )
-        }
-
+        let summary = startupManager.statusSummary
         return WelcomeGuideChecklistStatus(
             title: "Launch at Login",
             symbol: "power.circle",
-            tone: .neutral,
-            badge: "Optional",
-            detail: "Enable this if you rely on Core Monitor staying present in the menu bar after restart.",
-            actionTitle: "Enable"
+            tone: checklistTone(for: summary.tone),
+            badge: summary.badge,
+            detail: summary.detail,
+            actionTitle: summary.actionTitle
         )
+    }
+
+    private func checklistTone(for tone: LaunchAtLoginStatusTone) -> WelcomeGuideChecklistTone {
+        switch tone {
+        case .positive:
+            return .positive
+        case .neutral:
+            return .neutral
+        case .caution:
+            return .caution
+        }
     }
 
     private var helperStatus: WelcomeGuideChecklistStatus {
@@ -686,7 +686,7 @@ private struct WelcomeGuideReadinessPanel: View {
     let loginStatus: WelcomeGuideChecklistStatus
     let helperStatus: WelcomeGuideChecklistStatus
     let installHelper: () -> Void
-    let enableLaunchAtLogin: () -> Void
+    let performLaunchAtLoginAction: () -> Void
     let applyBalancedPreset: () -> Void
     let refreshHelperDiagnostics: () -> Void
     let exportHelperDiagnostics: () -> Void
@@ -705,7 +705,7 @@ private struct WelcomeGuideReadinessPanel: View {
 
             VStack(spacing: 8) {
                 WelcomeGuideChecklistRow(status: menuBarStatus, action: applyBalancedPreset)
-                WelcomeGuideChecklistRow(status: loginStatus, action: enableLaunchAtLogin)
+                WelcomeGuideChecklistRow(status: loginStatus, action: performLaunchAtLoginAction)
                 WelcomeGuideChecklistRow(
                     status: helperStatus,
                     action: helperStatus.actionTitle == "Install Helper" ? installHelper : refreshHelperDiagnostics
