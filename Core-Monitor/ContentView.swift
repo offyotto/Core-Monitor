@@ -1381,8 +1381,7 @@ private struct Sidebar: View {
 // MARK: - DetailPane
 private struct DetailPane: View {
     @Binding var selection: SidebarItem
-    let state: ContentView.DashboardState
-    let cpuHistory: [Double]; let memHistory: [Double]; let cpuTempHistory: [Double]
+    let snapshot: SystemMonitorSnapshot
     let fanController: FanController; let systemMonitor: SystemMonitor
     let alertManager: AlertManager
     let startupManager: StartupManager
@@ -1434,36 +1433,36 @@ private struct DetailPane: View {
             }
             MonitoringStatusCard(systemMonitor: systemMonitor)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                MetricTile(label: "CPU Load",  value: "\(Int(state.cpuUsagePercent.rounded()))", unit: "%",
-                           color: cpuColor, gauge: state.cpuUsagePercent / 100, history: cpuHistory,
+                MetricTile(label: "CPU Load",  value: "\(Int(snapshot.cpuUsagePercent.rounded()))", unit: "%",
+                           color: cpuColor, gauge: snapshot.cpuUsagePercent / 100, history: systemMonitor.cpuHistory,
                            badgeText: alertBadgeText(for: .cpuUsage), badgeColor: alertBadgeColor(for: .cpuUsage))
-                if let pUsage = state.performanceCoreUsagePercent {
-                    MetricTile(label: "P-Core Load (\(state.performanceCoreCount) cores)",
+                if let pUsage = snapshot.performanceCoreUsagePercent {
+                    MetricTile(label: "P-Core Load (\(SystemMonitor.performanceCoreCount()) cores)",
                                value: "\(Int(pUsage.rounded()))", unit: "%",
                                color: loadColor(pUsage), gauge: pUsage / 100)
                 }
-                if let eUsage = state.efficiencyCoreUsagePercent {
-                    MetricTile(label: "E-Core Load (\(state.efficiencyCoreCount) cores)",
+                if let eUsage = snapshot.efficiencyCoreUsagePercent {
+                    MetricTile(label: "E-Core Load (\(SystemMonitor.efficiencyCoreCount()) cores)",
                                value: "\(Int(eUsage.rounded()))", unit: "%",
                                color: loadColor(eUsage), gauge: eUsage / 100)
                 }
-                MetricTile(label: "Memory",    value: "\(Int(state.memoryUsagePercent.rounded()))", unit: "%",
-                           color: memColor, gauge: state.memoryUsagePercent / 100, history: memHistory,
+                MetricTile(label: "Memory",    value: "\(Int(snapshot.memoryUsagePercent.rounded()))", unit: "%",
+                           color: memColor, gauge: snapshot.memoryUsagePercent / 100, history: systemMonitor.memHistory,
                            badgeText: alertBadgeText(for: .memoryPressure), badgeColor: alertBadgeColor(for: .memoryPressure))
-                if let t = state.cpuTemperature {
+                if let t = snapshot.cpuTemperature {
                     MetricTile(label: "CPU Temp", value: "\(Int(t.rounded()))", unit: "°C",
-                               color: tempColor(t), gauge: min(t, 110) / 110, history: cpuTempHistory,
+                               color: tempColor(t), gauge: min(t, 110) / 110, history: systemMonitor.cpuTempHistory,
                                badgeText: alertBadgeText(for: .cpuTemperature), badgeColor: alertBadgeColor(for: .cpuTemperature))
                 }
-                if let rpm = state.fanSpeeds.first, rpm > 0 {
+                if let rpm = snapshot.fanSpeeds.first, rpm > 0 {
                     MetricTile(label: "Fan", value: "\(rpm)", unit: " RPM", color: Color.bdAccent,
                                badgeText: alertBadgeText(for: .fanTooLowUnderHeat), badgeColor: alertBadgeColor(for: .fanTooLowUnderHeat))
                 }
-                if let w = state.totalSystemWatts {
+                if let w = snapshot.totalSystemWatts {
                     MetricTile(label: "Power", value: String(format: "%.1f", abs(w)), unit: " W", color: .purple)
                 }
-                if state.batteryInfo.hasBattery {
-                    MetricTile(label: "Battery", value: "\(state.batteryInfo.chargePercent ?? 0)", unit: "%",
+                if snapshot.batteryInfo.hasBattery {
+                    MetricTile(label: "Battery", value: "\(snapshot.batteryInfo.chargePercent ?? 0)", unit: "%",
                                color: battColor, gauge: battFrac,
                                badgeText: alertBadgeText(for: .lowBatteryDischarging), badgeColor: alertBadgeColor(for: .lowBatteryDischarging))
                 }
@@ -1476,16 +1475,16 @@ private struct DetailPane: View {
         VStack(alignment: .leading, spacing: 18) {
             header("Thermals", subtitle: "CPU & GPU temperature sensors")
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                if let t = state.cpuTemperature {
+                if let t = snapshot.cpuTemperature {
                     MetricTile(label: "CPU Temp", value: "\(Int(t.rounded()))", unit: "°C",
-                               color: tempColor(t), gauge: min(t, 110) / 110, history: cpuTempHistory)
+                               color: tempColor(t), gauge: min(t, 110) / 110, history: systemMonitor.cpuTempHistory)
                 }
-                if let t = state.gpuTemperature {
+                if let t = snapshot.gpuTemperature {
                     MetricTile(label: "GPU Temp", value: "\(Int(t.rounded()))", unit: "°C",
                                color: tempColor(t), gauge: min(t, 110) / 110)
                 }
             }
-            if state.cpuTemperature == nil && state.gpuTemperature == nil {
+            if snapshot.cpuTemperature == nil && snapshot.gpuTemperature == nil {
                 emptyState(icon: "thermometer.slash", message: "No thermal sensors available.\nSMC access is required.")
             }
         }
@@ -1495,24 +1494,24 @@ private struct DetailPane: View {
         VStack(alignment: .leading, spacing: 18) {
             header("Memory", subtitle: "Unified memory pressure and usage")
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                MetricTile(label: "Usage", value: "\(Int(state.memoryUsagePercent.rounded()))", unit: "%",
-                           color: memColor, gauge: state.memoryUsagePercent / 100, history: memHistory,
+                MetricTile(label: "Usage", value: "\(Int(snapshot.memoryUsagePercent.rounded()))", unit: "%",
+                           color: memColor, gauge: snapshot.memoryUsagePercent / 100, history: systemMonitor.memHistory,
                            badgeText: alertBadgeText(for: .memoryPressure), badgeColor: alertBadgeColor(for: .memoryPressure))
-                MetricTile(label: "Used", value: String(format: "%.1f", state.memoryUsedGB), unit: " GB",
-                           color: memColor, gauge: state.memoryUsedGB / max(1, state.totalMemoryGB))
+                MetricTile(label: "Used", value: String(format: "%.1f", snapshot.memoryUsedGB), unit: " GB",
+                           color: memColor, gauge: snapshot.memoryUsedGB / max(1, snapshot.totalMemoryGB))
             }
             DarkCard(padding: 16) {
                 VStack(spacing: 0) {
-                    CompactRow(icon: "memorychip", label: "Total",    value: String(format: "%.0f GB", state.totalMemoryGB), color: .secondary)
+                    CompactRow(icon: "memorychip", label: "Total",    value: String(format: "%.0f GB", snapshot.totalMemoryGB), color: .secondary)
                     rowDivider
                     CompactRow(icon: "chart.bar.fill", label: "Pressure", value: pressureLabel, color: pressureColor)
-                    if let w = state.totalSystemWatts {
+                    if let w = snapshot.totalSystemWatts {
                         rowDivider
                         CompactRow(icon: "bolt.fill", label: "System Power", value: String(format: "%.1f W", abs(w)), color: .purple)
                     }
                 }
             }
-            TopMemoryProcessesPanel(snapshot: systemMonitor.snapshot.topProcesses)
+            TopMemoryProcessesPanel(snapshot: snapshot.topProcesses)
         }
     }
 
@@ -1520,30 +1519,75 @@ private struct DetailPane: View {
         VStack(alignment: .leading, spacing: 18) {
             header("Fans", subtitle: fanController.statusMessage)
             FanControlPanel(fanController: fanController,
-                            snapshot: FanControlPanel.Snapshot(fanSpeeds: state.fanSpeeds,
-                                                               fanMinSpeeds: state.fanMinSpeeds,
-                                                               fanMaxSpeeds: state.fanMaxSpeeds))
+                            snapshot: FanControlPanel.Snapshot(fanSpeeds: snapshot.fanSpeeds,
+                                                               fanMinSpeeds: snapshot.fanMinSpeeds,
+                                                               fanMaxSpeeds: snapshot.fanMaxSpeeds))
         }
     }
 
     private var batteryContent: some View {
         VStack(alignment: .leading, spacing: 18) {
             header("Battery", subtitle: "Power and health information")
-            BatteryBar(info: state.batteryInfo)
+            BatteryBar(info: snapshot.batteryInfo)
             DarkCard(padding: 16) {
                 VStack(spacing: 0) {
-                    CompactRow(icon: "battery.100", label: "Charge", value: "\(state.batteryInfo.chargePercent ?? 0)%", color: battColor)
-                    if let h = state.batteryInfo.healthPercent {
+                    CompactRow(icon: "battery.100", label: "Charge", value: "\(snapshot.batteryInfo.chargePercent ?? 0)%", color: battColor)
+                    if let h = snapshot.batteryInfo.healthPercent {
                         rowDivider
                         CompactRow(icon: "heart.fill", label: "Health", value: "\(h)%", color: h > 80 ? .green : h > 60 ? .orange : .red)
                     }
-                    if let c = state.batteryInfo.cycleCount {
+                    if let c = snapshot.batteryInfo.cycleCount {
                         rowDivider
                         CompactRow(icon: "arrow.2.circlepath", label: "Cycles", value: "\(c)", color: .secondary)
                     }
-                    if let w = state.batteryInfo.powerWatts {
+                    if let w = snapshot.batteryInfo.powerWatts {
                         rowDivider
                         CompactRow(icon: "bolt.fill", label: "Power", value: String(format: "%.1f W", abs(w)), color: .yellow)
+                    }
+                }
+            }
+            DarkCard(padding: 16) {
+                VStack(spacing: 0) {
+                    CompactRow(
+                        icon: "powerplug.fill",
+                        label: "Status",
+                        value: BatteryDetailFormatter.powerStateDescription(for: snapshot.batteryInfo),
+                        color: snapshot.batteryInfo.isCharging ? .yellow : snapshot.batteryInfo.isPluggedIn ? .green : Color.bdAccent
+                    )
+                    if let source = BatteryDetailFormatter.sourceDescription(for: snapshot.batteryInfo) {
+                        rowDivider
+                        CompactRow(icon: "cable.connector", label: "Source", value: source, color: .secondary)
+                    }
+                    if let runtime = BatteryDetailFormatter.runtimeDescription(for: snapshot.batteryInfo) {
+                        rowDivider
+                        CompactRow(
+                            icon: "clock.fill",
+                            label: snapshot.batteryInfo.isCharging ? "Time to Full" : "Time Remaining",
+                            value: runtime,
+                            color: Color.bdAccent
+                        )
+                    }
+                    if let temperature = BatteryDetailFormatter.temperatureDescription(snapshot.batteryInfo.temperatureC) {
+                        rowDivider
+                        CompactRow(
+                            icon: "thermometer.medium",
+                            label: "Temperature",
+                            value: temperature,
+                            color: tempColor(snapshot.batteryInfo.temperatureC ?? 0)
+                        )
+                    }
+                    if let voltage = BatteryDetailFormatter.voltageDescription(snapshot.batteryInfo.voltageV) {
+                        rowDivider
+                        CompactRow(icon: "bolt.fill", label: "Voltage", value: voltage, color: .yellow)
+                    }
+                    if let amperage = BatteryDetailFormatter.amperageDescription(snapshot.batteryInfo.amperageA) {
+                        rowDivider
+                        CompactRow(
+                            icon: "waveform.path.ecg",
+                            label: "Current",
+                            value: amperage,
+                            color: snapshot.batteryInfo.isCharging ? .green : .orange
+                        )
                     }
                 }
             }
@@ -1557,19 +1601,19 @@ private struct DetailPane: View {
             HelperDiagnosticsSupportCard(startupManager: startupManager)
             DarkCard(padding: 16) {
                 VStack(spacing: 8) {
-                    levelRow(label: "Volume",     icon: state.currentVolume < 0.01 ? "speaker.slash.fill" : "speaker.wave.2.fill",
-                             fraction: Double(state.currentVolume),      color: .yellow)
+                    levelRow(label: "Volume",     icon: snapshot.currentVolume < 0.01 ? "speaker.slash.fill" : "speaker.wave.2.fill",
+                             fraction: Double(snapshot.currentVolume),      color: .yellow)
                     Rectangle().fill(Color.bdDivider).frame(height: 1)
                     levelRow(label: "Brightness", icon: "sun.max.fill",
-                             fraction: Double(state.currentBrightness),  color: Color.bdAccent)
+                             fraction: Double(snapshot.currentBrightness),  color: Color.bdAccent)
                 }
             }
             MenuBarSettingsCard(
                 snapshot: .init(
-                    cpuUsagePercent: state.cpuUsagePercent,
-                    memoryUsagePercent: state.memoryUsagePercent,
-                    diskUsagePercent: state.diskUsagePercent,
-                    cpuTemperature: state.cpuTemperature
+                    cpuUsagePercent: snapshot.cpuUsagePercent,
+                    memoryUsagePercent: snapshot.memoryUsagePercent,
+                    diskUsagePercent: snapshot.diskStats.usagePercent,
+                    cpuTemperature: snapshot.cpuTemperature
                 )
             )
             DarkCard(padding: 16) {
@@ -1667,14 +1711,14 @@ private struct DetailPane: View {
     }
 
     // MARK: Colour helpers
-    private var cpuColor: Color   { state.cpuUsagePercent > 80 ? .red : state.cpuUsagePercent > 50 ? .orange : .green }
-    private var memColor: Color   { switch state.memoryPressure { case .green: return .green; case .yellow: return .orange; case .red: return .red } }
-    private var pressureLabel: String { switch state.memoryPressure { case .green: return "Normal"; case .yellow: return "Elevated"; case .red: return "Critical" } }
+    private var cpuColor: Color   { snapshot.cpuUsagePercent > 80 ? .red : snapshot.cpuUsagePercent > 50 ? .orange : .green }
+    private var memColor: Color   { switch snapshot.memoryPressure { case .green: return .green; case .yellow: return .orange; case .red: return .red } }
     private var pressureColor: Color  { memColor }
-    private var battFrac: Double  { Double(state.batteryInfo.chargePercent ?? 0) / 100 }
+    private var pressureLabel: String { switch snapshot.memoryPressure { case .green: return "Normal"; case .yellow: return "Elevated"; case .red: return "Critical" } }
+    private var battFrac: Double  { Double(snapshot.batteryInfo.chargePercent ?? 0) / 100 }
     private var battColor: Color  {
-        let p = state.batteryInfo.chargePercent ?? 100
-        return p < 20 ? .red : p < 40 ? .orange : state.batteryInfo.isCharging ? Color.bdAccent : .green
+        let p = snapshot.batteryInfo.chargePercent ?? 100
+        return p < 20 ? .red : p < 40 ? .orange : snapshot.batteryInfo.isCharging ? Color.bdAccent : .green
     }
     private func loadColor(_ usage: Double) -> Color { usage > 80 ? .red : usage > 50 ? .orange : .green }
     private func tempColor(_ t: Double) -> Color { t > 90 ? .red : t > 70 ? .orange : .green }
@@ -2453,32 +2497,13 @@ struct VisualEffectView: NSViewRepresentable {
 // MARK: - ContentView
 struct ContentView: View {
     @StateObject private var appearanceSettings = AppAppearanceSettings.shared
-    struct DashboardState {
-        var hasSMCAccess = false; var numberOfFans = 0
-        var fanSpeeds: [Int] = []; var fanMinSpeeds: [Int] = []; var fanMaxSpeeds: [Int] = []
-        var cpuUsagePercent: Double = 0; var cpuTemperature: Double?; var gpuTemperature: Double?
-        var performanceCoreUsagePercent: Double?; var efficiencyCoreUsagePercent: Double?
-        var performanceCoreCount: Int = SystemMonitor.performanceCoreCount()
-        var efficiencyCoreCount: Int = SystemMonitor.efficiencyCoreCount()
-        var memoryUsagePercent: Double = 0; var memoryUsedGB: Double = 0; var totalMemoryGB: Double = 0
-        var diskUsagePercent: Double = 0
-        var memoryPressure: MemoryPressureLevel = .green
-        var batteryInfo = BatteryInfo(); var totalSystemWatts: Double?
-        var currentVolume: Float = 0.5; var currentBrightness: Float = 1.0
-    }
-
-    let systemMonitor: SystemMonitor
+    @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
     @ObservedObject var alertManager: AlertManager
     @ObservedObject var startupManager: StartupManager
 
     @StateObject private var modeState      = AppModeState()
-
-    @State private var cpuHistory:     [Double] = Array(repeating: 0, count: 60)
-    @State private var memHistory:     [Double] = Array(repeating: 0, count: 60)
-    @State private var cpuTempHistory: [Double] = Array(repeating: 0, count: 60)
     @State private var sidebarSelection: SidebarItem = .overview
-    @State private var dashboardState = DashboardState()
 
     var body: some View {
         Group {
@@ -2488,17 +2513,11 @@ struct ContentView: View {
                 fullDashboard
             }
         }
-        .onReceive(systemMonitor.$snapshot.receive(on: RunLoop.main)) { snapshot in
-            applySnapshot(snapshot)
-        }
         .onChange(of: modeState.isBasicMode) { systemMonitor.setBasicMode($0) }
         .onAppear {
-            DispatchQueue.main.async {
-                systemMonitor.setBasicMode(modeState.isBasicMode)
-                systemMonitor.setInteractiveMonitoringEnabled(true, reason: "dashboard")
-                systemMonitor.setDetailedSamplingEnabled(true, reason: "dashboard")
-                applySnapshot(systemMonitor.snapshot)
-            }
+            systemMonitor.setBasicMode(modeState.isBasicMode)
+            systemMonitor.setInteractiveMonitoringEnabled(true, reason: "dashboard")
+            systemMonitor.setDetailedSamplingEnabled(true, reason: "dashboard")
         }
         .onDisappear {
             systemMonitor.setInteractiveMonitoringEnabled(false, reason: "dashboard")
@@ -2510,13 +2529,12 @@ struct ContentView: View {
         HStack(spacing: 0) {
             Sidebar(
                 selection: $sidebarSelection,
-                hasBattery: dashboardState.batteryInfo.hasBattery,
+                hasBattery: systemMonitor.snapshot.batteryInfo.hasBattery,
                 modeState: modeState
             )
             DetailPane(
                 selection: $sidebarSelection,
-                state: dashboardState,
-                cpuHistory: cpuHistory, memHistory: memHistory, cpuTempHistory: cpuTempHistory,
+                snapshot: systemMonitor.snapshot,
                 fanController: fanController, systemMonitor: systemMonitor, alertManager: alertManager,
                 startupManager: startupManager
             )
@@ -2540,31 +2558,5 @@ struct ContentView: View {
         }
         .preferredColorScheme(.dark)
         .welcomeGuide()
-    }
-
-    private func updateHistories(using snapshot: SystemMonitorSnapshot) {
-        cpuHistory.removeFirst(); cpuHistory.append(snapshot.cpuUsagePercent)
-        memHistory.removeFirst(); memHistory.append(snapshot.memoryUsagePercent)
-        let n = snapshot.cpuTemperature.map { min($0, 120) / 120 * 100 } ?? 0
-        cpuTempHistory.removeFirst(); cpuTempHistory.append(n)
-    }
-
-    private func applySnapshot(_ snapshot: SystemMonitorSnapshot) {
-        dashboardState = DashboardState(
-            hasSMCAccess: snapshot.hasSMCAccess, numberOfFans: snapshot.numberOfFans,
-            fanSpeeds: snapshot.fanSpeeds, fanMinSpeeds: snapshot.fanMinSpeeds,
-            fanMaxSpeeds: snapshot.fanMaxSpeeds, cpuUsagePercent: snapshot.cpuUsagePercent,
-            cpuTemperature: snapshot.cpuTemperature, gpuTemperature: snapshot.gpuTemperature,
-            performanceCoreUsagePercent: snapshot.performanceCoreUsagePercent,
-            efficiencyCoreUsagePercent: snapshot.efficiencyCoreUsagePercent,
-            performanceCoreCount: SystemMonitor.performanceCoreCount(),
-            efficiencyCoreCount: SystemMonitor.efficiencyCoreCount(),
-            memoryUsagePercent: snapshot.memoryUsagePercent, memoryUsedGB: snapshot.memoryUsedGB,
-            totalMemoryGB: snapshot.totalMemoryGB, diskUsagePercent: snapshot.diskStats.usagePercent,
-            memoryPressure: snapshot.memoryPressure,
-            batteryInfo: snapshot.batteryInfo, totalSystemWatts: snapshot.totalSystemWatts,
-            currentVolume: snapshot.currentVolume, currentBrightness: snapshot.currentBrightness
-        )
-        updateHistories(using: snapshot)
     }
 }
