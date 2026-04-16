@@ -116,9 +116,12 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     private var dashboardController: DashboardWindowController?
     private var hasPresentedInitialDashboard = false
     private var pendingInitialDashboardAttempts: [DispatchWorkItem] = []
+    private var quitShortcutMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSWindow.allowsAutomaticWindowTabbing = false
+        installApplicationMenuIfNeeded()
+        installQuitShortcutMonitorIfNeeded()
         NSApp.setActivationPolicy(.accessory)
         purgeLegacyWindowStateIfNeeded()
         installMenuBarIfNeeded()
@@ -126,6 +129,10 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        if let quitShortcutMonitor {
+            NSEvent.removeMonitor(quitShortcutMonitor)
+            self.quitShortcutMonitor = nil
+        }
         cancelInitialDashboardAttempts()
         coordinator.stop()
     }
@@ -150,6 +157,11 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         guard flag == false else { return false }
         openDashboard()
         return true
+    }
+
+    @objc
+    private func quitApplication(_ sender: Any?) {
+        NSApp.terminate(sender)
     }
 
     func openDashboard() {
@@ -179,6 +191,44 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
                 self?.coordinator.revertToSystemTouchBar()
             }
         )
+    }
+
+    private func installApplicationMenuIfNeeded() {
+        guard NSApp.mainMenu == nil else { return }
+
+        let appName = Bundle.main.object(forInfoDictionaryKey: kCFBundleNameKey as String) as? String ?? "Core Monitor"
+        let mainMenu = NSMenu()
+        let appMenuItem = NSMenuItem()
+        appMenuItem.title = appName
+
+        let appMenu = NSMenu(title: appName)
+        let quitMenuItem = NSMenuItem(
+            title: "Quit \(appName)",
+            action: #selector(quitApplication(_:)),
+            keyEquivalent: "q"
+        )
+        quitMenuItem.keyEquivalentModifierMask = [.command]
+        quitMenuItem.target = self
+        appMenu.addItem(quitMenuItem)
+
+        appMenuItem.submenu = appMenu
+        mainMenu.addItem(appMenuItem)
+        NSApp.mainMenu = mainMenu
+    }
+
+    private func installQuitShortcutMonitorIfNeeded() {
+        guard quitShortcutMonitor == nil else { return }
+
+        quitShortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard self?.isQuitShortcut(event) == true else { return event }
+            NSApp.terminate(nil)
+            return nil
+        }
+    }
+
+    private func isQuitShortcut(_ event: NSEvent) -> Bool {
+        let modifierFlags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        return modifierFlags == [.command] && event.charactersIgnoringModifiers?.lowercased() == "q"
     }
 
     private func dashboardControllerIfNeeded() -> DashboardWindowController {
