@@ -73,6 +73,7 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
 
     private func configure(_ window: NSWindow) {
         window.identifier = NSUserInterfaceItemIdentifier("CoreMonitorMainWindow")
+        window.title = "Core Monitor"
         window.isReleasedWhenClosed = false
         window.delegate = self
         window.isMovableByWindowBackground = true
