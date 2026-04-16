@@ -288,3 +288,33 @@ final class MenuBarSettingsTests: XCTestCase {
         return defaults
     }
 }
+
+@MainActor
+final class TopProcessSamplerTests: XCTestCase {
+    func testSamplerDoesNotRestartWhenSameIntervalIsAlreadyActive() {
+        XCTAssertFalse(
+            TopProcessSampler.shouldRestartTimer(
+                isRunning: true,
+                currentInterval: 5,
+                requestedInterval: 5
+            )
+        )
+    }
+
+    func testSamplerRestartsWhenStoppedOrIntervalChanges() {
+        XCTAssertTrue(
+            TopProcessSampler.shouldRestartTimer(
+                isRunning: false,
+                currentInterval: 5,
+                requestedInterval: 5
+            )
+        )
+        XCTAssertTrue(
+            TopProcessSampler.shouldRestartTimer(
+                isRunning: true,
+                currentInterval: 5,
+                requestedInterval: 30
+            )
+        )
+    }
+}
