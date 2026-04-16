@@ -228,6 +228,7 @@ enum SystemBrightness {
 }
 
 @available(macOS 13.0, *)
+@MainActor
 final class ControlCenterSliderPresenter: NSObject, NSTouchBarDelegate {
     enum SliderKind {
         case brightness
