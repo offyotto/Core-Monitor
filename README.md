@@ -5,7 +5,7 @@
 <h1 align="center">Core-Monitor</h1>
 
 <p align="center">
-  A native system monitor for macOS, built for Apple Silicon Macs.
+  A thermal-first system monitor for macOS, built for Apple Silicon Macs.
 </p>
 
 <p align="center">
@@ -42,6 +42,15 @@ Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs
 It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. Sensor reads stay local to your Mac. The optional fan control helper is the only additional process, and it is only needed if you want write access for fan control.
 
 Public builds are available through GitHub Releases.
+
+## Product stance
+
+Core-Monitor is intentionally narrower than broad “everything in the menu bar” utilities. The product bar is:
+
+- **Thermal-first** — CPU/GPU temperatures, fan behavior, power draw, swap pressure, and alerts stay ahead of novelty widgets.
+- **Monitoring-first** — sensor reads, menu bar summaries, dashboard trends, and alerts work without the privileged helper.
+- **Helper only when requested** — install `smc-helper` only if you want manual or managed fan writes.
+- **Local by default** — monitoring stays on-device, without analytics, accounts, or external network dependencies for core telemetry.
 
 ## UI Preview
 
@@ -237,6 +246,8 @@ The new customization system is intentionally practical rather than unlimited. R
 ## Installation
 
 **Download:** Get the latest public build from [Releases](https://github.com/offyotto-sl3/Core-Monitor/releases/latest) and move it to `/Applications`.
+
+Monitoring is available immediately after launch. If you later decide you want helper-backed fan control, install the bundled helper from the app’s `Fans` or `System` flow instead of having to bless it up front.
 
 **Build from source:**
 
