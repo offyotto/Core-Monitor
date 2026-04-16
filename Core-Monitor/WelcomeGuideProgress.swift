@@ -56,9 +56,16 @@ enum CoreMonitorDefaultsMaintenance {
         defaults: UserDefaults,
         bundleIdentifier: String?
     ) {
-        guard defaults.bool(forKey: deprecatedLaunchStateResetKey) == false else { return }
+        let persistedKeys = persistedKeys(defaults: defaults, bundleIdentifier: bundleIdentifier)
+        let hasDeprecatedLaunchState = persistedKeys.contains { key in
+            deprecatedLaunchStateKeys.contains(key) || deprecatedLaunchStatePrefixes.contains(where: key.hasPrefix)
+        }
 
-        for key in persistedKeys(defaults: defaults, bundleIdentifier: bundleIdentifier) {
+        guard hasDeprecatedLaunchState || defaults.bool(forKey: deprecatedLaunchStateResetKey) == false else {
+            return
+        }
+
+        for key in persistedKeys {
             if deprecatedLaunchStateKeys.contains(key) || deprecatedLaunchStatePrefixes.contains(where: key.hasPrefix) {
                 defaults.removeObject(forKey: key)
             }
