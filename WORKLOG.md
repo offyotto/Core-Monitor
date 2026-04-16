@@ -167,3 +167,8 @@
 - Brought the in-app Help copy back in sync with the product by documenting the newer 1-minute, 5-minute, and 15-minute trend windows in the Overview topic instead of leaving the older “point-in-time dashboard” explanation.
 - Expanded the Battery help topic and search keywords so users can now find runtime, adapter/source, voltage, current, and amperage guidance from the shipped help instead of guessing from the UI.
 - Added `HelpViewSearchTests` coverage for the new battery keywords and re-verified the full macOS suite with `xcodebuild ... test`.
+
+### Completed batch
+- Reworked the welcome-guide flow so each presentation resets to the first onboarding step instead of reopening on a stale later screen.
+- Added a vertical overflow fallback for long onboarding steps and tightened the final “Quick Setup Checklist” layout so the guide degrades to scrolling instead of silently clipping action rows.
+- Rebuilt the macOS app repeatedly and verified the welcome-guide flow visually from a clean first launch through the final step with fresh screenshots.
