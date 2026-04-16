@@ -30,7 +30,7 @@ enum MenuBarVisibilityPreset: CaseIterable, Identifiable {
         case .balanced:
             return "Show core system pressure without turning the menu bar into noise."
         case .full:
-            return "Expose CPU, memory, storage, and temperature all at once."
+            return "Expose CPU, memory, network, storage, and temperature all at once."
         }
     }
 
@@ -57,6 +57,7 @@ final class MenuBarSettings: ObservableObject {
 
     @Published private(set) var cpuEnabled: Bool
     @Published private(set) var memoryEnabled: Bool
+    @Published private(set) var networkEnabled: Bool
     @Published private(set) var diskEnabled: Bool
     @Published private(set) var temperatureEnabled: Bool
     @Published private(set) var lastWarning: String?
@@ -67,6 +68,7 @@ final class MenuBarSettings: ObservableObject {
         self.defaults = defaults
         self.cpuEnabled = Self.boolValue(for: .cpu, defaults: defaults)
         self.memoryEnabled = Self.boolValue(for: .memory, defaults: defaults)
+        self.networkEnabled = Self.boolValue(for: .network, defaults: defaults)
         self.diskEnabled = Self.boolValue(for: .disk, defaults: defaults)
         self.temperatureEnabled = Self.boolValue(for: .temperature, defaults: defaults)
         ensureAccessibleConfiguration()
@@ -78,6 +80,8 @@ final class MenuBarSettings: ObservableObject {
             return cpuEnabled
         case .memory:
             return memoryEnabled
+        case .network:
+            return networkEnabled
         case .disk:
             return diskEnabled
         case .temperature:
@@ -139,6 +143,8 @@ final class MenuBarSettings: ObservableObject {
             cpuEnabled = enabled
         case .memory:
             memoryEnabled = enabled
+        case .network:
+            networkEnabled = enabled
         case .disk:
             diskEnabled = enabled
         case .temperature:

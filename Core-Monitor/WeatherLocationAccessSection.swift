@@ -103,11 +103,11 @@ struct WeatherLocationAccessSection: View {
     private var detailText: String {
         switch controller.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
-            return "Live weather widgets can use your current location without interrupting launch."
+            return "Live weather widgets can use your current location for local conditions without interrupting launch."
         case .denied, .restricted:
-            return "Core Monitor will not prompt again on launch. Re-enable location in System Settings if you want local weather in the Touch Bar."
+            return "Core Monitor can keep a fallback forecast running, but re-enable location in System Settings if you want weather for your current place in the Touch Bar."
         case .notDetermined:
-            return "Core Monitor now waits for you to opt in. Request access only when you want live local weather in the Touch Bar."
+            return "Core Monitor can still show fallback weather. Request access only when you want live local conditions and rain timing in the Touch Bar."
         @unknown default:
             return "Location access is unavailable right now."
         }

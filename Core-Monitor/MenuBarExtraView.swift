@@ -124,16 +124,16 @@ private struct MenuBarAlertSummarySection: View {
                         .foregroundStyle(Color.mbTint)
                         .mbTracking(1.2)
                     Spacer()
-                    Text(alertManager.highestActiveSeverity.title.uppercased())
+                    Text(statusBadgeLabel.uppercased())
                         .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(severityColor(alertManager.highestActiveSeverity))
+                        .foregroundStyle(statusBadgeColor(health))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(severityColor(alertManager.highestActiveSeverity).opacity(0.18))
+                        .background(statusBadgeColor(health).opacity(0.18))
                         .clipShape(Capsule())
                 }
 
-                Text(alertManager.summaryLine)
+                Text(summaryLine)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.84))
                     .fixedSize(horizontal: false, vertical: true)
@@ -175,12 +175,43 @@ private struct MenuBarAlertSummarySection: View {
             .clipShape(Capsule())
     }
 
-    private func severityColor(_ severity: AlertSeverity) -> Color {
-        switch severity {
-        case .none: return .white.opacity(0.55)
-        case .info: return Color.mbBlue
-        case .warning: return Color.mbOrange
-        case .critical: return .red
+    private var summaryLine: String {
+        if alertManager.activeAlerts.isEmpty == false {
+            return alertManager.summaryLine
+        }
+        if systemMonitor.hasSMCAccess {
+            return "Core Monitor is sampling live hardware metrics."
+        }
+        if let lastError = systemMonitor.lastError, lastError.isEmpty == false {
+            return lastError
+        }
+        return "Waiting for AppleSMC access."
+    }
+
+    private var statusBadgeLabel: String {
+        alertManager.highestActiveSeverity == .none
+            ? monitoringStatusLabel
+            : alertManager.highestActiveSeverity.title
+    }
+
+    private var monitoringStatusLabel: String {
+        let health = systemMonitor.snapshotHealth()
+        return health.statusLabel
+    }
+
+    private func statusBadgeColor(_ health: MonitoringSnapshotHealth) -> Color {
+        if alertManager.highestActiveSeverity == .none {
+            return freshnessColor(health)
+        }
+        switch alertManager.highestActiveSeverity {
+        case .none:
+            return freshnessColor(health)
+        case .info:
+            return Color.mbBlue
+        case .warning:
+            return Color.mbOrange
+        case .critical:
+            return .red
         }
     }
 
@@ -966,6 +997,213 @@ struct DiskMenuPopoverView: View {
         }
 
         return "PID \(pid)"
+    }
+}
+
+// MARK: - ═══════════════════════════════════════════
+// MARK: - Network Popover View
+// MARK: - ═══════════════════════════════════════════
+
+struct NetworkMenuPopoverView: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+    @ObservedObject var fanController: FanController
+    @ObservedObject var alertManager: AlertManager
+    var openDashboardAction: () -> Void = {}
+    var openAlertsAction: () -> Void = {}
+
+    var body: some View {
+        MenuPopoverSurface {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    networkHeader
+                    MBDivider()
+                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, fanController: fanController, alertManager: alertManager, openAlertsAction: openAlertsAction)
+                    MBDivider()
+                    liveThroughputSection
+                    MBDivider()
+                    historySection
+                    MBDivider()
+                    MBActionButton(label: "Open Dashboard", icon: "gauge.medium") { openDashboardAction() }
+                        .padding(.vertical, 4)
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
+        .frame(width: 320)
+    }
+
+    private var networkHeader: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.mbBlue.opacity(0.15))
+                    .frame(width: 34, height: 34)
+                Image(systemName: "arrow.down.arrow.up")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.mbBlue)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Network")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.92))
+                Text("Live interface throughput")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.55))
+            }
+            Spacer()
+            VStack(alignment: .trailing, spacing: 4) {
+                rateBadge(label: "↓", value: currentDownloadRate, color: Color.mbBlue)
+                rateBadge(label: "↑", value: currentUploadRate, color: Color.mbGreen)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+    }
+
+    private func rateBadge(label: String, value: String, color: Color) -> some View {
+        HStack(spacing: 6) {
+            Text(label)
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundStyle(color)
+            Text(value)
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.84))
+                .monospacedDigit()
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(color.opacity(0.12))
+        .clipShape(Capsule())
+    }
+
+    private var liveThroughputSection: some View {
+        VStack(spacing: 0) {
+            MBSectionHeader(title: "LIVE THROUGHPUT")
+            MBRow(
+                icon: "arrow.down.circle.fill",
+                label: "Download",
+                value: currentDownloadRate,
+                color: Color.mbBlue
+            )
+            MBRow(
+                icon: "arrow.up.circle.fill",
+                label: "Upload",
+                value: currentUploadRate,
+                color: Color.mbGreen
+            )
+            MBRow(
+                icon: "chart.line.uptrend.xyaxis",
+                label: "Peak Down",
+                value: summaryLabel(downloadSummary?.maximum),
+                color: Color.mbBlue.opacity(0.78)
+            )
+            MBRow(
+                icon: "chart.line.uptrend.xyaxis",
+                label: "Peak Up",
+                value: summaryLabel(uploadSummary?.maximum),
+                color: Color.mbGreen.opacity(0.78)
+            )
+        }
+    }
+
+    private var historySection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            MBSectionHeader(title: "1-MINUTE HISTORY")
+            if normalizedDownloadValues.isEmpty && normalizedUploadValues.isEmpty {
+                Text("Throughput history fills in after a few live samples.")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .padding(.horizontal, 14)
+                    .padding(.bottom, 10)
+            } else {
+                historyRow(
+                    title: "Download",
+                    color: Color.mbBlue,
+                    current: currentDownloadRate,
+                    average: summaryLabel(downloadSummary?.average),
+                    peak: summaryLabel(downloadSummary?.maximum),
+                    values: normalizedDownloadValues
+                )
+                historyRow(
+                    title: "Upload",
+                    color: Color.mbGreen,
+                    current: currentUploadRate,
+                    average: summaryLabel(uploadSummary?.average),
+                    peak: summaryLabel(uploadSummary?.maximum),
+                    values: normalizedUploadValues
+                )
+            }
+        }
+        .padding(.bottom, 10)
+    }
+
+    private func historyRow(
+        title: String,
+        color: Color,
+        current: String,
+        average: String,
+        peak: String,
+        values: [Double]
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(title)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.75))
+                Spacer()
+                Text(current)
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundStyle(color)
+                    .monospacedDigit()
+            }
+            MiniSparkline(values: values, color: color, height: 26)
+            HStack {
+                Text("Avg \(average)")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.55))
+                Spacer()
+                Text("Peak \(peak)")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.55))
+            }
+        }
+        .padding(.horizontal, 14)
+    }
+
+    private var currentDownloadRate: String {
+        NetworkThroughputFormatter.compactRate(bytesPerSecond: systemMonitor.networkStats.downloadBytesPerSec)
+    }
+
+    private var currentUploadRate: String {
+        NetworkThroughputFormatter.compactRate(bytesPerSecond: systemMonitor.networkStats.uploadBytesPerSec)
+    }
+
+    private var downloadSummary: MonitoringTrendSummary? {
+        systemMonitor.networkDownloadTrend.summary(for: .oneMinute)
+    }
+
+    private var uploadSummary: MonitoringTrendSummary? {
+        systemMonitor.networkUploadTrend.summary(for: .oneMinute)
+    }
+
+    private var normalizedDownloadValues: [Double] {
+        normalizedValues(systemMonitor.networkDownloadTrend.values(for: .oneMinute))
+    }
+
+    private var normalizedUploadValues: [Double] {
+        normalizedValues(systemMonitor.networkUploadTrend.values(for: .oneMinute))
+    }
+
+    private func summaryLabel(_ value: Double?) -> String {
+        guard let value else { return "—" }
+        return NetworkThroughputFormatter.compactRate(bytesPerSecond: value)
+    }
+
+    private func normalizedValues(_ values: [Double]) -> [Double] {
+        guard let maximum = values.max(), maximum > 0 else {
+            return values.map { _ in 0 }
+        }
+        return values.map { min(max(($0 / maximum) * 100, 0), 100) }
     }
 }
 

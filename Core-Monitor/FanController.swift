@@ -56,6 +56,8 @@ enum FanControlMode: String, CaseIterable {
     var usesManualSlider: Bool { self == .manual }
     var isManagedProfile: Bool { self != .manual && self != .automatic }
     var requiresPrivilegedHelper: Bool { canonicalMode != .automatic }
+    var isManagedProfile: Bool { guidance.ownership == .coreMonitor }
+    var requiresPrivilegedHelper: Bool { guidance.requiresHelper }
 
     var guidance: FanModeGuidance {
         switch self {
@@ -73,7 +75,7 @@ enum FanControlMode: String, CaseIterable {
                 summary: "Leaves the firmware curve in charge instead of holding a custom RPM target.",
                 detail: "Best when you want monitoring and alerts without an ongoing fan override.",
                 ownership: .system,
-                requiresHelper: true,
+                requiresHelper: false,
                 restoresSystemAutomaticOnExit: false,
                 showsAppleSiliconDelayedResponseNote: false
             )
@@ -695,12 +697,14 @@ final class FanController: ObservableObject {
         case .automatic:
             resetToSystemAutomatic()
             statusMessage = "System automatic control restored"
+        case .silent:
+            updateManagedControl()
         case .manual:
             applyFanSpeed(manualSpeed)
             lastAppliedSpeed = manualSpeed
             statusMessage = "Manual: \(manualSpeed) RPM"
             startControlLoop()
-        case .silent, .smart, .balanced, .performance, .max, .custom:
+        case .smart, .balanced, .performance, .max, .custom:
             startControlLoop()
         }
     }
@@ -720,11 +724,15 @@ final class FanController: ObservableObject {
             break
 
         case .silent:
-            if lastAppliedSpeed != -1 {
+            if helperManager.isInstalled, lastAppliedSpeed > 0 {
                 resetToSystemAutomatic()
-                lastAppliedSpeed = -1
+                if statusMessage == "System automatic control restored" {
+                    statusMessage = "Silent: system automatic"
+                }
+            } else {
+                statusMessage = helperManager.isInstalled ? "Silent: system automatic" : "Silent: monitoring only"
             }
-            statusMessage = "Silent: system automatic"
+            lastAppliedSpeed = -1
 
         case .balanced:
             applyFixedPercentProfile(0.60, label: "Balanced")

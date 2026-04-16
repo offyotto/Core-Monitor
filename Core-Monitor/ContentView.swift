@@ -365,7 +365,7 @@ private struct MonitoringTrendSection: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Load & Thermal Trends")
                         .font(.system(size: 18, weight: .bold))
-                    Text("Recent CPU, GPU, fan, power, memory, and swap history without leaving the dashboard.")
+                    Text("Recent CPU, GPU, fan, power, memory, network, and swap history without leaving the dashboard.")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -415,6 +415,24 @@ private struct MonitoringTrendSection: View {
                     values: systemMonitor.totalPowerTrend.values(for: selectedRange),
                     rangeTitle: selectedRange.title,
                     formatter: { String(format: "%.1f", $0) }
+                )
+                MonitoringTrendCard(
+                    title: "Download",
+                    unit: "",
+                    color: Color(red: 0.36, green: 0.77, blue: 1.0),
+                    summary: systemMonitor.networkDownloadTrend.summary(for: selectedRange),
+                    values: systemMonitor.networkDownloadTrend.values(for: selectedRange),
+                    rangeTitle: selectedRange.title,
+                    formatter: { NetworkThroughputFormatter.compactRate(bytesPerSecond: $0) }
+                )
+                MonitoringTrendCard(
+                    title: "Upload",
+                    unit: "",
+                    color: Color(red: 0.46, green: 0.90, blue: 0.66),
+                    summary: systemMonitor.networkUploadTrend.summary(for: selectedRange),
+                    values: systemMonitor.networkUploadTrend.values(for: selectedRange),
+                    rangeTitle: selectedRange.title,
+                    formatter: { NetworkThroughputFormatter.compactRate(bytesPerSecond: $0) }
                 )
                 MonitoringTrendCard(
                     title: "Memory Use",
@@ -1522,6 +1540,18 @@ private struct DetailPane: View {
                 if let w = snapshot.totalSystemWatts {
                     MetricTile(label: "Power", value: String(format: "%.1f", abs(w)), unit: " W", color: .purple)
                 }
+                MetricTile(
+                    label: "Download",
+                    value: NetworkThroughputFormatter.compactRate(bytesPerSecond: snapshot.networkStats.downloadBytesPerSec),
+                    unit: "",
+                    color: Color(red: 0.36, green: 0.77, blue: 1.0)
+                )
+                MetricTile(
+                    label: "Upload",
+                    value: NetworkThroughputFormatter.compactRate(bytesPerSecond: snapshot.networkStats.uploadBytesPerSec),
+                    unit: "",
+                    color: Color(red: 0.46, green: 0.90, blue: 0.66)
+                )
                 if snapshot.batteryInfo.hasBattery {
                     MetricTile(label: "Battery", value: "\(snapshot.batteryInfo.chargePercent ?? 0)", unit: "%",
                                color: battColor, gauge: battFrac,
@@ -1572,7 +1602,7 @@ private struct DetailPane: View {
                     }
                 }
             }
-            TopMemoryProcessesPanel(snapshot: snapshot.topProcesses)
+            TopMemoryProcessesPanel(systemMonitor: systemMonitor, snapshot: snapshot.topProcesses)
         }
     }
 
@@ -1676,42 +1706,14 @@ private struct DetailPane: View {
                 snapshot: .init(
                     cpuUsagePercent: snapshot.cpuUsagePercent,
                     memoryUsagePercent: snapshot.memoryUsagePercent,
+                    networkDownloadBytesPerSecond: snapshot.networkStats.downloadBytesPerSec,
+                    networkUploadBytesPerSecond: snapshot.networkStats.uploadBytesPerSec,
                     diskUsagePercent: snapshot.diskStats.usagePercent,
                     cpuTemperature: snapshot.cpuTemperature
                 )
             )
-            DarkCard(padding: 16) {
-                HStack(spacing: 14) {
-                    Image(systemName: "power").font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(startupManager.isEnabled ? .green : .secondary)
-                        .frame(width: 32, height: 32)
-                        .background((startupManager.isEnabled ? Color.green : Color.secondary).opacity(0.15))
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Launch at Login").font(.system(size: 13, weight: .semibold))
-                        Text(startupManager.isEnabled ? "Starts automatically with macOS" : "Start manually from Applications")
-                            .font(.system(size: 11)).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Toggle("", isOn: Binding(get: { startupManager.isEnabled },
-                                            set: { startupManager.setEnabled($0) }))
-                        .toggleStyle(.switch).tint(.green)
-                }
-            }
-            if let msg = startupManager.errorMessage {
-                DarkCard(padding: 14) {
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(msg).font(.system(size: 11)).foregroundStyle(.orange)
-                            Text("Open System Settings → General → Login Items to approve.")
-                                .font(.system(size: 10)).foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
+            LaunchAtLoginSection(startupManager: startupManager)
         }
-        .onAppear { startupManager.refreshState() }
     }
 
     private var touchBarContent: some View {
@@ -2122,10 +2124,16 @@ private struct TouchBarCustomizationPanel: View {
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
 
+                    if settings.presentationMode == .system {
+                        Text("You're still editing Core-Monitor's custom Touch Bar layout, but the hardware Touch Bar is showing the standard macOS strip. Switch back to Core-Monitor mode to apply these items live.")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.orange)
+                    }
+
                     Divider()
                         .overlay(Color.bdDivider)
 
-                    Text("Live layout preview")
+                    Text(settings.presentationMode == .app ? "Live layout preview" : "Core-Monitor layout preview")
                         .font(.system(size: 14, weight: .bold))
                     TouchBarPreviewStrip()
 
@@ -2174,9 +2182,25 @@ private struct TouchBarCustomizationPanel: View {
 
             DarkCard(padding: 16) {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Presets")
-                        .font(.system(size: 14, weight: .bold))
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Presets")
+                                .font(.system(size: 14, weight: .bold))
+                            Text(settings.activePreset?.title ?? "Custom layout")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+
+                        Button("Restore Defaults") {
+                            settings.restoreDefaults()
+                        }
+                        .buttonStyle(SoftPressButtonStyle())
+                    }
+
                     ForEach(TouchBarPreset.all) { preset in
+                        let isActive = settings.activePreset == preset
                         Button {
                             settings.applyPreset(preset)
                         } label: {
@@ -2189,6 +2213,20 @@ private struct TouchBarCustomizationPanel: View {
                                         .foregroundStyle(.secondary)
                                 }
                                 Spacer()
+                                if preset == TouchBarCustomizationSettings.defaultPreset {
+                                    Text("DEFAULT")
+                                        .font(.system(size: 9, weight: .bold))
+                                        .foregroundStyle(.secondary)
+                                        .padding(.horizontal, 7)
+                                        .padding(.vertical, 4)
+                                        .background(Color.white.opacity(0.06))
+                                        .clipShape(Capsule())
+                                }
+                                if isActive {
+                                    Label("Active", systemImage: "checkmark.circle.fill")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundStyle(Color.bdAccent)
+                                }
                                 Text(preset.theme.displayName)
                                     .font(.system(size: 10, weight: .bold))
                                     .foregroundStyle(.secondary)
@@ -2199,8 +2237,27 @@ private struct TouchBarCustomizationPanel: View {
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, 6)
+                            .padding(.horizontal, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(isActive ? Color.bdAccent.opacity(0.12) : Color.white.opacity(0.02))
+                            )
                         }
                         .buttonStyle(SoftPressButtonStyle())
+                    }
+
+                    if settings.widthOverflow > 0 {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("This layout is too wide for a full Touch Bar. Use a narrower preset to avoid clipped widgets.")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.secondary)
+
+                            Button("Use Compact Preset") {
+                                settings.applyPreset(.compact)
+                            }
+                            .buttonStyle(SoftPressButtonStyle())
+                        }
+                        .padding(.top, 4)
                     }
                 }
             }
@@ -2592,19 +2649,25 @@ struct ContentView: View {
                 fullDashboard
             }
         }
-        .onChange(of: modeState.isBasicMode) { systemMonitor.setBasicMode($0) }
+        .onChange(of: modeState.isBasicMode) {
+            systemMonitor.setBasicMode($0)
+            syncDashboardSampling()
+        }
         .onAppear {
             systemMonitor.setBasicMode(modeState.isBasicMode)
             systemMonitor.setInteractiveMonitoringEnabled(true, reason: "dashboard")
-            systemMonitor.setDetailedSamplingEnabled(true, reason: "dashboard")
             applyPendingDashboardRouteIfNeeded()
+            syncDashboardSampling()
+        }
+        .onChange(of: sidebarSelection) { _ in
+            syncDashboardSampling()
         }
         .onChange(of: dashboardNavigationRouter.route) { _ in
             applyPendingDashboardRouteIfNeeded()
+            syncDashboardSampling()
         }
         .onDisappear {
             systemMonitor.setInteractiveMonitoringEnabled(false, reason: "dashboard")
-            systemMonitor.setDetailedSamplingEnabled(false, reason: "dashboard")
         }
     }
 
@@ -2653,5 +2716,15 @@ struct ContentView: View {
             modeState.isBasicMode = false
         }
         sidebarSelection = selection
+    }
+
+    private func syncDashboardSampling() {
+        systemMonitor.setDetailedSamplingEnabled(
+            DashboardProcessSamplingPolicy.requiresDetailedSampling(
+                isBasicMode: modeState.isBasicMode,
+                selection: sidebarSelection
+            ),
+            reason: "dashboard.detail"
+        )
     }
 }

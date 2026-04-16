@@ -241,7 +241,7 @@ final class AlertEngineTests: XCTestCase {
     func testHelperAvailabilityRuleStaysInactiveWhileSystemModeOwnsCooling() {
         let config = AlertPreset.default.configurations().first(where: { $0.kind == .helperUnavailable })!
 
-        let outcome = AlertEvaluator.evaluate(
+        let automatic = AlertEvaluator.evaluate(
             config: config,
             runtime: .initial(for: .helperUnavailable),
             input: makeInput(
@@ -252,8 +252,21 @@ final class AlertEngineTests: XCTestCase {
             ) { _ in }
         )
 
-        XCTAssertNil(outcome.activeState)
-        XCTAssertNil(outcome.event)
+        let silent = AlertEvaluator.evaluate(
+            config: config,
+            runtime: .initial(for: .helperUnavailable),
+            input: makeInput(
+                fanMode: .silent,
+                helperInstalled: false,
+                helperConnectionState: .unreachable,
+                helperStatusMessage: "The helper rejected this ad-hoc build."
+            ) { _ in }
+        )
+
+        XCTAssertNil(automatic.activeState)
+        XCTAssertNil(automatic.event)
+        XCTAssertNil(silent.activeState)
+        XCTAssertNil(silent.event)
     }
 
     func testProcessInsightsDisabledRedactsTopProcessContext() {

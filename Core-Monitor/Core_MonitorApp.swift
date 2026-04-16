@@ -159,6 +159,23 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc
+    private func openDashboardFromMenu(_ sender: Any?) {
+        openDashboard()
+    }
+
+    @objc
+    private func openHelpFromMenu(_ sender: Any?) {
+        DashboardNavigationRouter.shared.open(.help)
+        openDashboard()
+    }
+
+    @objc
+    private func reopenWelcomeGuideFromMenu(_ sender: Any?) {
+        UserDefaults.standard.set(false, forKey: WelcomeGuideProgress.hasSeenDefaultsKey)
+        openDashboard()
+    }
+
+    @objc
     private func quitApplication(_ sender: Any?) {
         NSApp.terminate(sender)
     }
@@ -201,6 +218,33 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         appMenuItem.title = appName
 
         let appMenu = NSMenu(title: appName)
+        let openDashboardItem = NSMenuItem(
+            title: "Open Dashboard",
+            action: #selector(openDashboardFromMenu(_:)),
+            keyEquivalent: "o"
+        )
+        openDashboardItem.keyEquivalentModifierMask = [.command]
+        openDashboardItem.target = self
+        appMenu.addItem(openDashboardItem)
+
+        let openHelpItem = NSMenuItem(
+            title: "Open Help",
+            action: #selector(openHelpFromMenu(_:)),
+            keyEquivalent: ""
+        )
+        openHelpItem.target = self
+        appMenu.addItem(openHelpItem)
+
+        let reopenWelcomeGuideItem = NSMenuItem(
+            title: "Show Welcome Guide",
+            action: #selector(reopenWelcomeGuideFromMenu(_:)),
+            keyEquivalent: ""
+        )
+        reopenWelcomeGuideItem.target = self
+        appMenu.addItem(reopenWelcomeGuideItem)
+
+        appMenu.addItem(.separator())
+
         let quitMenuItem = NSMenuItem(
             title: "Quit \(appName)",
             action: #selector(quitApplication(_:)),

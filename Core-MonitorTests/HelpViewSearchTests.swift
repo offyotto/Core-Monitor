@@ -57,4 +57,18 @@ final class HelpViewSearchTests: XCTestCase {
         XCTAssertTrue(section.matches(query: "voltage current"))
         XCTAssertFalse(section.matches(query: "voltage helper"))
     }
+
+    func testHelpSectionMatchesNetworkThroughputKeywords() {
+        let section = HelpView.HelpSection(
+            id: "overview",
+            title: "Overview Dashboard",
+            icon: "gauge.medium",
+            keywords: ["network", "upload", "download", "throughput"],
+            content: AnyView(EmptyView())
+        )
+
+        XCTAssertTrue(section.matches(query: "network"))
+        XCTAssertTrue(section.matches(query: "upload throughput"))
+        XCTAssertFalse(section.matches(query: "upload helper"))
+    }
 }
