@@ -106,12 +106,10 @@ private struct MBDivider: View {
     var body: some View { Rectangle().fill(Color.mbDiv).frame(height: 1) }
 }
 
-private struct MenuBarAlertSummarySection: View {
+private struct MenuBarMonitoringSummarySection: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
-    @ObservedObject var alertManager: AlertManager
     @ObservedObject private var helperManager = SMCHelperManager.shared
-    var openAlertsAction: (() -> Void)? = nil
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -119,12 +117,12 @@ private struct MenuBarAlertSummarySection: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
-                    Text(alertManager.highestActiveSeverity == .none ? "STATUS" : "ALERTS")
+                    Text("STATUS")
                         .font(.system(size: 9, weight: .bold))
                         .foregroundStyle(Color.mbTint)
                         .mbTracking(1.2)
                     Spacer()
-                    Text(statusBadgeLabel.uppercased())
+                    Text(health.statusLabel.uppercased())
                         .font(.system(size: 8, weight: .bold))
                         .foregroundStyle(statusBadgeColor(health))
                         .padding(.horizontal, 8)
@@ -145,19 +143,13 @@ private struct MenuBarAlertSummarySection: View {
 
                 HStack(spacing: 8) {
                     summaryPill(health.statusLabel, color: freshnessColor(health))
-                    summaryPill("Thermal \(AlertEvaluator.thermalStateLabel(systemMonitor.thermalState))", color: thermalColor(systemMonitor.thermalState))
+                    summaryPill("Thermal \(thermalStateLabel(systemMonitor.thermalState))", color: thermalColor(systemMonitor.thermalState))
                     summaryPill(systemMonitor.hasSMCAccess ? "SMC Ready" : "SMC Unavailable", color: systemMonitor.hasSMCAccess ? Color.mbGreen : .red)
                 }
 
                 HStack(spacing: 8) {
                     summaryPill(fanModeSummary.label, color: pillColor(for: fanModeSummary.tone))
                     summaryPill(helperSummary.label, color: pillColor(for: helperSummary.tone))
-                }
-
-                if alertManager.activeAlerts.isEmpty == false, let openAlertsAction {
-                    MBActionButton(label: "Open Alerts", icon: "bell.badge") {
-                        openAlertsAction()
-                    }
                 }
             }
             .padding(.horizontal, 14)
@@ -176,9 +168,6 @@ private struct MenuBarAlertSummarySection: View {
     }
 
     private var summaryLine: String {
-        if alertManager.activeAlerts.isEmpty == false {
-            return alertManager.summaryLine
-        }
         if systemMonitor.hasSMCAccess {
             return "Core Monitor is sampling live hardware metrics."
         }
@@ -188,31 +177,8 @@ private struct MenuBarAlertSummarySection: View {
         return "Waiting for AppleSMC access."
     }
 
-    private var statusBadgeLabel: String {
-        alertManager.highestActiveSeverity == .none
-            ? monitoringStatusLabel
-            : alertManager.highestActiveSeverity.title
-    }
-
-    private var monitoringStatusLabel: String {
-        let health = systemMonitor.snapshotHealth()
-        return health.statusLabel
-    }
-
     private func statusBadgeColor(_ health: MonitoringSnapshotHealth) -> Color {
-        if alertManager.highestActiveSeverity == .none {
-            return freshnessColor(health)
-        }
-        switch alertManager.highestActiveSeverity {
-        case .none:
-            return freshnessColor(health)
-        case .info:
-            return Color.mbBlue
-        case .warning:
-            return Color.mbOrange
-        case .critical:
-            return .red
-        }
+        freshnessColor(health)
     }
 
     private func thermalColor(_ thermalState: ProcessInfo.ThermalState) -> Color {
@@ -262,6 +228,21 @@ private struct MenuBarAlertSummarySection: View {
             return Color.mbOrange
         case .critical:
             return .red
+        }
+    }
+
+    private func thermalStateLabel(_ thermalState: ProcessInfo.ThermalState) -> String {
+        switch thermalState {
+        case .nominal:
+            return "Nominal"
+        case .fair:
+            return "Fair"
+        case .serious:
+            return "Serious"
+        case .critical:
+            return "Critical"
+        @unknown default:
+            return "Unknown"
         }
     }
 }
@@ -406,9 +387,7 @@ private struct DonutChart: View {
 struct CPUMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
-    @ObservedObject var alertManager: AlertManager
     var openDashboardAction: () -> Void = {}
-    var openAlertsAction: () -> Void = {}
 
     private var pCores: Int { SystemMonitor.performanceCoreCount() }
     private var eCores: Int { SystemMonitor.efficiencyCoreCount() }
@@ -419,7 +398,7 @@ struct CPUMenuPopoverView: View {
                 VStack(spacing: 0) {
                     cpuHeader
                     MBDivider()
-                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, fanController: fanController, alertManager: alertManager, openAlertsAction: openAlertsAction)
+                    MenuBarMonitoringSummarySection(systemMonitor: systemMonitor, fanController: fanController)
                     MBDivider()
                     graphSection
                     MBDivider()
@@ -593,10 +572,8 @@ struct CPUMenuPopoverView: View {
 struct MemoryMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
-    @ObservedObject var alertManager: AlertManager
     @ObservedObject private var privacySettings = PrivacySettings.shared
     var openDashboardAction: () -> Void = {}
-    var openAlertsAction: () -> Void = {}
 
     var body: some View {
         MenuPopoverSurface {
@@ -604,7 +581,7 @@ struct MemoryMenuPopoverView: View {
                 VStack(spacing: 0) {
                     memHeader
                     MBDivider()
-                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, fanController: fanController, alertManager: alertManager, openAlertsAction: openAlertsAction)
+                    MenuBarMonitoringSummarySection(systemMonitor: systemMonitor, fanController: fanController)
                     MBDivider()
                     breakdownSection
                     MBDivider()
@@ -774,10 +751,8 @@ struct MemoryMenuPopoverView: View {
 struct DiskMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
-    @ObservedObject var alertManager: AlertManager
     @ObservedObject private var privacySettings = PrivacySettings.shared
     var openDashboardAction: () -> Void = {}
-    var openAlertsAction: () -> Void = {}
 
     var body: some View {
         MenuPopoverSurface {
@@ -785,7 +760,7 @@ struct DiskMenuPopoverView: View {
                 VStack(spacing: 0) {
                     diskHeader
                     MBDivider()
-                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, fanController: fanController, alertManager: alertManager, openAlertsAction: openAlertsAction)
+                    MenuBarMonitoringSummarySection(systemMonitor: systemMonitor, fanController: fanController)
                     MBDivider()
                     diskDonutSection
                     MBDivider()
@@ -1007,9 +982,7 @@ struct DiskMenuPopoverView: View {
 struct NetworkMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
-    @ObservedObject var alertManager: AlertManager
     var openDashboardAction: () -> Void = {}
-    var openAlertsAction: () -> Void = {}
 
     var body: some View {
         MenuPopoverSurface {
@@ -1017,7 +990,7 @@ struct NetworkMenuPopoverView: View {
                 VStack(spacing: 0) {
                     networkHeader
                     MBDivider()
-                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, fanController: fanController, alertManager: alertManager, openAlertsAction: openAlertsAction)
+                    MenuBarMonitoringSummarySection(systemMonitor: systemMonitor, fanController: fanController)
                     MBDivider()
                     liveThroughputSection
                     MBDivider()
@@ -1214,10 +1187,8 @@ struct NetworkMenuPopoverView: View {
 struct TemperatureMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
-    @ObservedObject var alertManager: AlertManager
     var openDashboardAction: () -> Void = {}
     var openFansAction: () -> Void = {}
-    var openAlertsAction: () -> Void = {}
 
     var body: some View {
         MenuPopoverSurface {
@@ -1225,7 +1196,7 @@ struct TemperatureMenuPopoverView: View {
                 VStack(spacing: 0) {
                     tempHeader
                     MBDivider()
-                    MenuBarAlertSummarySection(systemMonitor: systemMonitor, fanController: fanController, alertManager: alertManager, openAlertsAction: openAlertsAction)
+                    MenuBarMonitoringSummarySection(systemMonitor: systemMonitor, fanController: fanController)
                     MBDivider()
                     temperatureSection
                     MBDivider()

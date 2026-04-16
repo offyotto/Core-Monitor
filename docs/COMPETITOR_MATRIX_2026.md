@@ -11,7 +11,7 @@ This document captures the current public positioning of the main macOS monitori
 | Stats | Broad open-source menu bar monitoring with a large public user base and easy Homebrew/manual install | Fan control is still present, but the project README says it is in legacy mode and does not receive updates or fixes | Broad feature surface, but weaker trust story around actively maintained fan control | Thermal focus, helper trust, and clearer “monitoring only vs helper required” messaging |
 | iStat Menus 7 | Mature menu bar monitoring and polished fan-control UI | Official help documents Automatic, Custom fan curve, and Manual modes; Automatic acts as if iStat Menus is not installed | Broad and polished, but intentionally wider in scope than a thermal-first product | Simpler thermal workflows and less menu bar sprawl by default |
 | TG Pro | Strongest “serious fan control” posture and explicit helper/onboarding language | Official docs show per-fan override, Manual mode, and Auto Boost rules; official FAQ separates monitoring-only from helper-backed control | Powerful, but more admin-heavy and rule-oriented than many users need | Open-source transparency and a cleaner daily-use dashboard/menu bar experience |
-| Macs Fan Control | Simple mental model, strong reputation, broad Mac model support, and clear fan presets story | Official site documents Auto vs Custom, sensor-based control, saved presets, configurable menu bar display, and restoring fans to Auto on quit | UI is intentionally simple and narrow; custom presets are a Pro feature | Modern UI polish, better local alerts, and a more informative Apple Silicon dashboard |
+| Macs Fan Control | Simple mental model, strong reputation, broad Mac model support, and clear fan presets story | Official site documents Auto vs Custom, sensor-based control, saved presets, configurable menu bar display, and restoring fans to Auto on quit | UI is intentionally simple and narrow; custom presets are a Pro feature | Modern UI polish, better local diagnostics, and a more informative Apple Silicon dashboard |
 
 ## Current source-backed notes
 
@@ -77,7 +77,7 @@ Implication for Core-Monitor:
 
 Implication for Core-Monitor:
 
-- Core-Monitor should preserve its thermal-first story and keep “heat, throttling, fans, alerts” ahead of novelty widgets.
+- Core-Monitor should preserve its thermal-first story and keep “heat, throttling, fans, and monitoring clarity” ahead of novelty widgets.
 - If the dashboard grows, it should still keep a one-glance thermal state that is at least as legible as Hot.
 
 ### iGlance

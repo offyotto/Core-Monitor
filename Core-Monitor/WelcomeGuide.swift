@@ -132,7 +132,7 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgAmber,
         headline: "Thermals & Metrics",
         subheadline: "See what's really heating up.",
-        body: "The dashboard streams CPU, GPU, and memory data at 1-second resolution. Spark-line histories let you spot transient spikes that Activity Monitor smooths over, and the Alerts screen turns those readings into actual warning rules.",
+        body: "The dashboard streams CPU, GPU, and memory data at 1-second resolution. Spark-line histories let you spot transient spikes that Activity Monitor smooths over, while the system status cards and alerts flow keep monitoring health visible and actionable.",
         bullets: [
             ("cpu.fill",              .wgAmber,  "P-core and E-core usage, plus CPU temperature"),
             ("memorychip",            .wgBlue,   "Memory pressure with wired/active breakdown"),
@@ -179,10 +179,10 @@ private let guideSteps: [GuideStep] = [
         body: "Core Monitor starts reading hardware state on your Mac immediately. Hardware data stays local. Weather and support exports remain optional. Use the checklist below to confirm menu bar access, enable relaunch at login if you want persistent monitoring, and install the helper only if you want privileged fan control.",
         bullets: [
             ("sidebar.left",          .wgAmber,  "Dashboard sections collapse with a click"),
-            ("bell.badge",            .wgGreen,  "Alerts combines local history, presets, and notification controls"),
+            ("waveform.path.ecg.rectangle", .wgGreen, "System status cards surface monitoring freshness, helper state, and privacy"),
             ("menubar.rectangle",     .wgBlue,   "Balanced menu bar mode keeps the app visible without adding clutter"),
             ("lock.shield",           .wgPurple, "Monitoring works without the helper; only fan writes need it"),
-            ("hand.raised",           .wgAmber,  "Privacy Controls can keep alert history free of app names"),
+            ("hand.raised",           .wgAmber,  "Privacy Controls can keep alerts and memory views free of app names"),
             ("questionmark.circle",   .wgGreen,  "The Help tab can reopen this guide any time"),
         ]
     ),
@@ -529,7 +529,7 @@ private struct WelcomeGuideSheet: View {
                 symbol: "lock.shield",
                 tone: .neutral,
                 badge: "Optional",
-                detail: "Monitoring, alerts, and menu bar metrics work immediately. Install the helper only if you want fan writes.",
+                detail: "Monitoring and menu bar metrics work immediately. Install the helper only if you want fan writes.",
                 actionTitle: "Install Helper"
             )
         }

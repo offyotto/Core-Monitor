@@ -1,7 +1,7 @@
 import SwiftUI
 import UserNotifications
 
-private struct AlertSurfaceCard<Content: View>: View {
+private struct DashboardSurfaceCard<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {
@@ -43,10 +43,9 @@ private struct AlertSeverityBadge: View {
 
 struct AlertsDashboardStrip: View {
     @ObservedObject var alertManager: AlertManager
-    var openAlerts: (() -> Void)? = nil
 
     var body: some View {
-        AlertSurfaceCard {
+        DashboardSurfaceCard {
             HStack(alignment: .top, spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
@@ -54,6 +53,7 @@ struct AlertsDashboardStrip: View {
                         Text(alertManager.summaryLine)
                             .font(.system(size: 14, weight: .semibold))
                     }
+
                     if alertManager.activeAlerts.isEmpty {
                         Text("In-app history stays available even when desktop notifications are muted.")
                             .font(.system(size: 11, weight: .medium))
@@ -66,193 +66,72 @@ struct AlertsDashboardStrip: View {
                 }
 
                 Spacer(minLength: 12)
-
-                if let openAlerts {
-                    Button(action: openAlerts) {
-                        Label("Open Alerts", systemImage: "bell.badge")
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
             }
         }
     }
 }
 
-struct TopMemoryProcessesPanel: View {
+struct MonitoringDashboardStrip: View {
     @ObservedObject var systemMonitor: SystemMonitor
-    let snapshot: TopProcessSnapshot
-    @ObservedObject private var privacySettings = PrivacySettings.shared
-
-    var body: some View {
-        AlertSurfaceCard {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Top Memory Pressure")
-                    .font(.system(size: 16, weight: .bold))
-                if privacySettings.processInsightsEnabled == false {
-                    Text("Process insights are off. Memory views stay local without collecting app names.")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.secondary)
-                } else if snapshot.topMemory.isEmpty {
-                    Text("Top process context becomes available after a few samples.")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(snapshot.topMemory) { process in
-                        HStack(spacing: 10) {
-                            Image(systemName: "app.fill")
-                                .foregroundStyle(process.memoryBytes > 2_000_000_000 ? .red : Color.bdAccent)
-                                .frame(width: 18)
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(process.name)
-                                    .font(.system(size: 13, weight: .semibold))
-                                Text(String(format: "%.1f GB resident", process.memoryGB))
-                                    .font(.system(size: 11, weight: .medium))
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                        }
-                    }
-                }
-            }
-        }
-        .onAppear {
-            systemMonitor.setDetailedSamplingEnabled(true, reason: "dashboard.memory")
-        }
-        .onDisappear {
-            systemMonitor.setDetailedSamplingEnabled(false, reason: "dashboard.memory")
-        }
-    }
-}
-
-struct SystemStatusBoard: View {
-    @ObservedObject var alertManager: AlertManager
-    @ObservedObject var systemMonitor: SystemMonitor
+    @ObservedObject var fanController: FanController
     @ObservedObject private var helperManager = SMCHelperManager.shared
 
     var body: some View {
-        let health = systemMonitor.snapshotHealth()
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let health = systemMonitor.snapshotHealth(now: context.date)
 
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-            statusCard(
-                title: "Monitoring",
-                value: health.statusLabel,
-                detail: "\(health.ageDescription). \(health.cadenceDescription).",
-                icon: "waveform.path.ecg.rectangle",
-                color: monitoringColor(health)
-            )
-            statusCard(
-                title: "Notifications",
-                value: notificationLabel,
-                detail: notificationDetail,
-                icon: "bell.badge",
-                color: notificationColor
-            )
-            statusCard(
-                title: "Overall Thermal",
-                value: AlertEvaluator.thermalStateLabel(systemMonitor.thermalState),
-                detail: "macOS thermal pressure on Apple Silicon.",
-                icon: "thermometer.medium",
-                color: thermalColor
-            )
-            statusCard(
-                title: "Helper",
-                value: helperValue,
-                detail: helperDetail,
-                icon: "lock.shield",
-                color: helperColor
-            )
-            statusCard(
-                title: "SMC / Fan State",
-                value: systemMonitor.hasSMCAccess ? "Healthy" : "Unavailable",
-                detail: systemMonitor.hasSMCAccess
-                    ? "AppleSMC is reachable on this Mac."
-                    : (systemMonitor.lastError ?? "AppleSMC could not be opened."),
-                icon: "cpu.fill",
-                color: systemMonitor.hasSMCAccess ? .green : .red
-            )
-        }
-    }
+            DashboardSurfaceCard {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 8) {
+                        Text("System Status")
+                            .font(.system(size: 16, weight: .bold))
+                        Spacer()
+                        statusBadge(label: health.statusLabel.uppercased(), color: freshnessColor(health))
+                    }
 
-    private var notificationLabel: String {
-        switch alertManager.authorizationStatus {
-        case .authorized, .provisional:
-            if let mutedUntil = alertManager.notificationsMutedUntil, mutedUntil > Date() {
-                return "Muted"
-            }
-            return alertManager.desktopNotificationsEnabled ? "Allowed" : "In-App Only"
-        case .denied:
-            return "Denied"
-        case .notDetermined:
-            return "Pending"
-        @unknown default:
-            return "Unknown"
-        }
-    }
+                    Text(summaryLine)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.primary)
 
-    private var notificationDetail: String {
-        if let mutedUntil = alertManager.notificationsMutedUntil, mutedUntil > Date() {
-            return "Muted until \(mutedUntil.formatted(date: .omitted, time: .shortened))."
-        }
-        switch alertManager.authorizationStatus {
-        case .authorized, .provisional:
-            return alertManager.desktopNotificationsEnabled
-                ? "Desktop notifications follow the selected alerts policy."
-                : "Desktop banners are off; in-app history still records events."
-        case .denied:
-            return "Turn notifications on in System Settings if you want desktop banners."
-        case .notDetermined:
-            return "Request permission from the Alerts screen."
-        @unknown default:
-            return "Notification permission state is unavailable."
-        }
-    }
+                    Text("\(health.ageDescription) • \(health.cadenceDescription)")
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .foregroundStyle(freshnessColor(health))
+                        .monospacedDigit()
 
-    private var notificationColor: Color {
-        switch alertManager.authorizationStatus {
-        case .authorized, .provisional:
-            return alertManager.desktopNotificationsEnabled ? .green : .orange
-        case .denied:
-            return .red
-        case .notDetermined:
-            return Color.bdAccent
-        @unknown default:
-            return .secondary
-        }
-    }
+                    HStack(spacing: 8) {
+                        summaryPill("Thermal \(thermalStateLabel(systemMonitor.thermalState))", color: thermalColor)
+                        summaryPill(systemMonitor.hasSMCAccess ? "SMC Ready" : "SMC Unavailable", color: systemMonitor.hasSMCAccess ? .green : .red)
+                    }
 
-    private func statusCard(title: String, value: String, detail: String, icon: String, color: Color) -> some View {
-        AlertSurfaceCard {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Image(systemName: icon)
-                        .foregroundStyle(color)
-                    Text(title)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 8) {
+                        summaryPill(fanModeSummary.label, color: pillColor(for: fanModeSummary.tone))
+                        summaryPill(helperSummary.label, color: pillColor(for: helperSummary.tone))
+                    }
                 }
-                Text(value)
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundStyle(color)
-                Text(detail)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
-    private func monitoringColor(_ health: MonitoringSnapshotHealth) -> Color {
-        switch health.freshness {
-        case .waiting:
-            return Color.bdAccent
-        case .live:
-            return .green
-        case .delayed:
-            return .orange
-        case .stale:
-            return .red
+    private var summaryLine: String {
+        if systemMonitor.hasSMCAccess {
+            return "Core Monitor is sampling live hardware metrics."
         }
+        if let lastError = systemMonitor.lastError, lastError.isEmpty == false {
+            return lastError
+        }
+        return "Waiting for AppleSMC access."
+    }
+
+    private var fanModeSummary: MenuBarStatusPillSummary {
+        MenuBarStatusSummary.fanModeSummary(for: fanController.mode)
+    }
+
+    private var helperSummary: MenuBarStatusPillSummary {
+        MenuBarStatusSummary.helperSummary(
+            for: fanController.mode,
+            connectionState: helperManager.connectionState,
+            isInstalled: helperManager.isInstalled
+        )
     }
 
     private var thermalColor: Color {
@@ -265,48 +144,66 @@ struct SystemStatusBoard: View {
         }
     }
 
-    private var helperValue: String {
-        switch helperManager.connectionState {
-        case .reachable:
-            return "Ready"
-        case .checking:
-            return "Checking"
-        case .unreachable:
-            return "Rejected"
-        case .unknown where helperManager.isInstalled:
-            return "Installed"
-        case .unknown, .missing:
-            return "Missing"
-        }
+    private func summaryPill(_ text: String, color: Color) -> some View {
+        Text(text)
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(color)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(color.opacity(0.16))
+            .clipShape(Capsule())
     }
 
-    private var helperDetail: String {
-        switch helperManager.connectionState {
-        case .reachable:
-            return "Fan control can use the privileged helper."
-        case .checking:
-            return "Core Monitor is probing the local helper service."
-        case .unreachable:
-            return helperManager.statusMessage ?? "The helper is installed but this app build cannot talk to it."
-        case .unknown where helperManager.isInstalled:
-            return "The helper exists on disk, but Core Monitor has not completed a health probe yet."
-        case .unknown, .missing:
-            return "Install the helper before trusting manual or managed fan modes."
-        }
+    private func statusBadge(label: String, color: Color) -> some View {
+        Text(label)
+            .font(.system(size: 9, weight: .bold))
+            .foregroundStyle(color)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(color.opacity(0.16))
+            .clipShape(Capsule())
     }
 
-    private var helperColor: Color {
-        switch helperManager.connectionState {
-        case .reachable:
+    private func freshnessColor(_ health: MonitoringSnapshotHealth) -> Color {
+        switch health.freshness {
+        case .waiting:
             return Color.bdAccent
-        case .checking:
-            return .yellow
-        case .unreachable:
+        case .live:
+            return .green
+        case .delayed:
             return .orange
-        case .unknown where helperManager.isInstalled:
-            return .yellow
-        case .unknown, .missing:
+        case .stale:
+            return .red
+        }
+    }
+
+    private func pillColor(for tone: MenuBarStatusPillTone) -> Color {
+        switch tone {
+        case .neutral:
+            return .secondary
+        case .accent:
+            return Color.bdAccent
+        case .good:
+            return .green
+        case .warning:
             return .orange
+        case .critical:
+            return .red
+        }
+    }
+
+    private func thermalStateLabel(_ state: ProcessInfo.ThermalState) -> String {
+        switch state {
+        case .nominal:
+            return "Nominal"
+        case .fair:
+            return "Fair"
+        case .serious:
+            return "Serious"
+        case .critical:
+            return "Critical"
+        @unknown default:
+            return "Unknown"
         }
     }
 }
@@ -348,12 +245,12 @@ struct AlertsView: View {
     private var summaryCards: some View {
         VStack(spacing: 12) {
             AlertsDashboardStrip(alertManager: alertManager)
-            SystemStatusBoard(alertManager: alertManager, systemMonitor: systemMonitor)
+            SystemStatusBoard(systemMonitor: systemMonitor, fanController: fanController)
         }
     }
 
     private var presetCard: some View {
-        AlertSurfaceCard {
+        DashboardSurfaceCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
@@ -383,7 +280,7 @@ struct AlertsView: View {
     }
 
     private var notificationCard: some View {
-        AlertSurfaceCard {
+        DashboardSurfaceCard {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Notification Controls")
                     .font(.system(size: 16, weight: .bold))
@@ -442,8 +339,14 @@ struct AlertsView: View {
         }
     }
 
+    private var privacyCard: some View {
+        DashboardSurfaceCard {
+            PrivacyControlsSectionContent()
+        }
+    }
+
     private var activeAlertsCard: some View {
-        AlertSurfaceCard {
+        DashboardSurfaceCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Text("Active Alerts")
@@ -497,17 +400,11 @@ struct AlertsView: View {
         }
     }
 
-    private var privacyCard: some View {
-        AlertSurfaceCard {
-            PrivacyControlsSectionContent(alertManager: alertManager)
-        }
-    }
-
     private var ruleGroups: some View {
         VStack(alignment: .leading, spacing: 12) {
             ForEach(AlertCategory.allCases) { category in
                 if let configs = alertManager.groupedConfigs[category] {
-                    AlertSurfaceCard {
+                    DashboardSurfaceCard {
                         VStack(alignment: .leading, spacing: 14) {
                             Text(category.title)
                                 .font(.system(size: 16, weight: .bold))
@@ -515,7 +412,7 @@ struct AlertsView: View {
                                 AlertRuleConfigRow(
                                     alertManager: alertManager,
                                     config: config,
-                                    availabilityReason: alertManager.availabilityReasons[config.kind] ?? nil
+                                    availabilityReason: alertManager.availabilityReasons[config.kind]
                                 )
                             }
                         }
@@ -526,10 +423,19 @@ struct AlertsView: View {
     }
 
     private var historyCard: some View {
-        AlertSurfaceCard {
+        DashboardSurfaceCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Recent History")
-                    .font(.system(size: 16, weight: .bold))
+                HStack {
+                    Text("Recent History")
+                        .font(.system(size: 16, weight: .bold))
+                    Spacer()
+                    Button("Clear History") {
+                        alertManager.clearHistory()
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(alertManager.history.isEmpty)
+                }
+
                 if alertManager.history.isEmpty {
                     Text("No alert history yet.")
                         .font(.system(size: 11, weight: .medium))
@@ -540,6 +446,7 @@ struct AlertsView: View {
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(.secondary)
                     }
+
                     ForEach(alertManager.history.prefix(12)) { event in
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: event.kind.systemImageName)
@@ -626,167 +533,317 @@ private struct AlertRuleConfigRow: View {
 
                 Spacer()
 
-                if let active = alertManager.activeAlerts.first(where: { $0.kind == config.kind }) {
-                    AlertSeverityBadge(severity: active.severity)
+                if let availabilityReason, config.isEnabled {
+                    Text(availabilityReason)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.trailing)
                 }
             }
 
-            if let availabilityReason {
-                Text(availabilityReason)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.orange)
-            }
-
             if config.kind.supportsThresholdEditing {
-                AlertThresholdEditor(alertManager: alertManager, config: config)
-            } else {
-                Text(nonNumericSummary)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 16) {
+                    thresholdField(
+                        title: "Warning",
+                        value: config.threshold.warning,
+                        unitLabel: config.kind.unitLabel
+                    ) { value in
+                        alertManager.setWarningThreshold(value, for: config.kind)
+                    }
+
+                    thresholdField(
+                        title: "Critical",
+                        value: config.threshold.critical,
+                        unitLabel: config.kind.unitLabel
+                    ) { value in
+                        alertManager.setCriticalThreshold(value, for: config.kind)
+                    }
+                }
             }
 
-            HStack(spacing: 12) {
-                Stepper(
-                    "Cooldown \(config.cooldownMinutes)m",
-                    value: Binding(
-                        get: { config.cooldownMinutes },
-                        set: { alertManager.setCooldownMinutes($0, for: config.kind) }
-                    ),
-                    in: 1...180
-                )
+            HStack(spacing: 16) {
+                Stepper(value: Binding(
+                    get: { config.cooldownMinutes },
+                    set: { alertManager.setCooldownMinutes($0, for: config.kind) }
+                ), in: 1...1_440, step: 1) {
+                    Text("Repeat every \(config.cooldownMinutes) min")
+                        .font(.system(size: 11, weight: .medium))
+                }
                 .labelsHidden()
-
-                Text("Cooldown \(config.cooldownMinutes)m")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-
-                Spacer()
 
                 if config.kind.supportsDesktopNotifications {
                     Toggle(
-                        "Desktop",
+                        "Desktop banner",
                         isOn: Binding(
                             get: { config.desktopNotificationsEnabled },
                             set: { alertManager.setRuleDesktopNotificationsEnabled($0, for: config.kind) }
                         )
                     )
                     .toggleStyle(.switch)
-                    .labelsHidden()
-                    Text("Desktop")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.secondary)
                 }
             }
+            .font(.system(size: 11, weight: .medium))
+            .foregroundStyle(.secondary)
         }
         .padding(12)
         .background(Color.white.opacity(0.04))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
-    private var nonNumericSummary: String {
-        switch config.kind {
-        case .overallThermalState:
-            return "Warns from macOS thermal pressure transitions."
-        case .memoryPressure:
-            return "Warns from yellow/red pressure, not a guessed RAM percentage."
-        case .fanTooLowUnderHeat:
-            return "Warns when fan RPM stays too low relative to current heat."
-        case .smcUnavailable, .helperUnavailable:
-            return "Service-state rule. Thresholds are determined by live availability."
-        default:
-            return "Thresholds are controlled by the active preset."
+    private func thresholdField(
+        title: String,
+        value: Double?,
+        unitLabel: String?,
+        onChange: @escaping (Double) -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 6) {
+                TextField(
+                    title,
+                    text: Binding(
+                        get: { value.map { Self.formattedValue($0) } ?? "" },
+                        set: { newValue in
+                            guard let parsed = Double(newValue) else { return }
+                            onChange(parsed)
+                        }
+                    )
+                )
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 72)
+
+                if let unitLabel {
+                    Text(unitLabel)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    private static func formattedValue(_ value: Double) -> String {
+        if value.rounded() == value {
+            return String(Int(value))
+        }
+        return String(format: "%.1f", value)
+    }
+}
+
+struct TopMemoryProcessesPanel: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+    let snapshot: TopProcessSnapshot
+    @ObservedObject private var privacySettings = PrivacySettings.shared
+
+    var body: some View {
+        DashboardSurfaceCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Top Memory Pressure")
+                    .font(.system(size: 16, weight: .bold))
+                if privacySettings.processInsightsEnabled == false {
+                    Text("Process insights are off. Memory views stay local without showing app names.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                } else if snapshot.topMemory.isEmpty {
+                    Text("Top process context becomes available after a few samples.")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(snapshot.topMemory) { process in
+                        HStack(spacing: 10) {
+                            Image(systemName: "app.fill")
+                                .foregroundStyle(process.memoryBytes > 2_000_000_000 ? .red : Color.bdAccent)
+                                .frame(width: 18)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(process.name)
+                                    .font(.system(size: 13, weight: .semibold))
+                                Text(String(format: "%.1f GB resident", process.memoryGB))
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                        }
+                    }
+                }
+            }
+        }
+        .onAppear {
+            systemMonitor.setDetailedSamplingEnabled(true, reason: "dashboard.memory")
+        }
+        .onDisappear {
+            systemMonitor.setDetailedSamplingEnabled(false, reason: "dashboard.memory")
         }
     }
 }
 
-private struct AlertThresholdEditor: View {
-    @ObservedObject var alertManager: AlertManager
-    let config: AlertRuleConfig
+struct SystemStatusBoard: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+    @ObservedObject var fanController: FanController
+    @ObservedObject private var helperManager = SMCHelperManager.shared
+    @ObservedObject private var privacySettings = PrivacySettings.shared
 
     var body: some View {
-        HStack(spacing: 16) {
-            thresholdStepper(
-                label: "Warning",
-                value: warningBinding,
-                range: warningRange,
-                formattedValue: format(value: config.threshold.warning)
+        let health = systemMonitor.snapshotHealth()
+
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+            statusCard(
+                title: "Monitoring",
+                value: health.statusLabel,
+                detail: "\(health.ageDescription). \(health.cadenceDescription).",
+                icon: "waveform.path.ecg.rectangle",
+                color: monitoringColor(health)
             )
-            thresholdStepper(
-                label: "Critical",
-                value: criticalBinding,
-                range: criticalRange,
-                formattedValue: format(value: config.threshold.critical)
+            statusCard(
+                title: "Privacy",
+                value: privacySettings.processInsightsEnabled ? "Context Visible" : "Private",
+                detail: privacySettings.processInsightsEnabled
+                    ? "Top-process names can appear in memory views."
+                    : "Memory views stay on-device without showing app names.",
+                icon: "hand.raised.fill",
+                color: privacySettings.processInsightsEnabled ? Color.bdAccent : .green
+            )
+            statusCard(
+                title: "Overall Thermal",
+                value: thermalStateLabel(systemMonitor.thermalState),
+                detail: "macOS thermal pressure on Apple Silicon.",
+                icon: "thermometer.medium",
+                color: thermalColor
+            )
+            statusCard(
+                title: "Helper",
+                value: helperSummary.label,
+                detail: helperDetail,
+                icon: "lock.shield",
+                color: pillColor(for: helperSummary.tone)
+            )
+            statusCard(
+                title: "Cooling Mode",
+                value: fanModeSummary.label,
+                detail: fanController.mode.guidance.detail,
+                icon: "fanblades.fill",
+                color: pillColor(for: fanModeSummary.tone)
+            )
+            statusCard(
+                title: "SMC Access",
+                value: systemMonitor.hasSMCAccess ? "Healthy" : "Unavailable",
+                detail: systemMonitor.hasSMCAccess
+                    ? "AppleSMC is reachable on this Mac."
+                    : (systemMonitor.lastError ?? "AppleSMC could not be opened."),
+                icon: "cpu.fill",
+                color: systemMonitor.hasSMCAccess ? .green : .red
             )
         }
     }
 
-    private func thresholdStepper(
-        label: String,
-        value: Binding<Double>,
-        range: ClosedRange<Double>,
-        formattedValue: String
-    ) -> some View {
-        HStack(spacing: 8) {
-            Text("\(label) \(formattedValue)")
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
-            Stepper("", value: value, in: range, step: stepValue)
-                .labelsHidden()
-        }
+    private var fanModeSummary: MenuBarStatusPillSummary {
+        MenuBarStatusSummary.fanModeSummary(for: fanController.mode)
     }
 
-    private var warningBinding: Binding<Double> {
-        Binding(
-            get: { config.threshold.warning ?? warningRange.lowerBound },
-            set: { alertManager.setWarningThreshold($0, for: config.kind) }
+    private var helperSummary: MenuBarStatusPillSummary {
+        MenuBarStatusSummary.helperSummary(
+            for: fanController.mode,
+            connectionState: helperManager.connectionState,
+            isInstalled: helperManager.isInstalled
         )
     }
 
-    private var criticalBinding: Binding<Double> {
-        Binding(
-            get: { config.threshold.critical ?? criticalRange.upperBound },
-            set: { alertManager.setCriticalThreshold($0, for: config.kind) }
-        )
-    }
+    private var helperDetail: String {
+        if fanController.mode.requiresPrivilegedHelper == false {
+            return "Current cooling mode does not require the helper."
+        }
 
-    private var stepValue: Double {
-        switch config.kind {
-        case .swapUsage: return 1
-        default: return 1
+        if let statusMessage = helperManager.statusMessage, statusMessage.isEmpty == false {
+            return statusMessage
+        }
+
+        switch helperManager.connectionState {
+        case .reachable:
+            return "The privileged helper is installed and responding."
+        case .checking:
+            return "Core Monitor is checking the helper connection."
+        case .unreachable:
+            return "The helper is installed but not responding yet."
+        case .unknown:
+            return "The helper is installed but has not been checked yet."
+        case .missing:
+            return "Install the helper before using helper-backed fan modes."
         }
     }
 
-    private var warningRange: ClosedRange<Double> {
-        switch config.kind {
-        case .batteryHealth, .lowBatteryDischarging:
-            return 5...100
-        case .swapUsage:
-            return 1...64
-        case .cpuUsage:
-            return 50...100
-        case .cpuTemperature, .gpuTemperature, .batteryTemperature:
-            return 25...110
-        default:
-            return 0...100
+    private func statusCard(title: String, value: String, detail: String, icon: String, color: Color) -> some View {
+        DashboardSurfaceCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Image(systemName: icon)
+                        .foregroundStyle(color)
+                    Text(title)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+                Text(value)
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundStyle(color)
+                Text(detail)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
-    private var criticalRange: ClosedRange<Double> {
-        switch config.kind {
-        case .batteryHealth, .lowBatteryDischarging:
-            return 1...(config.threshold.warning ?? 100)
-        case .swapUsage:
-            return (config.threshold.warning ?? 1)...96
-        default:
-            return (config.threshold.warning ?? 1)...120
+    private func monitoringColor(_ health: MonitoringSnapshotHealth) -> Color {
+        switch health.freshness {
+        case .waiting:
+            return Color.bdAccent
+        case .live:
+            return .green
+        case .delayed:
+            return .orange
+        case .stale:
+            return .red
         }
     }
 
-    private func format(value: Double?) -> String {
-        guard let value else { return "Off" }
-        if let unit = config.kind.unitLabel {
-            return unit == "GB" ? String(format: "%.0f %@", value, unit) : String(format: "%.0f%@", value, unit)
+    private var thermalColor: Color {
+        switch systemMonitor.thermalState {
+        case .nominal: return .green
+        case .fair: return Color.bdAccent
+        case .serious: return .orange
+        case .critical: return .red
+        @unknown default: return .secondary
         }
-        return String(format: "%.0f", value)
+    }
+
+    private func thermalStateLabel(_ state: ProcessInfo.ThermalState) -> String {
+        switch state {
+        case .nominal:
+            return "Nominal"
+        case .fair:
+            return "Fair"
+        case .serious:
+            return "Serious"
+        case .critical:
+            return "Critical"
+        @unknown default:
+            return "Unknown"
+        }
+    }
+
+    private func pillColor(for tone: MenuBarStatusPillTone) -> Color {
+        switch tone {
+        case .neutral:
+            return .secondary
+        case .accent:
+            return Color.bdAccent
+        case .good:
+            return .green
+        case .warning:
+            return .orange
+        case .critical:
+            return .red
+        }
     }
 }

@@ -48,7 +48,7 @@ Public builds are available through GitHub Releases.
 - **Thermal-first by default.** Core-Monitor is built for people who care about heat, fan behavior, throttling risk, and sustained load more than decorative desktop stats.
 - **Monitoring first, helper optional.** Fresh installs start in system-owned cooling. You only need the privileged helper if you explicitly choose a fan mode that writes RPM targets.
 - **Readable menu bar defaults.** New installs start with the balanced three-item layout instead of trying to occupy the entire menu bar at once.
-- **Local diagnostics, no accounts.** Sensor reads, alert history, and helper diagnostics stay on-device. There are no cloud dashboards, required logins, or telemetry dependencies for core monitoring.
+- **Local diagnostics, no accounts.** Sensor reads and helper diagnostics stay on-device. There are no cloud dashboards, required logins, or telemetry dependencies for core monitoring.
 - **Open-source trust surface.** The repo includes helper diagnostics docs, architecture notes, contributor guidance, and a current public-source competitor matrix instead of hiding the hard parts behind marketing copy.
 
 If you want the broader market context, see [`docs/COMPETITOR_MATRIX_2026.md`](./docs/COMPETITOR_MATRIX_2026.md) and [`docs/CORE_MONITOR_AUDIT_2026.md`](./docs/CORE_MONITOR_AUDIT_2026.md).

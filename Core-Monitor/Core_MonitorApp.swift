@@ -1,6 +1,11 @@
 import AppKit
 import SwiftUI
 
+private func debugLaunch(_ message: String) {
+    guard ProcessInfo.processInfo.environment["CORE_MONITOR_DEBUG_LAUNCH"] == "1" else { return }
+    fputs("[CoreMonitorLaunch] \(message)\n", stderr)
+}
+
 @available(macOS 13.0, *)
 @MainActor
 private final class DashboardWindowController: NSWindowController, NSWindowDelegate {
@@ -44,6 +49,7 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
 
     func showDashboard() {
         guard let window else { return }
+        debugLaunch("showDashboard begin visible=\(window.isVisible) frame=\(NSStringFromRect(window.frame))")
 
         configure(window)
         coordinator.attachTouchBar(to: window)
@@ -55,6 +61,7 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
 
         showWindow(nil)
         promoteVisibility(of: window)
+        debugLaunch("showDashboard end visible=\(window.isVisible) frame=\(NSStringFromRect(window.frame))")
     }
 
     func windowWillClose(_ notification: Notification) {
@@ -110,6 +117,7 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
 final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     private lazy var coordinator = AppCoordinator()
     private lazy var startupManager = StartupManager()
+    private var launchPresentation: CoreMonitorLaunchPresentation = .menuBarOnly
 
     private var menuBarController: MenuBarController?
     private var dashboardController: DashboardWindowController?
@@ -119,9 +127,11 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSWindow.allowsAutomaticWindowTabbing = false
+        launchPresentation = WelcomeGuideProgress.launchPresentation()
+        applyInitialActivationPolicy()
+        debugLaunch("didFinishLaunching launchPresentation=\(launchPresentation) activationPolicy=\(NSApp.activationPolicy().rawValue)")
         installApplicationMenuIfNeeded()
         installQuitShortcutMonitorIfNeeded()
-        NSApp.setActivationPolicy(.accessory)
         CoreMonitorDefaultsMaintenance.purgeDeprecatedState()
         installMenuBarIfNeeded()
         presentInitialDashboardIfNeeded()
@@ -182,6 +192,7 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
 
     func openDashboard() {
         setDashboardActivationPolicy()
+        debugLaunch("openDashboard activationPolicy=\(NSApp.activationPolicy().rawValue)")
         let controller = dashboardControllerIfNeeded()
         controller.showDashboard()
         if controller.isDashboardVisible {
@@ -196,7 +207,6 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         menuBarController = MenuBarController(
             systemMonitor: coordinator.systemMonitor,
             fanController: coordinator.fanController,
-            alertManager: coordinator.alertManager,
             openDashboardAction: { [weak self] in
                 self?.openDashboard()
             },
@@ -276,6 +286,7 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
 
     private func dashboardControllerIfNeeded() -> DashboardWindowController {
         if let dashboardController {
+            debugLaunch("dashboardController reuse visible=\(dashboardController.isDashboardVisible)")
             return dashboardController
         }
 
@@ -286,15 +297,17 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
             self?.dashboardController = nil
             self?.restoreAccessoryActivationPolicyIfNeeded()
         }
+        debugLaunch("dashboardController created")
         dashboardController = controller
         return controller
     }
 
     private func presentInitialDashboardIfNeeded() {
         guard hasPresentedInitialDashboard == false else { return }
-        guard WelcomeGuideProgress.shouldAutoOpenDashboardOnLaunch() else { return }
+        guard launchPresentation.shouldAutoOpenDashboard else { return }
 
         hasPresentedInitialDashboard = true
+        debugLaunch("schedule initial dashboard attempts")
         scheduleInitialDashboardAttempts(after: [0, 0.35, 1.0, 2.0])
     }
 
@@ -316,10 +329,11 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func attemptInitialDashboardPresentation() {
-        guard WelcomeGuideProgress.shouldAutoOpenDashboardOnLaunch() else {
+        guard launchPresentation.shouldAutoOpenDashboard else {
             cancelInitialDashboardAttempts()
             return
         }
+        debugLaunch("attemptInitialDashboardPresentation visible=\(dashboardController?.isDashboardVisible == true)")
 
         if dashboardController?.isDashboardVisible == true {
             cancelInitialDashboardAttempts()
@@ -337,6 +351,15 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     private func setDashboardActivationPolicy() {
         if NSApp.activationPolicy() != .regular {
             NSApp.setActivationPolicy(.regular)
+        }
+    }
+
+    private func applyInitialActivationPolicy() {
+        switch launchPresentation {
+        case .dashboard:
+            NSApp.setActivationPolicy(.regular)
+        case .menuBarOnly:
+            NSApp.setActivationPolicy(.accessory)
         }
     }
 

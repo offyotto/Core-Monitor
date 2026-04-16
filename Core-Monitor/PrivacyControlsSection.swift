@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PrivacyControlsSectionContent: View {
-    @ObservedObject var alertManager: AlertManager
+    @ObservedObject private var privacySettings = PrivacySettings.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -9,11 +9,8 @@ struct PrivacyControlsSectionContent: View {
                 .font(.system(size: 16, weight: .bold))
 
             Toggle(
-                "Include top app context in alerts and memory views",
-                isOn: Binding(
-                    get: { alertManager.processInsightsEnabled },
-                    set: { alertManager.setProcessInsightsEnabled($0) }
-                )
+                "Include top app context in memory views",
+                isOn: $privacySettings.processInsightsEnabled
             )
             .toggleStyle(.switch)
 
@@ -22,26 +19,19 @@ struct PrivacyControlsSectionContent: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            HStack(spacing: 10) {
-                Button("Clear Alert History") {
-                    alertManager.clearHistory()
-                }
-                .buttonStyle(.bordered)
-
-                if alertManager.processInsightsEnabled == false {
-                    Text("Private mode is on.")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Color.bdAccent)
-                }
+            if privacySettings.processInsightsEnabled == false {
+                Text("Private mode is on.")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color.bdAccent)
             }
         }
     }
 
     private var description: String {
-        if alertManager.processInsightsEnabled {
-            return "Top app context stays on-device and helps explain CPU and memory spikes. Turn it off to keep alert history free of process names."
+        if privacySettings.processInsightsEnabled {
+            return "Top app context stays on-device and helps explain CPU and memory spikes in the dashboard and menu bar."
         }
 
-        return "Core Monitor still evaluates thresholds, but active alerts and recent history no longer retain process names. You can find the same control from both the Alerts and System tabs."
+        return "Core Monitor still tracks memory pressure and top-process usage locally, but app names stay hidden from memory views while private mode is on."
     }
 }

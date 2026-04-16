@@ -60,7 +60,7 @@ struct HelpView: View {
                     HelpBullet(text: "Current builds surface CPU, GPU, SSD, and battery temperatures when those readings are available.")
                     HelpBullet(text: "If a temperature is missing, the app could not resolve a readable sensor key for this Mac.")
                     HelpBullet(text: "Overall thermal uses `ProcessInfo.processInfo.thermalState`, which is macOS thermal pressure rather than a guessed package sensor.")
-                    HelpBullet(text: "Use the `Alerts` tab to configure thermal thresholds, notification policy, mute windows, and recent alert history.")
+                    HelpBullet(text: "Use the `Overview` and `System` sections to track monitoring freshness, thermal pressure, helper health, and SMC availability.")
                 }
             )),
             HelpSection(id: "alerts", title: "Alerts", icon: "bell.badge", keywords: [
@@ -71,9 +71,8 @@ struct HelpView: View {
                     HelpBullet(text: "Desktop notifications are optional. Turning them off does not disable in-app alert history.")
                     HelpBullet(text: "Presets let you trade off earlier warning thresholds against quieter notification behavior.")
                     HelpBullet(text: "CPU and memory alerts include top-process context so you can see likely culprits without configuring per-process rules.")
-                    HelpBullet(text: "Privacy Controls can remove app names from alerts and recent history while still keeping the thresholds active.")
-                    HelpBullet(text: "The same privacy toggle now appears in both the `Alerts` tab and the `System` tab so it is easier to find during setup.")
-                    HelpBullet(text: "The status cards above the rules also show monitoring cadence, thermal pressure, helper health, and notification readiness in one place.")
+                    HelpBullet(text: "Privacy Controls can remove app names from alerts and recent history while still keeping thresholds active.")
+                    HelpBullet(text: "System status cards now also surface monitoring freshness, thermal pressure, helper health, and privacy mode from the `Overview` and `System` tabs.")
                     HelpBullet(text: "Helper availability alerts matter once you opt into a helper-backed fan mode. Monitoring-only setups can stay healthy without the helper installed.")
                     HelpBullet(text: "Snooze suppresses desktop notifications for a rule, while `Hide For Now` clears the current alert card until conditions change again.")
                 }
@@ -116,14 +115,14 @@ struct HelpView: View {
                 }
             )),
             HelpSection(id: "system", title: "System Controls", icon: "gearshape", keywords: [
-                "volume", "brightness", "launch at login", "login items", "helper diagnostics", "notifications", "privacy", "process names", "alert history"
+                "volume", "brightness", "launch at login", "login items", "helper diagnostics", "privacy", "process names", "status", "monitoring"
             ], content: AnyView(
                 HelpCard {
                     Text("System controls enable adjusting volume, screen brightness, and launch-at-login behavior.")
                     HelpBullet(text: "Use the `System` tab or menu bar popovers to view current volume and brightness.")
                     HelpBullet(text: "Toggle `Launch at Login` to start Core Monitor automatically.")
-                    HelpBullet(text: "The `System` tab now also surfaces helper state, SMC access, overall thermal pressure, and notification permission status in dedicated status cards.")
-                    HelpBullet(text: "Privacy Controls also live in the `System` tab so you can disable process-name capture without hunting through alert rules first.")
+                    HelpBullet(text: "The `System` tab also surfaces helper state, SMC access, overall thermal pressure, privacy mode, and monitoring freshness in dedicated status cards.")
+                    HelpBullet(text: "Privacy Controls live in the `System` tab so you can disable process-name capture without leaving the main dashboard.")
                 }
             )),
             HelpSection(id: "touchbar", title: "Touch Bar Customization", icon: "rectangle.3.group", keywords: [
