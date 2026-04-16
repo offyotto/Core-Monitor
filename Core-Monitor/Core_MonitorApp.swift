@@ -32,6 +32,12 @@ enum CoreMonitorSingleInstancePolicy {
     }
 }
 
+struct CoreMonitorLaunchEnvironment {
+    static func shouldHandleDuplicateLaunch(environment: [String: String] = ProcessInfo.processInfo.environment) -> Bool {
+        environment["XCTestConfigurationFilePath"] == nil
+    }
+}
+
 @available(macOS 13.0, *)
 @MainActor
 private final class DashboardWindowController: NSWindowController, NSWindowDelegate {
@@ -159,7 +165,6 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     private var quitShortcutMonitor: Any?
     private var distributedDashboardRequestObserver: NSObjectProtocol?
     private var dashboardShortcutObserver: NSObjectProtocol?
-    private let isRunningUnderXCTest = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     private var shouldAutoOpenInitialDashboard = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -412,7 +417,7 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func handOffToRunningInstanceIfNeeded() -> Bool {
-        guard isRunningUnderXCTest == false else { return false }
+        guard CoreMonitorLaunchEnvironment.shouldHandleDuplicateLaunch() else { return false }
         guard let bundleIdentifier = Bundle.main.bundleIdentifier else { return false }
 
         let currentPID = ProcessInfo.processInfo.processIdentifier

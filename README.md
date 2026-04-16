@@ -5,21 +5,7 @@
 <h1 align="center">Core-Monitor</h1>
 
 <p align="center">
-  A native system monitor for macOS, built for Apple Silicon Macs.
-</p>
-
-<p align="center">
-  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">
-    <img src="https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge" alt="Download latest release">
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Latest release</a>
-  ·
-  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases">All releases</a>
-  ·
-  <a href="./LICENSE">License</a>
+  Thermal-first monitoring for Apple Silicon Macs, with optional helper-backed fan control.
 </p>
 
 <p align="center">
@@ -27,7 +13,7 @@
     <img src="https://img.shields.io/badge/Website-Core--Monitor-8A2BE2?style=flat" alt="Website">
   </a>
   <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">
-    <img src="https://img.shields.io/badge/Download-latest-brightgreen?style=flat" alt="Download latest">
+    <img src="https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=flat" alt="Download latest">
   </a>
   <a href="./LICENSE">
     <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=flat" alt="GPL-3.0 license">
@@ -37,9 +23,9 @@
 
 ---
 
-Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs, then presents it in the menu bar, dashboard, and, on supported hardware, the Touch Bar. CPU, GPU, memory, battery, temperatures, power draw, and fan speeds update continuously in the native app.
+Core-Monitor reads sensor data from AppleSMC and standard macOS system APIs, then presents it in the menu bar, dashboard, alerts surface, and, on supported hardware, the Touch Bar. CPU, GPU, memory, battery, temperatures, power draw, and fan speeds update continuously in a native macOS app.
 
-It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. Sensor reads stay local to your Mac. The optional fan control helper is the only additional process, and it is only needed if you want write access for fan control.
+It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. Sensor reads stay local to your Mac. The optional fan-control helper is the only additional process, and it is only needed when you want privileged fan writes.
 
 The `System` tab can also register an optional `Option-Command-M` dashboard shortcut so you still have a reliable way back into Core-Monitor when menu bar visibility or macOS reopen behavior gets in the way.
 
@@ -269,7 +255,13 @@ The new customization system is intentionally practical rather than unlimited. R
 git clone https://github.com/offyotto-sl3/Core-Monitor.git
 ```
 
-Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc-helper` is a separate target. You can build and run Core-Monitor without it, but fan control will not be available.
+Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc-helper` is a separate target. You can build and run Core-Monitor without it; only helper-backed fan control is unavailable until it is installed and trusted.
+
+## Support and diagnostics
+
+- Use the in-app `System` tab to recheck helper state, launch-at-login state, and menu bar visibility.
+- Export the helper diagnostics report before filing fan-control, signing, or startup-visibility issues.
+- Include the report when opening a GitHub issue so support does not depend on screenshots and guesswork.
 
 ## Compatibility
 
