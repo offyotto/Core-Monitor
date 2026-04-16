@@ -35,6 +35,7 @@ protocol WeatherProviding: AnyObject {
     func currentWeather(for location: CLLocation) async throws -> WeatherSnapshot
 }
 
+@MainActor
 protocol WeatherLocationAccessControlling: AnyObject {
     var authorizationStatus: CLAuthorizationStatus { get }
     var currentLocation: CLLocation? { get }
@@ -71,8 +72,11 @@ final class WeatherLocationAccessController: NSObject, ObservableObject, CLLocat
         authorizationStatus = locationManager.authorizationStatus
     }
 
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        authorizationStatus = manager.authorizationStatus
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
+        Task { @MainActor [weak self] in
+            self?.authorizationStatus = status
+        }
     }
 }
 
