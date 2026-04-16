@@ -5,6 +5,7 @@ final class WelcomeGuideProgressTests: XCTestCase {
     func testShouldAutoOpenDashboardOnLaunchWhenGuideHasNotBeenSeen() {
         let defaults = makeDefaults()
 
+        XCTAssertEqual(WelcomeGuideProgress.launchPresentation(defaults: defaults), .dashboard)
         XCTAssertTrue(WelcomeGuideProgress.shouldAutoOpenDashboardOnLaunch(defaults: defaults))
         XCTAssertFalse(WelcomeGuideProgress.hasSeen(in: defaults))
     }
@@ -13,6 +14,7 @@ final class WelcomeGuideProgressTests: XCTestCase {
         let defaults = makeDefaults()
         defaults.set(true, forKey: WelcomeGuideProgress.hasSeenDefaultsKey)
 
+        XCTAssertEqual(WelcomeGuideProgress.launchPresentation(defaults: defaults), .menuBarOnly)
         XCTAssertFalse(WelcomeGuideProgress.shouldAutoOpenDashboardOnLaunch(defaults: defaults))
         XCTAssertTrue(WelcomeGuideProgress.hasSeen(in: defaults))
     }
@@ -121,17 +123,17 @@ final class DashboardNavigationRouterTests: XCTestCase {
     func testConsumeReturnsRequestedSelectionAndClearsRoute() throws {
         let router = DashboardNavigationRouter()
 
-        router.open(.alerts)
+        router.open(.fans)
 
         let route = try XCTUnwrap(router.route)
-        XCTAssertEqual(router.consume(route), .alerts)
+        XCTAssertEqual(router.consume(route), .fans)
         XCTAssertNil(router.route)
     }
 
     func testConsumeRejectsStaleRouteAfterNewRequest() throws {
         let router = DashboardNavigationRouter()
 
-        router.open(.alerts)
+        router.open(.fans)
         let staleRoute = try XCTUnwrap(router.route)
 
         router.open(.memory)

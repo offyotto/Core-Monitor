@@ -14,13 +14,7 @@ final class DashboardProcessSamplingPolicyTests: XCTestCase {
         }
     }
 
-    func testAlertsAndMemoryViewsRequestDetailedSampling() {
-        XCTAssertTrue(
-            DashboardProcessSamplingPolicy.requiresDetailedSampling(
-                isBasicMode: false,
-                selection: .alerts
-            )
-        )
+    func testMemoryViewRequestsDetailedSampling() {
         XCTAssertTrue(
             DashboardProcessSamplingPolicy.requiresDetailedSampling(
                 isBasicMode: false,

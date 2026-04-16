@@ -25,7 +25,7 @@ body:
       options:
         - Fan control / helper
         - Monitoring / sensors
-        - Alerts
+        - Status / diagnostics
         - Menu bar
         - Dashboard UI
         - Touch Bar

@@ -5,7 +5,6 @@ changelog:
         - product
         - feature
         - ui
-        - alerts
     - title: Fan Control and Helper
       labels:
         - helper

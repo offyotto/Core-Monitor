@@ -677,7 +677,7 @@ private struct MonitoringStatusCard: View {
         case .waiting:
             return "Core Monitor is warming up the local sensor pipeline and will publish live readings as soon as the first sample completes."
         case .live:
-            return "The dashboard is receiving fresh sensor data on the active cadence. Higher-churn process detail only speeds up on the Alerts and Memory surfaces to keep idle overhead lower elsewhere."
+            return "The dashboard is receiving fresh sensor data on the active cadence. Higher-churn process detail only speeds up on the Memory surface to keep idle overhead lower elsewhere."
         case .delayed:
             return "The latest sample is slightly behind the active cadence, so values may briefly lag while the Mac is under load or waking from sleep."
         case .stale:
@@ -1390,36 +1390,19 @@ private struct FanControlPanel: View {
 
 // MARK: - Sidebar items
 enum SidebarItem: String, CaseIterable, Identifiable {
-    case overview="Overview", alerts="Alerts", thermals="Thermals", memory="Memory", fans="Fans"
+    case overview="Overview", thermals="Thermals", memory="Memory", fans="Fans"
     case battery="Battery"
     case system="System", touchBar="Touch Bar", help="Help", about="About"
     var id: String { rawValue }
     var icon: String {
         switch self {
         case .overview: return "gauge.medium"; case .thermals: return "thermometer.medium"
-        case .alerts: return "bell.badge"
         case .memory: return "memorychip"; case .fans: return "fanblades.fill"
         case .battery: return "battery.75"; case .system: return "gearshape"
         case .touchBar: return "rectangle.3.group"
         case .help: return "questionmark.circle"
         case .about: return "info.circle"
         }
-    }
-
-    var prefersDetailedProcessSampling: Bool {
-        switch self {
-        case .alerts, .memory:
-            return true
-        case .overview, .thermals, .fans, .battery, .system, .touchBar, .help, .about:
-            return false
-        }
-    }
-}
-
-enum DashboardProcessSamplingPolicy {
-    static func shouldEnableDetailedSampling(selection: SidebarItem, isBasicMode: Bool) -> Bool {
-        guard isBasicMode == false else { return false }
-        return selection.prefersDetailedProcessSampling
     }
 }
 
@@ -1472,7 +1455,7 @@ private struct Sidebar: View {
     let modeState: AppModeState
 
     var visibleItems: [SidebarItem] {
-        var items: [SidebarItem] = [.overview, .alerts, .thermals, .memory, .fans]
+        var items: [SidebarItem] = [.overview, .thermals, .memory, .fans]
         if hasBattery {
             items.append(.battery)
         }
@@ -1555,14 +1538,12 @@ private struct DetailPane: View {
     @Binding var selection: SidebarItem
     let snapshot: SystemMonitorSnapshot
     let fanController: FanController; let systemMonitor: SystemMonitor
-    let alertManager: AlertManager
     let startupManager: StartupManager
 
     @ViewBuilder
     private var selectedContent: some View {
         switch selection {
         case .overview:  overviewContent
-        case .alerts:    AlertsView(alertManager: alertManager, systemMonitor: systemMonitor, fanController: fanController)
         case .thermals:  thermalsContent
         case .memory:    memoryContent
         case .fans:      fansContent
@@ -1600,14 +1581,11 @@ private struct DetailPane: View {
     private var overviewContent: some View {
         VStack(alignment: .leading, spacing: 18) {
             header("Overview", subtitle: hostModelName())
-            AlertsDashboardStrip(alertManager: alertManager) {
-                selection = .alerts
-            }
+            MonitoringDashboardStrip(systemMonitor: systemMonitor, fanController: fanController)
             MonitoringStatusCard(systemMonitor: systemMonitor)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 MetricTile(label: "CPU Load",  value: "\(Int(snapshot.cpuUsagePercent.rounded()))", unit: "%",
-                           color: cpuColor, gauge: snapshot.cpuUsagePercent / 100, history: systemMonitor.cpuHistory,
-                           badgeText: alertBadgeText(for: .cpuUsage), badgeColor: alertBadgeColor(for: .cpuUsage))
+                           color: cpuColor, gauge: snapshot.cpuUsagePercent / 100, history: systemMonitor.cpuHistory)
                 if let pUsage = snapshot.performanceCoreUsagePercent {
                     MetricTile(label: "P-Core Load (\(SystemMonitor.performanceCoreCount()) cores)",
                                value: "\(Int(pUsage.rounded()))", unit: "%",
@@ -1619,16 +1597,13 @@ private struct DetailPane: View {
                                color: loadColor(eUsage), gauge: eUsage / 100)
                 }
                 MetricTile(label: "Memory",    value: "\(Int(snapshot.memoryUsagePercent.rounded()))", unit: "%",
-                           color: memColor, gauge: snapshot.memoryUsagePercent / 100, history: systemMonitor.memHistory,
-                           badgeText: alertBadgeText(for: .memoryPressure), badgeColor: alertBadgeColor(for: .memoryPressure))
+                           color: memColor, gauge: snapshot.memoryUsagePercent / 100, history: systemMonitor.memHistory)
                 if let t = snapshot.cpuTemperature {
                     MetricTile(label: "CPU Temp", value: "\(Int(t.rounded()))", unit: "°C",
-                               color: tempColor(t), gauge: min(t, 110) / 110, history: systemMonitor.cpuTempHistory,
-                               badgeText: alertBadgeText(for: .cpuTemperature), badgeColor: alertBadgeColor(for: .cpuTemperature))
+                               color: tempColor(t), gauge: min(t, 110) / 110, history: systemMonitor.cpuTempHistory)
                 }
                 if let rpm = snapshot.fanSpeeds.first, rpm > 0 {
-                    MetricTile(label: "Fan", value: "\(rpm)", unit: " RPM", color: Color.bdAccent,
-                               badgeText: alertBadgeText(for: .fanTooLowUnderHeat), badgeColor: alertBadgeColor(for: .fanTooLowUnderHeat))
+                    MetricTile(label: "Fan", value: "\(rpm)", unit: " RPM", color: Color.bdAccent)
                 }
                 if let w = snapshot.totalSystemWatts {
                     MetricTile(label: "Power", value: String(format: "%.1f", abs(w)), unit: " W", color: .purple)
@@ -1647,8 +1622,7 @@ private struct DetailPane: View {
                 )
                 if snapshot.batteryInfo.hasBattery {
                     MetricTile(label: "Battery", value: "\(snapshot.batteryInfo.chargePercent ?? 0)", unit: "%",
-                               color: battColor, gauge: battFrac,
-                               badgeText: alertBadgeText(for: .lowBatteryDischarging), badgeColor: alertBadgeColor(for: .lowBatteryDischarging))
+                               color: battColor, gauge: battFrac)
                 }
             }
             MonitoringTrendSection(systemMonitor: systemMonitor)
@@ -1679,8 +1653,7 @@ private struct DetailPane: View {
             header("Memory", subtitle: "Unified memory pressure and usage")
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 MetricTile(label: "Usage", value: "\(Int(snapshot.memoryUsagePercent.rounded()))", unit: "%",
-                           color: memColor, gauge: snapshot.memoryUsagePercent / 100, history: systemMonitor.memHistory,
-                           badgeText: alertBadgeText(for: .memoryPressure), badgeColor: alertBadgeColor(for: .memoryPressure))
+                           color: memColor, gauge: snapshot.memoryUsagePercent / 100, history: systemMonitor.memHistory)
                 MetricTile(label: "Used", value: String(format: "%.1f", snapshot.memoryUsedGB), unit: " GB",
                            color: memColor, gauge: snapshot.memoryUsedGB / max(1, snapshot.totalMemoryGB))
             }
@@ -1781,10 +1754,10 @@ private struct DetailPane: View {
     private var systemContent: some View {
         VStack(alignment: .leading, spacing: 18) {
             header("System", subtitle: "Controls and startup")
-            SystemStatusBoard(alertManager: alertManager, systemMonitor: systemMonitor)
+            SystemStatusBoard(systemMonitor: systemMonitor, fanController: fanController)
             HelperDiagnosticsSupportCard(startupManager: startupManager)
             DarkCard(padding: 16) {
-                PrivacyControlsSectionContent(alertManager: alertManager)
+                PrivacyControlsSectionContent()
             }
             DarkCard(padding: 16) {
                 VStack(spacing: 8) {
@@ -1883,18 +1856,6 @@ private struct DetailPane: View {
     }
     private func loadColor(_ usage: Double) -> Color { usage > 80 ? .red : usage > 50 ? .orange : .green }
     private func tempColor(_ t: Double) -> Color { t > 90 ? .red : t > 70 ? .orange : .green }
-    private func alertBadgeText(for kind: AlertRuleKind) -> String? {
-        alertManager.activeAlerts.first(where: { $0.kind == kind })?.severity.title
-    }
-    private func alertBadgeColor(for kind: AlertRuleKind) -> Color? {
-        guard let severity = alertManager.activeAlerts.first(where: { $0.kind == kind })?.severity else { return nil }
-        switch severity {
-        case .none: return nil
-        case .info: return Color.bdAccent
-        case .warning: return .orange
-        case .critical: return .red
-        }
-    }
     private func hostModelName() -> String {
         MacModelRegistry.displayName(for: SystemMonitor.hostModelIdentifier())
     }
@@ -2734,7 +2695,6 @@ struct ContentView: View {
     @StateObject private var appearanceSettings = AppAppearanceSettings.shared
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
-    @ObservedObject var alertManager: AlertManager
     @ObservedObject var startupManager: StartupManager
     @ObservedObject private var dashboardNavigationRouter = DashboardNavigationRouter.shared
 
@@ -2781,7 +2741,7 @@ struct ContentView: View {
             DetailPane(
                 selection: $sidebarSelection,
                 snapshot: systemMonitor.snapshot,
-                fanController: fanController, systemMonitor: systemMonitor, alertManager: alertManager,
+                fanController: fanController, systemMonitor: systemMonitor,
                 startupManager: startupManager
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

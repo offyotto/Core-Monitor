@@ -7,7 +7,6 @@ import Foundation
 final class AppCoordinator: ObservableObject {
     let systemMonitor: SystemMonitor
     let fanController: FanController
-    let alertManager: AlertManager
 
     private let touchBarPresenter = TouchBarPrivatePresenter()
     private let customizationSettings = TouchBarCustomizationSettings.shared
@@ -20,9 +19,12 @@ final class AppCoordinator: ObservableObject {
 
     private var launchObserver: NSObjectProtocol?
     private var activationObserver: NSObjectProtocol?
+    private var resignObserver: NSObjectProtocol?
+    private var workspaceActivationObserver: NSObjectProtocol?
     private var terminateObserver: NSObjectProtocol?
     private var customizationObserver: NSObjectProtocol?
     private var bootstrapWorkItem: DispatchWorkItem?
+    private var touchBarReassertWorkItem: DispatchWorkItem?
     private weak var attachedWindow: NSWindow?
 
     init() {
@@ -30,7 +32,6 @@ final class AppCoordinator: ObservableObject {
         let fanController = FanController(systemMonitor: monitor)
         self.systemMonitor = monitor
         self.fanController = fanController
-        self.alertManager = AlertManager(systemMonitor: monitor, fanController: fanController)
 
         start()
     }
@@ -44,6 +45,8 @@ final class AppCoordinator: ObservableObject {
     func stop() {
         bootstrapWorkItem?.cancel()
         bootstrapWorkItem = nil
+        touchBarReassertWorkItem?.cancel()
+        touchBarReassertWorkItem = nil
         fanController.restoreSystemAutomaticOnTermination()
         if let launchObserver {
             NotificationCenter.default.removeObserver(launchObserver)
@@ -52,6 +55,14 @@ final class AppCoordinator: ObservableObject {
         if let activationObserver {
             NotificationCenter.default.removeObserver(activationObserver)
             self.activationObserver = nil
+        }
+        if let resignObserver {
+            NotificationCenter.default.removeObserver(resignObserver)
+            self.resignObserver = nil
+        }
+        if let workspaceActivationObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(workspaceActivationObserver)
+            self.workspaceActivationObserver = nil
         }
         if let terminateObserver {
             NotificationCenter.default.removeObserver(terminateObserver)
@@ -99,6 +110,8 @@ final class AppCoordinator: ObservableObject {
     private func installTouchBarBootstrapObservers() {
         guard launchObserver == nil,
               activationObserver == nil,
+              resignObserver == nil,
+              workspaceActivationObserver == nil,
               terminateObserver == nil,
               customizationObserver == nil else {
             return
@@ -122,6 +135,29 @@ final class AppCoordinator: ObservableObject {
             Task { @MainActor [weak self] in
                 guard self?.presentationMode == .app else { return }
                 self?.startAppTouchBar()
+            }
+        }
+
+        resignObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didResignActiveNotification,
+            object: NSApp,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.scheduleTouchBarReassertion()
+            }
+        }
+
+        workspaceActivationObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            let activatedApplication = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+            let shouldReassert = activatedApplication != nil && activatedApplication != NSRunningApplication.current
+            Task { @MainActor [weak self] in
+                guard let self, shouldReassert else { return }
+                self.scheduleTouchBarReassertion()
             }
         }
 
@@ -151,6 +187,20 @@ final class AppCoordinator: ObservableObject {
                 }
             }
         }
+    }
+
+    private func scheduleTouchBarReassertion() {
+        guard presentationMode == .app else { return }
+        touchBarReassertWorkItem?.cancel()
+
+        let workItem = DispatchWorkItem { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self, self.presentationMode == .app else { return }
+                self.startAppTouchBar()
+            }
+        }
+        touchBarReassertWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: workItem)
     }
 
     private func scheduleTouchBarBootstrap() {

@@ -8,7 +8,7 @@ enum DashboardProcessSamplingPolicy {
         guard isBasicMode == false else { return false }
 
         switch selection {
-        case .alerts, .memory:
+        case .memory:
             return true
         case .overview, .thermals, .fans, .battery, .system, .touchBar, .help, .about:
             return false

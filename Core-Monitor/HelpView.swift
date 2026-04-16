@@ -60,22 +60,7 @@ struct HelpView: View {
                     HelpBullet(text: "Current builds surface CPU, GPU, SSD, and battery temperatures when those readings are available.")
                     HelpBullet(text: "If a temperature is missing, the app could not resolve a readable sensor key for this Mac.")
                     HelpBullet(text: "Overall thermal uses `ProcessInfo.processInfo.thermalState`, which is macOS thermal pressure rather than a guessed package sensor.")
-                    HelpBullet(text: "Use the `Alerts` tab to configure thermal thresholds, notification policy, mute windows, and recent alert history.")
-                }
-            )),
-            HelpSection(id: "alerts", title: "Alerts", icon: "bell.badge", keywords: [
-                "notifications", "thresholds", "warnings", "critical", "snooze", "history", "privacy", "process names"
-            ], content: AnyView(
-                HelpCard {
-                    Text("Core Monitor ships local alerts for thermals, memory pressure, swap usage, battery state, fan safety, helper availability, and SMC access.")
-                    HelpBullet(text: "Desktop notifications are optional. Turning them off does not disable in-app alert history.")
-                    HelpBullet(text: "Presets let you trade off earlier warning thresholds against quieter notification behavior.")
-                    HelpBullet(text: "CPU and memory alerts include top-process context so you can see likely culprits without configuring per-process rules.")
-                    HelpBullet(text: "Privacy Controls can remove app names from alerts and recent history while still keeping the thresholds active.")
-                    HelpBullet(text: "The same privacy toggle now appears in both the `Alerts` tab and the `System` tab so it is easier to find during setup.")
-                    HelpBullet(text: "The status cards above the rules also show monitoring cadence, thermal pressure, helper health, and notification readiness in one place.")
-                    HelpBullet(text: "Helper availability alerts matter once you opt into a helper-backed fan mode. Monitoring-only setups can stay healthy without the helper installed.")
-                    HelpBullet(text: "Snooze suppresses desktop notifications for a rule, while `Hide For Now` clears the current alert card until conditions change again.")
+                    HelpBullet(text: "Use the `Overview` and `System` sections to track monitoring freshness, thermal pressure, helper health, and SMC availability.")
                 }
             )),
             HelpSection(id: "memory", title: "Memory", icon: "memorychip", keywords: [
@@ -117,13 +102,13 @@ struct HelpView: View {
                 }
             )),
             HelpSection(id: "system", title: "System Controls", icon: "gearshape", keywords: [
-                "volume", "brightness", "launch at login", "login items", "helper diagnostics", "notifications", "privacy", "process names", "alert history", "dashboard shortcut", "dashboard hotkey", "option command m"
+                "volume", "brightness", "launch at login", "login items", "helper diagnostics", "notifications", "privacy", "process names", "alert history", "dashboard shortcut", "dashboard hotkey", "option command m", "status", "monitoring"
             ], content: AnyView(
                 HelpCard {
                     Text("System controls enable adjusting volume, screen brightness, and launch-at-login behavior.")
                     HelpBullet(text: "Use the `System` tab or menu bar popovers to view current volume and brightness.")
                     HelpBullet(text: "Toggle `Launch at Login` to start Core Monitor automatically.")
-                    HelpBullet(text: "The `System` tab now also surfaces helper state, SMC access, overall thermal pressure, and notification permission status in dedicated status cards.")
+                    HelpBullet(text: "The `System` tab now surfaces helper state, SMC access, overall thermal pressure, notification permission status, privacy mode, and monitoring freshness in dedicated status cards.")
                     HelpBullet(text: "Privacy Controls also live in the `System` tab so you can disable process-name capture without hunting through alert rules first.")
                     HelpBullet(text: "An optional global dashboard shortcut can register `Option-Command-M` so you can reopen Core Monitor even if menu bar items are hidden or hard to reach.")
                 }
@@ -186,7 +171,7 @@ struct HelpView: View {
                 HelpCard {
                     Text("Core Monitor reads sensors via AppleSMC. Fan writes require the bundled helper.")
                     HelpBullet(text: "The helper is signed and uses the macOS authorization sheet on first use.")
-                    HelpBullet(text: "Core Monitor starts in system-owned cooling. Service alerts about helper availability become relevant after you switch into Smart, Balanced, Performance, Max, Manual, or Custom.")
+                    HelpBullet(text: "Core Monitor starts in system-owned cooling. Helper state matters after you switch into Smart, Balanced, Performance, Max, Manual, or Custom.")
                     HelpBullet(text: "Use the `System` tab’s `Helper Diagnostics` card to recheck helper trust or export a support report without reopening onboarding.")
                     HelpBullet(text: "Use `Reset to System Auto` in the Fans section to restore default behavior immediately; Core Monitor also best-effort restores system auto when the app quits.")
                 }
@@ -430,7 +415,7 @@ private struct HelpSearchEmptyState: View {
             VStack(alignment: .leading, spacing: 10) {
                 Label("No matching help topics", systemImage: "magnifyingglass.circle")
                     .font(.system(size: 15, weight: .semibold))
-                Text("No help sections matched \"\(query)\". Try terms like helper, weather, login items, alerts, or Touch Bar.")
+                Text("No help sections matched \"\(query)\". Try terms like helper, weather, login items, menu bar, or Touch Bar.")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

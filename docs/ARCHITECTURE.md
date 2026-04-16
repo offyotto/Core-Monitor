@@ -8,7 +8,7 @@ It focuses on the code paths that matter most for product quality, helper trust,
 
 - `Core-Monitor/Core_MonitorApp.swift`
   - App entry point and top-level scene wiring.
-  - Owns the shared long-lived objects that feed the dashboard, menu bar, alerts, and fan control surfaces.
+  - Owns the shared long-lived objects that feed the dashboard, menu bar, onboarding, and fan control surfaces.
 - `Core-Monitor/AppCoordinator.swift`
   - Coordinates launch behavior, dashboard visibility, and menu bar interactions.
   - Good first stop when the app starts in the wrong place or loses discoverability.
@@ -26,7 +26,7 @@ It focuses on the code paths that matter most for product quality, helper trust,
   - Shared point-in-time data model for the latest monitoring sample.
   - Keep new monitoring surfaces reading from this model rather than inventing parallel ad hoc state.
 - `Core-Monitor/TopProcessSampler.swift`
-  - Samples top CPU and memory processes for alerts and dashboard context.
+  - Samples top CPU and memory processes for dashboard context and privacy-sensitive memory views.
   - Important privacy-sensitive path because it captures local process metadata.
 
 ## Fan control pipeline
@@ -47,17 +47,19 @@ It focuses on the code paths that matter most for product quality, helper trust,
   - Contains the helper executable entry point and privileged implementation details.
   - Any trust-boundary validation belongs here, not only in the app process.
 
-## Alerts and notification flow
+## Monitoring status and legacy alert code
 
-- `Core-Monitor/AlertModels.swift`
-  - Threshold, preset, and persistence-facing alert data model.
-- `Core-Monitor/AlertEngine.swift`
-  - Pure evaluation logic that converts snapshots into active/recovery alert events.
-  - Best place for narrow deterministic tests.
-- `Core-Monitor/AlertManager.swift`
-  - Runtime orchestration layer that observes monitoring and helper state, applies presets, and stores history.
 - `Core-Monitor/AlertsView.swift`
-  - User-facing configuration and history UI for alerts.
+  - Transitional file that now hosts the dashboard/system status panels used by the Overview and System surfaces while still carrying the retired alerts view.
+  - Good place to refine monitoring freshness, helper state, SMC status, and privacy messaging without adding new dashboard state owners.
+- `Core-Monitor/AlertEngine.swift`
+  - Legacy pure evaluation logic for the retired alert system.
+  - Do not extend this path unless alerts are being intentionally reintroduced.
+- `Core-Monitor/AlertModels.swift`
+  - Legacy threshold and persistence-facing alert data model kept for the retired alert subsystem.
+- `Core-Monitor/AlertManager.swift`
+  - Legacy runtime orchestration layer for the retired alert subsystem.
+  - The main app shell no longer wires this into the current dashboard or menu bar product path.
 
 ## Menu bar and dashboard surfaces
 
@@ -109,7 +111,7 @@ It focuses on the code paths that matter most for product quality, helper trust,
 - `StartupManager`
   - Wraps `SMAppService` for launch-at-login state and approval messaging.
 - `AlertManager`
-  - Persists alert configuration and history.
+  - Persists the retired alert configuration/history model that is no longer part of the main app shell.
 - `FanController`
   - Persists custom presets/curve state and active fan configuration.
 - Touch Bar customization
@@ -128,7 +130,8 @@ When changing behavior, prefer this order:
 Examples:
 
 - helper trust or fan-write bug: start with `SMCHelperManager`, `SMCHelperXPC`, or `smc-helper/`
-- wrong alert behavior: start with `AlertEngine.swift`
+- monitoring status or helper-health confusion: start with `AlertsView.swift` (legacy filename) and `MenuBarStatusSummary.swift`
+- legacy alert behavior being intentionally removed or audited: start with `AlertEngine.swift`
 - onboarding confusion: start with `WelcomeGuide.swift`
 - menu bar clutter or reachability problems: start with `MenuBarSettings.swift` and `MenubarController.swift`
 - sampling or performance regressions: start with `SystemMonitor.swift`

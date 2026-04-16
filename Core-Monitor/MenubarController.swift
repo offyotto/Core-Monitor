@@ -58,12 +58,10 @@ final class MenuBarController: NSObject {
     private var itemControllers: [SingleMenuBarItemController] = []
     private var snapshotCancellable: AnyCancellable?
     private var settingsObserver: Any?
-    private var alertCancellable: AnyCancellable?
 
     init(
         systemMonitor:            SystemMonitor,
         fanController:            FanController,
-        alertManager:             AlertManager,
         openDashboardAction:      @escaping () -> Void,
         restoreAppTouchBarAction: @escaping () -> Void,
         revertTouchBarAction:     @escaping () -> Void
@@ -75,7 +73,6 @@ final class MenuBarController: NSObject {
                 kind:                     kind,
                 systemMonitor:            systemMonitor,
                 fanController:            fanController,
-                alertManager:             alertManager,
                 openDashboardAction:      openDashboardAction,
                 restoreAppTouchBarAction: restoreAppTouchBarAction,
                 revertTouchBarAction:     revertTouchBarAction
@@ -98,12 +95,6 @@ final class MenuBarController: NSObject {
         ) { [weak self] _ in
             self?.scheduleRefreshAllItems()
         }
-
-        alertCancellable = alertManager.$activeAlerts
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.scheduleRefreshAllItems()
-            }
     }
 
     deinit {
@@ -150,19 +141,15 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         let isVisible: Bool
         let labelText: String
         let tone: StatusTone
-        let hasCriticalAlert: Bool
     }
 
     private static let labelFont = NSFont.monospacedSystemFont(ofSize: 11, weight: .semibold)
-    private static let alertFont = NSFont.systemFont(ofSize: 10, weight: .bold)
-
     let kind: MenuBarItemKind
     private var statusItem: NSStatusItem!
     private var popover: NSPopover?
 
     private let systemMonitor:            SystemMonitor
     private let fanController:            FanController
-    private let alertManager:             AlertManager
     private let openDashboardAction:      () -> Void
     private let restoreAppTouchBarAction: () -> Void
     private let revertTouchBarAction:     () -> Void
@@ -176,7 +163,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         kind:                     MenuBarItemKind,
         systemMonitor:            SystemMonitor,
         fanController:            FanController,
-        alertManager:             AlertManager,
         openDashboardAction:      @escaping () -> Void,
         restoreAppTouchBarAction: @escaping () -> Void,
         revertTouchBarAction:     @escaping () -> Void
@@ -184,7 +170,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         self.kind                     = kind
         self.systemMonitor            = systemMonitor
         self.fanController            = fanController
-        self.alertManager             = alertManager
         self.openDashboardAction      = openDashboardAction
         self.restoreAppTouchBarAction = restoreAppTouchBarAction
         self.revertTouchBarAction     = revertTouchBarAction
@@ -235,17 +220,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
             ]
         ))
 
-        if state.hasCriticalAlert {
-            full.append(NSAttributedString(string: " "))
-            full.append(NSAttributedString(
-                string: "●",
-                attributes: [
-                    .foregroundColor: NSColor.systemRed,
-                    .font: Self.alertFont
-                ]
-            ))
-        }
-
         button.attributedTitle = full
         lastStatusState = state
     }
@@ -258,8 +232,7 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         return StatusButtonState(
             isVisible: isVisible,
             labelText: label.text,
-            tone: label.tone,
-            hasCriticalAlert: alertManager.hasCriticalAlert
+            tone: label.tone
         )
     }
 
@@ -363,7 +336,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                 CPUMenuPopoverView(
                     systemMonitor: systemMonitor,
                     fanController: fanController,
-                    alertManager: alertManager,
                     openDashboardAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openDashboardAction()
@@ -383,7 +355,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                 TemperatureMenuPopoverView(
                     systemMonitor: systemMonitor,
                     fanController: fanController,
-                    alertManager: alertManager,
                     openDashboardAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openDashboardAction()
@@ -403,7 +374,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                 MemoryMenuPopoverView(
                     systemMonitor: systemMonitor,
                     fanController: fanController,
-                    alertManager: alertManager,
                     openDashboardAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openDashboardAction()
@@ -423,7 +393,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                 DiskMenuPopoverView(
                     systemMonitor: systemMonitor,
                     fanController: fanController,
-                    alertManager: alertManager,
                     openDashboardAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openDashboardAction()
@@ -443,14 +412,9 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                 NetworkMenuPopoverView(
                     systemMonitor: systemMonitor,
                     fanController: fanController,
-                    alertManager: alertManager,
                     openDashboardAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openDashboardAction()
-                    },
-                    openAlertsAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openAlertsFromPopover()
                     }
                 )
             )
@@ -459,7 +423,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                 TemperatureMenuPopoverView(
                     systemMonitor: systemMonitor,
                     fanController: fanController,
-                    alertManager: alertManager,
                     openDashboardAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openDashboardAction()
@@ -481,13 +444,13 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         }
     }
 
-    private func openAlertsFromPopover() {
-        openSelectionFromPopover(.alerts)
-    }
-
     private func openSelectionFromPopover(_ selection: SidebarItem) {
         DashboardNavigationRouter.shared.open(selection)
         openDashboardAction()
+    }
+
+    private func openAlertsFromPopover() {
+        openSelectionFromPopover(.help)
     }
 
     private func ensurePopover() {

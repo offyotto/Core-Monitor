@@ -46,7 +46,7 @@ If Core Monitor is running but its menu bar items are missing, check `System Set
 
 ## Reading the summary quickly
 
-- `Monitoring-only configuration` means the helper is not installed. Core Monitor can still monitor sensors, alerts, and menu bar state normally.
+- `Monitoring-only configuration` means the helper is not installed. Core Monitor can still monitor sensors and menu bar state normally.
 - `Helper reachable` means the app should be able to perform privileged fan writes on supported Macs.
 - `Helper is installed, but this app could not establish a trusted connection` usually points to signing mismatch, stale helper state, or a reinstall problem.
 - `Helper exists, but Core Monitor has not completed a trusted health probe yet` usually means the helper has just been installed or the app still needs a recheck.
