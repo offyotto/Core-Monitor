@@ -192,6 +192,8 @@ final class CustomFanPresetTests: XCTestCase {
         XCTAssertEqual(FanControlMode.automatic.guidance.ownership, .system)
         XCTAssertEqual(FanControlMode.silent.guidance.ownership, .system)
         XCTAssertEqual(FanControlMode.custom.guidance.ownership, .coreMonitor)
+        XCTAssertFalse(FanControlMode.silent.requiresPrivilegedHelper)
+        XCTAssertFalse(FanControlMode.silent.guidance.requiresHelper)
     }
 
     func testAppleSiliconCaveatOnlyAppearsForManagedModes() {
@@ -240,15 +242,22 @@ final class CustomFanPresetTests: XCTestCase {
         XCTAssertEqual(MonitoringSnapshotHealth.compactDurationDescription(120), "2m")
     }
 
-    func testMenuBarStatusSummaryMakesHelperOptionalInSystemAutomaticMode() {
-        let summary = MenuBarStatusSummary.helperSummary(
+    func testMenuBarStatusSummaryMakesHelperOptionalInSystemOwnedModes() {
+        let automatic = MenuBarStatusSummary.helperSummary(
             for: .automatic,
             connectionState: .missing,
             isInstalled: false
         )
+        let silent = MenuBarStatusSummary.helperSummary(
+            for: .silent,
+            connectionState: .unreachable,
+            isInstalled: true
+        )
 
-        XCTAssertEqual(summary.label, "Helper Optional")
-        XCTAssertEqual(summary.tone, .neutral)
+        XCTAssertEqual(automatic.label, "Helper Optional")
+        XCTAssertEqual(automatic.tone, .neutral)
+        XCTAssertEqual(silent.label, "Helper Optional")
+        XCTAssertEqual(silent.tone, .neutral)
     }
 
     func testMenuBarStatusSummaryKeepsManagedModesExplicitAboutHelperProblems() {
