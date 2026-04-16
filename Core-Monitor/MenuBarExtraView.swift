@@ -256,6 +256,37 @@ private struct MBActionButton: View {
     }
 }
 
+private struct MBQuickActionsSection: View {
+    struct SecondaryAction {
+        let label: String
+        let icon: String
+        let action: () -> Void
+    }
+
+    let openDashboardAction: () -> Void
+    let openHelpAction: () -> Void
+    var secondaryAction: SecondaryAction? = nil
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if let secondaryAction {
+                MBActionButton(label: secondaryAction.label, icon: secondaryAction.icon) {
+                    secondaryAction.action()
+                }
+                MBDivider()
+            }
+
+            MBActionButton(label: "Open Dashboard", icon: "gauge.medium") {
+                openDashboardAction()
+            }
+            MBActionButton(label: "Setup & Help", icon: "questionmark.circle") {
+                openHelpAction()
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
 private struct BigRing: View {
     let value: Double   // 0–100
     let label: String
@@ -378,6 +409,7 @@ struct CPUMenuPopoverView: View {
     @ObservedObject var alertManager: AlertManager
     var openDashboardAction: () -> Void = {}
     var openAlertsAction: () -> Void = {}
+    var openHelpAction: () -> Void = {}
 
     private var pCores: Int { SystemMonitor.performanceCoreCount() }
     private var eCores: Int { SystemMonitor.efficiencyCoreCount() }
@@ -397,8 +429,10 @@ struct CPUMenuPopoverView: View {
                     MBDivider()
                     systemInfoSection
                     MBDivider()
-                    MBActionButton(label: "Open Dashboard", icon: "gauge.medium") { openDashboardAction() }
-                        .padding(.vertical, 4)
+                    MBQuickActionsSection(
+                        openDashboardAction: openDashboardAction,
+                        openHelpAction: openHelpAction
+                    )
                 }
             }
         }
@@ -566,6 +600,7 @@ struct MemoryMenuPopoverView: View {
     @ObservedObject private var privacySettings = PrivacySettings.shared
     var openDashboardAction: () -> Void = {}
     var openAlertsAction: () -> Void = {}
+    var openHelpAction: () -> Void = {}
 
     var body: some View {
         MenuPopoverSurface {
@@ -583,8 +618,10 @@ struct MemoryMenuPopoverView: View {
                     MBDivider()
                     swapSection
                     MBDivider()
-                    MBActionButton(label: "Open Dashboard", icon: "gauge.medium") { openDashboardAction() }
-                        .padding(.vertical, 4)
+                    MBQuickActionsSection(
+                        openDashboardAction: openDashboardAction,
+                        openHelpAction: openHelpAction
+                    )
                 }
             }
         }
@@ -747,6 +784,7 @@ struct DiskMenuPopoverView: View {
     @ObservedObject private var privacySettings = PrivacySettings.shared
     var openDashboardAction: () -> Void = {}
     var openAlertsAction: () -> Void = {}
+    var openHelpAction: () -> Void = {}
 
     var body: some View {
         MenuPopoverSurface {
@@ -762,8 +800,10 @@ struct DiskMenuPopoverView: View {
                     MBDivider()
                     processesSection
                     MBDivider()
-                    MBActionButton(label: "Open Dashboard", icon: "gauge.medium") { openDashboardAction() }
-                        .padding(.vertical, 4)
+                    MBQuickActionsSection(
+                        openDashboardAction: openDashboardAction,
+                        openHelpAction: openHelpAction
+                    )
                 }
             }
         }
@@ -980,6 +1020,7 @@ struct TemperatureMenuPopoverView: View {
     var openDashboardAction: () -> Void = {}
     var openFansAction: () -> Void = {}
     var openAlertsAction: () -> Void = {}
+    var openHelpAction: () -> Void = {}
 
     var body: some View {
         MenuPopoverSurface {
@@ -997,12 +1038,13 @@ struct TemperatureMenuPopoverView: View {
                     MBDivider()
                     frequencySection
                     MBDivider()
-                    if fanController.mode.requiresPrivilegedHelper {
-                        MBActionButton(label: "Open Fans", icon: "fanblades.fill") { openFansAction() }
-                        MBDivider()
-                    }
-                    MBActionButton(label: "Open Dashboard", icon: "gauge.medium") { openDashboardAction() }
-                        .padding(.vertical, 4)
+                    MBQuickActionsSection(
+                        openDashboardAction: openDashboardAction,
+                        openHelpAction: openHelpAction,
+                        secondaryAction: fanController.mode.requiresPrivilegedHelper
+                            ? .init(label: "Open Fans", icon: "fanblades.fill", action: openFansAction)
+                            : nil
+                    )
                 }
             }
         }
