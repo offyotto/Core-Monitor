@@ -1,6 +1,16 @@
 import AppKit
 import SwiftUI
 
+private extension Notification.Name {
+    static let coreMonitorDuplicateLaunchRequest = Notification.Name("CoreMonitor.DuplicateLaunchRequest")
+}
+
+struct CoreMonitorLaunchEnvironment {
+    static func shouldHandleDuplicateLaunch(environment: [String: String] = ProcessInfo.processInfo.environment) -> Bool {
+        environment["XCTestConfigurationFilePath"] == nil
+    }
+}
+
 @available(macOS 13.0, *)
 @MainActor
 private final class DashboardWindowController: NSWindowController, NSWindowDelegate {
@@ -116,8 +126,12 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     private var hasPresentedInitialDashboard = false
     private var pendingInitialDashboardAttempts: [DispatchWorkItem] = []
     private var quitShortcutMonitor: Any?
+    private var duplicateLaunchObserverInstalled = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        installDuplicateLaunchObserverIfNeeded()
+        guard handleDuplicateLaunchIfNeeded() == false else { return }
+
         NSWindow.allowsAutomaticWindowTabbing = false
         installApplicationMenuIfNeeded()
         installQuitShortcutMonitorIfNeeded()
@@ -132,6 +146,7 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
             NSEvent.removeMonitor(quitShortcutMonitor)
             self.quitShortcutMonitor = nil
         }
+        removeDuplicateLaunchObserverIfNeeded()
         cancelInitialDashboardAttempts()
         coordinator.stop()
     }
@@ -161,6 +176,11 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     @objc
     private func quitApplication(_ sender: Any?) {
         NSApp.terminate(sender)
+    }
+
+    @objc
+    private func handleDuplicateLaunchRequest(_ notification: Notification) {
+        openDashboard()
     }
 
     func openDashboard() {
@@ -213,6 +233,61 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         appMenuItem.submenu = appMenu
         mainMenu.addItem(appMenuItem)
         NSApp.mainMenu = mainMenu
+    }
+
+    private func installDuplicateLaunchObserverIfNeeded() {
+        guard duplicateLaunchObserverInstalled == false,
+              let bundleIdentifier = Bundle.main.bundleIdentifier else {
+            return
+        }
+
+        DistributedNotificationCenter.default().addObserver(
+            self,
+            selector: #selector(handleDuplicateLaunchRequest(_:)),
+            name: .coreMonitorDuplicateLaunchRequest,
+            object: bundleIdentifier,
+            suspensionBehavior: .deliverImmediately
+        )
+        duplicateLaunchObserverInstalled = true
+    }
+
+    private func removeDuplicateLaunchObserverIfNeeded() {
+        guard duplicateLaunchObserverInstalled,
+              let bundleIdentifier = Bundle.main.bundleIdentifier else {
+            return
+        }
+
+        DistributedNotificationCenter.default().removeObserver(
+            self,
+            name: .coreMonitorDuplicateLaunchRequest,
+            object: bundleIdentifier
+        )
+        duplicateLaunchObserverInstalled = false
+    }
+
+    private func handleDuplicateLaunchIfNeeded() -> Bool {
+        guard CoreMonitorLaunchEnvironment.shouldHandleDuplicateLaunch() else { return false }
+        guard let bundleIdentifier = Bundle.main.bundleIdentifier else { return false }
+
+        let currentPID = ProcessInfo.processInfo.processIdentifier
+        let existingApp = NSRunningApplication
+            .runningApplications(withBundleIdentifier: bundleIdentifier)
+            .first { $0.processIdentifier != currentPID && $0.isTerminated == false }
+
+        guard let existingApp else { return false }
+
+        DistributedNotificationCenter.default().postNotificationName(
+            .coreMonitorDuplicateLaunchRequest,
+            object: bundleIdentifier,
+            userInfo: nil,
+            deliverImmediately: true
+        )
+        existingApp.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+
+        DispatchQueue.main.async {
+            NSApp.terminate(nil)
+        }
+        return true
     }
 
     private func installQuitShortcutMonitorIfNeeded() {

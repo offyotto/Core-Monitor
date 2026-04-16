@@ -220,6 +220,11 @@
 - Removed the app’s persistent dashboard-launch diagnostics path so Core Monitor no longer records local open/visible window behavior for support exports.
 
 ### Completed batch
+- Added duplicate-launch handling at app startup so opening Core Monitor again now routes focus back to the already-running instance instead of leaving stacked menu bar extras behind.
+- Hardened the launch guard for XCTest-hosted runs and added focused coverage for the launch-environment decision so hosted unit tests do not inherit duplicate-instance protection by accident.
+- Re-verified with a fresh `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' -derivedDataPath /tmp/CoreMonitorBatch2TestData CODE_SIGNING_ALLOWED=NO test` pass after clearing stale manual app instances, then runtime-checked that launching the Batch 2 build while another Core Monitor instance was already running did not leave the Batch 2 process resident.
+
+### Completed batch
 - Tightened the launch-at-login UX so Core Monitor no longer drops user-triggered login-item errors on the floor after a refresh.
 - Centralized launch-at-login state into a reusable summary model, added direct `Open Login Items` actions via `SMAppService.openSystemSettingsLoginItems()`, and extracted the System-tab card into its own SwiftUI file instead of keeping more inline startup UI inside `ContentView`.
 - Reused the same launch-at-login status/action logic in the welcome-guide checklist so onboarding can send users straight to Login Items when approval is required instead of only showing passive copy.
