@@ -1706,6 +1706,8 @@ private struct DetailPane: View {
                 snapshot: .init(
                     cpuUsagePercent: snapshot.cpuUsagePercent,
                     memoryUsagePercent: snapshot.memoryUsagePercent,
+                    networkDownloadBytesPerSecond: snapshot.networkStats.downloadBytesPerSec,
+                    networkUploadBytesPerSecond: snapshot.networkStats.uploadBytesPerSec,
                     diskUsagePercent: snapshot.diskStats.usagePercent,
                     cpuTemperature: snapshot.cpuTemperature
                 )
