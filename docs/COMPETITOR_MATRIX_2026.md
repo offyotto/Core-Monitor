@@ -17,7 +17,7 @@ This document captures the current public positioning of the main macOS monitori
 
 ### Stats
 
-- The public repository page shows roughly 38k GitHub stars and a latest release tag of `v2.12.9` dated April 12, 2026.
+- The public repository page shows roughly 38k GitHub stars and a latest release tag of `v2.11.63` dated December 28, 2025.
 - The public GitHub README still describes Stats as a macOS system monitor in the menu bar.
 - The same README says fan control is in legacy mode and does not receive updates or fixes.
 - The README also documents external API usage for update checks and public IP retrieval.
@@ -46,6 +46,7 @@ Implication for Core-Monitor:
 - The official FAQ says the fan helper is essential for fan control, that monitoring remains available without it, and that quitting or uninstalling TG Pro returns all fans to macOS defaults.
 - The FAQ also says the helper is developed with hardened runtime and notarized by Apple.
 - Tunabelly’s public product and blog pages say TG Pro 2.103 added M5, M5 Pro, and M5 Max support on March 19, 2026.
+- TG Pro 2.103 release notes also call out startup prompt-order fixes and a larger centered initial window, which reinforces how much onboarding polish matters in this category.
 
 Implication for Core-Monitor:
 
