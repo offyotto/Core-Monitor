@@ -2649,14 +2649,22 @@ struct ContentView: View {
                 fullDashboard
             }
         }
-        .onChange(of: modeState.isBasicMode) { systemMonitor.setBasicMode($0) }
+        .onChange(of: modeState.isBasicMode) {
+            systemMonitor.setBasicMode($0)
+            syncDashboardSampling()
+        }
         .onAppear {
             systemMonitor.setBasicMode(modeState.isBasicMode)
             systemMonitor.setInteractiveMonitoringEnabled(true, reason: "dashboard")
             applyPendingDashboardRouteIfNeeded()
+            syncDashboardSampling()
+        }
+        .onChange(of: sidebarSelection) { _ in
+            syncDashboardSampling()
         }
         .onChange(of: dashboardNavigationRouter.route) { _ in
             applyPendingDashboardRouteIfNeeded()
+            syncDashboardSampling()
         }
         .onDisappear {
             systemMonitor.setInteractiveMonitoringEnabled(false, reason: "dashboard")
@@ -2708,5 +2716,15 @@ struct ContentView: View {
             modeState.isBasicMode = false
         }
         sidebarSelection = selection
+    }
+
+    private func syncDashboardSampling() {
+        systemMonitor.setDetailedSamplingEnabled(
+            DashboardProcessSamplingPolicy.requiresDetailedSampling(
+                isBasicMode: modeState.isBasicMode,
+                selection: sidebarSelection
+            ),
+            reason: "dashboard.detail"
+        )
     }
 }
