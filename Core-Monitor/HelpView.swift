@@ -115,7 +115,7 @@ struct HelpView: View {
                 }
             )),
             HelpSection(id: "system", title: "System Controls", icon: "gearshape", keywords: [
-                "volume", "brightness", "launch at login", "login items", "helper diagnostics", "notifications", "privacy", "process names", "alert history"
+                "volume", "brightness", "launch at login", "login items", "helper diagnostics", "notifications", "privacy", "process names", "alert history", "dashboard shortcut", "dashboard hotkey", "option command m"
             ], content: AnyView(
                 HelpCard {
                     Text("System controls enable adjusting volume, screen brightness, and launch-at-login behavior.")
@@ -123,6 +123,7 @@ struct HelpView: View {
                     HelpBullet(text: "Toggle `Launch at Login` to start Core Monitor automatically.")
                     HelpBullet(text: "The `System` tab now also surfaces helper state, SMC access, overall thermal pressure, and notification permission status in dedicated status cards.")
                     HelpBullet(text: "Privacy Controls also live in the `System` tab so you can disable process-name capture without hunting through alert rules first.")
+                    HelpBullet(text: "An optional global dashboard shortcut can register `Option-Command-M` so you can reopen Core Monitor even if menu bar items are hidden or hard to reach.")
                 }
             )),
             HelpSection(id: "touchbar", title: "Touch Bar Customization", icon: "rectangle.3.group", keywords: [

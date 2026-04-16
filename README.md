@@ -41,6 +41,8 @@ Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs
 
 It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. Sensor reads stay local to your Mac. The optional fan control helper is the only additional process, and it is only needed if you want write access for fan control.
 
+The `System` tab can also register an optional `Option-Command-M` dashboard shortcut so you still have a reliable way back into Core-Monitor when menu bar visibility or macOS reopen behavior gets in the way.
+
 Public builds are available through GitHub Releases.
 
 ## UI Preview

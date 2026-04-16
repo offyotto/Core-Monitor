@@ -1087,6 +1087,83 @@ private struct HelperDiagnosticsSupportCard: View {
     }
 }
 
+private struct DashboardShortcutCard: View {
+    @ObservedObject private var shortcutManager = DashboardShortcutManager.shared
+
+    var body: some View {
+        DarkCard(padding: 16) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Dashboard Shortcut")
+                            .font(.system(size: 13, weight: .semibold))
+                        Text(summaryText)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer(minLength: 12)
+
+                    Text(shortcutManager.isEnabled ? "Enabled" : "Off")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(statusColor)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(statusColor.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+
+                HStack(spacing: 10) {
+                    Text(DashboardShortcutConfiguration.displayLabel.uppercased())
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(shortcutManager.isEnabled ? Color.bdAccent : .secondary)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background((shortcutManager.isEnabled ? Color.bdAccent : Color.white).opacity(0.12))
+                        .clipShape(Capsule())
+
+                    Spacer(minLength: 12)
+
+                    Text("Enable global shortcut")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+
+                    Toggle("", isOn: Binding(
+                        get: { shortcutManager.isEnabled },
+                        set: { shortcutManager.setEnabled($0) }
+                    ))
+                    .toggleStyle(.switch)
+                    .tint(Color.bdAccent)
+                }
+
+                Text("Use \(DashboardShortcutConfiguration.displayLabel) to bring Core Monitor to the front even if macOS has hidden the menu bar items. The same shortcut also appears in the app menu while Core Monitor is active.")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let registrationError = shortcutManager.registrationError, registrationError.isEmpty == false {
+                    Text(registrationError)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+
+    private var summaryText: String {
+        if shortcutManager.isEnabled {
+            return "A global shortcut can open the dashboard from anywhere without depending on menu bar visibility or reopen behavior."
+        }
+        return "Turn this on if you want a reliable way to summon the dashboard when menu bar visibility or app activation gets in the way."
+    }
+
+    private var statusColor: Color {
+        shortcutManager.isEnabled ? Color.bdAccent : .secondary
+    }
+}
+
 // MARK: - Fan control panel
 private struct FanControlPanel: View {
     struct Snapshot { var fanSpeeds: [Int] = []; var fanMinSpeeds: [Int] = []; var fanMaxSpeeds: [Int] = [] }
@@ -1680,6 +1757,7 @@ private struct DetailPane: View {
                     cpuTemperature: snapshot.cpuTemperature
                 )
             )
+            DashboardShortcutCard()
             DarkCard(padding: 16) {
                 HStack(spacing: 14) {
                     Image(systemName: "power").font(.system(size: 16, weight: .medium))

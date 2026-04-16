@@ -57,4 +57,18 @@ final class HelpViewSearchTests: XCTestCase {
         XCTAssertTrue(section.matches(query: "voltage current"))
         XCTAssertFalse(section.matches(query: "voltage helper"))
     }
+
+    func testHelpSectionMatchesDashboardShortcutKeywords() {
+        let section = HelpView.HelpSection(
+            id: "system",
+            title: "System Controls",
+            icon: "gearshape",
+            keywords: ["dashboard shortcut", "dashboard hotkey", "option command m"],
+            content: AnyView(EmptyView())
+        )
+
+        XCTAssertTrue(section.matches(query: "dashboard shortcut"))
+        XCTAssertTrue(section.matches(query: "option command"))
+        XCTAssertFalse(section.matches(query: "dashboard fan"))
+    }
 }

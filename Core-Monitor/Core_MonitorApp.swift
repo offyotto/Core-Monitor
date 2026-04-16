@@ -116,11 +116,14 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     private var hasPresentedInitialDashboard = false
     private var pendingInitialDashboardAttempts: [DispatchWorkItem] = []
     private var quitShortcutMonitor: Any?
+    private var dashboardShortcutObserver: NSObjectProtocol?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSWindow.allowsAutomaticWindowTabbing = false
         installApplicationMenuIfNeeded()
         installQuitShortcutMonitorIfNeeded()
+        installDashboardShortcutObserverIfNeeded()
+        _ = DashboardShortcutManager.shared
         NSApp.setActivationPolicy(.accessory)
         CoreMonitorDefaultsMaintenance.purgeDeprecatedState()
         installMenuBarIfNeeded()
@@ -131,6 +134,10 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         if let quitShortcutMonitor {
             NSEvent.removeMonitor(quitShortcutMonitor)
             self.quitShortcutMonitor = nil
+        }
+        if let dashboardShortcutObserver {
+            NotificationCenter.default.removeObserver(dashboardShortcutObserver)
+            self.dashboardShortcutObserver = nil
         }
         cancelInitialDashboardAttempts()
         coordinator.stop()
@@ -163,6 +170,11 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         NSApp.terminate(sender)
     }
 
+    @objc
+    private func openDashboardFromMenu(_ sender: Any?) {
+        openDashboard()
+    }
+
     func openDashboard() {
         setDashboardActivationPolicy()
         let controller = dashboardControllerIfNeeded()
@@ -193,25 +205,56 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func installApplicationMenuIfNeeded() {
-        guard NSApp.mainMenu == nil else { return }
-
         let appName = Bundle.main.object(forInfoDictionaryKey: kCFBundleNameKey as String) as? String ?? "Core Monitor"
-        let mainMenu = NSMenu()
-        let appMenuItem = NSMenuItem()
-        appMenuItem.title = appName
+        let mainMenu = NSApp.mainMenu ?? NSMenu()
+        let appMenuItem = mainMenu.items.first ?? {
+            let item = NSMenuItem()
+            mainMenu.insertItem(item, at: 0)
+            return item
+        }()
 
-        let appMenu = NSMenu(title: appName)
-        let quitMenuItem = NSMenuItem(
-            title: "Quit \(appName)",
-            action: #selector(quitApplication(_:)),
-            keyEquivalent: "q"
-        )
-        quitMenuItem.keyEquivalentModifierMask = [.command]
-        quitMenuItem.target = self
-        appMenu.addItem(quitMenuItem)
+        appMenuItem.title = appName
+        let appMenu = appMenuItem.submenu ?? NSMenu(title: appName)
+        appMenu.title = appName
+
+        if appMenu.item(withTitle: "Open Dashboard") == nil {
+            let openDashboardMenuItem = NSMenuItem(
+                title: "Open Dashboard",
+                action: #selector(openDashboardFromMenu(_:)),
+                keyEquivalent: DashboardShortcutConfiguration.keyEquivalent
+            )
+            openDashboardMenuItem.keyEquivalentModifierMask = DashboardShortcutConfiguration.modifierFlags
+            openDashboardMenuItem.target = self
+            appMenu.insertItem(openDashboardMenuItem, at: 0)
+
+            if appMenu.items.indices.contains(1) == false || appMenu.items[1].isSeparatorItem == false {
+                appMenu.insertItem(.separator(), at: min(1, appMenu.items.count))
+            }
+        }
+
+        let quitTitle = "Quit \(appName)"
+        if let existingQuitItem = appMenu.item(withTitle: quitTitle) ?? appMenu.items.first(where: { $0.title.hasPrefix("Quit ") }) {
+            existingQuitItem.title = quitTitle
+            existingQuitItem.action = #selector(quitApplication(_:))
+            existingQuitItem.keyEquivalent = "q"
+            existingQuitItem.keyEquivalentModifierMask = [.command]
+            existingQuitItem.target = self
+        } else {
+            if appMenu.items.last?.isSeparatorItem == false {
+                appMenu.addItem(.separator())
+            }
+
+            let quitMenuItem = NSMenuItem(
+                title: quitTitle,
+                action: #selector(quitApplication(_:)),
+                keyEquivalent: "q"
+            )
+            quitMenuItem.keyEquivalentModifierMask = [.command]
+            quitMenuItem.target = self
+            appMenu.addItem(quitMenuItem)
+        }
 
         appMenuItem.submenu = appMenu
-        mainMenu.addItem(appMenuItem)
         NSApp.mainMenu = mainMenu
     }
 
@@ -222,6 +265,20 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
             guard self?.isQuitShortcut(event) == true else { return event }
             NSApp.terminate(nil)
             return nil
+        }
+    }
+
+    private func installDashboardShortcutObserverIfNeeded() {
+        guard dashboardShortcutObserver == nil else { return }
+
+        dashboardShortcutObserver = NotificationCenter.default.addObserver(
+            forName: .dashboardShortcutDidActivate,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.openDashboard()
+            }
         }
     }
 
