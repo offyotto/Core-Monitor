@@ -5,19 +5,19 @@ import IOKit.ps
 import Darwin
 import CoreAudio
 
-struct CPUStats {
+nonisolated struct CPUStats {
     let usagePercent: Double
     let performanceCoreUsagePercent: Double?
     let efficiencyCoreUsagePercent: Double?
 }
 
-enum MemoryPressureLevel {
+nonisolated enum MemoryPressureLevel {
     case green
     case yellow
     case red
 }
 
-struct MemoryStats {
+nonisolated struct MemoryStats {
     let usagePercent: Double
     let usedGB: Double
     let totalGB: Double
@@ -32,7 +32,7 @@ struct MemoryStats {
     let swapTotalBytes: UInt64
 }
 
-struct BatteryInfo {
+nonisolated struct BatteryInfo {
     var hasBattery: Bool = false
     var chargePercent: Int?
     var isCharging: Bool = false
@@ -51,7 +51,7 @@ struct BatteryInfo {
 }
 
 // MARK: - Disk stats
-struct DiskStats {
+nonisolated struct DiskStats {
     var totalGB: Double = 0
     var usedGB: Double = 0
     var freeGB: Double = 0
@@ -154,7 +154,7 @@ final class SystemMonitor: ObservableObject {
     var ssdTemperature: Double? { snapshot.ssdTemperature }
 
     // MARK: - Network throughput (bytes/sec since last sample)
-    struct NetworkStats {
+    nonisolated struct NetworkStats {
         var uploadBytesPerSec:   Double = 0
         var downloadBytesPerSec: Double = 0
     }

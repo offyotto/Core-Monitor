@@ -206,3 +206,8 @@
 - Removed the legacy `systemMonitorDidUpdate` broadcast and moved the menu bar and Touch Bar refresh path onto `SystemMonitor`'s published snapshot cadence instead of duplicating every sample through `NotificationCenter`.
 - Dropped the stale `RAMPressureTouchBarWidget` observer because the widget was already refreshed through the centralized Touch Bar state application path, which trims one more redundant monitor listener.
 - Rebuilt the macOS app, reran the full `xcodebuild ... test` suite, and runtime-smoke-tested the Debug build by relaunching it and confirming the live menu bar items still update (`CPU`, `MEM`, `SSD`, and temperature).
+
+### Completed batch
+- Marked the monitoring snapshot value layer as explicitly `nonisolated` so pure telemetry models no longer inherit the app target's default `MainActor` isolation by accident.
+- Extended the same cleanup to `BatteryInfo`, `DiskStats`, `MemoryStats`, `NetworkStats`, and the related monitoring enums, which removes a cluster of Swift 6 concurrency warnings from the build.
+- Re-ran the full `xcodebuild -project Core-Monitor.xcodeproj -scheme Core-Monitor -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test` suite and confirmed the earlier actor-isolation warnings no longer appear in the compile output.

@@ -1,6 +1,6 @@
 import Foundation
 
-enum MonitoringTrendRange: String, CaseIterable, Identifiable {
+nonisolated enum MonitoringTrendRange: String, CaseIterable, Identifiable {
     case oneMinute
     case fiveMinutes
     case fifteenMinutes
@@ -24,14 +24,14 @@ enum MonitoringTrendRange: String, CaseIterable, Identifiable {
     }
 }
 
-enum MonitoringFreshness: Equatable {
+nonisolated enum MonitoringFreshness: Equatable {
     case waiting
     case live
     case delayed
     case stale
 }
 
-struct MonitoringSnapshotHealth: Equatable {
+nonisolated struct MonitoringSnapshotHealth: Equatable {
     let freshness: MonitoringFreshness
     let sampledAt: Date?
     let age: TimeInterval?
@@ -100,12 +100,12 @@ struct MonitoringSnapshotHealth: Equatable {
     }
 }
 
-struct MonitoringTrendPoint: Equatable {
+nonisolated struct MonitoringTrendPoint: Equatable {
     let timestamp: Date
     let value: Double
 }
 
-struct MonitoringTrendSummary: Equatable {
+nonisolated struct MonitoringTrendSummary: Equatable {
     let latest: Double
     let minimum: Double
     let maximum: Double
@@ -113,7 +113,7 @@ struct MonitoringTrendSummary: Equatable {
     let delta: Double
 }
 
-struct MonitoringTrendSeries {
+nonisolated struct MonitoringTrendSeries {
     private(set) var points: [MonitoringTrendPoint] = []
     let retention: TimeInterval
 
@@ -164,7 +164,7 @@ struct MonitoringTrendSeries {
     }
 }
 
-struct ProcessActivity: Codable, Equatable, Identifiable {
+nonisolated struct ProcessActivity: Codable, Equatable, Identifiable {
     let pid: Int32
     let name: String
     let cpuPercent: Double
@@ -174,7 +174,7 @@ struct ProcessActivity: Codable, Equatable, Identifiable {
     nonisolated var memoryGB: Double { Double(memoryBytes) / 1_073_741_824.0 }
 }
 
-struct TopProcessSnapshot: Codable, Equatable {
+nonisolated struct TopProcessSnapshot: Codable, Equatable {
     var sampledAt: Date
     var topCPU: [ProcessActivity]
     var topMemory: [ProcessActivity]
@@ -182,7 +182,7 @@ struct TopProcessSnapshot: Codable, Equatable {
     nonisolated static let empty = TopProcessSnapshot(sampledAt: .distantPast, topCPU: [], topMemory: [])
 }
 
-struct SystemMonitorSnapshot {
+nonisolated struct SystemMonitorSnapshot {
     var sampledAt: Date = .distantPast
     var cpuTemperature: Double?
     var gpuTemperature: Double?
