@@ -108,7 +108,6 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
 @available(macOS 13.0, *)
 @MainActor
 final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
-    private let legacyWindowStateResetKey = "coremonitor.didResetLegacySwiftUIWindowFrames.v1"
     private lazy var coordinator = AppCoordinator()
     private lazy var startupManager = StartupManager()
 
@@ -123,7 +122,7 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         installApplicationMenuIfNeeded()
         installQuitShortcutMonitorIfNeeded()
         NSApp.setActivationPolicy(.accessory)
-        purgeLegacyWindowStateIfNeeded()
+        CoreMonitorDefaultsMaintenance.purgeDeprecatedState()
         installMenuBarIfNeeded()
         presentInitialDashboardIfNeeded()
     }
@@ -302,21 +301,5 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         if NSApp.activationPolicy() != .accessory {
             NSApp.setActivationPolicy(.accessory)
         }
-    }
-
-    private func purgeLegacyWindowStateIfNeeded() {
-        let defaults = UserDefaults.standard
-        guard defaults.bool(forKey: legacyWindowStateResetKey) == false else { return }
-
-        let persistedKeys = defaults
-            .persistentDomain(forName: Bundle.main.bundleIdentifier ?? "CoreTools.Core-Monitor")
-            .map { Array($0.keys) } ?? []
-        for key in persistedKeys {
-            if key.hasPrefix("NSWindow Frame SwiftUI.") || key == "NSWindow Frame CoreMonitorMainWindow" {
-                defaults.removeObject(forKey: key)
-            }
-        }
-
-        defaults.set(true, forKey: legacyWindowStateResetKey)
     }
 }
