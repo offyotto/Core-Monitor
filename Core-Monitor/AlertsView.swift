@@ -134,7 +134,7 @@ struct SystemStatusBoard: View {
             statusCard(
                 title: "Overall Thermal",
                 value: AlertEvaluator.thermalStateLabel(systemMonitor.thermalState),
-                detail: "macOS thermal pressure on Apple Silicon.",
+                detail: CoreMonitorPlatformCopy.thermalStatusDetail(),
                 icon: "waveform.path.ecg",
                 color: thermalColor
             )
