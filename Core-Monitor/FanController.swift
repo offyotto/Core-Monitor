@@ -26,7 +26,6 @@ enum FanControlMode: String, CaseIterable {
             return self
         }
     }
-
     var title: String {
         switch self {
         case .smart:       return "SMART"
@@ -54,8 +53,6 @@ enum FanControlMode: String, CaseIterable {
     }
 
     var usesManualSlider: Bool { self == .manual }
-    var isManagedProfile: Bool { self != .manual && self != .automatic }
-    var requiresPrivilegedHelper: Bool { canonicalMode != .automatic }
     var isManagedProfile: Bool { guidance.ownership == .coreMonitor }
     var requiresPrivilegedHelper: Bool { guidance.requiresHelper }
 
