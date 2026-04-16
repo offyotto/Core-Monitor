@@ -57,11 +57,12 @@ struct FanModeGuidanceCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            if guidance.showsAppleSiliconDelayedResponseNote && SystemMonitor.isAppleSilicon {
-                Label(
-                    "Some Apple Silicon notebooks only change RPM after macOS has already asked for airflow, so a manual target may not move immediately on a cool machine.",
-                    systemImage: "exclamationmark.triangle"
-                )
+            if let delayedResponseNote = FanModeGuidanceCopy.appleSiliconDelayedResponseNote(
+                for: mode,
+                hasFans: hasFans,
+                hostModelIdentifier: SystemMonitor.hostModelIdentifier()
+            ) {
+                Label(delayedResponseNote, systemImage: "exclamationmark.triangle")
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.orange)
                 .fixedSize(horizontal: false, vertical: true)
@@ -156,5 +157,24 @@ struct FanModeGuidanceCard: View {
             .padding(.vertical, 5)
             .background(color.opacity(0.14))
             .clipShape(Capsule())
+    }
+}
+
+enum FanModeGuidanceCopy {
+    static func appleSiliconDelayedResponseNote(
+        for mode: FanControlMode,
+        hasFans: Bool,
+        hostModelIdentifier: String,
+        isAppleSilicon: Bool = SystemMonitor.isAppleSilicon
+    ) -> String? {
+        guard mode.guidance.showsAppleSiliconDelayedResponseNote, hasFans, isAppleSilicon else {
+            return nil
+        }
+
+        guard let model = MacModelRegistry.entry(for: hostModelIdentifier), model.family.isAppleSiliconPortable else {
+            return nil
+        }
+
+        return "On \(model.friendlyName), macOS may hold fan RPM near its baseline until extra airflow is needed, so a manual target can take a moment to react on a cool machine."
     }
 }

@@ -1691,9 +1691,7 @@ private struct DetailPane: View {
         }
     }
     private func hostModelName() -> String {
-        var size = 0; sysctlbyname("hw.model", nil, &size, nil, 0)
-        var m = [CChar](repeating: 0, count: size); sysctlbyname("hw.model", &m, &size, nil, 0)
-        return String(cString: m)
+        MacModelRegistry.displayName(for: SystemMonitor.hostModelIdentifier())
     }
 }
 
