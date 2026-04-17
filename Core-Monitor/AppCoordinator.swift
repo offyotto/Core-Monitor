@@ -232,14 +232,14 @@ final class AppCoordinator: ObservableObject {
         if let attachedWindow {
             controller.install(in: attachedWindow)
         }
-        systemMonitor.setMonitoringIntervalOverride(TB.refreshInterval, reason: touchBarMonitoringReason)
+        systemMonitor.setInteractiveMonitoringEnabled(true, reason: touchBarMonitoringReason)
         controller.start()
         touchBarPresenter.present(touchBar: controller.touchBar)
     }
 
     private func stopAppTouchBar() {
         touchBarPresenter.dismissToSystemTouchBar()
-        systemMonitor.setMonitoringIntervalOverride(nil, reason: touchBarMonitoringReason)
+        systemMonitor.setInteractiveMonitoringEnabled(false, reason: touchBarMonitoringReason)
         coreMonTouchBarController.stop()
     }
 
