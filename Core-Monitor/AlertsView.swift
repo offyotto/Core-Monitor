@@ -112,7 +112,7 @@ struct AlertsDashboardStrip: View {
     var body: some View {
         let presentation = AlertsDashboardStripPresentation(alertManager: alertManager)
 
-        AlertSurfaceCard {
+        DashboardSurfaceCard {
             HStack(alignment: .top, spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
@@ -216,6 +216,84 @@ struct MonitoringDashboardStrip: View {
             connectionState: helperManager.connectionState,
             isInstalled: helperManager.isInstalled
         )
+    }
+
+    private var notificationLabel: String {
+        "Alerts"
+    }
+
+    private var notificationDetail: String {
+        "Open the Alerts screen to review thresholds, notification policy, and history."
+    }
+
+    private var notificationColor: Color {
+        Color.bdAccent
+    }
+
+    private var helperValue: String {
+        helperSummary.label
+    }
+
+    private var helperDetail: String {
+        if fanController.mode.requiresPrivilegedHelper == false {
+            return "Current cooling mode does not require the helper."
+        }
+
+        if let statusMessage = helperManager.statusMessage, statusMessage.isEmpty == false {
+            return statusMessage
+        }
+
+        switch helperManager.connectionState {
+        case .reachable:
+            return "The privileged helper is installed and responding."
+        case .checking:
+            return "Core Monitor is checking the helper connection."
+        case .unreachable:
+            return "The helper is installed but not responding yet."
+        case .unknown:
+            return "The helper is installed but has not been checked yet."
+        case .missing:
+            return "Install the helper before using helper-backed fan modes."
+        }
+    }
+
+    private var helperColor: Color {
+        pillColor(for: helperSummary.tone)
+    }
+
+    private func statusCard(title: String, value: String, detail: String, icon: String, color: Color) -> some View {
+        DashboardSurfaceCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Image(systemName: icon)
+                        .foregroundStyle(color)
+                    Text(title)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+                Text(value)
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundStyle(color)
+                Text(detail)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func monitoringColor(_ health: MonitoringSnapshotHealth) -> Color {
+        switch health.freshness {
+        case .waiting:
+            return Color.bdAccent
+        case .live:
+            return .green
+        case .delayed:
+            return .orange
+        case .stale:
+            return .red
+        }
     }
 
     private var thermalColor: Color {

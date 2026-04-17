@@ -69,8 +69,8 @@ enum CoreMonitorDefaultsMaintenance {
             return
         }
 
-        let persistedKeys = persistedKeys(defaults: defaults, bundleIdentifier: bundleIdentifier)
-        let hasDeprecatedLaunchState = persistedKeys.contains { key in
+        let storedKeys = persistedKeys(defaults: defaults, bundleIdentifier: bundleIdentifier)
+        let hasDeprecatedLaunchState = storedKeys.contains { key in
             deprecatedLaunchStateKeys.contains(key) || deprecatedLaunchStatePrefixes.contains(where: key.hasPrefix)
         }
 
@@ -78,11 +78,23 @@ enum CoreMonitorDefaultsMaintenance {
             return
         }
 
-        for key in persistedKeys where deprecatedLaunchStateKeys.contains(key) || deprecatedLaunchStatePrefixes.contains(where: key.hasPrefix) {
+        for key in storedKeys where deprecatedLaunchStateKeys.contains(key) || deprecatedLaunchStatePrefixes.contains(where: key.hasPrefix) {
             defaults.removeObject(forKey: key)
         }
 
         defaults.set(true, forKey: deprecatedLaunchStateResetKey)
+    }
+
+    private static func persistedKeys(
+        defaults: UserDefaults,
+        bundleIdentifier: String?
+    ) -> [String] {
+        if let bundleIdentifier,
+           let domain = defaults.persistentDomain(forName: bundleIdentifier) {
+            return Array(domain.keys)
+        }
+
+        return Array(defaults.dictionaryRepresentation().keys)
     }
 
     private static func mutatePersistentDomain(

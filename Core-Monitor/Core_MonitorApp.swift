@@ -1,4 +1,5 @@
 import AppKit
+import Carbon
 import OSLog
 import SwiftUI
 
@@ -170,6 +171,7 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     private var hasPresentedInitialDashboard = false
     private var pendingInitialDashboardAttempts: [DispatchWorkItem] = []
     private var quitShortcutMonitor: Any?
+    private var touchBarShortcutMonitor: Any?
     private var distributedDashboardRequestObserver: NSObjectProtocol?
     private var dashboardShortcutObserver: NSObjectProtocol?
     private let shouldBootstrapInteractiveApp = AppRuntimeContext.shouldBootstrapInteractiveApp()
@@ -189,11 +191,13 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         debugLaunch("launchPresentation=\(launchPresentation) activationPolicy=\(NSApp.activationPolicy().rawValue)")
         installApplicationMenuIfNeeded()
         installQuitShortcutMonitorIfNeeded()
+        installTouchBarShortcutMonitorIfNeeded()
         installDistributedDashboardRequestObserverIfNeeded()
         installDashboardShortcutObserverIfNeeded()
         _ = DashboardShortcutManager.shared
         applyInitialActivationPolicy()
-        Self.logger.notice("Launch finished autoOpenDashboard=\(launchPresentation.shouldAutoOpenDashboard, privacy: .public)")
+        let shouldAutoOpenDashboard = launchPresentation.shouldAutoOpenDashboard
+        Self.logger.notice("Launch finished autoOpenDashboard=\(shouldAutoOpenDashboard, privacy: .public)")
         Self.logger.debug("Activation policy after launch=\(String(describing: NSApp.activationPolicy()), privacy: .public)")
         installMenuBarIfNeeded()
         presentInitialDashboardIfNeeded()
@@ -205,6 +209,10 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         if let quitShortcutMonitor {
             NSEvent.removeMonitor(quitShortcutMonitor)
             self.quitShortcutMonitor = nil
+        }
+        if let touchBarShortcutMonitor {
+            NSEvent.removeMonitor(touchBarShortcutMonitor)
+            self.touchBarShortcutMonitor = nil
         }
         if let distributedDashboardRequestObserver {
             DistributedNotificationCenter.default().removeObserver(distributedDashboardRequestObserver)
@@ -380,6 +388,16 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    private func installTouchBarShortcutMonitorIfNeeded() {
+        guard touchBarShortcutMonitor == nil else { return }
+
+        touchBarShortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard self?.isSystemTouchBarShortcut(event) == true else { return event }
+            self?.coordinator.revertToSystemTouchBar()
+            return nil
+        }
+    }
+
     private func installDashboardShortcutObserverIfNeeded() {
         guard dashboardShortcutObserver == nil else { return }
 
@@ -397,6 +415,11 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     private func isQuitShortcut(_ event: NSEvent) -> Bool {
         let modifierFlags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         return modifierFlags == [.command] && event.charactersIgnoringModifiers?.lowercased() == "q"
+    }
+
+    private func isSystemTouchBarShortcut(_ event: NSEvent) -> Bool {
+        let modifierFlags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        return modifierFlags == [.command, .shift] && event.keyCode == UInt16(kVK_ANSI_6)
     }
 
     private func dashboardControllerIfNeeded() -> DashboardWindowController {

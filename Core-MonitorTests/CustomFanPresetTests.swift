@@ -201,8 +201,9 @@ final class CustomFanPresetTests: XCTestCase {
     func testSilentAliasMatchesSystemAutomaticPresentation() {
         XCTAssertEqual(FanControlMode.silent.title, FanControlMode.automatic.title)
         XCTAssertEqual(FanControlMode.silent.shortTitle, FanControlMode.automatic.shortTitle)
-        XCTAssertEqual(FanControlMode.silent.guidance.requiresHelper, FanControlMode.automatic.guidance.requiresHelper)
         XCTAssertEqual(FanControlMode.silent.guidance.ownership, FanControlMode.automatic.guidance.ownership)
+        XCTAssertEqual(FanControlMode.silent.guidance.helperRequirement, .handoff)
+        XCTAssertTrue(FanControlMode.silent.guidance.requiresHelper)
     }
 
     func testSystemOwnedModesAreMarkedAsSystemControlled() {
@@ -210,7 +211,6 @@ final class CustomFanPresetTests: XCTestCase {
         XCTAssertEqual(FanControlMode.silent.guidance.ownership, .system)
         XCTAssertEqual(FanControlMode.custom.guidance.ownership, .coreMonitor)
         XCTAssertFalse(FanControlMode.silent.requiresPrivilegedHelper)
-        XCTAssertFalse(FanControlMode.silent.guidance.requiresHelper)
     }
 
     func testFanModeGuidanceDifferentiatesMonitoringHandoffAndManagedModes() {

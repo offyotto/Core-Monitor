@@ -22,7 +22,7 @@ enum TouchBarPresentationMode: String, Codable, CaseIterable, Identifiable {
     var subtitle: String {
         switch self {
         case .app: return "Show the Core-Monitor Touch Bar layout on the hardware Touch Bar"
-        case .system: return "Keep editing the Core-Monitor layout, but show the standard macOS Touch Bar on the hardware"
+        case .system: return "Keep editing the Core-Monitor layout, but show the standard macOS Touch Bar on the hardware until you press Command-Shift-6 or switch back to Core-Monitor"
         }
     }
 }
@@ -364,8 +364,8 @@ final class TouchBarCustomizationSettings: ObservableObject {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         let fallbackPresentation = TouchBarPresentationMode(
-            rawValue: defaults.string(forKey: legacyPresentationModeKey) ?? TouchBarPresentationMode.system.rawValue
-        ) ?? .system
+            rawValue: defaults.string(forKey: legacyPresentationModeKey) ?? TouchBarPresentationMode.app.rawValue
+        ) ?? .app
 
         if let data = defaults.data(forKey: defaultsKey),
            let decoded = try? JSONDecoder().decode(PersistedTouchBarConfigurationV6.self, from: data) {
@@ -404,7 +404,7 @@ final class TouchBarCustomizationSettings: ObservableObject {
         applyConfiguration(
             theme: Self.defaultPreset.theme,
             items: Self.defaultPreset.items,
-            presentationMode: .system
+            presentationMode: .app
         )
     }
 
