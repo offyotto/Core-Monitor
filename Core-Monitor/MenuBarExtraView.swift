@@ -407,7 +407,6 @@ struct CPUMenuPopoverView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var fanController: FanController
     var openDashboardAction: () -> Void = {}
-    var openAlertsAction: () -> Void = {}
     var openHelpAction: () -> Void = {}
 
     private var pCores: Int { SystemMonitor.performanceCoreCount() }
@@ -597,7 +596,6 @@ struct MemoryMenuPopoverView: View {
     @ObservedObject var fanController: FanController
     @ObservedObject private var privacySettings = PrivacySettings.shared
     var openDashboardAction: () -> Void = {}
-    var openAlertsAction: () -> Void = {}
     var openHelpAction: () -> Void = {}
 
     var body: some View {
@@ -781,7 +779,6 @@ struct DiskMenuPopoverView: View {
     @ObservedObject private var privacySettings = PrivacySettings.shared
     @StateObject private var diskProcessSampler = DiskProcessSampler()
     var openDashboardAction: () -> Void = {}
-    var openAlertsAction: () -> Void = {}
     var openHelpAction: () -> Void = {}
 
     var body: some View {
@@ -1155,7 +1152,6 @@ struct TemperatureMenuPopoverView: View {
     @ObservedObject var fanController: FanController
     var openDashboardAction: () -> Void = {}
     var openFansAction: () -> Void = {}
-    var openAlertsAction: () -> Void = {}
     var openHelpAction: () -> Void = {}
 
     var body: some View {

@@ -182,7 +182,7 @@ private let guideSteps: [GuideStep] = [
             ("waveform.path.ecg.rectangle", .wgGreen, "System status cards surface monitoring freshness, helper state, and privacy"),
             ("menubar.rectangle",     .wgBlue,   "Balanced menu bar mode keeps the app visible without adding clutter"),
             ("lock.shield",           .wgPurple, "Monitoring works without the helper; only fan writes need it"),
-            ("hand.raised",           .wgAmber,  "Privacy Controls can keep alerts and memory views free of app names"),
+            ("hand.raised",           .wgAmber,  "Privacy Controls can keep notifications and memory views free of app names"),
             ("questionmark.circle",   .wgGreen,  "The Help tab can reopen this guide any time"),
         ]
     ),

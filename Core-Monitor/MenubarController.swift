@@ -340,10 +340,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                         self?.popover?.performClose(nil)
                         self?.openDashboardAction()
                     },
-                    openAlertsAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openAlertsFromPopover()
-                    },
                     openHelpAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openSelectionFromPopover(.help)
@@ -362,10 +358,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                     openFansAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openSelectionFromPopover(.fans)
-                    },
-                    openAlertsAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openAlertsFromPopover()
                     }
                 )
             )
@@ -377,10 +369,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                     openDashboardAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openDashboardAction()
-                    },
-                    openAlertsAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openAlertsFromPopover()
                     },
                     openHelpAction: { [weak self] in
                         self?.popover?.performClose(nil)
@@ -396,10 +384,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                     openDashboardAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openDashboardAction()
-                    },
-                    openAlertsAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openAlertsFromPopover()
                     },
                     openHelpAction: { [weak self] in
                         self?.popover?.performClose(nil)
@@ -431,10 +415,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                         self?.popover?.performClose(nil)
                         self?.openSelectionFromPopover(.fans)
                     },
-                    openAlertsAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openAlertsFromPopover()
-                    },
                     openHelpAction: { [weak self] in
                         self?.popover?.performClose(nil)
                         self?.openSelectionFromPopover(.help)
@@ -447,10 +427,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
     private func openSelectionFromPopover(_ selection: SidebarItem) {
         DashboardNavigationRouter.shared.open(selection)
         openDashboardAction()
-    }
-
-    private func openAlertsFromPopover() {
-        openSelectionFromPopover(.help)
     }
 
     private func ensurePopover() {

@@ -77,7 +77,7 @@ struct HelpView: View {
             ], content: AnyView(
                 HelpCard {
                     Text("Manage your Mac’s fans with advanced controls and profiles.")
-                    HelpBullet(text: "Fresh installs start in System mode so monitoring, alerts, and menu bar readings work normally before you opt into helper-backed fan control.")
+                    HelpBullet(text: "Fresh installs start in System mode so monitoring, notifications, and menu bar readings work normally before you opt into helper-backed fan control.")
                     HelpBullet(text: "System immediately restores the firmware curve without keeping an active profile selected. Silent uses the helper once to hand fan ownership back to the firmware curve, then stays passive while monitoring continues.")
                     HelpBullet(text: "Smart, Balanced, Performance, Max, Manual, and Custom actively write fan targets through the helper while those modes stay selected.")
                     HelpBullet(text: "The helper tool must be installed and trusted before managed fan control is reliable.")
@@ -102,14 +102,14 @@ struct HelpView: View {
                 }
             )),
             HelpSection(id: "system", title: "System Controls", icon: "gearshape", keywords: [
-                "volume", "brightness", "launch at login", "login items", "helper diagnostics", "notifications", "privacy", "process names", "alert history", "dashboard shortcut", "dashboard hotkey", "option command m", "status", "monitoring"
+                "volume", "brightness", "launch at login", "login items", "helper diagnostics", "notifications", "privacy", "process names", "status history", "dashboard shortcut", "dashboard hotkey", "option command m", "status", "monitoring"
             ], content: AnyView(
                 HelpCard {
                     Text("System controls enable adjusting volume, screen brightness, and launch-at-login behavior.")
                     HelpBullet(text: "Use the `System` tab or menu bar popovers to view current volume and brightness.")
                     HelpBullet(text: "Toggle `Launch at Login` to start Core Monitor automatically.")
                     HelpBullet(text: "The `System` tab now surfaces helper state, SMC access, overall thermal pressure, notification permission status, privacy mode, and monitoring freshness in dedicated status cards.")
-                    HelpBullet(text: "Privacy Controls also live in the `System` tab so you can disable process-name capture without hunting through alert rules first.")
+                    HelpBullet(text: "Privacy Controls also live in the `System` tab so you can disable process-name capture without hunting through notification settings first.")
                     HelpBullet(text: "An optional global dashboard shortcut can register `Option-Command-M` so you can reopen Core Monitor even if menu bar items are hidden or hard to reach.")
                 }
             )),
