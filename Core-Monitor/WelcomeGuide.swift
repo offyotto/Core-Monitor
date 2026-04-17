@@ -725,7 +725,7 @@ private struct WelcomeGuideTouchBarShowcase: View {
                     .clipShape(Capsule())
             }
 
-            HStack(alignment: .top, spacing: 12) {
+            VStack(spacing: 12) {
                 WelcomeGuideTouchBarDemoPanel(
                     title: "Tap Weather",
                     subtitle: "Tap the weather widget to expand the forecast line and rain summary.",
@@ -849,7 +849,7 @@ private struct WelcomeGuideWeatherTouchBarDemo: View {
                                 width: weatherWidth,
                                 accent: .wgAmber,
                                 icon: "cloud.sun.fill",
-                                title: "Karachi",
+                                title: "Cupertino",
                                 detail: expansion > 0.55 ? "22° • Partly Cloudy • Rain 4 PM" : "22° • Partly Cloudy"
                             )
 

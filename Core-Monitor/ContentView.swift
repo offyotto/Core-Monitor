@@ -2014,7 +2014,7 @@ private struct TouchBarWidgetPreview: View {
 
 private enum TouchBarPreviewFixture {
     static let weather = WeatherSnapshot(
-        locationName: "Karachi",
+        locationName: "Cupertino",
         symbolName: "cloud.bolt.rain.fill",
         temperature: 22,
         condition: "Partly Cloudy",

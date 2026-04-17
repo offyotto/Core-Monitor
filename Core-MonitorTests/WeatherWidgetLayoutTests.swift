@@ -30,7 +30,7 @@ final class WeatherWidgetLayoutTests: XCTestCase {
 
     private func sampleSnapshot() -> WeatherSnapshot {
         WeatherSnapshot(
-            locationName: "Karachi",
+            locationName: "Cupertino",
             symbolName: "cloud.sun.fill",
             temperature: 31,
             condition: "Partly Cloudy",
