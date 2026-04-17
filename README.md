@@ -41,14 +41,16 @@ Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs
 
 It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. Sensor reads stay local to your Mac. The optional fan control helper is the only additional process, and it is only needed if you want write access for fan control.
 
-Public builds are available through GitHub Releases.
+Public builds are available through GitHub Releases as a signed DMG for standard installs and a signed ZIP for archive-friendly installs.
 
 ## Install
 
 Direct download:
 
-- Download [Core-Monitor.app.zip](https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.app.zip) from the latest GitHub release.
-- Move `Core-Monitor.app` into `/Applications`.
+- Download [Core-Monitor.dmg](https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.dmg) for the normal drag-to-Applications install.
+- Open the disk image, drag `Core-Monitor.app` into `/Applications`, then eject the disk image.
+- Download [Core-Monitor.app.zip](https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.app.zip) if you prefer the raw app archive.
+- Move `Core-Monitor.app` into `/Applications` if you use the ZIP.
 
 Homebrew:
 
@@ -252,7 +254,7 @@ The new customization system is intentionally practical rather than unlimited. R
 
 ## Installation
 
-**Download:** Get the latest public build from [Releases](https://github.com/offyotto-sl3/Core-Monitor/releases/latest) and move it to `/Applications`.
+**Download:** Use the signed [Core-Monitor.dmg](https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.dmg) for the standard install, or grab the [Core-Monitor.app.zip](https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.app.zip) if you want the raw archive.
 
 **Build from source:**
 
