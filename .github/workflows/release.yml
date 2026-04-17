@@ -109,6 +109,20 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: ./scripts/release/notarize_release.sh build/release/Core-Monitor.app.zip build/release/export/Core-Monitor.app
 
+      - name: Build signed disk image
+        run: ./scripts/release/build_dmg.sh build/release/export/Core-Monitor.app build/release/Core-Monitor.dmg
+
+      - name: Notarize disk image
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          NOTARYTOOL_PROFILE: ${{ secrets.NOTARYTOOL_PROFILE }}
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: ./scripts/release/notarize_disk_image.sh build/release/Core-Monitor.dmg
+
       - name: Collect release metadata
         env:
           RELEASE_TAG: ${{ env.RELEASE_TAG }}
@@ -117,17 +131,22 @@ jobs:
           APP_PATH="build/release/export/Core-Monitor.app"
           VERSION="$(defaults read "${APP_PATH}/Contents/Info" CFBundleShortVersionString)"
           BUILD_NUMBER="$(defaults read "${APP_PATH}/Contents/Info" CFBundleVersion)"
-          SHA256="$(shasum -a 256 build/release/Core-Monitor.app.zip | awk '{print $1}')"
-          DOWNLOAD_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/Core-Monitor.app.zip"
+          ZIP_SHA256="$(shasum -a 256 build/release/Core-Monitor.app.zip | awk '{print $1}')"
+          DMG_SHA256="$(shasum -a 256 build/release/Core-Monitor.dmg | awk '{print $1}')"
+          ZIP_DOWNLOAD_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/Core-Monitor.app.zip"
+          DMG_DOWNLOAD_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/Core-Monitor.dmg"
 
-          printf '%s  %s\n' "${SHA256}" "Core-Monitor.app.zip" > build/release/Core-Monitor.app.zip.sha256
-          ./scripts/release/generate_homebrew_cask.sh "${VERSION}" "${SHA256}" "${DOWNLOAD_URL}" build/release/core-monitor.rb
+          printf '%s  %s\n' "${ZIP_SHA256}" "Core-Monitor.app.zip" > build/release/Core-Monitor.app.zip.sha256
+          printf '%s  %s\n' "${DMG_SHA256}" "Core-Monitor.dmg" > build/release/Core-Monitor.dmg.sha256
+          ./scripts/release/generate_homebrew_cask.sh "${VERSION}" "${ZIP_SHA256}" "${ZIP_DOWNLOAD_URL}" build/release/core-monitor.rb
 
           {
             echo "VERSION=${VERSION}"
             echo "BUILD_NUMBER=${BUILD_NUMBER}"
-            echo "SHA256=${SHA256}"
-            echo "DOWNLOAD_URL=${DOWNLOAD_URL}"
+            echo "ZIP_SHA256=${ZIP_SHA256}"
+            echo "DMG_SHA256=${DMG_SHA256}"
+            echo "ZIP_DOWNLOAD_URL=${ZIP_DOWNLOAD_URL}"
+            echo "DMG_DOWNLOAD_URL=${DMG_DOWNLOAD_URL}"
           } >> "${GITHUB_ENV}"
 
       - name: Upload release artifacts
@@ -137,6 +156,8 @@ jobs:
           path: |
             build/release/Core-Monitor.app.zip
             build/release/Core-Monitor.app.zip.sha256
+            build/release/Core-Monitor.dmg
+            build/release/Core-Monitor.dmg.sha256
             build/release/core-monitor.rb
             build/release/Core-Monitor.xcarchive
 
@@ -150,12 +171,16 @@ jobs:
             gh release upload "${RELEASE_TAG}" \
               build/release/Core-Monitor.app.zip \
               build/release/Core-Monitor.app.zip.sha256 \
+              build/release/Core-Monitor.dmg \
+              build/release/Core-Monitor.dmg.sha256 \
               build/release/core-monitor.rb \
               --clobber
           else
             gh release create "${RELEASE_TAG}" \
               build/release/Core-Monitor.app.zip \
               build/release/Core-Monitor.app.zip.sha256 \
+              build/release/Core-Monitor.dmg \
+              build/release/Core-Monitor.dmg.sha256 \
               build/release/core-monitor.rb \
               --title "Core-Monitor ${VERSION}" \
               --generate-notes

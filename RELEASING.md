@@ -4,14 +4,14 @@ Core-Monitor is not a throwaway unsigned zip anymore. The release path in this r
 
 1. Every public build should pass the macOS test suite first.
 2. Every downloadable app should be Developer ID signed and notarized.
-3. Every channel should point to the same stable artifact name: `Core-Monitor.app.zip`.
+3. Every channel should point to the same stable artifact names: `Core-Monitor.dmg` for normal installs and `Core-Monitor.app.zip` for archive-friendly installs.
 
 ## Release channels
 
-- GitHub Releases: primary source of truth, public changelog, checksum, and pinned Homebrew cask artifact.
-- Website: the download buttons should point straight at `releases/latest/download/Core-Monitor.app.zip`.
+- GitHub Releases: primary source of truth, public changelog, checksums, and pinned Homebrew cask artifact.
+- Website: the main download buttons should point to `releases/latest/download/Core-Monitor.dmg`, and the install section should also surface `releases/latest/download/Core-Monitor.app.zip`.
 - Homebrew: this repository acts as a custom tap; users should tap it first, then install `offyotto-sl3/core-monitor/core-monitor`.
-- Direct support/install docs: README, website, and release notes should all use the same install path.
+- Direct support/install docs: README, website, and release notes should present DMG as the standard drag-to-Applications path and ZIP as the fallback/manual path.
 
 ## GitHub Actions secrets
 
@@ -38,12 +38,14 @@ Do not rely on a bare `NOTARYTOOL_PROFILE` secret on GitHub Actions. A profile n
 2. Make sure the marketing version and build number in Xcode are correct.
 3. Tag the commit with a release tag such as `v14.0.0`.
 4. Push the branch and tag.
-5. Let `.github/workflows/release.yml` build, notarize, and publish `Core-Monitor.app.zip`.
+5. Let `.github/workflows/release.yml` build, notarize, and publish both `Core-Monitor.app.zip` and `Core-Monitor.dmg`.
 6. Confirm the release contains:
+- `Core-Monitor.dmg`
+- `Core-Monitor.dmg.sha256`
 - `Core-Monitor.app.zip`
 - `Core-Monitor.app.zip.sha256`
 - `core-monitor.rb`
-7. Verify the website download button resolves to the new asset.
+7. Verify the website's main download button resolves to the DMG and the install section still exposes the ZIP fallback.
 8. Test the Homebrew install path:
 
 ```bash
@@ -74,7 +76,7 @@ Signed archive + zip:
 
 The repository's `Release` configuration now uses the WeatherKit entitlement. The direct-download path therefore depends on the direct-distribution provisioning profile secret listed above.
 
-Notarize and staple:
+Notarize and staple the app:
 
 ```bash
 APPLE_ID="you@example.com" \
@@ -83,10 +85,25 @@ APPLE_TEAM_ID="TEAMID1234" \
 ./scripts/release/notarize_release.sh build/release/Core-Monitor.app.zip build/release/export/Core-Monitor.app
 ```
 
+Build the DMG from the stapled app:
+
+```bash
+./scripts/release/build_dmg.sh build/release/export/Core-Monitor.app build/release/Core-Monitor.dmg
+```
+
+Notarize the DMG:
+
+```bash
+APPLE_ID="you@example.com" \
+APPLE_APP_SPECIFIC_PASSWORD="xxxx-xxxx-xxxx-xxxx" \
+APPLE_TEAM_ID="TEAMID1234" \
+./scripts/release/notarize_disk_image.sh build/release/Core-Monitor.dmg
+```
+
 ## Distribution checklist outside the App Store
 
 - GitHub Releases: already automated in this repo
-- GitHub Pages site: keep download/install copy aligned with the stable asset name
+- GitHub Pages site: keep download/install copy aligned with the DMG-first, ZIP-fallback download path
 - Homebrew: keep the custom-tap install path working; a dedicated `homebrew-core-monitor` repo can come later if install volume justifies it
 - MacUpdate / AlternativeTo / Apple Silicon directories: submit after each major release and keep screenshots current
 - Setapp: viable only after the helper install and first-run flow feel invisible to a non-technical customer; do not prioritize it ahead of release trust and onboarding
