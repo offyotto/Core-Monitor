@@ -4,12 +4,12 @@ Core-Monitor is not a throwaway unsigned zip anymore. The release path in this r
 
 1. Every public build should pass the macOS test suite first.
 2. Every downloadable app should be Developer ID signed and notarized.
-3. Every channel should point to the same stable artifact name: `Core-Monitor.zip`.
+3. Every channel should point to the same stable artifact name: `Core-Monitor.app.zip`.
 
 ## Release channels
 
 - GitHub Releases: primary source of truth, public changelog, checksum, and pinned Homebrew cask artifact.
-- Website: the download buttons should point straight at `releases/latest/download/Core-Monitor.zip`.
+- Website: the download buttons should point straight at `releases/latest/download/Core-Monitor.app.zip`.
 - Homebrew: this repository acts as a custom tap; users should tap it first, then install `offyotto-sl3/core-monitor/core-monitor`.
 - Direct support/install docs: README, website, and release notes should all use the same install path.
 
@@ -33,10 +33,10 @@ If you already use `notarytool store-credentials` locally, you can mirror that p
 2. Make sure the marketing version and build number in Xcode are correct.
 3. Tag the commit with a release tag such as `v14.0.0`.
 4. Push the branch and tag.
-5. Let `.github/workflows/release.yml` build, notarize, and publish `Core-Monitor.zip`.
+5. Let `.github/workflows/release.yml` build, notarize, and publish `Core-Monitor.app.zip`.
 6. Confirm the release contains:
-- `Core-Monitor.zip`
-- `Core-Monitor.zip.sha256`
+- `Core-Monitor.app.zip`
+- `Core-Monitor.app.zip.sha256`
 - `core-monitor.rb`
 7. Verify the website download button resolves to the new asset.
 8. Test the Homebrew install path:
@@ -74,7 +74,7 @@ Notarize and staple:
 APPLE_ID="you@example.com" \
 APPLE_APP_SPECIFIC_PASSWORD="xxxx-xxxx-xxxx-xxxx" \
 APPLE_TEAM_ID="TEAMID1234" \
-./scripts/release/notarize_release.sh build/release/Core-Monitor.zip build/release/export/Core-Monitor.app
+./scripts/release/notarize_release.sh build/release/Core-Monitor.app.zip build/release/export/Core-Monitor.app
 ```
 
 ## Distribution checklist outside the App Store

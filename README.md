@@ -47,7 +47,7 @@ Public builds are available through GitHub Releases.
 
 Direct download:
 
-- Download [Core-Monitor.zip](https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.zip) from the latest GitHub release.
+- Download [Core-Monitor.app.zip](https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.app.zip) from the latest GitHub release.
 - Move `Core-Monitor.app` into `/Applications`.
 
 Homebrew:

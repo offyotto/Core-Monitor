@@ -79,7 +79,7 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           NOTARYTOOL_PROFILE: ${{ secrets.NOTARYTOOL_PROFILE }}
-        run: ./scripts/release/notarize_release.sh build/release/Core-Monitor.zip build/release/export/Core-Monitor.app
+        run: ./scripts/release/notarize_release.sh build/release/Core-Monitor.app.zip build/release/export/Core-Monitor.app
 
       - name: Collect release metadata
         env:
@@ -89,10 +89,10 @@ jobs:
           APP_PATH="build/release/export/Core-Monitor.app"
           VERSION="$(defaults read "${APP_PATH}/Contents/Info" CFBundleShortVersionString)"
           BUILD_NUMBER="$(defaults read "${APP_PATH}/Contents/Info" CFBundleVersion)"
-          SHA256="$(shasum -a 256 build/release/Core-Monitor.zip | awk '{print $1}')"
-          DOWNLOAD_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/Core-Monitor.zip"
+          SHA256="$(shasum -a 256 build/release/Core-Monitor.app.zip | awk '{print $1}')"
+          DOWNLOAD_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/Core-Monitor.app.zip"
 
-          printf '%s  %s\n' "${SHA256}" "Core-Monitor.zip" > build/release/Core-Monitor.zip.sha256
+          printf '%s  %s\n' "${SHA256}" "Core-Monitor.app.zip" > build/release/Core-Monitor.app.zip.sha256
           ./scripts/release/generate_homebrew_cask.sh "${VERSION}" "${SHA256}" "${DOWNLOAD_URL}" build/release/core-monitor.rb
 
           {
@@ -107,8 +107,8 @@ jobs:
         with:
           name: core-monitor-release
           path: |
-            build/release/Core-Monitor.zip
-            build/release/Core-Monitor.zip.sha256
+            build/release/Core-Monitor.app.zip
+            build/release/Core-Monitor.app.zip.sha256
             build/release/core-monitor.rb
             build/release/Core-Monitor.xcarchive
 
@@ -120,14 +120,14 @@ jobs:
         run: |
           if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
             gh release upload "${RELEASE_TAG}" \
-              build/release/Core-Monitor.zip \
-              build/release/Core-Monitor.zip.sha256 \
+              build/release/Core-Monitor.app.zip \
+              build/release/Core-Monitor.app.zip.sha256 \
               build/release/core-monitor.rb \
               --clobber
           else
             gh release create "${RELEASE_TAG}" \
-              build/release/Core-Monitor.zip \
-              build/release/Core-Monitor.zip.sha256 \
+              build/release/Core-Monitor.app.zip \
+              build/release/Core-Monitor.app.zip.sha256 \
               build/release/core-monitor.rb \
               --title "Core-Monitor ${VERSION}" \
               --generate-notes
