@@ -599,7 +599,7 @@ final class TouchBarCustomizationSettings: ObservableObject {
         }
     }
 
-    fileprivate static func standardizedPath(_ rawPath: String) -> String {
+    nonisolated fileprivate static func standardizedPath(_ rawPath: String) -> String {
         let trimmed = rawPath.trimmingCharacters(in: .whitespacesAndNewlines)
         let expanded = (trimmed as NSString).expandingTildeInPath
         return (expanded as NSString).standardizingPath
