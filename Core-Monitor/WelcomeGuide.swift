@@ -160,12 +160,12 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgPurple,
         headline: "Touch Bar",
         subheadline: "OLED space should look intentional.",
-        body: "Core Monitor can replace the system Touch Bar with a full-width widget strip, including clocks, weather, network, combined stats, and hardware glyphs. It stays on while Core Monitor is running. Press Command-Shift-6 to return the hardware bar to macOS, or quit the app to dismiss the HUD entirely.",
+        body: "Core Monitor can replace the system Touch Bar with a full-width widget strip for weather, status, network, dock shortcuts, and dense system widgets. Tap the weather widget to flip between compact and expanded conditions, swipe sideways on the trackpad to move between onboarding cards, and open the Touch Bar tab to reorder, remove, or add widgets with live width guidance.",
         bullets: [
-            ("rectangle.on.rectangle", .wgGreen, "Light and dark widget themes"),
-            ("rectangle.3.group",     .wgBlue,   "Reorder or disable widgets in-app"),
-            ("cloud.sun.rain.fill",   .wgAmber,  "Weather uses Apple's WeatherKit path"),
-            ("location.fill",         .wgGreen,  "Allow location for accurate weather"),
+            ("hand.tap.fill",         .wgAmber,  "Tap Weather to expand conditions and rain timing"),
+            ("rectangle.3.group",     .wgBlue,   "Swipe sideways on the trackpad to move between guide cards"),
+            ("slider.horizontal.3",   .wgGreen,  "Touch Bar > Active Items lets you reorder, remove, and add widgets"),
+            ("cloud.sun.rain.fill",   .wgAmber,  "Weather uses Apple's WeatherKit path and gets better with location access"),
             ("command.circle.fill",   .wgPurple, "Command-Shift-6 switches back to the system Touch Bar"),
             ("power",                 .wgRed,    "Quitting Core Monitor also dismisses the HUD"),
         ]
@@ -206,6 +206,9 @@ private struct WelcomeGuideSheet: View {
     @State private var headerGlow    = false     // ambient pulse on icon
     @State private var progressPulse = false     // subtle dot pulse
     @State private var diagnosticsExportMessage: String?
+    @State private var scrollMonitor: Any?
+    @State private var horizontalScrollAccumulator: CGFloat = 0
+    @State private var scrollNavigationLocked = false
 
     var body: some View {
         ZStack {
@@ -237,6 +240,7 @@ private struct WelcomeGuideSheet: View {
         .opacity(sheetVisible ? 1 : 0)
         .scaleEffect(sheetVisible ? 1 : 0.96)
         .onAppear(perform: prepareSheet)
+        .onDisappear(perform: tearDownSheet)
     }
 
     // ── Step content ─────────────────────────────────────────────────────────
@@ -246,10 +250,13 @@ private struct WelcomeGuideSheet: View {
         return WelcomeGuideStepContent(
             step: step,
             stepVisible: stepVisible,
-            usesCompactFeatureGrid: currentStep == guideSteps.count - 1,
+            usesCompactFeatureGrid: currentStep == guideSteps.count - 1 || currentStep == 3,
             badge: { iconBadge(for: step) }
         ) {
-            if currentStep == guideSteps.count - 1 {
+            if currentStep == 3 {
+                WelcomeGuideTouchBarShowcase(accentColor: step.iconColor)
+                    .padding(.top, 12)
+            } else if currentStep == guideSteps.count - 1 {
                 WelcomeGuideReadinessPanel(
                     menuBarStatus: menuBarStatus,
                     dashboardShortcutStatus: dashboardShortcutStatus,
@@ -356,6 +363,8 @@ private struct WelcomeGuideSheet: View {
     // ── Navigation helper ─────────────────────────────────────────────────────
 
     private func transition(to index: Int) {
+        horizontalScrollAccumulator = 0
+        scrollNavigationLocked = false
         withAnimation(.easeIn(duration: 0.16)) { stepVisible = false }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
             currentStep = index
@@ -370,9 +379,12 @@ private struct WelcomeGuideSheet: View {
         headerGlow = false
         progressPulse = false
         diagnosticsExportMessage = nil
+        horizontalScrollAccumulator = 0
+        scrollNavigationLocked = false
 
         startupManager.refreshState()
         refreshHelperDiagnostics()
+        installScrollMonitor()
 
         withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) {
             sheetVisible = true
@@ -388,14 +400,26 @@ private struct WelcomeGuideSheet: View {
         }
     }
 
+    private func tearDownSheet() {
+        if let scrollMonitor {
+            NSEvent.removeMonitor(scrollMonitor)
+            self.scrollMonitor = nil
+        }
+    }
+
     private func goBack() {
         guard currentStep > 0 else { return }
         transition(to: currentStep - 1)
     }
 
+    private func goForwardStep() {
+        guard currentStep < guideSteps.count - 1 else { return }
+        transition(to: currentStep + 1)
+    }
+
     private func advanceOrDismiss() {
         if currentStep < guideSteps.count - 1 {
-            transition(to: currentStep + 1)
+            goForwardStep()
             return
         }
         dismissSheet()
@@ -408,6 +432,111 @@ private struct WelcomeGuideSheet: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
             onDismiss()
         }
+    }
+
+    private func installScrollMonitor() {
+        guard scrollMonitor == nil else { return }
+
+        scrollMonitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel, .swipe]) { event in
+            guard sheetVisible else {
+                return event
+            }
+
+            if handleNavigationGesture(event) {
+                return nil
+            }
+
+            return event
+        }
+    }
+
+    private func handleNavigationGesture(_ event: NSEvent) -> Bool {
+        switch event.type {
+        case .swipe:
+            return handleSwipeGesture(event)
+
+        case .scrollWheel:
+            guard event.hasPreciseScrollingDeltas else {
+                return false
+            }
+            return handleHorizontalScroll(event)
+
+        default:
+            return false
+        }
+    }
+
+    private func handleSwipeGesture(_ event: NSEvent) -> Bool {
+        let horizontalDelta = event.deltaX
+        let verticalDelta = event.deltaY
+
+        guard abs(horizontalDelta) > abs(verticalDelta), abs(horizontalDelta) >= 0.5 else {
+            return false
+        }
+
+        if horizontalDelta > 0 {
+            goForwardStep()
+            return true
+        }
+
+        if horizontalDelta < 0 {
+            goBack()
+            return true
+        }
+
+        return false
+    }
+
+    private func handleHorizontalScroll(_ event: NSEvent) -> Bool {
+        let horizontalMagnitude = abs(event.scrollingDeltaX)
+        let verticalMagnitude = abs(event.scrollingDeltaY)
+
+        if horizontalMagnitude <= verticalMagnitude || horizontalMagnitude < 1.5 {
+            if event.phase == .ended || event.momentumPhase == .ended {
+                horizontalScrollAccumulator = 0
+                scrollNavigationLocked = false
+            }
+            return false
+        }
+
+        if event.phase == .began || event.phase == .mayBegin {
+            horizontalScrollAccumulator = 0
+            scrollNavigationLocked = false
+        }
+
+        let fingerDeltaX = event.isDirectionInvertedFromDevice
+            ? -event.scrollingDeltaX
+            : event.scrollingDeltaX
+
+        horizontalScrollAccumulator += fingerDeltaX
+
+        let threshold: CGFloat = 56
+        guard scrollNavigationLocked == false else {
+            if event.phase == .ended || event.momentumPhase == .ended {
+                horizontalScrollAccumulator = 0
+                scrollNavigationLocked = false
+            }
+            return false
+        }
+
+        if horizontalScrollAccumulator <= -threshold {
+            scrollNavigationLocked = true
+            goForwardStep()
+            return true
+        }
+
+        if horizontalScrollAccumulator >= threshold {
+            scrollNavigationLocked = true
+            goBack()
+            return true
+        }
+
+        if event.phase == .ended || event.momentumPhase == .ended {
+            horizontalScrollAccumulator = 0
+            scrollNavigationLocked = false
+        }
+
+        return false
     }
 
     private func enableLaunchAtLogin() {
@@ -573,6 +702,526 @@ private struct WelcomeGuideSheet: View {
         }
     }
 
+}
+
+private struct WelcomeGuideTouchBarShowcase: View {
+    let accentColor: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Label("Touch Bar Interaction Demos", systemImage: "sparkles.rectangle.stack")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.wgText)
+
+                Spacer()
+
+                Text("LIVE LOOP")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundColor(accentColor)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 4)
+                    .background(accentColor.opacity(0.14))
+                    .clipShape(Capsule())
+            }
+
+            HStack(alignment: .top, spacing: 12) {
+                WelcomeGuideTouchBarDemoPanel(
+                    title: "Tap Weather",
+                    subtitle: "Tap the weather widget to expand the forecast line and rain summary.",
+                    accentColor: .wgAmber,
+                    symbol: "hand.tap.fill"
+                ) {
+                    WelcomeGuideWeatherTouchBarDemo()
+                }
+
+                WelcomeGuideTouchBarDemoPanel(
+                    title: "Swipe Cards",
+                    subtitle: "Use a sideways trackpad swipe to move across the onboarding cards.",
+                    accentColor: .wgBlue,
+                    symbol: "rectangle.3.group.fill"
+                ) {
+                    WelcomeGuideCardSwipeDemo()
+                }
+            }
+
+            WelcomeGuideTouchBarDemoPanel(
+                title: "Change Widgets",
+                subtitle: "Open Touch Bar to reorder active widgets or add new ones from the library.",
+                accentColor: .wgGreen,
+                symbol: "slider.horizontal.3"
+            ) {
+                WelcomeGuideTouchBarEditDemo()
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: 520, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.wgSurface.opacity(0.88))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.wgBorder, lineWidth: 1)
+                )
+        )
+        .padding(.horizontal, 40)
+    }
+}
+
+private struct WelcomeGuideTouchBarDemoPanel<Content: View>: View {
+    let title: String
+    let subtitle: String
+    let accentColor: Color
+    let symbol: String
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 8) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(accentColor.opacity(0.12))
+                        .frame(width: 28, height: 28)
+
+                    Image(systemName: symbol)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(accentColor)
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title)
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundColor(.wgText)
+
+                    Text(subtitle)
+                        .font(.system(size: 10.5, weight: .medium))
+                        .foregroundColor(.wgTextSub)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            content()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.white.opacity(0.02))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Color.wgBorder.opacity(0.9), lineWidth: 1)
+                )
+        )
+    }
+}
+
+private struct WelcomeGuideWeatherTouchBarDemo: View {
+    @State private var startedAt = Date()
+
+    var body: some View {
+        TimelineView(.animation) { context in
+            let cycle = context.date.timeIntervalSince(startedAt).truncatingRemainder(dividingBy: 4.8)
+            let expansion = wgLoopEnvelope(time: cycle, fadeIn: 0.55...1.25, fadeOut: 3.1...3.9)
+            let tapPulse = wgPulse(time: cycle, start: 0.35, peak: 0.78, end: 1.2)
+            let weatherWidth = CGFloat(wgMix(124, 210, expansion))
+
+            VStack(alignment: .leading, spacing: 10) {
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.black.opacity(0.78))
+                        .frame(height: 58)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                        )
+
+                    HStack(spacing: 8) {
+                        WelcomeGuideTouchBarPill(
+                            width: 84,
+                            accent: .wgBlue,
+                            icon: "wifi",
+                            title: "9:41",
+                            detail: "73%"
+                        )
+
+                        ZStack {
+                            WelcomeGuideTouchBarPill(
+                                width: weatherWidth,
+                                accent: .wgAmber,
+                                icon: "cloud.sun.fill",
+                                title: "Karachi",
+                                detail: expansion > 0.55 ? "22° • Partly Cloudy • Rain 4 PM" : "22° • Partly Cloudy"
+                            )
+
+                            Circle()
+                                .stroke(Color.wgAmber.opacity(1 - tapPulse * 0.8), lineWidth: 1.4)
+                                .frame(width: 24, height: 24)
+                                .scaleEffect(1 + tapPulse * 0.7)
+                                .opacity(tapPulse > 0 ? 1 : 0)
+                                .offset(x: min(42, weatherWidth * 0.22), y: -4)
+
+                            Image(systemName: "hand.tap.fill")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.wgAmber)
+                                .offset(x: min(42, weatherWidth * 0.22), y: -18 - tapPulse * 4)
+                                .opacity(0.35 + tapPulse * 0.65)
+                        }
+
+                        WelcomeGuideTouchBarPill(
+                            width: 78,
+                            accent: .wgGreen,
+                            icon: "cpu.fill",
+                            title: "CPU",
+                            detail: "44°"
+                        )
+                    }
+                    .padding(.horizontal, 10)
+                }
+
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.up.forward.circle.fill")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.wgAmber)
+                    Text(expansion > 0.55 ? "Expanded weather view is showing the longer condition line." : "Compact weather view is showing the default summary.")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.wgTextSub)
+                }
+            }
+        }
+        .frame(height: 94)
+        .onAppear { startedAt = Date() }
+    }
+}
+
+private struct WelcomeGuideCardSwipeDemo: View {
+    @State private var startedAt = Date()
+
+    private let cardWidth: CGFloat = 104
+    private let cardSpacing: CGFloat = 10
+
+    var body: some View {
+        TimelineView(.animation) { context in
+            let cycle = context.date.timeIntervalSince(startedAt).truncatingRemainder(dividingBy: 6.4)
+            let progressIndex = cardProgressIndex(for: cycle)
+            let stripOffset = -progressIndex * Double(cardWidth + cardSpacing)
+            let fingerTravel = wgMix(-28, 26, wgLoopEnvelope(time: cycle, fadeIn: 1.0...2.0, fadeOut: 4.7...5.8))
+
+            VStack(alignment: .leading, spacing: 10) {
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.black.opacity(0.28))
+                        .frame(height: 78)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.wgBorder, lineWidth: 1)
+                        )
+
+                    HStack(spacing: cardSpacing) {
+                        WelcomeGuideCardPreview(title: "Overview", accent: .wgAmber, symbol: "gauge.medium")
+                        WelcomeGuideCardPreview(title: "Touch Bar", accent: .wgPurple, symbol: "display.2")
+                        WelcomeGuideCardPreview(title: "Ready", accent: .wgGreen, symbol: "checkmark.seal.fill")
+                    }
+                    .padding(.horizontal, 10)
+                    .offset(x: stripOffset)
+                }
+                .clipped()
+
+                HStack(spacing: 10) {
+                    Text("3-FINGER SWIPE")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundColor(.wgBlue)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.wgBlue.opacity(0.14))
+                        .clipShape(Capsule())
+
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 9, style: .continuous)
+                            .fill(Color.white.opacity(0.05))
+                            .frame(width: 78, height: 22)
+
+                        HStack(spacing: 5) {
+                            ForEach(0..<3, id: \.self) { _ in
+                                Circle()
+                                    .fill(Color.wgBlue.opacity(0.92))
+                                    .frame(width: 5, height: 5)
+                            }
+                        }
+                        .offset(x: fingerTravel)
+                    }
+
+                    Text("Swipe sideways to move between guide cards.")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.wgTextSub)
+                }
+            }
+        }
+        .frame(height: 94)
+        .onAppear { startedAt = Date() }
+    }
+
+    private func cardProgressIndex(for cycle: TimeInterval) -> Double {
+        switch cycle {
+        case ..<1.0:
+            return 0
+        case 1.0..<2.0:
+            return wgSmoothProgress(cycle, start: 1.0, end: 2.0)
+        case 2.0..<3.4:
+            return 1
+        case 3.4..<4.4:
+            return 1 + wgSmoothProgress(cycle, start: 3.4, end: 4.4)
+        case 4.4..<5.8:
+            return 2
+        default:
+            return 2 - wgSmoothProgress(cycle, start: 5.8, end: 6.4) * 2
+        }
+    }
+}
+
+private struct WelcomeGuideTouchBarEditDemo: View {
+    @State private var startedAt = Date()
+
+    var body: some View {
+        TimelineView(.animation) { context in
+            let cycle = context.date.timeIntervalSince(startedAt).truncatingRemainder(dividingBy: 6.8)
+            let reorderProgress = wgLoopEnvelope(time: cycle, fadeIn: 1.1...2.1, fadeOut: 4.2...5.2)
+            let addProgress = wgLoopEnvelope(time: cycle, fadeIn: 3.4...4.2, fadeOut: 5.8...6.6)
+
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 6) {
+                    Text("Touch Bar")
+                        .font(.system(size: 10.5, weight: .semibold))
+                        .foregroundColor(.wgText)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundColor(.wgTextDim)
+                    Text("Active Items")
+                        .font(.system(size: 10.5, weight: .medium))
+                        .foregroundColor(.wgTextSub)
+                }
+
+                ZStack(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.black.opacity(0.28))
+                        .frame(height: 94)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.wgBorder, lineWidth: 1)
+                        )
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 8) {
+                            WelcomeGuideActiveWidgetChip(title: "Status", accent: .wgBlue)
+
+                            WelcomeGuideActiveWidgetChip(title: "CPU", accent: .wgGreen)
+                                .offset(x: CGFloat(wgMix(0, 60, reorderProgress)))
+
+                            WelcomeGuideActiveWidgetChip(title: "Weather", accent: .wgAmber)
+                                .offset(x: CGFloat(wgMix(0, -60, reorderProgress)))
+
+                            WelcomeGuideActiveWidgetChip(title: "Network", accent: .wgPurple)
+                                .opacity(addProgress)
+                                .offset(y: CGFloat(wgMix(8, 0, addProgress)))
+                        }
+
+                        HStack(spacing: 8) {
+                            WelcomeGuideLibraryWidgetChip(title: "Weather")
+                            WelcomeGuideLibraryWidgetChip(title: "Network")
+                                .overlay(alignment: .topTrailing) {
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundColor(.wgGreen)
+                                        .background(Color.wgBackground, in: Circle())
+                                        .scaleEffect(0.9 + addProgress * 0.25)
+                                        .opacity(0.45 + addProgress * 0.55)
+                                        .offset(x: 6, y: -6)
+                                }
+                            WelcomeGuideLibraryWidgetChip(title: "Hardware")
+                        }
+
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.wgGreen)
+                                .scaleEffect(0.95 + reorderProgress * 0.2)
+                                .opacity(0.45 + reorderProgress * 0.55)
+
+                            Text("Reorder with the arrows, remove what you do not need, and add widgets from the library below.")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.wgTextSub)
+                        }
+                    }
+                    .padding(12)
+                }
+            }
+        }
+        .frame(height: 138)
+        .onAppear { startedAt = Date() }
+    }
+}
+
+private struct WelcomeGuideTouchBarPill: View {
+    let width: CGFloat
+    let accent: Color
+    let icon: String
+    let title: String
+    let detail: String
+
+    var body: some View {
+        HStack(spacing: 7) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(accent)
+                .frame(width: 14)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.system(size: 10.5, weight: .semibold))
+                    .foregroundColor(.wgText)
+                    .lineLimit(1)
+
+                Text(detail)
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundColor(.wgTextSub)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 9)
+        .frame(width: width, height: 38, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.white.opacity(0.07))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(Color.white.opacity(0.10), lineWidth: 1)
+                )
+        )
+    }
+}
+
+private struct WelcomeGuideCardPreview: View {
+    let title: String
+    let accent: Color
+    let symbol: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: symbol)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(accent)
+                Spacer()
+                Circle()
+                    .fill(accent.opacity(0.92))
+                    .frame(width: 6, height: 6)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.wgText)
+                RoundedRectangle(cornerRadius: 999, style: .continuous)
+                    .fill(Color.white.opacity(0.08))
+                    .frame(height: 6)
+                    .overlay(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 999, style: .continuous)
+                            .fill(accent.opacity(0.92))
+                            .frame(width: 42, height: 6)
+                    }
+            }
+        }
+        .padding(12)
+        .frame(width: 104, height: 58, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.wgSurface.opacity(0.9))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Color.wgBorder, lineWidth: 1)
+                )
+        )
+    }
+}
+
+private struct WelcomeGuideActiveWidgetChip: View {
+    let title: String
+    let accent: Color
+
+    var body: some View {
+        Text(title)
+            .font(.system(size: 9.5, weight: .semibold))
+            .foregroundColor(.wgText)
+            .frame(width: 52, height: 22)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(accent.opacity(0.16))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(accent.opacity(0.35), lineWidth: 1)
+                    )
+            )
+    }
+}
+
+private struct WelcomeGuideLibraryWidgetChip: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.system(size: 9, weight: .medium))
+            .foregroundColor(.wgTextSub)
+            .frame(width: 58, height: 20)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(Color.white.opacity(0.05))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .stroke(Color.wgBorder, lineWidth: 1)
+                    )
+            )
+    }
+}
+
+private func wgMix(_ from: Double, _ to: Double, _ progress: Double) -> Double {
+    from + (to - from) * progress
+}
+
+private func wgSmoothProgress(_ time: TimeInterval, start: TimeInterval, end: TimeInterval) -> Double {
+    guard end > start else { return time >= end ? 1 : 0 }
+    let raw = max(0, min(1, (time - start) / (end - start)))
+    return raw * raw * (3 - 2 * raw)
+}
+
+private func wgLoopEnvelope(
+    time: TimeInterval,
+    fadeIn: ClosedRange<TimeInterval>,
+    fadeOut: ClosedRange<TimeInterval>
+) -> Double {
+    if time <= fadeIn.lowerBound {
+        return 0
+    }
+    if time < fadeIn.upperBound {
+        return wgSmoothProgress(time, start: fadeIn.lowerBound, end: fadeIn.upperBound)
+    }
+    if time <= fadeOut.lowerBound {
+        return 1
+    }
+    if time < fadeOut.upperBound {
+        return 1 - wgSmoothProgress(time, start: fadeOut.lowerBound, end: fadeOut.upperBound)
+    }
+    return 0
+}
+
+private func wgPulse(time: TimeInterval, start: TimeInterval, peak: TimeInterval, end: TimeInterval) -> Double {
+    if time <= start || time >= end {
+        return 0
+    }
+    if time <= peak {
+        return wgSmoothProgress(time, start: start, end: peak)
+    }
+    return 1 - wgSmoothProgress(time, start: peak, end: end)
 }
 
 private struct WelcomeGuideStepContent<TrailingContent: View, Badge: View>: View {
