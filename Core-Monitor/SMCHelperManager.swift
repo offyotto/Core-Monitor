@@ -135,6 +135,15 @@ final class SMCHelperManager: ObservableObject {
             }
         }
 
+        let didExecute = executeViaBlessedXPC(arguments: arguments, timeout: timeout)
+        guard didExecute == false, allowInstall, shouldAttemptHelperRepair(afterFailureMessage: statusMessage) else {
+            return didExecute
+        }
+
+        guard attemptRepairingStaleHelper() else {
+            return false
+        }
+
         return executeViaBlessedXPC(arguments: arguments, timeout: timeout)
     }
 
@@ -146,11 +155,8 @@ final class SMCHelperManager: ObservableObject {
             return nil
         }
 
-        switch withHelperConnection(timeout: 5, perform: { proxy, finish in
-            proxy.readValue(key) { value, errorMessage in
-                finish(value?.doubleValue, errorMessage as String?)
-            }
-        }) {
+        let result = readValueViaHelper(key: key, timeout: 5)
+        switch result {
         case .success(let value):
             statusMessage = nil
             connectionState = .reachable
@@ -158,7 +164,21 @@ final class SMCHelperManager: ObservableObject {
         case .failure(let message):
             statusMessage = message
             connectionState = .unreachable
-            return nil
+
+            guard shouldAttemptHelperRepair(afterFailureMessage: message), attemptRepairingStaleHelper() else {
+                return nil
+            }
+
+            switch readValueViaHelper(key: key, timeout: 5) {
+            case .success(let value):
+                statusMessage = nil
+                connectionState = .reachable
+                return value
+            case .failure(let retryMessage):
+                statusMessage = retryMessage
+                connectionState = .unreachable
+                return nil
+            }
         }
     }
 
@@ -175,6 +195,54 @@ final class SMCHelperManager: ObservableObject {
             statusMessage = installMessage
         }
         return didInstall
+    }
+
+    private func attemptRepairingStaleHelper() -> Bool {
+        refreshStatus()
+        guard fileManager.fileExists(atPath: installedHelperPath) else {
+            return false
+        }
+
+        let didRepair = attemptPrivilegedInstall(forceReinstall: true)
+        refreshStatus()
+        if didRepair {
+            hasAttemptedBlessInstall = false
+            refreshDiagnostics()
+        }
+        return didRepair
+    }
+
+    private func shouldAttemptHelperRepair(afterFailureMessage message: String?) -> Bool {
+        let normalized = message?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
+        guard normalized.isEmpty == false else { return false }
+
+        if normalized.contains("ad-hoc signed")
+            || normalized.contains("bundle identifier")
+            || normalized.contains("does not match")
+        {
+            return false
+        }
+
+        if normalized.contains("launchd error 4")
+            || normalized.contains("could not connect to privileged helper")
+            || normalized.contains("timed out while waiting for privileged helper")
+            || normalized.contains("failed to create helper connection")
+            || normalized.contains("rejected this app build")
+            || normalized.contains("rejected or could not reach this app build")
+            || normalized.contains("could not reach this app build")
+        {
+            return true
+        }
+
+        return false
+    }
+
+    private func readValueViaHelper(key: String, timeout: TimeInterval) -> ConnectionResult<Double> {
+        withHelperConnection(timeout: timeout, perform: { proxy, finish in
+            proxy.readValue(key) { value, errorMessage in
+                finish(value?.doubleValue, errorMessage as String?)
+            }
+        })
     }
 
     private func executeViaBlessedXPC(arguments: [String], timeout: TimeInterval) -> Bool {
