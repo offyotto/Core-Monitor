@@ -1079,10 +1079,10 @@ final class SystemMonitor: ObservableObject {
             return nil
         }
 
-        return parseSMCBytes(output.bytes, dataType: keyInfo.dataType, dataSize: keyInfo.dataSize)
+        return parseSMCBytes(output.bytes, key: key, dataType: keyInfo.dataType, dataSize: keyInfo.dataSize)
     }
 
-    private func parseSMCBytes(_ bytes: SMCBytes, dataType: UInt32, dataSize: UInt32) -> Double? {
+    private func parseSMCBytes(_ bytes: SMCBytes, key: String? = nil, dataType: UInt32, dataSize: UInt32) -> Double? {
         let raw = [
             bytes.0, bytes.1, bytes.2, bytes.3, bytes.4, bytes.5, bytes.6, bytes.7,
             bytes.8, bytes.9, bytes.10, bytes.11, bytes.12, bytes.13, bytes.14, bytes.15,
@@ -1093,10 +1093,7 @@ final class SystemMonitor: ObservableObject {
         switch dataType {
         case dataTypeFlt:
             if dataSize == 4 {
-                let value = raw.withUnsafeBufferPointer {
-                    $0.baseAddress!.withMemoryRebound(to: Float32.self, capacity: 1) { $0.pointee }
-                }
-                return Double(value)
+                return decodeSMCFloat(raw, key: key)
             }
 
         case dataTypeSp78:
@@ -1143,6 +1140,81 @@ final class SystemMonitor: ObservableObject {
 
         return nil
     }
+
+    private func decodeSMCFloat(_ raw: [UInt8], key: String?) -> Double? {
+        guard raw.count >= 4 else { return nil }
+
+        let bigEndianBits = (UInt32(raw[0]) << 24)
+            | (UInt32(raw[1]) << 16)
+            | (UInt32(raw[2]) << 8)
+            | UInt32(raw[3])
+        let littleEndianBits = (UInt32(raw[3]) << 24)
+            | (UInt32(raw[2]) << 16)
+            | (UInt32(raw[1]) << 8)
+            | UInt32(raw[0])
+
+        let bigEndianValue = Double(Float(bitPattern: bigEndianBits))
+        let littleEndianValue = Double(Float(bitPattern: littleEndianBits))
+
+        func isValid(_ value: Double) -> Bool {
+            value.isFinite && value.magnitude < 100_000
+        }
+
+        let bigEndianValid = isValid(bigEndianValue)
+        let littleEndianValid = isValid(littleEndianValue)
+
+        switch (bigEndianValid, littleEndianValid) {
+        case (true, false):
+            return bigEndianValue
+        case (false, true):
+            return littleEndianValue
+        case (false, false):
+            return nil
+        case (true, true):
+            break
+        }
+
+        if let preferredRange = preferredFloatRange(for: key) {
+            let bigEndianPreferred = preferredRange.contains(bigEndianValue)
+            let littleEndianPreferred = preferredRange.contains(littleEndianValue)
+            if bigEndianPreferred != littleEndianPreferred {
+                return bigEndianPreferred ? bigEndianValue : littleEndianValue
+            }
+        }
+
+        func isSubnormalLike(_ value: Double) -> Bool {
+            value != 0 && value.magnitude < 1e-12
+        }
+
+        let bigEndianSubnormal = isSubnormalLike(bigEndianValue)
+        let littleEndianSubnormal = isSubnormalLike(littleEndianValue)
+        if bigEndianSubnormal != littleEndianSubnormal {
+            return bigEndianSubnormal ? littleEndianValue : bigEndianValue
+        }
+
+        func isCommonSensorMagnitude(_ value: Double) -> Bool {
+            value == 0 || (0.01...20_000).contains(value.magnitude)
+        }
+
+        let bigEndianCommon = isCommonSensorMagnitude(bigEndianValue)
+        let littleEndianCommon = isCommonSensorMagnitude(littleEndianValue)
+        if bigEndianCommon != littleEndianCommon {
+            return bigEndianCommon ? bigEndianValue : littleEndianValue
+        }
+
+        return bigEndianValue.magnitude >= littleEndianValue.magnitude ? bigEndianValue : littleEndianValue
+    }
+
+    private func preferredFloatRange(for key: String?) -> ClosedRange<Double>? {
+        guard let key, key.count == 4 else { return nil }
+
+        if key.hasPrefix("F"), ["Ac", "Mn", "Mx", "Tg"].contains(String(key.suffix(2))) {
+            return 100...10_000
+        }
+
+        return nil
+    }
+
     private func readSystemControls() -> (volume: Float, brightness: Float) {
         var volume = currentVolume
         var brightness = currentBrightness

@@ -136,7 +136,7 @@ private final class SMCController {
             throw HelperError("SMC read failed (\(result))")
         }
 
-        guard let parsed = parseSMCBytes(output.bytes, dataType: keyInfo.dataType, dataSize: keyInfo.dataSize) else {
+        guard let parsed = parseSMCBytes(output.bytes, key: key, dataType: keyInfo.dataType, dataSize: keyInfo.dataSize) else {
             throw HelperError("Unsupported key type for \(key)")
         }
 
@@ -290,7 +290,7 @@ private final class SMCController {
         )
     }
 
-    private func parseSMCBytes(_ bytes: SMCBytes, dataType: UInt32, dataSize: UInt32) -> Double? {
+    private func parseSMCBytes(_ bytes: SMCBytes, key: String? = nil, dataType: UInt32, dataSize: UInt32) -> Double? {
         let raw = [
             bytes.0, bytes.1, bytes.2, bytes.3, bytes.4, bytes.5, bytes.6, bytes.7,
             bytes.8, bytes.9, bytes.10, bytes.11, bytes.12, bytes.13, bytes.14, bytes.15,
@@ -319,23 +319,81 @@ private final class SMCController {
         }
 
         if dataType == typeFlt, dataSize == 4 {
-            let bigEndianBits = (UInt32(raw[0]) << 24)
-                | (UInt32(raw[1]) << 16)
-                | (UInt32(raw[2]) << 8)
-                | UInt32(raw[3])
-            let littleEndianBits = (UInt32(raw[3]) << 24)
-                | (UInt32(raw[2]) << 16)
-                | (UInt32(raw[1]) << 8)
-                | UInt32(raw[0])
+            return decodeSMCFloat(raw, key: key)
+        }
 
-            let be = Double(Float(bitPattern: bigEndianBits))
-            let le = Double(Float(bitPattern: littleEndianBits))
-            let beValid = be.isFinite && abs(be) < 100_000
-            let leValid = le.isFinite && abs(le) < 100_000
-            if beValid && !leValid { return be }
-            if leValid && !beValid { return le }
-            if beValid && leValid { return abs(be) <= abs(le) ? be : le }
-            return be.isFinite ? be : (le.isFinite ? le : nil)
+        return nil
+    }
+
+    private func decodeSMCFloat(_ raw: [UInt8], key: String?) -> Double? {
+        guard raw.count >= 4 else { return nil }
+
+        let bigEndianBits = (UInt32(raw[0]) << 24)
+            | (UInt32(raw[1]) << 16)
+            | (UInt32(raw[2]) << 8)
+            | UInt32(raw[3])
+        let littleEndianBits = (UInt32(raw[3]) << 24)
+            | (UInt32(raw[2]) << 16)
+            | (UInt32(raw[1]) << 8)
+            | UInt32(raw[0])
+
+        let bigEndianValue = Double(Float(bitPattern: bigEndianBits))
+        let littleEndianValue = Double(Float(bitPattern: littleEndianBits))
+
+        func isValid(_ value: Double) -> Bool {
+            value.isFinite && value.magnitude < 100_000
+        }
+
+        let bigEndianValid = isValid(bigEndianValue)
+        let littleEndianValid = isValid(littleEndianValue)
+
+        switch (bigEndianValid, littleEndianValid) {
+        case (true, false):
+            return bigEndianValue
+        case (false, true):
+            return littleEndianValue
+        case (false, false):
+            return nil
+        case (true, true):
+            break
+        }
+
+        if let preferredRange = preferredFloatRange(for: key) {
+            let bigEndianPreferred = preferredRange.contains(bigEndianValue)
+            let littleEndianPreferred = preferredRange.contains(littleEndianValue)
+            if bigEndianPreferred != littleEndianPreferred {
+                return bigEndianPreferred ? bigEndianValue : littleEndianValue
+            }
+        }
+
+        func isSubnormalLike(_ value: Double) -> Bool {
+            value != 0 && value.magnitude < 1e-12
+        }
+
+        let bigEndianSubnormal = isSubnormalLike(bigEndianValue)
+        let littleEndianSubnormal = isSubnormalLike(littleEndianValue)
+        if bigEndianSubnormal != littleEndianSubnormal {
+            return bigEndianSubnormal ? littleEndianValue : bigEndianValue
+        }
+
+        func isCommonSensorMagnitude(_ value: Double) -> Bool {
+            value == 0 || (0.01...20_000).contains(value.magnitude)
+        }
+
+        let bigEndianCommon = isCommonSensorMagnitude(bigEndianValue)
+        let littleEndianCommon = isCommonSensorMagnitude(littleEndianValue)
+        if bigEndianCommon != littleEndianCommon {
+            return bigEndianCommon ? bigEndianValue : littleEndianValue
+        }
+
+        return bigEndianValue.magnitude >= littleEndianValue.magnitude ? bigEndianValue : littleEndianValue
+    }
+
+    private func preferredFloatRange(for key: String?) -> ClosedRange<Double>? {
+        guard let key, key.count == 4 else { return nil }
+
+        if key.hasPrefix("F"), ["Ac", "Mn", "Mx", "Tg"].contains(String(key.suffix(2))) {
+            return 100...10_000
         }
 
         return nil
