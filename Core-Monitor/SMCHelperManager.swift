@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Combine
 import Security
@@ -41,6 +42,10 @@ final class SMCHelperManager: ObservableObject {
 
     private var installedHelperPath: String {
         "/Library/PrivilegedHelperTools/\(helperLabel)"
+    }
+
+    private var installedLaunchDaemonPath: String {
+        "/Library/LaunchDaemons/\(helperLabel).plist"
     }
 
     // MARK: - Status
@@ -237,6 +242,108 @@ final class SMCHelperManager: ObservableObject {
         return false
     }
 
+    private func helperInstallationLooksOrphaned() -> Bool {
+        let installedHelperExists = fileManager.fileExists(atPath: installedHelperPath)
+        let installedLaunchDaemonExists = fileManager.fileExists(atPath: installedLaunchDaemonPath)
+
+        guard installedHelperExists || installedLaunchDaemonExists else {
+            return false
+        }
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+        process.arguments = ["print", "system/\(helperLabel)"]
+        process.standardOutput = Pipe()
+        process.standardError = Pipe()
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+        } catch {
+            return false
+        }
+
+        return Self.helperInstallAppearsOrphaned(
+            installedHelperExists: installedHelperExists,
+            installedLaunchDaemonExists: installedLaunchDaemonExists,
+            launchctlExitStatus: process.terminationStatus
+        )
+    }
+
+    private func removeOrphanedHelperInstallInteractively() -> String? {
+        let shellScript = Self.orphanedHelperCleanupShellScript(label: helperLabel)
+        let source = "do shell script \(Self.appleScriptStringLiteral(shellScript)) with administrator privileges"
+
+        guard let appleScript = NSAppleScript(source: source) else {
+            return "Could not prepare the stale helper cleanup script."
+        }
+
+        var errorInfo: NSDictionary?
+        _ = appleScript.executeAndReturnError(&errorInfo)
+
+        guard let errorInfo else {
+            return nil
+        }
+
+        return Self.administratorCleanupFailureMessage(errorInfo: errorInfo)
+    }
+
+    static func helperInstallAppearsOrphaned(
+        installedHelperExists: Bool,
+        installedLaunchDaemonExists: Bool,
+        launchctlExitStatus: Int32
+    ) -> Bool {
+        guard installedHelperExists || installedLaunchDaemonExists else {
+            return false
+        }
+
+        return launchctlExitStatus != 0
+    }
+
+    static func orphanedHelperCleanupShellScript(label: String) -> String {
+        let launchctlTarget = shellEscaped("system/\(label)")
+        let helperPath = shellEscaped("/Library/PrivilegedHelperTools/\(label)")
+        let launchDaemonPath = shellEscaped("/Library/LaunchDaemons/\(label).plist")
+        return "/bin/launchctl bootout \(launchctlTarget) >/dev/null 2>&1 || true; /bin/rm -f \(helperPath) \(launchDaemonPath)"
+    }
+
+    private nonisolated static func shouldAttemptOrphanedInstallCleanup(afterBlessFailureMessage message: String) -> Bool {
+        let normalized = message.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard normalized.isEmpty == false else { return false }
+
+        return normalized.contains("cferrordomainlaunchd")
+            || normalized.contains("launchd error")
+            || normalized.contains("launchd")
+    }
+
+    private nonisolated static func administratorCleanupFailureMessage(errorInfo: NSDictionary) -> String {
+        let errorNumber = errorInfo[NSAppleScript.errorNumber] as? Int
+        let errorMessage = (errorInfo[NSAppleScript.errorMessage] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if errorNumber == -128 {
+            return "Administrator approval was canceled while removing the stale privileged helper."
+        }
+
+        if let errorMessage, errorMessage.isEmpty == false {
+            return "Could not remove the stale privileged helper: \(errorMessage)"
+        }
+
+        return "Could not remove the stale privileged helper."
+    }
+
+    private nonisolated static func appleScriptStringLiteral(_ value: String) -> String {
+        let escaped = value
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+        return "\"\(escaped)\""
+    }
+
+    private nonisolated static func shellEscaped(_ value: String) -> String {
+        let escaped = value.replacingOccurrences(of: "'", with: "'\"'\"'")
+        return "'\(escaped)'"
+    }
+
     private func readValueViaHelper(key: String, timeout: TimeInterval) -> ConnectionResult<Double> {
         withHelperConnection(timeout: timeout, perform: { proxy, finish in
             proxy.readValue(key) { value, errorMessage in
@@ -367,7 +474,31 @@ final class SMCHelperManager: ObservableObject {
             completion(true, nil)
         } else {
             let message = (blessError?.takeRetainedValue().localizedDescription) ?? "SMJobBless failed."
-            completion(false, message)
+
+            guard forceReinstall,
+                  Self.shouldAttemptOrphanedInstallCleanup(afterBlessFailureMessage: message),
+                  helperInstallationLooksOrphaned() else {
+                completion(false, message)
+                return
+            }
+
+            if let cleanupFailureMessage = removeOrphanedHelperInstallInteractively() {
+                completion(false, cleanupFailureMessage)
+                return
+            }
+
+            refreshStatus()
+
+            var retryError: Unmanaged<CFError>?
+            let retriedBless = SMJobBless(kSMDomainSystemLaunchd, helperLabel as CFString, authRef, &retryError)
+            if retriedBless {
+                refreshStatus()
+                refreshDiagnostics()
+                completion(true, nil)
+            } else {
+                let retryMessage = (retryError?.takeRetainedValue().localizedDescription) ?? "SMJobBless failed."
+                completion(false, retryMessage)
+            }
         }
     }
 

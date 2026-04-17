@@ -110,4 +110,31 @@ final class HelperDiagnosticsReportTests: XCTestCase {
         XCTAssertTrue(report.recommendedActions.contains("Launch at login needs attention: Startup requires approval in System Settings → General → Login Items."))
         XCTAssertEqual(report.launchAtLogin.errorMessage, "Startup requires approval in System Settings → General → Login Items.")
     }
+
+    func testHelperInstallAppearsOrphanedWhenFilesExistButLaunchdServiceIsMissing() {
+        XCTAssertTrue(
+            SMCHelperManager.helperInstallAppearsOrphaned(
+                installedHelperExists: true,
+                installedLaunchDaemonExists: true,
+                launchctlExitStatus: 113
+            )
+        )
+    }
+
+    func testHelperInstallDoesNotAppearOrphanedWhenLaunchdServiceExists() {
+        XCTAssertFalse(
+            SMCHelperManager.helperInstallAppearsOrphaned(
+                installedHelperExists: true,
+                installedLaunchDaemonExists: true,
+                launchctlExitStatus: 0
+            )
+        )
+    }
+
+    func testOrphanedHelperCleanupScriptTargetsInstalledHelperArtifacts() {
+        let script = SMCHelperManager.orphanedHelperCleanupShellScript(label: "ventaphobia.smc-helper")
+
+        XCTAssertTrue(script.contains("/bin/launchctl bootout 'system/ventaphobia.smc-helper'"))
+        XCTAssertTrue(script.contains("/bin/rm -f '/Library/PrivilegedHelperTools/ventaphobia.smc-helper' '/Library/LaunchDaemons/ventaphobia.smc-helper.plist'"))
+    }
 }
