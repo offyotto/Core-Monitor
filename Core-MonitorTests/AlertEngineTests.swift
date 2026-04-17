@@ -298,8 +298,8 @@ final class AlertEngineTests: XCTestCase {
         XCTAssertNil(outcome.event?.context)
     }
 
-    func testAlertsDashboardStripPresentationHighlightsActiveAlerts() {
-        let presentation = AlertsDashboardStripPresentation(
+    func testNotificationStripPresentationHighlightsActiveNotifications() {
+        let presentation = NotificationStripPresentation(
             activeAlertCount: 2,
             authorizationStatus: .authorized,
             desktopNotificationsEnabled: true,
@@ -307,15 +307,15 @@ final class AlertEngineTests: XCTestCase {
             now: Date(timeIntervalSince1970: 10_000)
         )
 
-        XCTAssertEqual(presentation.detail, "2 active alerts")
+        XCTAssertEqual(presentation.detail, "2 active notifications")
         XCTAssertEqual(
             presentation.action,
-            .init(title: "Open Alerts", icon: "bell.badge", style: .prominent)
+            .init(title: "Open Notifications", icon: "bell.badge", style: .prominent)
         )
     }
 
-    func testAlertsDashboardStripPresentationRequestsSetupWhenNotificationsArePending() {
-        let presentation = AlertsDashboardStripPresentation(
+    func testNotificationStripPresentationRequestsSetupWhenNotificationsArePending() {
+        let presentation = NotificationStripPresentation(
             activeAlertCount: 0,
             authorizationStatus: .notDetermined,
             desktopNotificationsEnabled: true,
@@ -325,16 +325,16 @@ final class AlertEngineTests: XCTestCase {
 
         XCTAssertEqual(
             presentation.detail,
-            "Desktop notifications are not set up yet. In-app history already records every alert."
+            "Desktop notifications are not set up yet. In-app history already records every event."
         )
         XCTAssertEqual(
             presentation.action,
-            .init(title: "Set Up Alerts", icon: "bell.badge", style: .standard)
+            .init(title: "Set Up Notifications", icon: "bell.badge", style: .standard)
         )
     }
 
-    func testAlertsDashboardStripPresentationStaysQuietWhenSystemIsHealthy() {
-        let presentation = AlertsDashboardStripPresentation(
+    func testNotificationStripPresentationStaysQuietWhenSystemIsHealthy() {
+        let presentation = NotificationStripPresentation(
             activeAlertCount: 0,
             authorizationStatus: .authorized,
             desktopNotificationsEnabled: true,
@@ -344,14 +344,14 @@ final class AlertEngineTests: XCTestCase {
 
         XCTAssertEqual(
             presentation.detail,
-            "Alert thresholds and recent history stay available from the Alerts screen."
+            "Notification thresholds and recent history stay available from the notification screen."
         )
         XCTAssertNil(presentation.action)
     }
 
-    func testAlertsDashboardStripPresentationRoutesMutedSessionsToAlertSettings() {
+    func testNotificationStripPresentationRoutesMutedSessionsToSettings() {
         let now = Date(timeIntervalSince1970: 10_000)
-        let presentation = AlertsDashboardStripPresentation(
+        let presentation = NotificationStripPresentation(
             activeAlertCount: 0,
             authorizationStatus: .authorized,
             desktopNotificationsEnabled: true,
@@ -361,11 +361,11 @@ final class AlertEngineTests: XCTestCase {
 
         XCTAssertEqual(
             presentation.detail,
-            "Desktop notifications are muted for now. In-app history still records every alert."
+            "Desktop notifications are muted for now. In-app history still records every event."
         )
         XCTAssertEqual(
             presentation.action,
-            .init(title: "Alert Settings", icon: "bell.slash", style: .standard)
+            .init(title: "Notification Settings", icon: "bell.slash", style: .standard)
         )
     }
 
