@@ -16,6 +16,7 @@ struct NotificationStripPresentation: Equatable {
     let detail: String
     let action: Action?
 
+    @MainActor
     init(notificationManager: AlertManager) {
         self.init(
             activeAlertCount: notificationManager.activeAlerts.count,
