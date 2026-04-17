@@ -562,7 +562,7 @@
 				OTHER_LDFLAGS = (
 					"$(inherited)\n-sectcreate\n__TEXT\n__info_plist\n$(SRCROOT)/$(INFOPLIST_FILE)\n-sectcreate\n__TEXT\n__launchd_plist\n$(SRCROOT)/smc-helper/Launchd.plist",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = CoreSMC;
+					PRODUCT_BUNDLE_IDENTIFIER = "$(PRIVILEGED_HELPER_LABEL)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
