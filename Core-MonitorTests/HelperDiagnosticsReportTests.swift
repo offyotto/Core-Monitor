@@ -137,4 +137,20 @@ final class HelperDiagnosticsReportTests: XCTestCase {
         XCTAssertTrue(script.contains("/bin/launchctl bootout 'system/ventaphobia.smc-helper'"))
         XCTAssertTrue(script.contains("/bin/rm -f '/Library/PrivilegedHelperTools/ventaphobia.smc-helper' '/Library/LaunchDaemons/ventaphobia.smc-helper.plist'"))
     }
+
+    func testLaunchdBlessFailuresTriggerOrphanedCleanupRetry() {
+        XCTAssertTrue(
+            SMCHelperManager.shouldAttemptOrphanedInstallCleanup(
+                afterBlessFailureMessage: "The operation couldn't be completed. (CFErrorDomainLaunchd error 4.)"
+            )
+        )
+    }
+
+    func testNonLaunchdBlessFailuresSkipOrphanedCleanupRetry() {
+        XCTAssertFalse(
+            SMCHelperManager.shouldAttemptOrphanedInstallCleanup(
+                afterBlessFailureMessage: "This build is ad-hoc signed."
+            )
+        )
+    }
 }

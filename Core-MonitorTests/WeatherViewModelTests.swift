@@ -30,29 +30,37 @@ final class WeatherViewModelTests: XCTestCase {
         XCTAssertEqual(locationAccess.requestCurrentLocationCallCount, 0)
     }
 
-    func testRefreshNowShowsSignedBuildRequirementWhenWeatherKitCapabilityIsMissing() async {
+    func testRefreshNowUsesFallbackProviderWhenWeatherKitCapabilityIsMissing() async {
         let provider = RecordingWeatherProvider()
+        let fallbackProvider = RecordingWeatherProvider()
         let locationAccess = MockWeatherLocationAccess(status: .authorizedWhenInUse, currentLocation: nil)
         let viewModel = WeatherViewModel(
             provider: provider,
             locationAccess: locationAccess,
+            fallbackProvider: fallbackProvider,
             weatherCapabilityEnabled: { false }
         )
 
         await viewModel.refreshNow()
 
-        switch viewModel.state {
-        case .error(let message):
-            XCTAssertEqual(
-                message,
-                "Weather is unavailable in this build. Use a WeatherKit-enabled signature to turn it on."
-            )
-        default:
-            XCTFail("Expected a signed-build requirement error state.")
+        XCTAssertNil(provider.requestedLocation)
+
+        guard let requestedLocation = fallbackProvider.requestedLocation else {
+            return XCTFail("Expected the fallback weather provider to receive a fallback location.")
         }
 
-        XCTAssertNil(provider.requestedLocation)
+        XCTAssertEqual(requestedLocation.coordinate.latitude, 37.3346, accuracy: 0.0001)
+        XCTAssertEqual(requestedLocation.coordinate.longitude, -122.0090, accuracy: 0.0001)
+
+        switch viewModel.state {
+        case .loaded(let snapshot):
+            XCTAssertEqual(snapshot.locationName, "Recorded")
+        default:
+            XCTFail("Expected a loaded fallback weather snapshot.")
+        }
+
         XCTAssertEqual(locationAccess.refreshCallCount, 0)
+        XCTAssertEqual(locationAccess.requestCurrentLocationCallCount, 0)
     }
 
     func testRefreshNowRequestsLiveLocationBeforeUsingFallback() async {

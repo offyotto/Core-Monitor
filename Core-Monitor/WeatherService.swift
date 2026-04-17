@@ -447,7 +447,7 @@ final class WeatherViewModel: ObservableObject {
 
     func refreshNow() async {
         guard weatherCapabilityEnabled() else {
-            state = .error("Weather is unavailable in this build. Use a WeatherKit-enabled signature to turn it on.")
+            await refreshFallbackWeather()
             return
         }
 
@@ -472,9 +472,7 @@ final class WeatherViewModel: ObservableObject {
         state = .loading
 
         do {
-            let snapshot = try await provider.currentWeather(for: location)
-            lastSnapshot = snapshot
-            state = .loaded(snapshot)
+            try await loadWeatherSnapshot(using: provider, location: location)
         } catch {
             if let lastSnapshot {
                 state = .loaded(lastSnapshot)
@@ -482,9 +480,11 @@ final class WeatherViewModel: ObservableObject {
             }
 
             if let fallbackProvider,
-               let fallbackSnapshot = try? await fallbackProvider.currentWeather(for: Self.fallbackLocation) {
-                lastSnapshot = fallbackSnapshot
-                state = .loaded(fallbackSnapshot)
+               let fallbackSnapshot = try? await fetchWeatherSnapshot(
+                    using: fallbackProvider,
+                    location: Self.fallbackLocation
+               ) {
+                applyLoadedSnapshot(fallbackSnapshot)
                 return
             }
 
@@ -504,5 +504,41 @@ final class WeatherViewModel: ObservableObject {
         default:
             return underlyingError.localizedDescription
         }
+    }
+
+    private func refreshFallbackWeather() async {
+        state = .loading
+
+        do {
+            let snapshot = try await fetchWeatherSnapshot(
+                using: fallbackProvider ?? provider,
+                location: Self.fallbackLocation
+            )
+            applyLoadedSnapshot(snapshot)
+        } catch {
+            if let lastSnapshot {
+                state = .loaded(lastSnapshot)
+                return
+            }
+
+            state = .error("Weather fallback is unavailable right now.")
+        }
+    }
+
+    private func loadWeatherSnapshot(using provider: WeatherProviding, location: CLLocation) async throws {
+        let snapshot = try await fetchWeatherSnapshot(using: provider, location: location)
+        applyLoadedSnapshot(snapshot)
+    }
+
+    private func fetchWeatherSnapshot(
+        using provider: WeatherProviding,
+        location: CLLocation
+    ) async throws -> WeatherSnapshot {
+        try await provider.currentWeather(for: location)
+    }
+
+    private func applyLoadedSnapshot(_ snapshot: WeatherSnapshot) {
+        lastSnapshot = snapshot
+        state = .loaded(snapshot)
     }
 }
