@@ -9,8 +9,29 @@ fi
 ZIP_PATH="$1"
 APP_PATH="$2"
 PROFILE_NAME="${NOTARYTOOL_PROFILE:-core-monitor-notary}"
+APP_STORE_CONNECT_KEY_PATH="${APP_STORE_CONNECT_KEY_PATH:-}"
 
-if [[ -z "${NOTARYTOOL_PROFILE:-}" ]]; then
+submit_with_api_key() {
+  local key_path="$1"
+  : "${APP_STORE_CONNECT_KEY_ID:?Set APP_STORE_CONNECT_KEY_ID when using App Store Connect API key notarization}"
+  : "${APP_STORE_CONNECT_ISSUER_ID:?Set APP_STORE_CONNECT_ISSUER_ID when using App Store Connect API key notarization}"
+
+  xcrun notarytool submit "${ZIP_PATH}" \
+    --key "${key_path}" \
+    --key-id "${APP_STORE_CONNECT_KEY_ID}" \
+    --issuer "${APP_STORE_CONNECT_ISSUER_ID}" \
+    --wait
+}
+
+if [[ -n "${APP_STORE_CONNECT_API_KEY_BASE64:-}" ]]; then
+  APP_STORE_CONNECT_KEY_PATH="${RUNNER_TEMP:-/tmp}/AuthKey_${APP_STORE_CONNECT_KEY_ID:-api}.p8"
+  echo -n "${APP_STORE_CONNECT_API_KEY_BASE64}" | base64 -D > "${APP_STORE_CONNECT_KEY_PATH}"
+  submit_with_api_key "${APP_STORE_CONNECT_KEY_PATH}"
+elif [[ -n "${APP_STORE_CONNECT_KEY_PATH}" ]]; then
+  submit_with_api_key "${APP_STORE_CONNECT_KEY_PATH}"
+elif xcrun notarytool history --keychain-profile "${PROFILE_NAME}" >/dev/null 2>&1; then
+  xcrun notarytool submit "${ZIP_PATH}" --keychain-profile "${PROFILE_NAME}" --wait
+elif [[ -z "${NOTARYTOOL_PROFILE:-}" ]]; then
   : "${APPLE_ID:?Set APPLE_ID or NOTARYTOOL_PROFILE}"
   : "${APPLE_APP_SPECIFIC_PASSWORD:?Set APPLE_APP_SPECIFIC_PASSWORD or NOTARYTOOL_PROFILE}"
   : "${APPLE_TEAM_ID:?Set APPLE_TEAM_ID or NOTARYTOOL_PROFILE}"
@@ -19,9 +40,12 @@ if [[ -z "${NOTARYTOOL_PROFILE:-}" ]]; then
     --apple-id "${APPLE_ID}" \
     --team-id "${APPLE_TEAM_ID}" \
     --password "${APPLE_APP_SPECIFIC_PASSWORD}"
+
+  xcrun notarytool submit "${ZIP_PATH}" --keychain-profile "${PROFILE_NAME}" --wait
+else
+  xcrun notarytool submit "${ZIP_PATH}" --keychain-profile "${PROFILE_NAME}" --wait
 fi
 
-xcrun notarytool submit "${ZIP_PATH}" --keychain-profile "${PROFILE_NAME}" --wait
 xcrun stapler staple "${APP_PATH}"
 
 rm -f "${ZIP_PATH}"

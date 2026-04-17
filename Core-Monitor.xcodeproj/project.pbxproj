@@ -263,7 +263,7 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/smc-helper",
+				"$(BUILT_PRODUCTS_DIR)/$(PRIVILEGED_HELPER_LABEL)",
 			);
 			name = "Embed Privileged Helper";
 			outputFileListPaths = (
@@ -273,7 +273,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\nHELPER_SRC=${BUILT_PRODUCTS_DIR}/smc-helper\nHELPER_DST=${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Library/LaunchServices/${PRIVILEGED_HELPER_LABEL}\nmkdir -p $(dirname $HELPER_DST)\ncp -f $HELPER_SRC $HELPER_DST\n";
+			shellScript = "set -e\nHELPER_SRC=${BUILT_PRODUCTS_DIR}/${PRIVILEGED_HELPER_LABEL}\nHELPER_DST=${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Library/LaunchServices/${PRIVILEGED_HELPER_LABEL}\nmkdir -p $(dirname $HELPER_DST)\ncp -f $HELPER_SRC $HELPER_DST\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -456,7 +456,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 14040;
+				CURRENT_PROJECT_VERSION = 14050;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 6VDP675K4L;
 				ENABLE_APP_SANDBOX = NO;
@@ -473,7 +473,7 @@
 					"@executable_path/../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MARKETING_VERSION = 14.0.4;
+				MARKETING_VERSION = 14.0.5;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "CoreTools.Core-Monitor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -502,10 +502,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				AUTOMATION_APPLE_EVENTS = NO;
-				CODE_SIGN_ENTITLEMENTS = "Core-Monitor.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Core-Monitor-WeatherKit.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 14040;
+				CURRENT_PROJECT_VERSION = 14050;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 6VDP675K4L;
 				ENABLE_APP_SANDBOX = NO;
@@ -522,7 +522,7 @@
 					"@executable_path/../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MARKETING_VERSION = 14.0.4;
+				MARKETING_VERSION = 14.0.5;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(CORE_MONITOR_APP_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -563,7 +563,7 @@
 					"$(inherited)\n-sectcreate\n__TEXT\n__info_plist\n$(SRCROOT)/$(INFOPLIST_FILE)\n-sectcreate\n__TEXT\n__launchd_plist\n$(SRCROOT)/smc-helper/Launchd.plist",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRIVILEGED_HELPER_LABEL)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "$(PRIVILEGED_HELPER_LABEL)";
 				SKIP_INSTALL = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
@@ -589,7 +589,7 @@
 					"$(inherited)\n-sectcreate\n__TEXT\n__info_plist\n$(SRCROOT)/$(INFOPLIST_FILE)\n-sectcreate\n__TEXT\n__launchd_plist\n$(SRCROOT)/smc-helper/Launchd.plist",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRIVILEGED_HELPER_LABEL)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "$(PRIVILEGED_HELPER_LABEL)";
 				SKIP_INSTALL = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;

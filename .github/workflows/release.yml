@@ -70,7 +70,32 @@ jobs:
           security list-keychains -d user -s "${KEYCHAIN_PATH}" $(security list-keychains -d user | tr -d '"')
           security set-key-partition-list -S apple-tool:,apple: -s -k "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}"
 
+      - name: Install WeatherKit provisioning profile
+        env:
+          WEATHERKIT_PROVISIONING_PROFILE_BASE64: ${{ secrets.WEATHERKIT_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          if [[ -z "${WEATHERKIT_PROVISIONING_PROFILE_BASE64}" ]]; then
+            echo "Missing signing secret. Configure WEATHERKIT_PROVISIONING_PROFILE_BASE64." >&2
+            exit 1
+          fi
+
+          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          PROFILE_PATH="$RUNNER_TEMP/core-monitor-weatherkit.provisionprofile"
+          PROFILE_PLIST="$RUNNER_TEMP/core-monitor-weatherkit.plist"
+
+          mkdir -p "${PROFILE_DIR}"
+          echo -n "${WEATHERKIT_PROVISIONING_PROFILE_BASE64}" | base64 -D > "${PROFILE_PATH}"
+          security cms -D -i "${PROFILE_PATH}" > "${PROFILE_PLIST}"
+
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" "${PROFILE_PLIST}")
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" "${PROFILE_PLIST}")
+
+          cp "${PROFILE_PATH}" "${PROFILE_DIR}/${PROFILE_UUID}.provisionprofile"
+          echo "RELEASE_PROVISIONING_PROFILE_SPECIFIER=${PROFILE_NAME}" >> "${GITHUB_ENV}"
+
       - name: Build release archive
+        env:
+          RELEASE_PROVISIONING_PROFILE_SPECIFIER: ${{ env.RELEASE_PROVISIONING_PROFILE_SPECIFIER }}
         run: ./scripts/release/build_release.sh
 
       - name: Notarize and staple
@@ -79,6 +104,9 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           NOTARYTOOL_PROFILE: ${{ secrets.NOTARYTOOL_PROFILE }}
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: ./scripts/release/notarize_release.sh build/release/Core-Monitor.app.zip build/release/export/Core-Monitor.app
 
       - name: Collect release metadata

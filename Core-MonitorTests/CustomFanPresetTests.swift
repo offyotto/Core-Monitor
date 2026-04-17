@@ -193,6 +193,12 @@ final class CustomFanPresetTests: XCTestCase {
         XCTAssertEqual(FanControlMode.quickModes.last, .automatic)
     }
 
+    func testSystemAutomaticHandoffOnlyRunsAfterManagedWrite() {
+        XCTAssertFalse(FanController.shouldRequestSystemAutomaticHandoff(lastAppliedSpeed: -1))
+        XCTAssertFalse(FanController.shouldRequestSystemAutomaticHandoff(lastAppliedSpeed: 0))
+        XCTAssertTrue(FanController.shouldRequestSystemAutomaticHandoff(lastAppliedSpeed: 1800))
+    }
+
     func testSilentCanonicalizesToSystemAutomatic() {
         XCTAssertEqual(FanControlMode.silent.canonicalMode, .automatic)
         XCTAssertFalse(FanControlMode.silent.requiresPrivilegedHelper)
@@ -276,6 +282,11 @@ final class CustomFanPresetTests: XCTestCase {
         )
         let silent = MenuBarStatusSummary.helperSummary(
             for: .silent,
+            connectionState: .reachable,
+            isInstalled: true
+        )
+        let repairNeeded = MenuBarStatusSummary.helperSummary(
+            for: .silent,
             connectionState: .unreachable,
             isInstalled: true
         )
@@ -284,6 +295,8 @@ final class CustomFanPresetTests: XCTestCase {
         XCTAssertEqual(automatic.tone, .neutral)
         XCTAssertEqual(silent.label, "Helper Optional")
         XCTAssertEqual(silent.tone, .neutral)
+        XCTAssertEqual(repairNeeded.label, "Helper Attention")
+        XCTAssertEqual(repairNeeded.tone, .critical)
     }
 
     func testMenuBarStatusSummaryKeepsManagedModesExplicitAboutHelperProblems() {
