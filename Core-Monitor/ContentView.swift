@@ -1082,7 +1082,7 @@ private struct HelperDiagnosticsSupportCard: View {
         exportMessage = nil
         if helperManager.isInstalled {
             if helperManager.connectionState == .unreachable {
-                helperManager.installFromApp()
+                helperManager.installFromApp(forceReinstall: true)
             } else {
                 helperManager.refreshStatus()
                 helperManager.refreshDiagnostics()

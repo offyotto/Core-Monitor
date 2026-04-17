@@ -429,7 +429,7 @@ private struct WelcomeGuideSheet: View {
     }
 
     private func installHelperIfNeeded() {
-        helperManager.installFromApp()
+        helperManager.installFromApp(forceReinstall: helperManager.connectionState == .unreachable)
     }
 
     private func applyBalancedPreset() {
@@ -558,7 +558,7 @@ private struct WelcomeGuideSheet: View {
                 tone: .caution,
                 badge: "Unavailable",
                 detail: helperManager.statusMessage ?? "The helper is installed but not responding right now.",
-                actionTitle: "Recheck"
+                actionTitle: "Reinstall Helper"
             )
 
         case .missing:
@@ -749,7 +749,9 @@ private struct WelcomeGuideReadinessPanel: View {
                 WelcomeGuideChecklistRow(status: loginStatus, action: performLaunchAtLoginAction)
                 WelcomeGuideChecklistRow(
                     status: helperStatus,
-                    action: helperStatus.actionTitle == "Install Helper" ? installHelper : refreshHelperDiagnostics
+                    action: helperStatus.actionTitle == "Install Helper" || helperStatus.actionTitle == "Reinstall Helper"
+                        ? installHelper
+                        : refreshHelperDiagnostics
                 )
             }
 

@@ -99,7 +99,7 @@ final class SMCHelperManager: ObservableObject {
         }
 
         hasAttemptedBlessInstall = true
-        let didInstall = attemptPrivilegedInstall()
+        let didInstall = attemptPrivilegedInstall(forceReinstall: helperExists && connectionState == .unreachable)
         refreshStatus()
         if didInstall && fileManager.fileExists(atPath: installedHelperPath) {
             hasAttemptedBlessInstall = false
@@ -164,10 +164,10 @@ final class SMCHelperManager: ObservableObject {
 
     // MARK: - Execution Strategies
 
-    private func attemptPrivilegedInstall() -> Bool {
+    private func attemptPrivilegedInstall(forceReinstall: Bool = false) -> Bool {
         var didInstall = false
         var installMessage: String?
-        installBundledHelper { success, message in
+        installBundledHelper(forceReinstall: forceReinstall) { success, message in
             didInstall = success
             installMessage = message
         }
@@ -241,15 +241,31 @@ final class SMCHelperManager: ObservableObject {
 
     // MARK: - Helper Installation
 
-    func installBundledHelper(completion: @escaping (Bool, String?) -> Void) {
+    func installBundledHelper(forceReinstall: Bool = false, completion: @escaping (Bool, String?) -> Void) {
         let flags: AuthorizationFlags = [.interactionAllowed, .extendRights, .preAuthorize]
 
         var authRef: AuthorizationRef?
-        let authStatus: OSStatus = kSMRightBlessPrivilegedHelper.withCString { rightName in
-            var authItem = AuthorizationItem(name: rightName, valueLength: 0, value: nil, flags: 0)
-            return withUnsafeMutablePointer(to: &authItem) { itemPointer in
-                var authRights = AuthorizationRights(count: 1, items: itemPointer)
-                return AuthorizationCreate(&authRights, nil, flags, &authRef)
+        let authStatus: OSStatus = kSMRightBlessPrivilegedHelper.withCString { blessRightName in
+            if forceReinstall {
+                return kSMRightModifySystemDaemons.withCString { removeRightName in
+                    var authItems = [
+                        AuthorizationItem(name: blessRightName, valueLength: 0, value: nil, flags: 0),
+                        AuthorizationItem(name: removeRightName, valueLength: 0, value: nil, flags: 0)
+                    ]
+                    return authItems.withUnsafeMutableBufferPointer { buffer in
+                        guard let itemPointer = buffer.baseAddress else {
+                            return errAuthorizationInternal
+                        }
+                        var authRights = AuthorizationRights(count: 2, items: itemPointer)
+                        return AuthorizationCreate(&authRights, nil, flags, &authRef)
+                    }
+                }
+            } else {
+                var authItem = AuthorizationItem(name: blessRightName, valueLength: 0, value: nil, flags: 0)
+                return withUnsafeMutablePointer(to: &authItem) { itemPointer in
+                    var authRights = AuthorizationRights(count: 1, items: itemPointer)
+                    return AuthorizationCreate(&authRights, nil, flags, &authRef)
+                }
             }
         }
 
@@ -258,6 +274,22 @@ final class SMCHelperManager: ObservableObject {
             return
         }
         defer { AuthorizationFree(authRef, []) }
+
+        if forceReinstall {
+            // Tear down stale launchd state before bootstrapping the fresh helper.
+            var removeError: Unmanaged<CFError>?
+            let removed = SMJobRemove(kSMDomainSystemLaunchd, helperLabel as CFString, authRef, true, &removeError)
+            if removed == false, let removeError {
+                let nsError = removeError.takeRetainedValue() as Error as NSError
+                let isMissingJob = nsError.domain == kSMErrorDomainLaunchd as String
+                    && nsError.code == Int(kSMErrorJobNotFound)
+                if !isMissingJob {
+                    completion(false, nsError.localizedDescription)
+                    return
+                }
+            }
+            refreshStatus()
+        }
 
         var blessError: Unmanaged<CFError>?
         let blessed = SMJobBless(kSMDomainSystemLaunchd, helperLabel as CFString, authRef, &blessError)
@@ -271,17 +303,19 @@ final class SMCHelperManager: ObservableObject {
         }
     }
 
-    func installFromApp() {
-        installBundledHelper { [weak self] success, message in
+    func installFromApp(forceReinstall: Bool = false) {
+        installBundledHelper(forceReinstall: forceReinstall) { [weak self] success, message in
             guard let self else { return }
             if success {
                 hasAttemptedBlessInstall = false
                 refreshStatus()
-                statusMessage = "Privileged helper installed. Fan control is ready."
+                statusMessage = forceReinstall
+                    ? "Privileged helper reinstalled from this app build. Fan control is ready."
+                    : "Privileged helper installed. Fan control is ready."
                 refreshDiagnostics()
             } else {
                 refreshStatus()
-                statusMessage = message ?? "Failed to install privileged helper."
+                statusMessage = message ?? (forceReinstall ? "Failed to reinstall privileged helper." : "Failed to install privileged helper.")
             }
         }
     }
