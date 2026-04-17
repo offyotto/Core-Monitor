@@ -2,6 +2,9 @@ import Foundation
 import IOKit
 import Security
 
+// Apple Silicon fan-control mode detection and Ftst unlock behavior are based on
+// the MIT-licensed research implementation from agoodkind/macos-smc-fan.
+
 private typealias SMCBytes = (
     UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
     UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
@@ -45,6 +48,11 @@ private struct SMCParamStruct {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     )
+}
+
+private struct SMCControlMetadata {
+    let modeKeyTemplate: String
+    let hasForceTestKey: Bool
 }
 
 private final class SMCController {
@@ -104,11 +112,20 @@ private final class SMCController {
 
     func setFanAuto(_ fanID: Int) throws {
         let modeKey = try modeKey(for: fanID)
+        let otherFansStillManual = manualFanCount(excluding: fanID)
         try writeValue(key: modeKey, value: 0)
         try? writeValue(key: String(format: "F%dTg", fanID), value: 0)
-        if hasForceTest() {
+        if hasForceTest(), otherFansStillManual == 0, isForceTestEnabled() {
             try? writeValue(key: "Ftst", value: 0)
         }
+    }
+
+    func controlMetadata() -> SMCControlMetadata {
+        detectHardwareCapabilities()
+        return SMCControlMetadata(
+            modeKeyTemplate: detectedModeKeyTemplate ?? "F%dMd",
+            hasForceTestKey: hasForceTestKey == true
+        )
     }
 
     func readValue(_ key: String) throws -> Double {
@@ -233,6 +250,46 @@ private final class SMCController {
     private func hasForceTest() -> Bool {
         detectHardwareCapabilities()
         return hasForceTestKey == true
+    }
+
+    private func isForceTestEnabled() -> Bool {
+        guard hasForceTest() else { return false }
+        guard let value = try? readValue("Ftst") else { return false }
+        return value.rounded() != 0
+    }
+
+    private func manualFanCount(excluding excludedFanID: Int) -> Int {
+        let fanCount = resolvedFanCount()
+        guard fanCount > 0 else { return 0 }
+
+        var manualCount = 0
+        for fanID in 0..<fanCount where fanID != excludedFanID {
+            guard let modeKey = try? modeKey(for: fanID),
+                  let value = try? readValue(modeKey) else { continue }
+            if Int(value.rounded()) == 1 {
+                manualCount += 1
+            }
+        }
+
+        return manualCount
+    }
+
+    private func resolvedFanCount() -> Int {
+        if let directCount = try? readValue("FNum"),
+           Int(directCount.rounded()) > 0 {
+            return Int(directCount.rounded())
+        }
+
+        for fanID in 0..<12 {
+            let actualKey = String(format: "F%dAc", fanID)
+            let minKey = String(format: "F%dMn", fanID)
+            let maxKey = String(format: "F%dMx", fanID)
+            if keyExists(actualKey) || keyExists(minKey) || keyExists(maxKey) {
+                return fanID + 1
+            }
+        }
+
+        return 0
     }
 
     private func unlockFansIfNeeded(for fanID: Int) throws {
@@ -499,7 +556,7 @@ private final class HelperClientValidator {
     }
 }
 
-private let helperMachServiceName = "ventaphobia.smc-helper"
+private let helperMachServiceName = Bundle.main.bundleIdentifier ?? "ventaphobia.smc-helper"
 
 private final class SMCHelperXPCService: NSObject, NSXPCListenerDelegate, SMCHelperXPCProtocol {
     private let controller = SMCController()
@@ -553,6 +610,20 @@ private final class SMCHelperXPCService: NSObject, NSXPCListenerDelegate, SMCHel
             reply(NSNumber(value: value), nil)
         } catch {
             reply(nil, error.localizedDescription as NSString)
+        }
+    }
+
+    func readControlMetadata(withReply reply: @escaping (NSString?, NSNumber?, NSString?) -> Void) {
+        do {
+            try controller.open()
+            let metadata = controller.controlMetadata()
+            reply(
+                metadata.modeKeyTemplate as NSString,
+                NSNumber(value: metadata.hasForceTestKey),
+                nil
+            )
+        } catch {
+            reply(nil, nil, error.localizedDescription as NSString)
         }
     }
 }

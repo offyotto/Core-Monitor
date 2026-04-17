@@ -375,6 +375,10 @@ enum CustomPresetSaveOutcome {
 final class FanController: ObservableObject {
     static let defaultMode: FanControlMode = .automatic
 
+    static func shouldRequestSystemAutomaticHandoff(lastAppliedSpeed: Int) -> Bool {
+        lastAppliedSpeed > 0
+    }
+
     @Published var mode: FanControlMode = FanController.defaultMode
     @Published var manualSpeed: Int = 2200
     @Published var autoAggressiveness: Double = 1.5
@@ -706,8 +710,12 @@ final class FanController: ObservableObject {
 
         switch mode {
         case .automatic, .silent:
-            resetToSystemAutomatic()
-            statusMessage = "System automatic control restored"
+            if Self.shouldRequestSystemAutomaticHandoff(lastAppliedSpeed: lastAppliedSpeed) {
+                resetToSystemAutomatic()
+            } else {
+                statusMessage = passiveStatusMessage(for: mode)
+            }
+            lastAppliedSpeed = -1
         case .manual:
             applyFanSpeed(manualSpeed)
             lastAppliedSpeed = manualSpeed
@@ -730,11 +738,12 @@ final class FanController: ObservableObject {
             statusMessage = "Manual: \(manualSpeed) RPM"
 
         case .automatic, .silent:
-            if lastAppliedSpeed != -1 {
+            if Self.shouldRequestSystemAutomaticHandoff(lastAppliedSpeed: lastAppliedSpeed) {
                 resetToSystemAutomatic()
+            } else {
+                statusMessage = "System automatic mode is active"
             }
             lastAppliedSpeed = -1
-            statusMessage = "System automatic mode is active"
 
         case .balanced:
             applyFixedPercentProfile(0.60, label: "Balanced")

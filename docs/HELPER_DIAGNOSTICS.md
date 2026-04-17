@@ -27,6 +27,9 @@ The app reveals the saved file in Finder after export.
 - app signing identity details relevant to helper trust
 - bundled helper path and installed helper path
 - helper install state and current connectivity state
+- the Apple Silicon fan-control backend currently wired into the helper
+- detected mode-key format (`F%dMd` vs `F%dmd`) when the helper can report it
+- whether the `Ftst` unlock path exists on the current Mac
 - current helper status message, if one exists
 - launch-at-login state and approval errors
 - menu bar preset title and enabled-item count

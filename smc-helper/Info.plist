@@ -2,21 +2,26 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!--
+	 Keep these helper identity fields concrete. This plist is embedded into the
+	 helper binary via -sectcreate, so build-setting placeholders like
+	 $(EXECUTABLE_NAME) are not expanded here and will break SMJobBless installs.
+	-->
 	<key>CFBundleExecutable</key>
-	<string>smc-helper</string>
+	<string>ventaphobia.smc-helper</string>
 	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<string>ventaphobia.smc-helper</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>smc-helper</string>
+	<string>ventaphobia.smc-helper</string>
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>SMAuthorizedClients</key>
 	<array>
-		<string>identifier "CoreTools.Core-Monitor" and anchor apple generic and certificate leaf[subject.OU] = "6VDP675K4L"</string>
+		<string>anchor apple generic and identifier "CoreTools.Core-Monitor" and certificate leaf[subject.OU] = "6VDP675K4L"</string>
 	</array>
 </dict>
 </plist>

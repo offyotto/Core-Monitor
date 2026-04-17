@@ -19,6 +19,9 @@ final class HelperDiagnosticsReportTests: XCTestCase {
             installedHelperExists: false,
             connectionState: .missing,
             helperStatusMessage: nil,
+            fanBackendRepository: "agoodkind/macos-smc-fan",
+            fanModeKeyFormat: nil,
+            fanForceTestAvailable: nil,
             launchAtLoginEnabled: false,
             launchAtLoginError: nil,
             enabledMenuBarItemCount: 1,
@@ -57,6 +60,9 @@ final class HelperDiagnosticsReportTests: XCTestCase {
             installedHelperExists: true,
             connectionState: .unreachable,
             helperStatusMessage: "The helper rejected this build.",
+            fanBackendRepository: "agoodkind/macos-smc-fan",
+            fanModeKeyFormat: "F%dMd",
+            fanForceTestAvailable: true,
             launchAtLoginEnabled: true,
             launchAtLoginError: nil,
             enabledMenuBarItemCount: 3,
@@ -93,6 +99,9 @@ final class HelperDiagnosticsReportTests: XCTestCase {
             installedHelperExists: true,
             connectionState: .reachable,
             helperStatusMessage: nil,
+            fanBackendRepository: "agoodkind/macos-smc-fan",
+            fanModeKeyFormat: "F%dmd",
+            fanForceTestAvailable: false,
             launchAtLoginEnabled: false,
             launchAtLoginError: "Startup requires approval in System Settings → General → Login Items.",
             enabledMenuBarItemCount: 3,
@@ -117,6 +126,16 @@ final class HelperDiagnosticsReportTests: XCTestCase {
                 installedHelperExists: true,
                 installedLaunchDaemonExists: true,
                 launchctlExitStatus: 113
+            )
+        )
+    }
+
+    func testHelperInstallAppearsOrphanedWhenLaunchdPlistExistsWithoutHelperBinary() {
+        XCTAssertTrue(
+            SMCHelperManager.helperInstallAppearsOrphaned(
+                installedHelperExists: false,
+                installedLaunchDaemonExists: true,
+                launchctlExitStatus: 0
             )
         )
     }
@@ -152,5 +171,82 @@ final class HelperDiagnosticsReportTests: XCTestCase {
                 afterBlessFailureMessage: "This build is ad-hoc signed."
             )
         )
+    }
+
+    func testMakeReportCallsOutIncompleteHelperInstall() {
+        let context = HelperDiagnosticsContext(
+            generatedAt: Date(timeIntervalSince1970: 4_000),
+            appBundleIdentifier: "CoreTools.Core-Monitor",
+            appVersion: "14.0.4",
+            appBuild: "14040",
+            macOSVersion: "macOS 15.5",
+            hostModelIdentifier: "Mac16,7",
+            hostModelName: "MacBook Pro (16-inch, 2024, M4 Pro/Max)",
+            chipName: "Apple M4 Pro",
+            helperLabel: "ventaphobia.smc-helper",
+            bundledHelperPath: "/Applications/Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper",
+            bundledHelperExists: true,
+            installedHelperPath: "/Library/PrivilegedHelperTools/ventaphobia.smc-helper",
+            installedHelperExists: false,
+            connectionState: .unreachable,
+            helperStatusMessage: "The privileged helper install is incomplete.",
+            fanBackendRepository: "agoodkind/macos-smc-fan",
+            fanModeKeyFormat: nil,
+            fanForceTestAvailable: nil,
+            launchAtLoginEnabled: true,
+            launchAtLoginError: nil,
+            enabledMenuBarItemCount: 2,
+            menuBarPresetTitle: "Balanced",
+            signingInfo: HelperDiagnosticsSigningInfo(
+                signedIdentifier: "CoreTools.Core-Monitor",
+                teamIdentifier: "TEAM1234",
+                isAdHocOrUnsigned: false,
+                issue: nil
+            )
+        )
+
+        let report = HelperDiagnosticsExporter.makeReport(from: context)
+
+        XCTAssertEqual(report.summary, "Helper install is incomplete or stale, so this app cannot trust it yet.")
+        XCTAssertEqual(report.recommendedActions.first, "Repair the privileged helper from this exact app build so the stale or incomplete install can be replaced cleanly.")
+    }
+
+    func testMakeReportCarriesAppleSiliconFanBackendMetadata() {
+        let context = HelperDiagnosticsContext(
+            generatedAt: Date(timeIntervalSince1970: 5_000),
+            appBundleIdentifier: "CoreTools.Core-Monitor",
+            appVersion: "14.0.4",
+            appBuild: "14040",
+            macOSVersion: "macOS 15.5",
+            hostModelIdentifier: "Mac16,6",
+            hostModelName: "MacBook Pro (14-inch, 2024, M4 Max)",
+            chipName: "Apple M4 Max",
+            helperLabel: "ventaphobia.smc-helper",
+            bundledHelperPath: "/Applications/Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper",
+            bundledHelperExists: true,
+            installedHelperPath: "/Library/PrivilegedHelperTools/ventaphobia.smc-helper",
+            installedHelperExists: true,
+            connectionState: .reachable,
+            helperStatusMessage: nil,
+            fanBackendRepository: "agoodkind/macos-smc-fan",
+            fanModeKeyFormat: "F%dMd",
+            fanForceTestAvailable: true,
+            launchAtLoginEnabled: true,
+            launchAtLoginError: nil,
+            enabledMenuBarItemCount: 3,
+            menuBarPresetTitle: "Balanced",
+            signingInfo: HelperDiagnosticsSigningInfo(
+                signedIdentifier: "CoreTools.Core-Monitor",
+                teamIdentifier: "TEAM1234",
+                isAdHocOrUnsigned: false,
+                issue: nil
+            )
+        )
+
+        let report = HelperDiagnosticsExporter.makeReport(from: context)
+
+        XCTAssertEqual(report.helper.backendRepository, "agoodkind/macos-smc-fan")
+        XCTAssertEqual(report.helper.modeKeyFormat, "F%dMd")
+        XCTAssertEqual(report.helper.forceTestAvailable, true)
     }
 }

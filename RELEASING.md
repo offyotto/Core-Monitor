@@ -20,12 +20,17 @@ The release workflow expects these repository or organization secrets:
 - `BUILD_CERTIFICATE_BASE64`: base64-encoded Developer ID Application `.p12`
 - `P12_PASSWORD`: password for the `.p12`
 - `KEYCHAIN_PASSWORD`: temporary keychain password used on the runner
-- `APPLE_TEAM_ID`: Apple Developer team id
-- Either `NOTARYTOOL_PROFILE` or both:
+- `WEATHERKIT_PROVISIONING_PROFILE_BASE64`: base64-encoded `Mac Team Direct Provisioning Profile: CoreTools.Core-Monitor`
+- `APPLE_TEAM_ID`: Apple Developer team id when using Apple ID notarization
+- For notarization, configure one of these:
+- `APP_STORE_CONNECT_API_KEY_BASE64`
+- `APP_STORE_CONNECT_KEY_ID`
+- `APP_STORE_CONNECT_ISSUER_ID`
+- Or both:
 - `APPLE_ID`
 - `APPLE_APP_SPECIFIC_PASSWORD`
 
-If you already use `notarytool store-credentials` locally, you can mirror that profile name into `NOTARYTOOL_PROFILE` on the runner. Otherwise the workflow will create a temporary profile from `APPLE_ID` and the app-specific password.
+Do not rely on a bare `NOTARYTOOL_PROFILE` secret on GitHub Actions. A profile name alone does not recreate the runner keychain entry. Either provide Apple ID credentials so the workflow can create the profile on the runner, or provide an App Store Connect API key.
 
 ## Standard release flow
 
@@ -65,8 +70,9 @@ Signed archive + zip:
 ```
 
 `build_release.sh` forces a manual `Developer ID Application` signing identity for the archive step so the release path does not depend on whichever automatic-signing identity Xcode happens to prefer locally.
+`build_release.sh` now archives with automatic signing and then performs a `developer-id` export so the release artifact keeps the WeatherKit entitlement while still shipping as a Developer ID app.
 
-The repository's `Release` entitlements intentionally omit WeatherKit so the notarized direct-download path does not block on a separate provisioning profile. Use the Debug configuration or a custom release variant if you specifically need a WeatherKit-enabled signed build.
+The repository's `Release` configuration now uses the WeatherKit entitlement. The direct-download path therefore depends on the direct-distribution provisioning profile secret listed above.
 
 Notarize and staple:
 

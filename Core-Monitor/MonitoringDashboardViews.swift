@@ -88,12 +88,12 @@ struct MonitoringDashboardStrip: View {
     }
 
     private var helperDetail: String {
-        if fanController.mode.requiresPrivilegedHelper == false {
-            return "Current cooling mode does not require the helper."
-        }
-
         if let statusMessage = helperManager.statusMessage, statusMessage.isEmpty == false {
             return statusMessage
+        }
+
+        if fanController.mode.requiresPrivilegedHelper == false {
+            return "Current cooling mode does not require the helper."
         }
 
         switch helperManager.connectionState {
@@ -247,12 +247,12 @@ struct SystemStatusBoard: View {
     }
 
     private var helperDetail: String {
-        if fanController.mode.requiresPrivilegedHelper == false {
-            return "Current cooling mode does not require the helper."
-        }
-
         if let statusMessage = helperManager.statusMessage, statusMessage.isEmpty == false {
             return statusMessage
+        }
+
+        if fanController.mode.requiresPrivilegedHelper == false {
+            return "Current cooling mode does not require the helper."
         }
 
         switch helperManager.connectionState {

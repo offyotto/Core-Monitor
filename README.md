@@ -87,7 +87,9 @@ brew install --cask offyotto-sl3/core-monitor/core-monitor
 
 Fan control is optional and requires a privileged helper called `smc-helper`. If you don't need it, you don't need the helper — everything else works without it.
 
-The helper is bundled at `Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper`, installed to `/Library/PrivilegedHelperTools/ventaphobia.smc-helper` via `SMJobBless`, and registered as a launchd XPC service. The app owns the helper through `SMPrivilegedExecutables`; the helper authorizes the app through its embedded `SMAuthorizedClients` requirement.
+The helper is bundled at `Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper`, installed to `/Library/PrivilegedHelperTools/ventaphobia.smc-helper` via [`SMJobBless`](https://developer.apple.com/documentation/servicemanagement/smjobbless%28_%3A_%3A_%3A_%3A%29), and registered as a launchd XPC service. The app owns the helper through `SMPrivilegedExecutables`; the helper authorizes the app through its embedded `SMAuthorizedClients` requirement. That packaging follows Apple's documented privileged-helper bundle placement for `Contents/Library/LaunchServices` in [Placing Content in a Bundle](https://developer.apple.com/documentation/bundleresources/placing-content-in-a-bundle).
+
+The Apple Silicon manual-control path is adapted from the MIT-licensed research project [`agoodkind/macos-smc-fan`](https://github.com/agoodkind/macos-smc-fan). Core Monitor now probes `F%dMd` vs `F%dmd` at runtime, attempts direct manual-mode writes first, and falls back to the `Ftst` unlock sequence only on hardware that still requires it.
 
 **Fan modes:**
 

@@ -894,8 +894,8 @@ private struct FanHelperStatusCard: View {
                             .background(statusColor.opacity(0.12))
                             .clipShape(Capsule())
                     } else {
-                        Button("Install Helper") {
-                            helperManager.installFromApp()
+                        Button(helperButtonTitle) {
+                            helperManager.installFromApp(forceReinstall: helperManager.connectionState == .unreachable)
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
@@ -923,6 +923,12 @@ private struct FanHelperStatusCard: View {
     }
 
     private var helperDescription: String {
+        if helperManager.connectionState == .unreachable {
+            return helperManager.isInstalled
+                ? "Installed, but the XPC service rejected or could not reach this app build. Reinstall the helper from this exact app build, then recheck."
+                : "Core Monitor found an incomplete or stale helper install state. Repair the helper from this exact app build before switching into Smart, Manual, or other managed fan profiles."
+        }
+
         if helperIsRequiredNow == false {
             if helperManager.connectionState == .reachable {
                 return "The helper is ready if you switch back into a managed fan mode later. System-owned cooling is active right now."
@@ -930,9 +936,6 @@ private struct FanHelperStatusCard: View {
             return "System mode keeps the firmware fan curve in charge right now. Install or repair the helper before switching into Smart, Manual, or other managed fan profiles."
         }
 
-        if helperManager.connectionState == .unreachable {
-            return "Installed, but the XPC service rejected or could not reach this app build. Reinstall the helper from this exact app build, then recheck."
-        }
         if helperManager.connectionState == .checking {
             return "Installed. Verifying the local privileged helper before enabling managed fan modes."
         }
@@ -947,6 +950,10 @@ private struct FanHelperStatusCard: View {
             return .green
         }
         return helperIsRequiredNow ? .orange : .secondary
+    }
+
+    private var helperButtonTitle: String {
+        helperManager.connectionState == .unreachable ? "Repair Helper" : "Install Helper"
     }
 }
 
@@ -1068,7 +1075,9 @@ private struct HelperDiagnosticsSupportCard: View {
         case .checking:
             return "Core Monitor is verifying the local helper before trusting it for fan writes."
         case .unreachable:
-            return "The helper is installed but this build could not establish a trusted XPC connection. Reinstall from this exact app build, then recheck if needed."
+            return helperManager.isInstalled
+                ? "The helper is installed but this build could not establish a trusted XPC connection. Reinstall from this exact app build, then recheck if needed."
+                : "Core Monitor detected an incomplete or stale helper install. Repair the helper from this exact app build, then recheck if needed."
         case .unknown:
             return helperManager.isInstalled
                 ? "The helper exists, but Core Monitor has not finished a fresh health probe yet."
@@ -1080,13 +1089,14 @@ private struct HelperDiagnosticsSupportCard: View {
 
     private func performPrimaryAction() {
         exportMessage = nil
+        if helperManager.connectionState == .unreachable {
+            helperManager.installFromApp(forceReinstall: true)
+            return
+        }
+
         if helperManager.isInstalled {
-            if helperManager.connectionState == .unreachable {
-                helperManager.installFromApp(forceReinstall: true)
-            } else {
-                helperManager.refreshStatus()
-                helperManager.refreshDiagnostics()
-            }
+            helperManager.refreshStatus()
+            helperManager.refreshDiagnostics()
         } else {
             helperManager.installFromApp()
         }

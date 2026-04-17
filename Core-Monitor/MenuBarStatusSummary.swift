@@ -31,6 +31,9 @@ enum MenuBarStatusSummary {
         isInstalled: Bool
     ) -> MenuBarStatusPillSummary {
         guard mode.requiresPrivilegedHelper else {
+            if connectionState == .unreachable {
+                return MenuBarStatusPillSummary(label: "Helper Attention", tone: .critical)
+            }
             return MenuBarStatusPillSummary(label: "Helper Optional", tone: .neutral)
         }
 

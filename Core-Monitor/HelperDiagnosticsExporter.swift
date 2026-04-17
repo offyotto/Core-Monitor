@@ -34,6 +34,9 @@ struct HelperDiagnosticsContext: Equatable {
     let installedHelperExists: Bool
     let connectionState: HelperDiagnosticsConnectionState
     let helperStatusMessage: String?
+    let fanBackendRepository: String
+    let fanModeKeyFormat: String?
+    let fanForceTestAvailable: Bool?
     let launchAtLoginEnabled: Bool
     let launchAtLoginError: String?
     let enabledMenuBarItemCount: Int
@@ -63,6 +66,9 @@ struct HelperDiagnosticsReport: Codable, Equatable {
         let installedHelperExists: Bool
         let connectionState: HelperDiagnosticsConnectionState
         let statusMessage: String?
+        let backendRepository: String
+        let modeKeyFormat: String?
+        let forceTestAvailable: Bool?
     }
 
     struct LaunchAtLoginDetails: Codable, Equatable {
@@ -85,6 +91,8 @@ struct HelperDiagnosticsReport: Codable, Equatable {
 }
 
 enum HelperDiagnosticsExporter {
+    private static let fanBackendRepository = "agoodkind/macos-smc-fan"
+
     @MainActor
     static func exportReport(
         helperManager: SMCHelperManager,
@@ -131,6 +139,7 @@ enum HelperDiagnosticsExporter {
         let installedHelperPath = "/Library/PrivilegedHelperTools/\(helperLabel)"
         let fileManager = FileManager.default
         let hostModelIdentifier = SystemMonitor.hostModelIdentifier()
+        let controlMetadata = helperManager.readControlMetadata()
 
         return HelperDiagnosticsContext(
             generatedAt: Date(),
@@ -148,6 +157,9 @@ enum HelperDiagnosticsExporter {
             installedHelperExists: fileManager.fileExists(atPath: installedHelperPath),
             connectionState: map(helperManager.connectionState),
             helperStatusMessage: helperManager.statusMessage,
+            fanBackendRepository: fanBackendRepository,
+            fanModeKeyFormat: controlMetadata?.modeKeyFormat,
+            fanForceTestAvailable: controlMetadata?.forceTestAvailable,
             launchAtLoginEnabled: startupManager.isEnabled,
             launchAtLoginError: startupManager.errorMessage,
             enabledMenuBarItemCount: menuBarSettings.enabledItemCount,
@@ -180,7 +192,10 @@ enum HelperDiagnosticsExporter {
                 installedHelperPath: context.installedHelperPath,
                 installedHelperExists: context.installedHelperExists,
                 connectionState: context.connectionState,
-                statusMessage: context.helperStatusMessage
+                statusMessage: context.helperStatusMessage,
+                backendRepository: context.fanBackendRepository,
+                modeKeyFormat: context.fanModeKeyFormat,
+                forceTestAvailable: context.fanForceTestAvailable
             ),
             launchAtLogin: .init(
                 enabled: context.launchAtLoginEnabled,
@@ -200,7 +215,9 @@ enum HelperDiagnosticsExporter {
         case .checking, .unknown:
             return "Helper exists, but Core Monitor has not completed a trusted health probe yet."
         case .unreachable:
-            return "Helper is installed, but this app could not establish a trusted connection to it."
+            return context.installedHelperExists
+                ? "Helper is installed, but this app could not establish a trusted connection to it."
+                : "Helper install is incomplete or stale, so this app cannot trust it yet."
         case .missing:
             return "Monitoring-only configuration. The privileged helper is not installed."
         }
@@ -217,6 +234,8 @@ enum HelperDiagnosticsExporter {
         case .unreachable:
             if let issue = context.signingInfo.issue, issue.isEmpty == false {
                 actions.append(issue)
+            } else if context.installedHelperExists == false {
+                actions.append("Repair the privileged helper from this exact app build so the stale or incomplete install can be replaced cleanly.")
             } else {
                 actions.append("Reinstall the privileged helper from this exact app build, then recheck connectivity before trusting fan control.")
             }

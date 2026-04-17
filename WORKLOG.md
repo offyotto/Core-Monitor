@@ -1,5 +1,15 @@
 # WORKLOG
 
+## 2026-04-17
+
+### Completed batch
+- Reworked the privileged fan-control backend around the Apple-Silicon-first `agoodkind/macos-smc-fan` research model instead of leaving Core Monitor on a purely local ad hoc implementation.
+- Kept Core Monitor's stricter helper boundary checks, but aligned the low-level control path with runtime mode-key probing (`F%dMd` vs `F%dmd`), direct-write-first behavior, and `Ftst`-only fallback semantics.
+- Fixed a helper reset edge case so returning one fan to auto no longer clears `Ftst` while other fans are still in manual mode.
+- Expanded helper diagnostics exports to record the upstream backend reference plus detected mode-key and `Ftst` availability, then added regression coverage for those new report fields.
+- Corrected the `SMPrivilegedExecutables` and `SMAuthorizedClients` requirement strings back to the Team ID check after proving the sample-style Apple Development certificate OIDs broke `SMJobBless` for local signed builds.
+- Corrected the raw helper `Info.plist` metadata after proving the `-sectcreate` path was embedding literal `$(PRODUCT_...)` placeholders into the blessed helper binary instead of concrete executable and bundle identifiers.
+
 ## 2026-04-15
 
 ### Reviewed

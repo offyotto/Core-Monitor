@@ -15,6 +15,14 @@ import Darwin
 
 @MainActor
 final class SMCHelperManager: ObservableObject {
+    struct ControlMetadata: Equatable {
+        let modeKeyFormat: String
+        let forceTestAvailable: Bool
+    }
+
+    private static let missingInstallMessage = "Fan write access unavailable: privileged helper not installed."
+    private static let incompleteInstallMessage = "Fan write access unavailable: the privileged helper install is incomplete or stale. Repair it from this app build."
+
     private enum LegacyServiceManagementBridge {
         typealias JobRemoveFunction = @convention(c) (
             CFString,
@@ -109,12 +117,29 @@ final class SMCHelperManager: ObservableObject {
     // MARK: - Status
 
     func refreshStatus() {
-        isInstalled = fileManager.fileExists(atPath: installedHelperPath)
-        if isInstalled == false {
+        let helperExists = fileManager.fileExists(atPath: installedHelperPath)
+        let launchDaemonExists = fileManager.fileExists(atPath: installedLaunchDaemonPath)
+        let installNeedsRepair: Bool
+
+        if helperExists || launchDaemonExists {
+            installNeedsRepair = helperExists != launchDaemonExists || helperInstallationLooksOrphaned()
+        } else {
+            installNeedsRepair = false
+        }
+
+        isInstalled = helperExists
+        if helperExists == false {
             diagnosticsTask?.cancel()
             diagnosticsTask = nil
-            connectionState = .missing
-            if statusMessage == "Fan write access unavailable: privileged helper not installed." {
+            connectionState = installNeedsRepair ? .unreachable : .missing
+            if installNeedsRepair {
+                if statusMessage == nil
+                    || statusMessage == Self.missingInstallMessage
+                    || statusMessage == Self.incompleteInstallMessage
+                {
+                    statusMessage = Self.incompleteInstallMessage
+                }
+            } else if statusMessage == Self.missingInstallMessage || statusMessage == Self.incompleteInstallMessage {
                 statusMessage = nil
             }
             return
@@ -124,7 +149,7 @@ final class SMCHelperManager: ObservableObject {
             connectionState = .unknown
         }
 
-        if statusMessage == "Fan write access unavailable: privileged helper not installed." {
+        if statusMessage == Self.missingInstallMessage || statusMessage == Self.incompleteInstallMessage {
             statusMessage = nil
         }
     }
@@ -162,7 +187,7 @@ final class SMCHelperManager: ObservableObject {
         }
 
         hasAttemptedBlessInstall = true
-        let didInstall = attemptPrivilegedInstall(forceReinstall: helperExists && connectionState == .unreachable)
+        let didInstall = attemptPrivilegedInstall(forceReinstall: connectionState == .unreachable)
         refreshStatus()
         if didInstall && fileManager.fileExists(atPath: installedHelperPath) {
             hasAttemptedBlessInstall = false
@@ -188,7 +213,7 @@ final class SMCHelperManager: ObservableObject {
         if allowInstall {
             guard fileManager.fileExists(atPath: installedHelperPath) || ensureInstalledIfNeeded() else {
                 connectionState = .missing
-                statusMessage = "Fan write access unavailable: privileged helper not installed."
+                statusMessage = Self.missingInstallMessage
                 return false
             }
         } else {
@@ -213,7 +238,7 @@ final class SMCHelperManager: ObservableObject {
     func readValue(key: String) -> Double? {
         refreshStatus()
 
-        if !fileManager.fileExists(atPath: installedHelperPath), !ensureInstalledIfNeeded() {
+        guard fileManager.fileExists(atPath: installedHelperPath) else {
             connectionState = .missing
             return nil
         }
@@ -245,6 +270,38 @@ final class SMCHelperManager: ObservableObject {
         }
     }
 
+    func readControlMetadata(timeout: TimeInterval = 1.0) -> ControlMetadata? {
+        refreshStatus()
+
+        guard fileManager.fileExists(atPath: installedHelperPath) else {
+            return nil
+        }
+
+        let result: ConnectionResult<ControlMetadata> = withHelperConnection(timeout: timeout) { proxy, finish in
+            proxy.readControlMetadata { modeKeyFormat, forceTestAvailable, errorMessage in
+                guard let modeKeyFormat else {
+                    finish(nil, errorMessage as String?)
+                    return
+                }
+
+                finish(
+                    ControlMetadata(
+                        modeKeyFormat: modeKeyFormat as String,
+                        forceTestAvailable: forceTestAvailable?.boolValue ?? false
+                    ),
+                    errorMessage as String?
+                )
+            }
+        }
+
+        switch result {
+        case .success(let metadata):
+            return metadata
+        case .failure:
+            return nil
+        }
+    }
+
     // MARK: - Execution Strategies
 
     private func attemptPrivilegedInstall(forceReinstall: Bool = false) -> Bool {
@@ -262,7 +319,8 @@ final class SMCHelperManager: ObservableObject {
 
     private func attemptRepairingStaleHelper() -> Bool {
         refreshStatus()
-        guard fileManager.fileExists(atPath: installedHelperPath) else {
+        guard fileManager.fileExists(atPath: installedHelperPath)
+                || fileManager.fileExists(atPath: installedLaunchDaemonPath) else {
             return false
         }
 
@@ -353,6 +411,10 @@ final class SMCHelperManager: ObservableObject {
     ) -> Bool {
         guard installedHelperExists || installedLaunchDaemonExists else {
             return false
+        }
+
+        if installedHelperExists != installedLaunchDaemonExists {
+            return true
         }
 
         return launchctlExitStatus != 0
@@ -576,6 +638,10 @@ final class SMCHelperManager: ObservableObject {
     }
 
     func installFromApp(forceReinstall: Bool = false) {
+        statusMessage = forceReinstall
+            ? "Waiting for administrator approval to repair the privileged helper."
+            : "Waiting for administrator approval to install the privileged helper."
+
         installBundledHelper(forceReinstall: forceReinstall) { [weak self] success, message in
             guard let self else { return }
             if success {
