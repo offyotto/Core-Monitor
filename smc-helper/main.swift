@@ -441,7 +441,7 @@ private final class HelperClientValidator {
     }
 }
 
-private let helperMachServiceName = Bundle.main.bundleIdentifier ?? "ventaphobia.smc-helper"
+private let helperMachServiceName = "ventaphobia.smc-helper"
 
 private final class SMCHelperXPCService: NSObject, NSXPCListenerDelegate, SMCHelperXPCProtocol {
     private let controller = SMCController()

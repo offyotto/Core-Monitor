@@ -88,8 +88,15 @@ final class SMCHelperManager: ObservableObject {
 
     func ensureInstalledIfNeeded() -> Bool {
         refreshStatus()
-        guard !fileManager.fileExists(atPath: installedHelperPath) else { return true }
-        guard !hasAttemptedBlessInstall else { return false }
+        let helperExists = fileManager.fileExists(atPath: installedHelperPath)
+
+        if helperExists, connectionState != .unreachable {
+            return true
+        }
+
+        guard !hasAttemptedBlessInstall else {
+            return helperExists && connectionState == .reachable
+        }
 
         hasAttemptedBlessInstall = true
         let didInstall = attemptPrivilegedInstall()
@@ -99,7 +106,7 @@ final class SMCHelperManager: ObservableObject {
             refreshDiagnostics()
             return true
         }
-        return false
+        return helperExists && connectionState == .reachable
     }
 
     /// Executes the helper with the given arguments.

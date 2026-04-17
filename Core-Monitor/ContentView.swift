@@ -931,7 +931,7 @@ private struct FanHelperStatusCard: View {
         }
 
         if helperManager.connectionState == .unreachable {
-            return "Installed, but the XPC service rejected or could not reach this app build. Fan writes will fail until the signed app and helper match."
+            return "Installed, but the XPC service rejected or could not reach this app build. Reinstall the helper from this exact app build, then recheck."
         }
         if helperManager.connectionState == .checking {
             return "Installed. Verifying the local privileged helper before enabling managed fan modes."
@@ -982,7 +982,7 @@ private struct HelperDiagnosticsSupportCard: View {
                 }
 
                 HStack(spacing: 8) {
-                    if primaryActionTitle == "Install Helper" {
+                    if primaryActionTitle == "Install Helper" || primaryActionTitle == "Reinstall Helper" {
                         Button(primaryActionTitle, action: performPrimaryAction)
                             .buttonStyle(.borderedProminent)
                             .controlSize(.small)
@@ -1023,7 +1023,10 @@ private struct HelperDiagnosticsSupportCard: View {
     }
 
     private var primaryActionTitle: String {
-        helperManager.isInstalled ? "Recheck Helper" : "Install Helper"
+        if helperManager.isInstalled {
+            return helperManager.connectionState == .unreachable ? "Reinstall Helper" : "Recheck Helper"
+        }
+        return "Install Helper"
     }
 
     private var connectionLabel: String {
@@ -1065,7 +1068,7 @@ private struct HelperDiagnosticsSupportCard: View {
         case .checking:
             return "Core Monitor is verifying the local helper before trusting it for fan writes."
         case .unreachable:
-            return "The helper is installed but this build could not establish a trusted XPC connection. Recheck first, then reinstall from this exact app build if needed."
+            return "The helper is installed but this build could not establish a trusted XPC connection. Reinstall from this exact app build, then recheck if needed."
         case .unknown:
             return helperManager.isInstalled
                 ? "The helper exists, but Core Monitor has not finished a fresh health probe yet."
@@ -1078,8 +1081,12 @@ private struct HelperDiagnosticsSupportCard: View {
     private func performPrimaryAction() {
         exportMessage = nil
         if helperManager.isInstalled {
-            helperManager.refreshStatus()
-            helperManager.refreshDiagnostics()
+            if helperManager.connectionState == .unreachable {
+                helperManager.installFromApp()
+            } else {
+                helperManager.refreshStatus()
+                helperManager.refreshDiagnostics()
+            }
         } else {
             helperManager.installFromApp()
         }
