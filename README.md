@@ -264,7 +264,7 @@ Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc
 
 ## Compatibility
 
-- macOS 12 or later
+- macOS 13 or later
 - Apple Silicon is the primary target; Intel Macs are not part of the current test path
 - Fan control requires macOS 13+ (XPC with code-signing requirements)
 - Core-Monitor is not available on the Mac App Store
