@@ -38,6 +38,9 @@ final class AppCoordinator: ObservableObject {
 
     func start() {
         systemMonitor.startMonitoring()
+        if customizationSettings.presentationMode != .app {
+            customizationSettings.presentationMode = .app
+        }
         installTouchBarBootstrapObservers()
         applySavedTouchBarMode()
     }
@@ -77,6 +80,7 @@ final class AppCoordinator: ObservableObject {
     }
 
     func revertToSystemTouchBar() {
+        cancelTouchBarScheduling()
         customizationSettings.presentationMode = .system
         stopAppTouchBar()
     }
@@ -105,6 +109,13 @@ final class AppCoordinator: ObservableObject {
         case .system:
             stopAppTouchBar()
         }
+    }
+
+    private func cancelTouchBarScheduling() {
+        bootstrapWorkItem?.cancel()
+        bootstrapWorkItem = nil
+        touchBarReassertWorkItem?.cancel()
+        touchBarReassertWorkItem = nil
     }
 
     private func installTouchBarBootstrapObservers() {

@@ -160,14 +160,14 @@ private let guideSteps: [GuideStep] = [
         iconColor: .wgPurple,
         headline: "Touch Bar",
         subheadline: "OLED space should look intentional.",
-        body: "Core Monitor can replace the system Touch Bar with a full-width widget strip, including clocks, weather, network, combined stats, and hardware glyphs. Fresh installs leave the standard Touch Bar alone until you opt in.",
+        body: "Core Monitor can replace the system Touch Bar with a full-width widget strip, including clocks, weather, network, combined stats, and hardware glyphs. It stays on while Core Monitor is running. Press Command-Shift-6 to return the hardware bar to macOS, or quit the app to dismiss the HUD entirely.",
         bullets: [
             ("rectangle.on.rectangle", .wgGreen, "Light and dark widget themes"),
             ("rectangle.3.group",     .wgBlue,   "Reorder or disable widgets in-app"),
             ("cloud.sun.rain.fill",   .wgAmber,  "Weather uses Apple's WeatherKit path"),
             ("location.fill",         .wgGreen,  "Allow location for accurate weather"),
-            ("hand.tap",              .wgPurple, "On MacBook Touch Bar models, tap Weather for rain details"),
-            ("wrench.and.screwdriver", .wgPurple, "Touch Bar presentation stays isolated"),
+            ("command.circle.fill",   .wgPurple, "Command-Shift-6 switches back to the system Touch Bar"),
+            ("power",                 .wgRed,    "Quitting Core Monitor also dismisses the HUD"),
         ]
     ),
     GuideStep(

@@ -2181,7 +2181,7 @@ private struct TouchBarCustomizationPanel: View {
                         .foregroundStyle(.secondary)
 
                     if settings.presentationMode == .system {
-                        Text("You're still editing Core-Monitor's custom Touch Bar layout, but the hardware Touch Bar is showing the standard macOS strip. Switch back to Core-Monitor mode to apply these items live.")
+                        Text("You're still editing Core-Monitor's custom Touch Bar layout, but the hardware Touch Bar is showing the standard macOS strip. Press Command-Shift-6 to return to the system Touch Bar, or switch back to Core-Monitor mode to apply these items live.")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(.orange)
                     }
