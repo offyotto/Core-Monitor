@@ -3,6 +3,7 @@ import Foundation
 import Combine
 import Security
 import ServiceManagement
+import Darwin
 
 // MARK: - SMC Helper Manager
 //
@@ -14,6 +15,63 @@ import ServiceManagement
 
 @MainActor
 final class SMCHelperManager: ObservableObject {
+    private enum LegacyServiceManagementBridge {
+        typealias JobRemoveFunction = @convention(c) (
+            CFString,
+            CFString,
+            AuthorizationRef,
+            Bool,
+            UnsafeMutablePointer<Unmanaged<CFError>?>?
+        ) -> Bool
+
+        typealias JobBlessFunction = @convention(c) (
+            CFString,
+            CFString,
+            AuthorizationRef,
+            UnsafeMutablePointer<Unmanaged<CFError>?>?
+        ) -> Bool
+
+        static let launchdErrorDomain = "CFErrorDomainLaunchd"
+
+        private static let serviceManagementHandle: UnsafeMutableRawPointer? = {
+            dlopen("/System/Library/Frameworks/ServiceManagement.framework/ServiceManagement", RTLD_NOW)
+        }()
+
+        private static func resolve<Function>(_ symbolName: String, as type: Function.Type) -> Function? {
+            guard let serviceManagementHandle,
+                  let symbol = dlsym(serviceManagementHandle, symbolName) else {
+                return nil
+            }
+            return unsafeBitCast(symbol, to: type)
+        }
+
+        static func jobRemove(
+            domain: CFString,
+            jobLabel: CFString,
+            auth: AuthorizationRef,
+            wait: Bool,
+            outError: UnsafeMutablePointer<Unmanaged<CFError>?>?
+        ) -> Bool {
+            guard let function = resolve("SMJobRemove", as: JobRemoveFunction.self) else {
+                outError?.pointee = nil
+                return false
+            }
+            return function(domain, jobLabel, auth, wait, outError)
+        }
+
+        static func jobBless(
+            domain: CFString,
+            executableLabel: CFString,
+            auth: AuthorizationRef,
+            outError: UnsafeMutablePointer<Unmanaged<CFError>?>?
+        ) -> Bool {
+            guard let function = resolve("SMJobBless", as: JobBlessFunction.self) else {
+                outError?.pointee = nil
+                return false
+            }
+            return function(domain, executableLabel, auth, outError)
+        }
+    }
 
     enum ConnectionState: Equatable {
         case missing
@@ -307,7 +365,7 @@ final class SMCHelperManager: ObservableObject {
         return "/bin/launchctl bootout \(launchctlTarget) >/dev/null 2>&1 || true; /bin/rm -f \(helperPath) \(launchDaemonPath)"
     }
 
-    private nonisolated static func shouldAttemptOrphanedInstallCleanup(afterBlessFailureMessage message: String) -> Bool {
+    nonisolated static func shouldAttemptOrphanedInstallCleanup(afterBlessFailureMessage message: String) -> Bool {
         let normalized = message.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard normalized.isEmpty == false else { return false }
 
@@ -453,10 +511,16 @@ final class SMCHelperManager: ObservableObject {
         if forceReinstall {
             // Tear down stale launchd state before bootstrapping the fresh helper.
             var removeError: Unmanaged<CFError>?
-            let removed = SMJobRemove(kSMDomainSystemLaunchd, helperLabel as CFString, authRef, true, &removeError)
+            let removed = LegacyServiceManagementBridge.jobRemove(
+                domain: kSMDomainSystemLaunchd,
+                jobLabel: helperLabel as CFString,
+                auth: authRef,
+                wait: true,
+                outError: &removeError
+            )
             if removed == false, let removeError {
                 let nsError = removeError.takeRetainedValue() as Error as NSError
-                let isMissingJob = nsError.domain == kSMErrorDomainLaunchd as String
+                let isMissingJob = nsError.domain == LegacyServiceManagementBridge.launchdErrorDomain
                     && nsError.code == Int(kSMErrorJobNotFound)
                 if !isMissingJob {
                     completion(false, nsError.localizedDescription)
@@ -467,17 +531,21 @@ final class SMCHelperManager: ObservableObject {
         }
 
         var blessError: Unmanaged<CFError>?
-        let blessed = SMJobBless(kSMDomainSystemLaunchd, helperLabel as CFString, authRef, &blessError)
+        let blessed = LegacyServiceManagementBridge.jobBless(
+            domain: kSMDomainSystemLaunchd,
+            executableLabel: helperLabel as CFString,
+            auth: authRef,
+            outError: &blessError
+        )
         if blessed {
             refreshStatus()
             refreshDiagnostics()
             completion(true, nil)
         } else {
-            let message = (blessError?.takeRetainedValue().localizedDescription) ?? "SMJobBless failed."
+            let message = (blessError?.takeRetainedValue().localizedDescription) ?? "Privileged helper installation failed."
 
-            guard forceReinstall,
-                  Self.shouldAttemptOrphanedInstallCleanup(afterBlessFailureMessage: message),
-                  helperInstallationLooksOrphaned() else {
+            guard Self.shouldAttemptOrphanedInstallCleanup(afterBlessFailureMessage: message),
+                  forceReinstall || helperInstallationLooksOrphaned() || message.localizedCaseInsensitiveContains("launchd") else {
                 completion(false, message)
                 return
             }
@@ -490,13 +558,18 @@ final class SMCHelperManager: ObservableObject {
             refreshStatus()
 
             var retryError: Unmanaged<CFError>?
-            let retriedBless = SMJobBless(kSMDomainSystemLaunchd, helperLabel as CFString, authRef, &retryError)
+            let retriedBless = LegacyServiceManagementBridge.jobBless(
+                domain: kSMDomainSystemLaunchd,
+                executableLabel: helperLabel as CFString,
+                auth: authRef,
+                outError: &retryError
+            )
             if retriedBless {
                 refreshStatus()
                 refreshDiagnostics()
                 completion(true, nil)
             } else {
-                let retryMessage = (retryError?.takeRetainedValue().localizedDescription) ?? "SMJobBless failed."
+                let retryMessage = (retryError?.takeRetainedValue().localizedDescription) ?? "Privileged helper installation failed."
                 completion(false, retryMessage)
             }
         }
