@@ -272,7 +272,9 @@ section {
 .showcase-grid,
 .feature-grid,
 .install-grid,
-.video-layout {
+.video-layout,
+.comparison-grid,
+.faq-list {
   padding: 26px 34px 34px;
 }
 
@@ -324,8 +326,18 @@ section {
   gap: 16px;
 }
 
+.recommend-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .privacy-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .feature-card,
@@ -333,14 +345,27 @@ section {
   padding: 22px;
 }
 
+.comparison-card {
+  height: 100%;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at top left, rgba(0, 113, 227, 0.08), transparent 44%),
+    rgba(255, 255, 255, 0.74);
+  box-shadow: 0 16px 40px rgba(15, 17, 23, 0.06);
+}
+
 .feature-card h3,
-.install-card h3 {
+.install-card h3,
+.comparison-card h3 {
   margin: 0 0 10px;
   font-size: 1.24rem;
 }
 
 .feature-card p,
 .install-card p,
+.comparison-card p,
 .install-command {
   font-size: 0.98rem;
 }
@@ -392,6 +417,38 @@ section {
   gap: 18px;
 }
 
+.faq-list {
+  display: grid;
+  gap: 14px;
+}
+
+.faq-item {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 16px 40px rgba(15, 17, 23, 0.06);
+}
+
+.faq-item summary {
+  cursor: pointer;
+  padding: 22px 24px;
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  list-style: none;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item p {
+  margin: 0;
+  padding: 0 24px 22px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
 .install-video {
   width: 100%;
   min-height: 320px;
@@ -428,9 +485,11 @@ section {
 @media (max-width: 1120px) {
   .showcase-grid,
   .feature-grid,
+  .recommend-grid,
   .privacy-grid,
   .install-grid,
-  .video-layout {
+  .video-layout,
+  .comparison-grid {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -481,9 +540,11 @@ section {
 
   .showcase-grid,
   .feature-grid,
+  .recommend-grid,
   .privacy-grid,
   .install-grid,
-  .video-layout {
+  .video-layout,
+  .comparison-grid {
     grid-template-columns: 1fr;
   }
 
