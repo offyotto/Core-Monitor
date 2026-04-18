@@ -226,7 +226,7 @@ private struct SoftPressButtonStyle: ButtonStyle {
 }
 
 // MARK: - Dark card (BetterDisplay style)
-private struct DarkCard<Content: View>: View {
+struct DarkCard<Content: View>: View {
     var padding: CGFloat = 14
     @ViewBuilder let content: () -> Content
     var body: some View {
@@ -1810,9 +1810,11 @@ private struct DetailPane: View {
 
     private var aboutContent: some View {
         VStack(alignment: .leading, spacing: 22) {
-            header("About", subtitle: "App details and appearance")
+            header("About", subtitle: "App details, language, and experiments")
             BetterDisplayInspiredHero()
+            LocalizationSettingsCard()
             AboutDetailsPanel()
+            EasterEggLabCard()
         }
     }
 

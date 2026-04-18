@@ -62,7 +62,7 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
         self.startupManager = startupManager
         self.onClose = onClose
 
-        let rootView = ContentView(
+        let rootView = DashboardRootView(
             systemMonitor: coordinator.systemMonitor,
             fanController: coordinator.fanController,
             startupManager: startupManager

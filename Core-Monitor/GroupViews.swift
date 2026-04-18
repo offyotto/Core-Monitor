@@ -444,7 +444,8 @@ final class SystemStatsGroupView: NSView, TouchBarThemable {
 
     func update(snap: TouchBarSystemSnapshot) {
         let formatter = DateFormatter()
-        formatter.dateFormat = "H:mm"
+        formatter.locale = AppLocaleStore.currentLocale
+        formatter.setLocalizedDateFormatFromTemplate("Hm")
         timeLabel.stringValue = formatter.string(from: Date())
 
         memBar.fraction = CGFloat(snap.memPct / 100)

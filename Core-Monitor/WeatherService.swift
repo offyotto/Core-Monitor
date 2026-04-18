@@ -273,7 +273,7 @@ final class LiveWeatherService: WeatherProviding {
             hour.date >= now && isRainy(hour.condition)
         }) {
             let formatter = DateFormatter()
-            formatter.locale = Locale.current
+            formatter.locale = AppLocaleStore.currentLocale
             formatter.timeStyle = .short
             formatter.dateStyle = .none
             return "Next rain at \(formatter.string(from: nextRain.date))"
@@ -283,7 +283,7 @@ final class LiveWeatherService: WeatherProviding {
             hour.date >= now && hour.precipitationChance >= 0.35
         }) {
             let formatter = DateFormatter()
-            formatter.locale = Locale.current
+            formatter.locale = AppLocaleStore.currentLocale
             formatter.timeStyle = .short
             formatter.dateStyle = .none
             let pct = Int((nextPrecip.precipitationChance * 100).rounded())
