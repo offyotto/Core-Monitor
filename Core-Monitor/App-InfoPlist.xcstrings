@@ -1,0 +1,1360 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "CFBundleName": {
+      "comment": "Bundle name",
+      "localizations": {
+        "af": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "am": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "as": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ay": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "be": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "bm": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "bo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ceb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "co": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "dv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "eo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "eu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "fy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ga": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "gd": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "gl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "gn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "gu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ha": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "haw": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "hmn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ht": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ig": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "jv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "kk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "kn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ku": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ky": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "la": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "lb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "mg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "mi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ml": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "mt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ny": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "or": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "pa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ps": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "rw": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "sd": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "si": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "sm": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "sn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "so": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "sr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "st": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "su": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "sw": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "tg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "uz": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "xh": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "yi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "yo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        },
+        "zu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor"
+          }
+        }
+      }
+    },
+    "NSLocationWhenInUseUsageDescription": {
+      "comment": "Privacy - Location When In Use Usage Description",
+      "localizations": {
+        "af": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor gebruik jou ligging vir die opsionele Touch Bar weeritem."
+          }
+        },
+        "am": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor የእርስዎን መገኛ ለአማራጭ Touch Bar የአየር ሁኔታ ነገር ይጠቀማል።"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يستخدم Core-Monitor موقعك لعنصر الطقس الاختياري Touch Bar."
+          }
+        },
+        "as": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor uses your location for the optional Touch Bar weather item."
+          }
+        },
+        "ay": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor uses your location for the optional Touch Bar weather item."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor isteğe bağlı Touch Bar hava elementi üçün məkanınızdan istifadə edir."
+          }
+        },
+        "be": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor выкарыстоўвае ваша месцазнаходжанне для дадатковага элемента надвор'я Touch Bar."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor използва вашето местоположение за незадължителния елемент за времето Touch Bar."
+          }
+        },
+        "bm": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor uses your location for the optional Touch Bar weather item."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor ঐচ্ছিক Touch Bar আবহাওয়া আইটেমের জন্য আপনার অবস্থান ব্যবহার করে।"
+          }
+        },
+        "bo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor uses your location for the optional Touch Bar weather item."
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor koristi vašu lokaciju za opcionu vremensku stavku Touch Bar."
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor utilitza la vostra ubicació per a l'element meteorològic opcional Touch Bar."
+          }
+        },
+        "ceb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gigamit sa Core-Monitor ang imong lokasyon para sa opsyonal nga butang sa panahon nga Touch Bar."
+          }
+        },
+        "co": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor usa a vostra situazione per l'elementu meteorologicu opcional Touch Bar."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor používá vaši polohu pro volitelnou položku počasí Touch Bar."
+          }
+        },
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mae Core-Monitor yn defnyddio'ch lleoliad ar gyfer yr eitem tywydd Touch Bar dewisol."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor bruger din placering til det valgfrie Touch Bar vejrelement."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor verwendet Ihren Standort für das optionale Wetterelement Touch Bar."
+          }
+        },
+        "dv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor uses your location for the optional Touch Bar weather item."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Το Core-Monitor χρησιμοποιεί την τοποθεσία σας για το προαιρετικό στοιχείο καιρού Touch Bar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor uses your location for the optional Touch Bar weather item."
+          }
+        },
+        "eo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor uzas vian lokon por la laŭvola Touch Bar veteraĵo."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor utiliza su ubicación para el elemento meteorológico opcional Touch Bar."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor kasutab teie asukohta valikulise Touch Bar ilmastiku jaoks."
+          }
+        },
+        "eu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor zure kokapena erabiltzen du aukerako Touch Bar eguraldi elementurako."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor از موقعیت مکانی شما برای گزینه آب و هوای اختیاری Touch Bar استفاده می کند."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor käyttää sijaintiasi valinnaisen Touch Bar säätuotteen luomiseen."
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ginagamit ng Core-Monitor ang iyong lokasyon para sa opsyonal na item ng panahon na Touch Bar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor utilise votre emplacement pour l'élément météo optionnel Touch Bar."
+          }
+        },
+        "fy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor brûkt jo lokaasje foar it opsjonele Touch Bar waar item."
+          }
+        },
+        "ga": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Úsáideann Core-Monitor do shuíomh don mhír roghnach aimsire Touch Bar."
+          }
+        },
+        "gd": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bidh Core-Monitor a’ cleachdadh d’ àite airson an rud sìde roghainneil Touch Bar."
+          }
+        },
+        "gl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor usa a túa localización para o elemento meteorolóxico opcional Touch Bar."
+          }
+        },
+        "gn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor uses your location for the optional Touch Bar weather item."
+          }
+        },
+        "gu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor વૈકલ્પિક Touch Bar હવામાન આઇટમ માટે તમારા સ્થાનનો ઉપયોગ કરે છે."
+          }
+        },
+        "ha": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor yana amfani da wurin ku don zaɓin yanayin Touch Bar na zaɓi."
+          }
+        },
+        "haw": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoʻohana ʻo Core-Monitor i kou wahi no ka mea koho Touch Bar."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor משתמש במיקום שלך עבור פריט מזג האוויר האופציונלי Touch Bar."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor वैकल्पिक Touch Bar मौसम आइटम के लिए आपके स्थान का उपयोग करता है।"
+          }
+        },
+        "hmn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor siv koj qhov chaw nyob rau qhov xaiv Touch Bar huab cua."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor koristi vašu lokaciju za dodatnu stavku vremenske prognoze Touch Bar."
+          }
+        },
+        "ht": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor sèvi ak kote w genyen pou atik metewolojik Touch Bar opsyonèl."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Core-Monitor az Ön tartózkodási helyét használja az opcionális Touch Bar időjárásjelzőhöz."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor-ն օգտագործում է ձեր գտնվելու վայրը կամընտիր Touch Bar եղանակային տարրի համար:"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor menggunakan lokasi Anda untuk item cuaca Touch Bar opsional."
+          }
+        },
+        "ig": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor na-eji ọnọdụ gị maka ihe ihu igwe nhọrọ Touch Bar."
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor notar staðsetningu þína fyrir valfrjálsa Touch Bar veðurhlutinn."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor utilizza la tua posizione per l'elemento meteo Touch Bar opzionale."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor は、オプションの Touch Bar 天気アイテムに位置情報を使用します。"
+          }
+        },
+        "jv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor nggunakake lokasi sampeyan kanggo item cuaca Touch Bar opsional."
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor იყენებს თქვენს მდებარეობას არასავალდებულო Touch Bar ამინდის ელემენტისთვის."
+          }
+        },
+        "kk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor қосымша Touch Bar ауа райы элементі үшін орналасқан жеріңізді пайдаланады."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor ប្រើទីតាំងរបស់អ្នកសម្រាប់ធាតុអាកាសធាតុ Touch Bar ជាជម្រើស។"
+          }
+        },
+        "kn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor ಐಚ್ಛಿಕ Touch Bar ಹವಾಮಾನ ಐಟಂಗಾಗಿ ನಿಮ್ಮ ಸ್ಥಳವನ್ನು ಬಳಸುತ್ತದೆ."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor는 선택적인 Touch Bar 날씨 항목에 대해 사용자의 위치를 사용합니다."
+          }
+        },
+        "ku": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor cîhê we ji bo bijareya hewayê Touch Bar bikar tîne."
+          }
+        },
+        "ky": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor кошумча Touch Bar аба ырайы объектиси үчүн жайгашкан жериңизди колдонот."
+          }
+        },
+        "la": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor loco tuo utitur ad Touch Bar tempestatum item libitum."
+          }
+        },
+        "lb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor benotzt Är Plaz fir den optionalen Touch Bar Wiederartikel."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor ໃຊ້ສະຖານທີ່ຂອງທ່ານສໍາລັບລາຍການສະພາບອາກາດ Touch Bar ທາງເລືອກ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor naudoja jūsų vietą pasirenkamam orų elementui Touch Bar."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor izmanto jūsu atrašanās vietu papildu laikapstākļu vienībai Touch Bar."
+          }
+        },
+        "mg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor dia mampiasa ny toerana misy anao ho an'ny singa toetr'andro Touch Bar."
+          }
+        },
+        "mi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ka whakamahi a Core-Monitor i to waahi mo te waahanga huarere Touch Bar."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor ја користи вашата локација за изборниот временски распоред Touch Bar."
+          }
+        },
+        "ml": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor ഓപ്‌ഷണൽ Touch Bar കാലാവസ്ഥാ ഇനത്തിനായി നിങ്ങളുടെ സ്ഥാനം ഉപയോഗിക്കുന്നു."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor нь Touch Bar цаг агаарын нэмэлт зүйлд таны байршлыг ашигладаг."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor पर्यायी Touch Bar हवामान आयटमसाठी तुमचे स्थान वापरते."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor menggunakan lokasi anda untuk item cuaca Touch Bar pilihan."
+          }
+        },
+        "mt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor juża l-lokalità tiegħek għall-oġġett tat-temp Touch Bar fakultattiv."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor ရွေးချယ်နိုင်သော Touch Bar မိုးလေဝသပစ္စည်းအတွက် သင့်တည်နေရာကို အသုံးပြုသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor bruker posisjonen din for det valgfrie Touch Bar værelementet."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor वैकल्पिक Touch Bar मौसम वस्तुको लागि तपाईंको स्थान प्रयोग गर्दछ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor gebruikt uw locatie voor het optionele Touch Bar weeritem."
+          }
+        },
+        "ny": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor imagwiritsa ntchito malo omwe muli pazinthu zanyengo za Touch Bar."
+          }
+        },
+        "or": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor uses your location for the optional Touch Bar weather item."
+          }
+        },
+        "pa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor ਵਿਕਲਪਿਕ Touch Bar ਮੌਸਮ ਆਈਟਮ ਲਈ ਤੁਹਾਡੇ ਟਿਕਾਣੇ ਦੀ ਵਰਤੋਂ ਕਰਦਾ ਹੈ।"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor wykorzystuje Twoją lokalizację dla opcjonalnego elementu pogodowego Touch Bar."
+          }
+        },
+        "ps": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor ستاسو ځای د اختیاري Touch Bar موسم توکي لپاره کاروي."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor usa sua localização para o item meteorológico opcional Touch Bar."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor utilizează locația dvs. pentru elementul meteo opțional Touch Bar."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor использует ваше местоположение для дополнительного элемента погоды Touch Bar."
+          }
+        },
+        "rw": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor uses your location for the optional Touch Bar weather item."
+          }
+        },
+        "sd": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor اختياري Touch Bar موسم جي شيءِ لاءِ توھان جي جڳھ کي استعمال ڪري ٿو."
+          }
+        },
+        "si": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor විකල්ප Touch Bar කාලගුණ අයිතමය සඳහා ඔබේ ස්ථානය භාවිත කරයි."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor používa vašu polohu pre voliteľnú položku počasia Touch Bar."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor uporablja vašo lokacijo za izbirni vremenski element Touch Bar."
+          }
+        },
+        "sm": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor fa'aoga lou nofoaga mo le mea ole tau ole Touch Bar."
+          }
+        },
+        "sn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor inoshandisa nzvimbo yako yesarudzo Touch Bar mamiriro ekunze."
+          }
+        },
+        "so": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor waxay u isticmaashaa goobtaada xulashada cimilada Touch Bar."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor përdor vendndodhjen tuaj për artikullin opsional të motit Touch Bar."
+          }
+        },
+        "sr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor uses your location for the optional Touch Bar weather item."
+          }
+        },
+        "st": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor e sebelisa sebaka sa hau bakeng sa ntho ea boemo ba leholimo ea Touch Bar ea boikhethelo."
+          }
+        },
+        "su": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor nganggo lokasi anjeun pikeun item cuaca Touch Bar opsional."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor använder din plats för det valfria väderobjektet Touch Bar."
+          }
+        },
+        "sw": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor hutumia eneo lako kwa bidhaa ya hiari ya hali ya hewa ya Touch Bar."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor உங்கள் இருப்பிடத்தை விருப்பமான Touch Bar வானிலை உருப்படிக்காகப் பயன்படுத்துகிறது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor ఐచ్ఛిక Touch Bar వాతావరణ అంశం కోసం మీ స్థానాన్ని ఉపయోగిస్తుంది."
+          }
+        },
+        "tg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor макони шуморо барои обу ҳавои ихтиёрии Touch Bar истифода мебарад."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor ใช้ตำแหน่งของคุณสำหรับรายการสภาพอากาศ Touch Bar ที่เป็นตัวเลือก"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor, isteğe bağlı Touch Bar hava durumu öğesi için konumunuzu kullanır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor використовує ваше місцезнаходження для додаткового елемента погоди Touch Bar."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor اختیاری Touch Bar موسمی آئٹم کے لیے آپ کا مقام استعمال کرتا ہے۔"
+          }
+        },
+        "uz": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor ixtiyoriy Touch Bar ob-havo elementi uchun joylashuvingizdan foydalanadi."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor sử dụng vị trí của bạn cho mục thời tiết Touch Bar tùy chọn."
+          }
+        },
+        "xh": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I-Core-Monitor isebenzisa indawo yakho kwizinto ozikhethelayo zemozulu Touch Bar."
+          }
+        },
+        "yi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor ניצט דיין אָרט פֿאַר די אַפּשאַנאַל Touch Bar וועטער נומער."
+          }
+        },
+        "yo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor nlo ipo rẹ fun ohun oju ojo Touch Bar iyan."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor 将您的位置用于可选的 Touch Bar 天气项目。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Core-Monitor 將您的位置用於選購的 Touch Bar 天氣項目。"
+          }
+        },
+        "zu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I-Core-Monitor isebenzisa indawo yakho entweni yesimo sezulu eyi-Touch Bar ozikhethela yona."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.2"
+}
