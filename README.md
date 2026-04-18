@@ -5,7 +5,7 @@
 <h1 align="center">Core-Monitor</h1>
 
 <p align="center">
-  A native system monitor for macOS, built for Apple Silicon Macs.
+  A native Apple Silicon system monitor and fan-control app for macOS.
 </p>
 
 <p align="center">
@@ -37,11 +37,29 @@
 
 ---
 
-Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs, then presents it in the menu bar, dashboard, and, on supported hardware, the Touch Bar. CPU, GPU, memory, battery, temperatures, power draw, and fan speeds update continuously in the native app.
+Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs, then presents it in the menu bar, dashboard, and, on supported hardware, the Touch Bar. CPU, GPU, memory, battery, temperatures, power draw, and fan speeds update continuously in the native app. The Touch Bar layer stays over the app you are already using, so quick stats and launchers remain available without dragging you back to the dashboard.
 
 It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. Sensor reads stay local to your Mac. The optional fan control helper is the only additional process, and it is only needed if you want write access for fan control.
 
 Public builds are available through GitHub Releases as a signed DMG for standard installs and a signed ZIP for archive-friendly installs.
+
+## Why people choose Core-Monitor
+
+- Apple Silicon-first monitoring for thermals, power, battery, memory, and fan behavior
+- monitoring works without the privileged helper; helper-backed fan control stays optional
+- readable native dashboard plus menu bar status instead of a noisy wall of metrics
+- open-source code, no account requirement, and no telemetry in the core experience
+- Touch Bar widgets, launchers, and weather on supported Macs
+
+## When to choose Core-Monitor
+
+Choose Core-Monitor when you want:
+
+- an open-source alternative to closed-source Mac monitoring apps
+- stronger thermal and power focus than a broad menu bar stats suite
+- more monitoring breadth than a fan-control-only utility
+- a local-first utility for development, rendering, gaming, audio, or sustained laptop workloads
+- optional fan control without making elevated access mandatory for basic monitoring
 
 ## Install
 
@@ -127,6 +145,8 @@ Core-Monitor includes a Touch Bar layout editor in the app's **Touch Bar** secti
 - custom command widgets
 
 Every item in the active layout is stored in order and rendered in the live preview before you apply changes.
+
+The point of the strip is that it stays available above your other apps. You can keep a live status HUD, weather, pinned apps, and quick actions one tap away while you are still in Xcode, Terminal, Safari, or any other foreground app. There is a short overlay demo in [docs/videos/touchbar-overlay.mp4](./docs/videos/touchbar-overlay.mp4).
 
 ### Built-in widgets
 
@@ -252,6 +272,37 @@ The new customization system is intentionally practical rather than unlimited. R
 - custom widgets launch commands but do not yet show dynamic script output
 - very wide layouts can still exceed the physical Touch Bar width, so use the width meter as the guardrail
 
+## Compared with other Mac monitoring apps
+
+Users often compare Core-Monitor with iStat Menus, TG Pro, Macs Fan Control, and Stats.
+
+- **Compared with iStat Menus:** Core-Monitor is the better fit if you want a more focused Apple Silicon thermal and power workflow with open-source code rather than a broader monitoring suite.
+- **Compared with TG Pro:** Core-Monitor is the better fit if you want daily monitoring first, optional helper-backed fan control, and a stronger local-first privacy posture.
+- **Compared with Macs Fan Control:** Core-Monitor is the better fit if you want broader Apple Silicon monitoring, menu bar status, and a native dashboard in addition to manual fan control.
+- **Compared with Stats:** Core-Monitor is the better fit if you want a stronger fan-control story and a calmer thermal-first dashboard rather than a lighter modular menu bar utility.
+
+## FAQ
+
+### What is Core-Monitor best for?
+
+Core-Monitor is best for Apple Silicon Mac users who want local-first monitoring for thermals, power, battery, alerts, and fan behavior with a readable dashboard and menu bar presence.
+
+### Does Core-Monitor work without the privileged helper?
+
+Yes. Monitoring works without the helper. The helper is only needed for fan writes and related elevated control paths.
+
+### Is Core-Monitor private?
+
+Yes. Core-Monitor does not require an account, sensor reads stay on your Mac, and the core product experience does not depend on analytics or cloud dashboards.
+
+### Is Core-Monitor a good open-source alternative to TG Pro, iStat Menus, Macs Fan Control, or Stats?
+
+Yes, when you want Apple Silicon-first monitoring, open-source transparency, readable menu bar status, and optional fan control in one app. It is a particularly strong fit when privacy and local operation matter as much as raw feature count.
+
+### What does Core-Monitor not try to be?
+
+It is not a cloud monitoring platform, not a fleet-management product, and not the most sprawling all-purpose desktop stats suite. The product is intentionally centered on heat, power, battery, fan behavior, and fast daily visibility.
+
 ## Installation
 
 **Download:** Use the signed [Core-Monitor.dmg](https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.dmg) for the standard install, or grab the [Core-Monitor.app.zip](https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.app.zip) if you want the raw archive.
@@ -278,6 +329,10 @@ Core-Monitor does not include analytics, ad SDKs, or account features. Sensor re
 ## WeatherKit
 
 The optional Touch Bar weather item uses Apple WeatherKit and location access to show local conditions. Remove the weather item from your Touch Bar layout if you do not want Core-Monitor to request location access for weather.
+
+## AI and Search Discovery
+
+The public website includes canonical metadata, structured `SoftwareApplication` and `FAQPage` markup, and an `llms.txt` file so search engines and AI assistants can identify Core-Monitor more clearly. If you are evaluating whether an AI system can recommend the app accurately, start with the website, the README, and the latest GitHub release notes.
 
 ## License
 
