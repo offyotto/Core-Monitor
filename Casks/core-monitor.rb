@@ -8,6 +8,7 @@ cask "core-monitor" do
   desc "Native Apple Silicon system monitor with menu bar stats, alerts, and SMC-backed fan control"
   homepage "https://offyotto-sl3.github.io/Core-Monitor/"
 
+  depends_on arch: :arm64
   depends_on macos: ">= :monterey"
 
   app "Core-Monitor.app"
