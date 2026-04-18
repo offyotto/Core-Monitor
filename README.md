@@ -37,7 +37,7 @@
 
 ---
 
-Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs, then presents it in the menu bar, dashboard, and, on supported hardware, the Touch Bar. CPU, GPU, memory, battery, temperatures, power draw, and fan speeds update continuously in the native app.
+Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs, then presents it in the menu bar, dashboard, and, on supported hardware, the Touch Bar. CPU, GPU, memory, battery, temperatures, power draw, and fan speeds update continuously in the native app. The Touch Bar layer stays over the app you are already using, so quick stats and launchers remain available without dragging you back to the dashboard.
 
 It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. Sensor reads stay local to your Mac. The optional fan control helper is the only additional process, and it is only needed if you want write access for fan control.
 
@@ -127,6 +127,8 @@ Core-Monitor includes a Touch Bar layout editor in the app's **Touch Bar** secti
 - custom command widgets
 
 Every item in the active layout is stored in order and rendered in the live preview before you apply changes.
+
+The point of the strip is that it stays available above your other apps. You can keep a live status HUD, weather, pinned apps, and quick actions one tap away while you are still in Xcode, Terminal, Safari, or any other foreground app. There is a short overlay demo in [docs/videos/touchbar-overlay.mp4](./docs/videos/touchbar-overlay.mp4).
 
 ### Built-in widgets
 
@@ -266,7 +268,7 @@ Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc
 
 ## Compatibility
 
-- macOS 13 or later
+- macOS 12 or later
 - Apple Silicon is the primary target; Intel Macs are not part of the current test path
 - Fan control requires macOS 13+ (XPC with code-signing requirements)
 - Core-Monitor is not available on the Mac App Store
