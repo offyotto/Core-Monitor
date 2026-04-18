@@ -422,3 +422,133 @@ final class TopProcessSamplerTests: XCTestCase {
         )
     }
 }
+
+@MainActor
+final class KernelPanicGameTests: XCTestCase {
+    func testKernelPanicBossCatalogMatchesRequiredOrderAndDialogue() {
+        let bosses = KernelPanicBossProfile.campaignOrder
+
+        XCTAssertEqual(bosses.map(\.id), [.iloveyou, .wannacry, .stuxnet])
+        XCTAssertEqual(bosses[0].mechanics.count, 3)
+        XCTAssertGreaterThanOrEqual(bosses[1].mechanics.count, 4)
+        XCTAssertGreaterThanOrEqual(bosses[2].mechanics.count, 5)
+        XCTAssertEqual(bosses[1].openingLine, "You’re not safe.")
+        XCTAssertEqual(bosses[1].midpointLine, "This won’t be so easy for you.")
+        XCTAssertTrue(bosses[0].mechanics.contains(.heartSpread))
+        XCTAssertTrue(bosses[0].mechanics.contains(.textMines))
+        XCTAssertTrue(bosses[2].mechanics.contains(.laserGrid))
+        XCTAssertTrue(bosses[2].mechanics.contains(.precisionStrikes))
+        XCTAssertLessThan(bosses[0].maxHealth, bosses[1].maxHealth)
+        XCTAssertLessThan(bosses[1].maxHealth, bosses[2].maxHealth)
+    }
+
+    func testKernelPanicCampaignCanReachVictoryInBossOrder() {
+        let model = KernelPanicGameModel(seed: 7)
+        var guardCounter = 0
+
+        while model.scene != .victory && guardCounter < 16 {
+            model.debugCompleteCurrentStage()
+            guardCounter += 1
+        }
+
+        XCTAssertEqual(model.scene, .victory)
+        XCTAssertEqual(model.debugVisitedBosses, [.iloveyou, .wannacry, .stuxnet])
+    }
+
+    func testKernelPanicCapsShotsAndUsesFacingInsteadOfAutoAim() {
+        let model = KernelPanicGameModel(seed: 11)
+        let start = Date()
+
+        model.handlePrimaryAction()
+        model.setMoveLeft(true)
+        model.tick(at: start)
+        model.setMoveLeft(false)
+
+        for step in 1...8 {
+            model.handleSpacePressed()
+            model.handleSpaceReleased()
+            model.tick(at: start.addingTimeInterval(Double(step)))
+        }
+
+        XCTAssertLessThanOrEqual(model.friendlyShots.count, 3)
+        XCTAssertFalse(model.friendlyShots.isEmpty)
+        XCTAssertTrue(model.friendlyShots.allSatisfy { $0.dx == -1 })
+        XCTAssertTrue(model.friendlyShots.allSatisfy { $0.dy == 0 })
+    }
+
+    func testKernelPanicPhaseThreeFakeoutTriggersBeforeStuxnet() {
+        let model = KernelPanicGameModel(seed: 5)
+
+        model.handlePrimaryAction()
+        model.debugCompleteCurrentStage() // spawn ILOVEYOU
+        model.debugCompleteCurrentStage() // defeat ILOVEYOU
+        model.debugCompleteCurrentStage() // spawn WannaCry
+        model.debugCompleteCurrentStage() // defeat WannaCry -> fakeout
+
+        XCTAssertEqual(model.phaseLabel, "3")
+        XCTAssertEqual(model.statusLine, "PHASE 3")
+        XCTAssertEqual(model.detailLine, "IS IT OVER?")
+        XCTAssertNil(model.boss)
+
+        model.debugCompleteCurrentStage() // trigger Stuxnet
+
+        XCTAssertEqual(model.boss?.profile.id, .stuxnet)
+    }
+
+    func testKernelPanicSkipPhaseAdvancesCampaignAndCanReachVictory() {
+        let model = KernelPanicGameModel(seed: 9)
+
+        model.handlePrimaryAction()
+        XCTAssertTrue(model.canSkipPhase)
+
+        model.skipCurrentPhase()
+        XCTAssertEqual(model.boss?.profile.id, .iloveyou)
+
+        model.skipCurrentPhase()
+        XCTAssertNil(model.boss)
+        XCTAssertEqual(model.phaseLabel, "2")
+
+        model.skipCurrentPhase()
+        XCTAssertEqual(model.boss?.profile.id, .wannacry)
+
+        model.skipCurrentPhase()
+        XCTAssertNil(model.boss)
+        XCTAssertEqual(model.phaseLabel, "3")
+        XCTAssertEqual(model.detailLine, "IS IT OVER?")
+
+        model.skipCurrentPhase()
+        XCTAssertEqual(model.boss?.profile.id, .stuxnet)
+
+        model.skipCurrentPhase()
+        XCTAssertEqual(model.scene, .victory)
+        XCTAssertFalse(model.canSkipPhase)
+    }
+
+    func testKernelPanicMusicCueTracksPhaseEscalation() {
+        let model = KernelPanicGameModel(seed: 13)
+
+        XCTAssertEqual(model.musicCue, .silence)
+
+        model.handlePrimaryAction()
+        XCTAssertEqual(model.musicCue, .phaseOne)
+
+        model.skipCurrentPhase()
+        XCTAssertEqual(model.musicCue, .phaseOne)
+
+        model.skipCurrentPhase()
+        XCTAssertEqual(model.musicCue, .phaseTwo)
+
+        model.skipCurrentPhase()
+        XCTAssertEqual(model.musicCue, .phaseTwo)
+
+        model.skipCurrentPhase()
+        XCTAssertEqual(model.musicCue, .silence)
+
+        model.skipCurrentPhase()
+        XCTAssertEqual(model.musicCue, .phaseThree)
+
+        model.skipCurrentPhase()
+        XCTAssertEqual(model.scene, .victory)
+        XCTAssertEqual(model.musicCue, .silence)
+    }
+}
