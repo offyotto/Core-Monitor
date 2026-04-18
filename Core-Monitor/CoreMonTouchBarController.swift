@@ -24,14 +24,12 @@ final class CoreMonTouchBarController: NSObject {
     private var lastRefreshDate = Date.distantPast
     private lazy var timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "H:mm"
+        formatter.setLocalizedDateFormatFromTemplate("Hm")
         return formatter
     }()
     private lazy var monthDayFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "MMM d"
+        formatter.setLocalizedDateFormatFromTemplate("MMM d")
         return formatter
     }()
 
@@ -247,28 +245,15 @@ final class CoreMonTouchBarController: NSObject {
     }
 
     private func formattedTime(from date: Date, timeZone: TimeZone) -> String {
+        timeFormatter.locale = AppLocaleStore.currentLocale
         timeFormatter.timeZone = timeZone
         return timeFormatter.string(from: date)
     }
 
     private func formattedMonthDay(from date: Date) -> String {
+        monthDayFormatter.locale = AppLocaleStore.currentLocale
         monthDayFormatter.timeZone = .current
-        let day = Calendar.current.component(.day, from: date)
-        return "\(monthDayFormatter.string(from: date))\(ordinalSuffix(for: day))"
-    }
-
-    private func ordinalSuffix(for day: Int) -> String {
-        let tens = day % 100
-        if tens >= 11 && tens <= 13 {
-            return "th"
-        }
-
-        switch day % 10 {
-        case 1: return "st"
-        case 2: return "nd"
-        case 3: return "rd"
-        default: return "th"
-        }
+        return monthDayFormatter.string(from: date)
     }
 
     private func currentFPS() -> Int {

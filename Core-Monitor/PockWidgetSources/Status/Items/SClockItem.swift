@@ -10,8 +10,7 @@ final class SClockItem: StatusItem {
     private let clockLabel = NSTextField(labelWithString: "…")
     private let formatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "H:mm"
-        formatter.locale = Locale(identifier: Locale.preferredLanguages.first ?? "en_US_POSIX")
+        formatter.setLocalizedDateFormatFromTemplate("Hm")
         return formatter
     }()
 
@@ -38,6 +37,7 @@ final class SClockItem: StatusItem {
     }
 
     @objc func reload() {
+        formatter.locale = AppLocaleStore.currentLocale
         clockLabel.stringValue = formatter.string(from: Date())
         clockLabel.sizeToFit()
     }
