@@ -38,7 +38,9 @@ jobs:
           xcode-version: latest-stable
 
       - name: Verify release tag exists
-        run: git rev-parse "${RELEASE_TAG}^{tag}"
+        run: |
+          git show-ref --verify --quiet "refs/tags/${RELEASE_TAG}"
+          git rev-parse --verify "${RELEASE_TAG}^{commit}"
 
       - name: Run test suite before archiving
         run: |
