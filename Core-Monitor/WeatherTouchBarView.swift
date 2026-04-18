@@ -239,7 +239,8 @@ final class WeatherTouchBarView: NSView {
 
     private func timeString() -> String {
         let fmt = DateFormatter()
-        fmt.dateFormat = "EEE H:mm"
+        fmt.locale = AppLocaleStore.currentLocale
+        fmt.setLocalizedDateFormatFromTemplate("EEEHm")
         return fmt.string(from: Date())
     }
 

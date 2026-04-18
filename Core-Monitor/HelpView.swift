@@ -23,13 +23,13 @@ struct HelpView: View {
         func matches(query rawQuery: String) -> Bool {
             let query = rawQuery
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-                .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+                .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: AppLocaleStore.currentLocale)
 
             guard query.isEmpty == false else { return true }
 
             let searchableText = ([title] + keywords)
                 .joined(separator: " ")
-                .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+                .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: AppLocaleStore.currentLocale)
 
             return query
                 .split(whereSeparator: \.isWhitespace)
