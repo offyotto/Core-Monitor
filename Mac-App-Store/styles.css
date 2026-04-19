@@ -73,6 +73,13 @@ a {
   text-decoration: none;
 }
 
+.inline-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
 .page-shell {
   position: relative;
   z-index: 1;
@@ -530,6 +537,21 @@ h1 {
   background: var(--accent);
 }
 
+.contact-card {
+  align-content: start;
+}
+
+.contact-value {
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  line-height: 1;
+}
+
+.contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .closing {
   display: flex;
   align-items: center;
@@ -635,6 +657,10 @@ h1 {
 
   .back-link,
   .button {
+    width: 100%;
+  }
+
+  .contact-actions {
     width: 100%;
   }
 
