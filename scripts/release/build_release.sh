@@ -12,6 +12,7 @@ DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM:-6VDP675K4L}"
 RELEASE_CODE_SIGN_IDENTITY="${RELEASE_CODE_SIGN_IDENTITY:-Developer ID Application}"
 RELEASE_PROVISIONING_PROFILE_SPECIFIER="${RELEASE_PROVISIONING_PROFILE_SPECIFIER:-Mac Team Direct Provisioning Profile: CoreTools.Core-Monitor}"
 EXPORT_OPTIONS_PLIST="${EXPORT_OPTIONS_PLIST:-${BUILD_DIR}/exportOptions.plist}"
+RELEASE_ARCHS="${RELEASE_ARCHS:-arm64}"
 
 rm -rf "${BUILD_DIR}"
 mkdir -p "${EXPORT_DIR}"
@@ -24,6 +25,9 @@ xcodebuild \
   -destination 'generic/platform=macOS' \
   -derivedDataPath "${DERIVED_DATA_PATH}" \
   DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}" \
+  ARCHS="${RELEASE_ARCHS}" \
+  ONLY_ACTIVE_ARCH=YES \
+  EXCLUDED_ARCHS=x86_64 \
   CODE_SIGN_STYLE=Automatic \
   -archivePath "${ARCHIVE_PATH}" \
   archive
@@ -57,6 +61,6 @@ xcodebuild \
   -exportOptionsPlist "${EXPORT_OPTIONS_PLIST}"
 
 codesign --verify --deep --strict --verbose=2 "${APP_PATH}"
-ditto -c -k --keepParent "${APP_PATH}" "${ZIP_PATH}"
+ditto -c -k --keepParent --sequesterRsrc --zlibCompressionLevel 9 "${APP_PATH}" "${ZIP_PATH}"
 
 echo "Release bundle ready at ${ZIP_PATH}"
