@@ -20,6 +20,15 @@ enum KernelPanicMusicCue: String, Equatable {
         }
     }
 
+    var resourceExtension: String? {
+        switch self {
+        case .silence:
+            return nil
+        default:
+            return "m4a"
+        }
+    }
+
     var volume: Float {
         switch self {
         case .silence:
@@ -57,7 +66,8 @@ final class KernelPanicMusicPlayer {
 
         guard
             let resourceName = cue.resourceName,
-            let url = Bundle.main.url(forResource: resourceName, withExtension: "mp3")
+            let resourceExtension = cue.resourceExtension,
+            let url = Bundle.main.url(forResource: resourceName, withExtension: resourceExtension)
         else {
             currentCue = .silence
             return
