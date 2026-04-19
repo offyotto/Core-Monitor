@@ -552,6 +552,26 @@ h1 {
   gap: 12px;
 }
 
+.support-hero {
+  grid-template-columns: minmax(0, 0.92fr) minmax(360px, 0.88fr);
+  align-items: start;
+}
+
+.support-summary {
+  max-width: 44rem;
+  align-content: start;
+}
+
+.support-summary h1 {
+  max-width: 11ch;
+  font-size: clamp(2.9rem, 6vw, 5.2rem);
+  line-height: 0.94;
+}
+
+.support-summary .hero-lead {
+  max-width: 28ch;
+}
+
 .closing {
   display: flex;
   align-items: center;
@@ -604,6 +624,10 @@ h1 {
 
 @media (max-width: 1120px) {
   .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .support-hero {
     grid-template-columns: 1fr;
   }
 
@@ -673,6 +697,10 @@ h1 {
   h1 {
     max-width: none;
     font-size: clamp(3rem, 18vw, 4.6rem);
+  }
+
+  .support-summary h1 {
+    font-size: clamp(2.6rem, 12vw, 4rem);
   }
 
   .hero-lead {

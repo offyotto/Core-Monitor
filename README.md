@@ -43,6 +43,8 @@ It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCop
 
 Public builds are available through GitHub Releases as a signed DMG for standard installs and a signed ZIP for archive-friendly installs.
 
+There is also a separate Core-Monitor Mac App Store edition. That variant is sandboxed and intentionally different: it keeps read-only monitoring features that fit App Store rules, and excludes the helper, fan control, AppleSMC access, private-framework paths, and other elevated or non-App-Store behavior.
+
 ## Why people choose Core-Monitor
 
 - Apple Silicon-first monitoring for thermals, power, battery, memory, and fan behavior
