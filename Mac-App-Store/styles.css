@@ -676,16 +676,39 @@ h1 {
   }
 
   .header-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
   }
 
-  .back-link,
-  .button {
+  .header-actions .back-link:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .hero-actions,
+  .contact-actions,
+  .closing-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
   }
 
-  .contact-actions {
+  .hero-actions .button:last-child,
+  .closing-actions .button:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .contact-actions .button {
     width: 100%;
+  }
+
+  .contact-card {
+    gap: 10px;
+  }
+
+  .contact-card p,
+  .contact-card a {
+    overflow-wrap: anywhere;
   }
 
   .hero {
@@ -744,9 +767,25 @@ h1 {
     border-radius: 28px;
   }
 
+  .policy-meta,
+  .panel-copy,
+  .spec p,
+  .list li,
+  .policy-list li {
+    font-size: 0.95rem;
+  }
+
   .policy-note {
     padding: 20px;
     border-radius: 24px;
+  }
+
+  .policy-note strong {
+    font-size: 1.18rem;
+  }
+
+  .contact-value {
+    font-size: clamp(1.5rem, 8vw, 2.1rem);
   }
 
   .closing {
@@ -754,7 +793,22 @@ h1 {
     align-items: flex-start;
   }
 
-  .closing-actions {
+  .closing-actions .button {
     width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .header-actions,
+  .hero-actions,
+  .contact-actions,
+  .closing-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .header-actions .back-link:last-child,
+  .hero-actions .button:last-child,
+  .closing-actions .button:last-child {
+    grid-column: auto;
   }
 }
