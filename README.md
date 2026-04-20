@@ -32,7 +32,7 @@
   <a href="./LICENSE">
     <img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=flat" alt="GPL-3.0 license">
   </a>
-  <img src="https://img.shields.io/badge/macOS-12%2B-black?style=flat&logo=apple" alt="macOS 12+">
+  <img src="https://img.shields.io/badge/macOS-13%2B-black?style=flat&logo=apple" alt="macOS 13+">
 </p>
 
 ---
@@ -42,6 +42,8 @@ Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs
 It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. Sensor reads stay local to your Mac. The optional fan control helper is the only additional process, and it is only needed if you want write access for fan control.
 
 Public builds are available through GitHub Releases as a signed DMG for standard installs and a signed ZIP for archive-friendly installs.
+
+There is also a separate Core-Monitor Mac App Store edition. That variant is sandboxed and intentionally different: it keeps read-only monitoring features that fit App Store rules, and excludes the helper, fan control, AppleSMC access, private-framework paths, and other elevated or non-App-Store behavior.
 
 ## Why people choose Core-Monitor
 
@@ -329,10 +331,6 @@ Core-Monitor does not include analytics, ad SDKs, or account features. Sensor re
 ## WeatherKit
 
 The optional Touch Bar weather item uses Apple WeatherKit and location access to show local conditions. Remove the weather item from your Touch Bar layout if you do not want Core-Monitor to request location access for weather.
-
-## AI and Search Discovery
-
-The public website includes canonical metadata, structured `SoftwareApplication` and `FAQPage` markup, and an `llms.txt` file so search engines and AI assistants can identify Core-Monitor more clearly. If you are evaluating whether an AI system can recommend the app accurately, start with the website, the README, and the latest GitHub release notes.
 
 ## License
 
