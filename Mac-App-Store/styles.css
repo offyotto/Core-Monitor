@@ -2,6 +2,7 @@
   --bg: #eef2f6;
   --surface: rgba(255, 255, 255, 0.7);
   --surface-strong: rgba(255, 255, 255, 0.84);
+  --line: rgba(29, 29, 31, 0.08);
   --surface-soft: rgba(255, 255, 255, 0.56);
   --line: rgba(29, 29, 31, 0.08);
   --line-strong: rgba(29, 29, 31, 0.14);
@@ -31,6 +32,9 @@ body {
   background:
     radial-gradient(circle at 12% 18%, rgba(0, 113, 227, 0.15), transparent 24%),
     radial-gradient(circle at 88% 14%, rgba(255, 159, 67, 0.18), transparent 22%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2f6 52%, #e7ebf2 100%);
+}
+
     radial-gradient(circle at 86% 80%, rgba(124, 92, 255, 0.12), transparent 24%),
     linear-gradient(180deg, #f8fafc 0%, #eef2f6 52%, #e7ebf2 100%);
 }
@@ -98,6 +102,7 @@ a {
   padding: 14px 18px;
   border: 1px solid var(--line);
   border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(24px);
   box-shadow: 0 16px 44px rgba(17, 24, 39, 0.08);
@@ -142,6 +147,7 @@ a {
   margin-left: auto;
 }
 
+.back-link {
 .header-actions .back-link {
   margin-left: 0;
 }
@@ -155,6 +161,7 @@ a {
   color: var(--text);
   font-size: 0.95rem;
   font-weight: 700;
+  transition: transform 180ms ease;
   transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
 }
 
@@ -172,6 +179,10 @@ main {
 .hero,
 .panel,
 .closing {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(247, 249, 252, 0.74));
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.68);
@@ -239,12 +250,16 @@ h1 {
 }
 
 .hero-lead {
+  max-width: 20ch;
   max-width: 16ch;
   color: var(--muted);
   font-size: clamp(1.16rem, 2.2vw, 1.6rem);
   line-height: 1.36;
 }
 
+.hero-actions,
+.contact-actions,
+.closing-actions {
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
@@ -278,6 +293,7 @@ h1 {
   border-radius: 999px;
   font-size: 0.96rem;
   font-weight: 700;
+  transition: transform 180ms ease;
   transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
 }
 
@@ -302,6 +318,8 @@ h1 {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.78);
   border-radius: 34px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(243, 245, 249, 0.76));
+  box-shadow: 0 30px 72px rgba(17, 24, 39, 0.14);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(243, 245, 249, 0.76));
   box-shadow:
@@ -353,11 +371,15 @@ h1 {
 .spec p,
 .panel-copy,
 .list li,
+.closing-copy,
+.policy-list li {
 .closing-copy {
   color: var(--muted);
   line-height: 1.55;
 }
 
+.content-grid,
+.policy-grid {
 .spec:nth-child(2) {
   animation-delay: 80ms;
 }
@@ -380,6 +402,20 @@ h1 {
   padding: 30px;
 }
 
+.intro-panel,
+.quote-panel,
+.policy-section {
+  display: grid;
+  gap: 16px;
+  align-content: center;
+}
+
+.intro-panel {
+  min-height: 260px;
+}
+
+.intro-panel h2,
+.policy-section h2 {
 .intro-panel {
   display: grid;
   gap: 14px;
@@ -394,6 +430,8 @@ h1 {
 }
 
 .quote-panel {
+  min-height: 260px;
+  background: radial-gradient(circle at top right, rgba(0, 113, 227, 0.09), transparent 44%), rgba(255, 255, 255, 0.72);
   display: grid;
   gap: 16px;
   align-content: space-between;
@@ -416,11 +454,15 @@ h1 {
   padding: 32px;
 }
 
+.list,
+.policy-section {
 .list {
   display: grid;
   gap: 18px;
 }
 
+.list ul,
+.policy-list {
 .list ul {
   display: grid;
   gap: 10px;
@@ -428,12 +470,18 @@ h1 {
   list-style: none;
 }
 
+.list li,
+.policy-list li {
 .list li {
   display: flex;
   gap: 12px;
   align-items: flex-start;
   padding-top: 12px;
   border-top: 1px solid rgba(29, 29, 31, 0.09);
+}
+
+.list li::before,
+.policy-list li::before {
   font-size: 0.98rem;
 }
 
@@ -451,6 +499,9 @@ h1 {
   background: rgba(29, 29, 31, 0.28);
 }
 
+.policy-summary,
+.support-summary {
+  max-width: 44rem;
 .policy-hero {
   align-items: start;
 }
@@ -612,6 +663,11 @@ h1 {
   }
 }
 
+@media (max-width: 1120px) {
+  .hero,
+  .support-hero,
+  .content-grid,
+  .policy-grid {
 @keyframes drift {
   0%,
   100% {
@@ -648,6 +704,9 @@ h1 {
   }
 
   .spec-strip,
+  .checklist {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .content-grid,
   .checklist,
   .policy-grid {
@@ -675,6 +734,7 @@ h1 {
     border-radius: 28px;
   }
 
+  .header-actions,
   .header-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -689,6 +749,10 @@ h1 {
   .contact-actions,
   .closing-actions {
     display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
   }
