@@ -402,6 +402,22 @@ h1 {
 .policy-summary,
 .support-summary {
   max-width: 44rem;
+  align-content: start;
+}
+
+.policy-summary {
+  max-width: 30rem;
+}
+
+.policy-summary h1 {
+  max-width: 6.5ch;
+  font-size: clamp(2.9rem, 6vw, 5.4rem);
+  line-height: 0.92;
+}
+
+.policy-summary .hero-lead {
+  max-width: 18ch;
+  font-size: clamp(1.05rem, 1.8vw, 1.34rem);
 }
 
 .policy-meta {
@@ -439,7 +455,19 @@ h1 {
 }
 
 .contact-card {
+  display: grid;
+  gap: 8px;
   align-content: start;
+}
+
+.contact-card p {
+  max-width: 34ch;
+  line-height: 1.34;
+}
+
+.contact-card .inline-link {
+  font-size: 1.08rem;
+  font-weight: 600;
 }
 
 .contact-value {
@@ -448,18 +476,29 @@ h1 {
 }
 
 .support-hero {
-  grid-template-columns: minmax(0, 0.92fr) minmax(360px, 0.88fr);
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.84fr);
   align-items: start;
 }
 
+.support-summary {
+  max-width: 36rem;
+  gap: 16px;
+}
+
 .support-summary h1 {
-  max-width: 11ch;
-  font-size: clamp(2.9rem, 6vw, 5.2rem);
-  line-height: 0.94;
+  max-width: 8.4ch;
+  font-size: clamp(2.55rem, 5vw, 4.6rem);
+  line-height: 0.95;
 }
 
 .support-summary .hero-lead {
-  max-width: 28ch;
+  max-width: 24ch;
+  font-size: clamp(1.06rem, 1.75vw, 1.34rem);
+}
+
+.contact-actions {
+  margin-top: 10px;
+  align-items: center;
 }
 
 .closing {
@@ -554,7 +593,7 @@ h1 {
   }
 
   .support-summary h1 {
-    font-size: clamp(2.6rem, 12vw, 4rem);
+    font-size: clamp(2.35rem, 10.5vw, 3.6rem);
   }
 
   .hero-list {
