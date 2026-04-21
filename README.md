@@ -9,21 +9,21 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">
+  <a href="https://github.com/offyotto/Core-Monitor/releases/latest">
     <img src="https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge" alt="Download latest release">
   </a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">Latest release</a>
+  <a href="https://github.com/offyotto/Core-Monitor/releases/latest">Latest release</a>
   ·
-  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases">All releases</a>
+  <a href="https://github.com/offyotto/Core-Monitor/releases">All releases</a>
   ·
   <a href="./LICENSE">License</a>
 </p>
 
 <p align="center">
-  <a href="https://offyotto-sl3.github.io/Core-Monitor/">
+  <a href="https://offyotto.github.io/Core-Monitor/">
     <img src="https://img.shields.io/badge/Website-Core--Monitor-8A2BE2?style=flat" alt="Website">
   </a>
   <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">
