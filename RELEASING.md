@@ -10,7 +10,7 @@ Core-Monitor is not a throwaway unsigned zip anymore. The release path in this r
 
 - GitHub Releases: primary source of truth, public changelog, checksums, and pinned Homebrew cask artifact.
 - Website: the main download buttons should point to `releases/latest/download/Core-Monitor.dmg`, and the install section should also surface `releases/latest/download/Core-Monitor.app.zip`.
-- Homebrew: this repository acts as a custom tap; users should tap it first, then install `offyotto-sl3/core-monitor/core-monitor`.
+- Homebrew: this repository acts as a custom tap; users should tap it first, then install `offyotto/core-monitor/core-monitor`.
 - Direct support/install docs: README, website, and release notes should present DMG as the standard drag-to-Applications path and ZIP as the fallback/manual path.
 
 ## GitHub Actions secrets
@@ -49,8 +49,8 @@ Do not rely on a bare `NOTARYTOOL_PROFILE` secret on GitHub Actions. A profile n
 8. Test the Homebrew install path:
 
 ```bash
-brew tap --custom-remote offyotto-sl3/core-monitor https://github.com/offyotto-sl3/Core-Monitor
-brew install --cask offyotto-sl3/core-monitor/core-monitor
+brew tap --custom-remote offyotto/core-monitor https://github.com/offyotto/Core-Monitor
+brew install --cask offyotto/core-monitor/core-monitor
 ```
 
 ## Local dry run

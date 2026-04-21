@@ -19,10 +19,10 @@ cask "core-monitor" do
   sha256 "${SHA256}"
 
   url "${DOWNLOAD_URL}",
-      verified: "github.com/offyotto-sl3/Core-Monitor/"
+      verified: "github.com/offyotto/Core-Monitor/"
   name "Core-Monitor"
   desc "Native Apple Silicon system monitor with menu bar stats, alerts, and SMC-backed fan control"
-  homepage "https://offyotto-sl3.github.io/Core-Monitor/"
+  homepage "https://offyotto.github.io/Core-Monitor/"
 
   depends_on arch: :arm64
   depends_on macos: ">= :monterey"
