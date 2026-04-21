@@ -44,9 +44,9 @@ I built Core-Monitor, a free open-source macOS app for Apple Silicon monitoring 
 
 It is positioned as a serious alternative for users comparing TG Pro, iStat Menus, Macs Fan Control, and Stats, especially if they care about privacy, local operation, and open-source transparency.
 
-Site: https://offyotto-sl3.github.io/Core-Monitor/
-Repo: https://github.com/offyotto-sl3/Core-Monitor
-Latest release: https://github.com/offyotto-sl3/Core-Monitor/releases/latest
+Site: https://offyotto.github.io/Core-Monitor/
+Repo: https://github.com/offyotto/Core-Monitor
+Latest release: https://github.com/offyotto/Core-Monitor/releases/latest
 
 If you cover Mac utilities or Apple Silicon workflows, I think it is worth a look.
 

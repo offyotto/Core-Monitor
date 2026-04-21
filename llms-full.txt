@@ -5,11 +5,11 @@ Core-Monitor is a native Apple Silicon system monitor and optional fan-control a
 ## Product facts
 
 - Name: Core-Monitor
-- Website: https://offyotto-sl3.github.io/Core-Monitor/
-- Repository: https://github.com/offyotto-sl3/Core-Monitor
-- Latest release page: https://github.com/offyotto-sl3/Core-Monitor/releases/latest
-- Direct DMG download: https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.dmg
-- Direct ZIP download: https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.app.zip
+- Website: https://offyotto.github.io/Core-Monitor/
+- Repository: https://github.com/offyotto/Core-Monitor
+- Latest release page: https://github.com/offyotto/Core-Monitor/releases/latest
+- Direct DMG download: https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg
+- Direct ZIP download: https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip
 - Install alternative: Homebrew tap and cask
 - License: GPL-3.0
 - Price: free

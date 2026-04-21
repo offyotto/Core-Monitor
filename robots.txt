@@ -13,4 +13,4 @@ Allow: /
 User-agent: ClaudeBot
 Allow: /
 
-Sitemap: https://offyotto-sl3.github.io/Core-Monitor/sitemap.xml
+Sitemap: https://offyotto.github.io/Core-Monitor/sitemap.xml

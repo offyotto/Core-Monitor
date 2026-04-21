@@ -26,7 +26,7 @@
   <a href="https://offyotto.github.io/Core-Monitor/">
     <img src="https://img.shields.io/badge/Website-Core--Monitor-8A2BE2?style=flat" alt="Website">
   </a>
-  <a href="https://github.com/offyotto-sl3/Core-Monitor/releases/latest">
+  <a href="https://github.com/offyotto/Core-Monitor/releases/latest">
     <img src="https://img.shields.io/badge/Download-latest-brightgreen?style=flat" alt="Download latest">
   </a>
   <a href="./LICENSE">
@@ -67,16 +67,16 @@ Choose Core-Monitor when you want:
 
 Direct download:
 
-- Download [Core-Monitor.dmg](https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.dmg) for the normal drag-to-Applications install.
+- Download [Core-Monitor.dmg](https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg) for the normal drag-to-Applications install.
 - Open the disk image, drag `Core-Monitor.app` into `/Applications`, then eject the disk image.
-- Download [Core-Monitor.app.zip](https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.app.zip) if you prefer the raw app archive.
+- Download [Core-Monitor.app.zip](https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip) if you prefer the raw app archive.
 - Move `Core-Monitor.app` into `/Applications` if you use the ZIP.
 
 Homebrew:
 
 ```bash
-brew tap --custom-remote offyotto-sl3/core-monitor https://github.com/offyotto-sl3/Core-Monitor
-brew install --cask offyotto-sl3/core-monitor/core-monitor
+brew tap --custom-remote offyotto/core-monitor https://github.com/offyotto/Core-Monitor
+brew install --cask offyotto/core-monitor/core-monitor
 ```
 
 ## UI Preview
@@ -307,12 +307,12 @@ It is not a cloud monitoring platform, not a fleet-management product, and not t
 
 ## Installation
 
-**Download:** Use the signed [Core-Monitor.dmg](https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.dmg) for the standard install, or grab the [Core-Monitor.app.zip](https://github.com/offyotto-sl3/Core-Monitor/releases/latest/download/Core-Monitor.app.zip) if you want the raw archive.
+**Download:** Use the signed [Core-Monitor.dmg](https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg) for the standard install, or grab the [Core-Monitor.app.zip](https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip) if you want the raw archive.
 
 **Build from source:**
 
 ```bash
-git clone https://github.com/offyotto-sl3/Core-Monitor.git
+git clone https://github.com/offyotto/Core-Monitor.git
 ```
 
 Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc-helper` is a separate target. You can build and run Core-Monitor without it, but fan control will not be available.

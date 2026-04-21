@@ -360,9 +360,9 @@ struct HelpView: View {
                     .font(.footnote.weight(.bold))
                     .foregroundColor(.primary.opacity(0.8))
                 HStack(spacing: 24) {
-                    Link("GitHub Issues", destination: URL(string: "https://github.com/offyotto-sl3/Core-Monitor/issues")!)
-                    Link("Official Website", destination: URL(string: "https://offyotto-sl3.github.io/Core-Monitor/")!)
-                    Link("Security Policy", destination: URL(string: "https://github.com/offyotto-sl3/Core-Monitor/blob/main/SECURITY.md")!)
+                    Link("GitHub Issues", destination: URL(string: "https://github.com/offyotto/Core-Monitor/issues")!)
+                    Link("Official Website", destination: URL(string: "https://offyotto.github.io/Core-Monitor/")!)
+                    Link("Security Policy", destination: URL(string: "https://github.com/offyotto/Core-Monitor/blob/main/SECURITY.md")!)
                 }
                 .font(.footnote)
                 .foregroundColor(.accentColor)
