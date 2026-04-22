@@ -20,6 +20,7 @@ The release workflow expects these repository or organization secrets:
 - `BUILD_CERTIFICATE_BASE64`: base64-encoded Developer ID Application `.p12`
 - `P12_PASSWORD`: password for the `.p12`
 - `KEYCHAIN_PASSWORD`: temporary keychain password used on the runner
+- `ARCHIVE_PROVISIONING_PROFILE_BASE64`: base64-encoded `Mac Team Provisioning Profile: CoreTools.Core-Monitor` for the archive step
 - `WEATHERKIT_PROVISIONING_PROFILE_BASE64`: base64-encoded `Mac Team Direct Provisioning Profile: CoreTools.Core-Monitor`
 - `APPLE_TEAM_ID`: Apple Developer team id when using Apple ID notarization
 - For notarization, configure one of these:
@@ -71,10 +72,9 @@ Signed archive + zip:
 ./scripts/release/build_release.sh
 ```
 
-`build_release.sh` forces a manual `Developer ID Application` signing identity for the archive step so the release path does not depend on whichever automatic-signing identity Xcode happens to prefer locally.
-`build_release.sh` now archives with automatic signing and then performs a `developer-id` export so the release artifact keeps the WeatherKit entitlement while still shipping as a Developer ID app.
+`build_release.sh` now archives with automatic signing against the WeatherKit-enabled development profile installed on the machine, then performs a `developer-id` export so the release artifact keeps the WeatherKit entitlement while still shipping as a Developer ID app.
 
-The repository's `Release` configuration now uses the WeatherKit entitlement. The direct-download path therefore depends on the direct-distribution provisioning profile secret listed above.
+The repository's `Release` configuration now uses the WeatherKit entitlement. The direct-download path therefore depends on both provisioning profile secrets listed above: the development profile for the archive phase and the direct-distribution profile for the export phase.
 
 Notarize and staple the app:
 
