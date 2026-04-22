@@ -24,6 +24,8 @@
 	<string>public.app-category.utilities</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Core-Monitor uses your location for the optional Touch Bar weather item.</string>
 	<key>SMPrivilegedExecutables</key>
