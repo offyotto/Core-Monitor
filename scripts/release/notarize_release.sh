@@ -31,7 +31,7 @@ elif [[ -n "${APP_STORE_CONNECT_KEY_PATH}" ]]; then
   submit_with_api_key "${APP_STORE_CONNECT_KEY_PATH}"
 elif xcrun notarytool history --keychain-profile "${PROFILE_NAME}" >/dev/null 2>&1; then
   xcrun notarytool submit "${ZIP_PATH}" --keychain-profile "${PROFILE_NAME}" --wait
-elif [[ -z "${NOTARYTOOL_PROFILE:-}" ]]; then
+elif [[ -n "${APPLE_ID:-}" || -n "${APPLE_APP_SPECIFIC_PASSWORD:-}" || -n "${APPLE_TEAM_ID:-}" ]]; then
   : "${APPLE_ID:?Set APPLE_ID or NOTARYTOOL_PROFILE}"
   : "${APPLE_APP_SPECIFIC_PASSWORD:?Set APPLE_APP_SPECIFIC_PASSWORD or NOTARYTOOL_PROFILE}"
   : "${APPLE_TEAM_ID:?Set APPLE_TEAM_ID or NOTARYTOOL_PROFILE}"
@@ -42,8 +42,15 @@ elif [[ -z "${NOTARYTOOL_PROFILE:-}" ]]; then
     --password "${APPLE_APP_SPECIFIC_PASSWORD}"
 
   xcrun notarytool submit "${ZIP_PATH}" --keychain-profile "${PROFILE_NAME}" --wait
+elif [[ -n "${NOTARYTOOL_PROFILE:-}" ]]; then
+  echo "Keychain profile '${PROFILE_NAME}' was not found." >&2
+  echo "NOTARYTOOL_PROFILE is only a local keychain profile name, not a portable GitHub Actions secret." >&2
+  echo "Configure APP_STORE_CONNECT_API_KEY_BASE64 with APP_STORE_CONNECT_KEY_ID and APP_STORE_CONNECT_ISSUER_ID, or APPLE_ID with APPLE_APP_SPECIFIC_PASSWORD and APPLE_TEAM_ID." >&2
+  exit 1
 else
-  xcrun notarytool submit "${ZIP_PATH}" --keychain-profile "${PROFILE_NAME}" --wait
+  echo "Missing notarization credentials." >&2
+  echo "Configure APP_STORE_CONNECT_API_KEY_BASE64 with APP_STORE_CONNECT_KEY_ID and APP_STORE_CONNECT_ISSUER_ID, or APPLE_ID with APPLE_APP_SPECIFIC_PASSWORD and APPLE_TEAM_ID." >&2
+  exit 1
 fi
 
 xcrun stapler staple "${APP_PATH}"
