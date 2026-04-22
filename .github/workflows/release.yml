@@ -152,8 +152,9 @@ jobs:
           REPOSITORY: ${{ github.repository }}
         run: |
           APP_PATH="build/release/export/Core-Monitor.app"
-          VERSION="$(defaults read "${APP_PATH}/Contents/Info" CFBundleShortVersionString)"
-          BUILD_NUMBER="$(defaults read "${APP_PATH}/Contents/Info" CFBundleVersion)"
+          INFO_PLIST="${APP_PATH}/Contents/Info.plist"
+          VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "${INFO_PLIST}")
+          BUILD_NUMBER=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "${INFO_PLIST}")
           ZIP_SHA256="$(shasum -a 256 build/release/Core-Monitor.app.zip | awk '{print $1}')"
           DMG_SHA256="$(shasum -a 256 build/release/Core-Monitor.dmg | awk '{print $1}')"
           ZIP_DOWNLOAD_URL="https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}/Core-Monitor.app.zip"
