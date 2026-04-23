@@ -1,0 +1,50 @@
+# Commit 591aecf: Publish Sparkle test update 11.2.8
+
+## Metadata
+
+| Field | Value |
+| --- | --- |
+| Full SHA | `591aecf069e8793908f4c0087779592f3aea6fce` |
+| Author | ventaphobia <nazishamin65@gmail.com> |
+| Date | 2026-04-08 |
+| ISO date | `2026-04-08T23:37:45+05:00` |
+| Parents | `e9a03c52bb80` |
+| Direct refs | No direct branch/tag ref |
+| Files changed | 13 |
+| Insertions | 63 |
+| Deletions | 26 |
+
+## Commit Message
+
+No extended commit message body.
+
+## Area Summary
+
+- Repository support: 8 file(s)
+- Core app: 2 file(s)
+- Website and documentation: 2 file(s)
+- Dashboard: 1 file(s)
+
+## Changed Files
+
+| Status | Path | Added | Deleted |
+| --- | --- | ---: | ---: |
+| Modified | `Core-Monitor.xcodeproj/project.pbxproj` | 4 | 4 |
+| Modified | `Core-Monitor/AppUpdater.swift` | 19 | 1 |
+| Modified | `Core-Monitor/AppVersion.swift` | 1 | 1 |
+| Modified | `Core-Monitor/ContentView.swift` | 21 | 2 |
+| Modified | `appcast.xml` | 10 | 10 |
+| Modified | `docs/index.html` | 4 | 4 |
+| Added | `downloads/Core-Monitor-11.2.8.zip` |  |  |
+| Added | `downloads/Core-Monitor11280-11230.delta` |  |  |
+| Added | `downloads/Core-Monitor11280-11240.delta` |  |  |
+| Added | `downloads/Core-Monitor11280-11250.delta` |  |  |
+| Added | `downloads/Core-Monitor11280-11260.delta` |  |  |
+| Added | `downloads/Core-Monitor11280-11270.delta` |  |  |
+| Modified | `index.html` | 4 | 4 |
+
+## Reading Notes
+
+- This page is generated from local git metadata so it is best used with the exact repository clone that produced the wiki.
+- Merge commits may show little or no direct diff even though they pull a full branch of work into the reachable history.
+- Deleted paths are also cross-linked from the removed-parts index when the status is `Deleted`.

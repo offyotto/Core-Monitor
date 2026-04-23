@@ -1,0 +1,35 @@
+# Commit b7d0f21: improve readme
+
+## Metadata
+
+| Field | Value |
+| --- | --- |
+| Full SHA | `b7d0f2163bd2880e73df7be5bf3ac1c83092439d` |
+| Author | offyotto (not my real name) <nazishamin65@gmail.com> |
+| Date | 2026-03-28 |
+| ISO date | `2026-03-28T12:08:25+05:00` |
+| Parents | `292325058fe1` |
+| Direct refs | No direct branch/tag ref |
+| Files changed | 1 |
+| Insertions | 0 |
+| Deletions | 4 |
+
+## Commit Message
+
+No extended commit message body.
+
+## Area Summary
+
+- Repository support: 1 file(s)
+
+## Changed Files
+
+| Status | Path | Added | Deleted |
+| --- | --- | ---: | ---: |
+| Modified | `README.md` | 0 | 4 |
+
+## Reading Notes
+
+- This page is generated from local git metadata so it is best used with the exact repository clone that produced the wiki.
+- Merge commits may show little or no direct diff even though they pull a full branch of work into the reachable history.
+- Deleted paths are also cross-linked from the removed-parts index when the status is `Deleted`.
