@@ -70,6 +70,8 @@ private final class SMCController {
     private let typeFlt = fourCharCodeFrom("flt ")
     private let typeUi8 = fourCharCodeFrom("ui8 ")
     private let typeUi16 = fourCharCodeFrom("ui16")
+    private let conservativeMinimumRPM = 1_000
+    private let conservativeMaximumRPM = 6_500
 
     deinit {
         close()
@@ -104,10 +106,11 @@ private final class SMCController {
     func setFanManual(_ fanID: Int, rpm: Int) throws {
         let modeKey = try modeKey(for: fanID)
         let targetKey = String(format: "F%dTg", fanID)
+        let safeRPM = try validatedHardwareRPM(for: fanID, requestedRPM: rpm)
 
         try unlockFansIfNeeded(for: fanID)
         try writeValue(key: modeKey, value: 1)
-        try writeValue(key: targetKey, value: rpm)
+        try writeValue(key: targetKey, value: safeRPM)
     }
 
     func setFanAuto(_ fanID: Int) throws {
@@ -290,6 +293,35 @@ private final class SMCController {
         }
 
         return 0
+    }
+
+    private func validatedHardwareRPM(for fanID: Int, requestedRPM: Int) throws -> Int {
+        let minimumKey = String(format: "F%dMn", fanID)
+        let maximumKey = String(format: "F%dMx", fanID)
+
+        guard let reportedMinimumRPM = readRPMBoundary(key: minimumKey),
+              let reportedMaximumRPM = readRPMBoundary(key: maximumKey) else {
+            throw HelperError("Fan \(fanID) did not report safe RPM limits")
+        }
+
+        let minimumRPM = max(reportedMinimumRPM, conservativeMinimumRPM)
+        let maximumRPM = min(reportedMaximumRPM, conservativeMaximumRPM)
+
+        guard minimumRPM <= maximumRPM else {
+            throw HelperError("Fan \(fanID) reported an unsafe RPM range")
+        }
+
+        guard (minimumRPM...maximumRPM).contains(requestedRPM) else {
+            throw HelperError("RPM for fan \(fanID) must be between \(minimumRPM) and \(maximumRPM)")
+        }
+
+        return requestedRPM
+    }
+
+    private func readRPMBoundary(key: String) -> Int? {
+        guard let value = try? readValue(key), value.isFinite else { return nil }
+        let rounded = Int(value.rounded())
+        return rounded > 0 ? rounded : nil
     }
 
     private func unlockFansIfNeeded(for fanID: Int) throws {
@@ -561,6 +593,7 @@ private let helperMachServiceName = Bundle.main.bundleIdentifier ?? "ventaphobia
 private final class SMCHelperXPCService: NSObject, NSXPCListenerDelegate, SMCHelperXPCProtocol {
     private let controller = SMCController()
     private let clientValidator = HelperClientValidator()
+    private let controllerQueue = DispatchQueue(label: "ventaphobia.smc-helper.smc-controller", qos: .userInitiated)
 
     override init() {
         super.init()
@@ -580,50 +613,58 @@ private final class SMCHelperXPCService: NSObject, NSXPCListenerDelegate, SMCHel
     }
 
     func setFanManual(_ fanID: Int, rpm: Int, withReply reply: @escaping (NSString?) -> Void) {
-        do {
-            let validatedFanID = try validatedFanID(fanID)
-            let validatedRPM = try validatedRPM(rpm)
-            try controller.open()
-            try controller.setFanManual(validatedFanID, rpm: validatedRPM)
-            reply(nil)
-        } catch {
-            reply(error.localizedDescription as NSString)
+        controllerQueue.async { [controller] in
+            do {
+                let validatedFanID = try validatedFanID(fanID)
+                let validatedRPM = try validatedRPM(rpm)
+                try controller.open()
+                try controller.setFanManual(validatedFanID, rpm: validatedRPM)
+                reply(nil)
+            } catch {
+                reply(error.localizedDescription as NSString)
+            }
         }
     }
 
     func setFanAuto(_ fanID: Int, withReply reply: @escaping (NSString?) -> Void) {
-        do {
-            let validatedFanID = try validatedFanID(fanID)
-            try controller.open()
-            try controller.setFanAuto(validatedFanID)
-            reply(nil)
-        } catch {
-            reply(error.localizedDescription as NSString)
+        controllerQueue.async { [controller] in
+            do {
+                let validatedFanID = try validatedFanID(fanID)
+                try controller.open()
+                try controller.setFanAuto(validatedFanID)
+                reply(nil)
+            } catch {
+                reply(error.localizedDescription as NSString)
+            }
         }
     }
 
     func readValue(_ key: String, withReply reply: @escaping (NSNumber?, NSString?) -> Void) {
-        do {
-            let validatedKey = try validatedSMCKey(key)
-            try controller.open()
-            let value = try controller.readValue(validatedKey)
-            reply(NSNumber(value: value), nil)
-        } catch {
-            reply(nil, error.localizedDescription as NSString)
+        controllerQueue.async { [controller] in
+            do {
+                let validatedKey = try validatedSMCKey(key)
+                try controller.open()
+                let value = try controller.readValue(validatedKey)
+                reply(NSNumber(value: value), nil)
+            } catch {
+                reply(nil, error.localizedDescription as NSString)
+            }
         }
     }
 
     func readControlMetadata(withReply reply: @escaping (NSString?, NSNumber?, NSString?) -> Void) {
-        do {
-            try controller.open()
-            let metadata = controller.controlMetadata()
-            reply(
-                metadata.modeKeyTemplate as NSString,
-                NSNumber(value: metadata.hasForceTestKey),
-                nil
-            )
-        } catch {
-            reply(nil, nil, error.localizedDescription as NSString)
+        controllerQueue.async { [controller] in
+            do {
+                try controller.open()
+                let metadata = controller.controlMetadata()
+                reply(
+                    metadata.modeKeyTemplate as NSString,
+                    NSNumber(value: metadata.hasForceTestKey),
+                    nil
+                )
+            } catch {
+                reply(nil, nil, error.localizedDescription as NSString)
+            }
         }
     }
 }

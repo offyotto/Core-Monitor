@@ -44,7 +44,7 @@
 /* Begin PBXFileReference section */
 		33D1932E6B3C54A956AF5F6C /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
 		353B02D12F640A0700A65F2C /* Core-Monitor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Core-Monitor.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		35F039AB2F64444D004CB9F8 /* smc-helper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "smc-helper"; sourceTree = BUILT_PRODUCTS_DIR; };
+		35F039AB2F64444D004CB9F8 /* smc-helper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = "smc-helper"; path = "ventaphobia.smc-helper"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7381A6E72B87236C00C0DE01 /* CustomFanPresetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomFanPresetTests.swift; sourceTree = "<group>"; };
 		8D6F3C76B69FEDB140682676 /* AlertEngineTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlertEngineTests.swift; sourceTree = "<group>"; };
 		E5B12BED2CCB8BBEC03C227F /* Core-MonitorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Core-MonitorTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -456,7 +456,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 14080;
+				CURRENT_PROJECT_VERSION = 15000;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 6VDP675K4L;
 				ENABLE_APP_SANDBOX = NO;
@@ -473,7 +473,7 @@
 					"@executable_path/../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MARKETING_VERSION = 14.08;
+				MARKETING_VERSION = 15;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "CoreTools.Core-Monitor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -484,7 +484,6 @@
 				RUNTIME_EXCEPTION_ALLOW_UNSIGNED_EXECUTABLE_MEMORY = NO;
 				RUNTIME_EXCEPTION_DEBUGGING_TOOL = NO;
 				RUNTIME_EXCEPTION_DISABLE_EXECUTABLE_PAGE_PROTECTION = NO;
-				RUNTIME_EXCEPTION_DISABLE_LIBRARY_VALIDATION = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -505,7 +504,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Core-Monitor-WeatherKit.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 14080;
+				CURRENT_PROJECT_VERSION = 15000;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 6VDP675K4L;
 				ENABLE_APP_SANDBOX = NO;
@@ -522,7 +521,7 @@
 					"@executable_path/../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MARKETING_VERSION = 14.08;
+				MARKETING_VERSION = 15;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(CORE_MONITOR_APP_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -532,7 +531,6 @@
 				RUNTIME_EXCEPTION_ALLOW_UNSIGNED_EXECUTABLE_MEMORY = NO;
 				RUNTIME_EXCEPTION_DEBUGGING_TOOL = NO;
 				RUNTIME_EXCEPTION_DISABLE_EXECUTABLE_PAGE_PROTECTION = NO;
-				RUNTIME_EXCEPTION_DISABLE_LIBRARY_VALIDATION = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;

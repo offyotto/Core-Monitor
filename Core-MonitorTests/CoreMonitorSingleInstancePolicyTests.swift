@@ -80,4 +80,43 @@ final class CoreMonitorSingleInstancePolicyTests: XCTestCase {
 
         XCTAssertEqual(target, lowerPID)
     }
+
+    func testDashboardHandoffRequestRequiresExpectedBundleAndTargetPID() {
+        let request = CoreMonitorDashboardHandoffRequest(
+            bundleIdentifier: "CoreTools.Core-Monitor",
+            targetProcessIdentifier: 1234
+        )
+
+        XCTAssertTrue(
+            CoreMonitorDashboardHandoffRequest.accepts(
+                userInfo: request.userInfo,
+                expectedBundleIdentifier: "CoreTools.Core-Monitor",
+                currentProcessIdentifier: 1234
+            )
+        )
+
+        XCTAssertFalse(
+            CoreMonitorDashboardHandoffRequest.accepts(
+                userInfo: request.userInfo,
+                expectedBundleIdentifier: "CoreTools.Core-Monitor",
+                currentProcessIdentifier: 5678
+            )
+        )
+
+        XCTAssertFalse(
+            CoreMonitorDashboardHandoffRequest.accepts(
+                userInfo: ["bundleIdentifier": "CoreTools.Core-Monitor"],
+                expectedBundleIdentifier: "CoreTools.Core-Monitor",
+                currentProcessIdentifier: 1234
+            )
+        )
+
+        XCTAssertFalse(
+            CoreMonitorDashboardHandoffRequest.accepts(
+                userInfo: request.userInfo,
+                expectedBundleIdentifier: "com.example.other",
+                currentProcessIdentifier: 1234
+            )
+        )
+    }
 }

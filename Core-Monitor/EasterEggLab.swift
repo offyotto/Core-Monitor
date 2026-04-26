@@ -10,8 +10,7 @@ struct EasterEggLabCard: View {
     @AppStorage(KernelPanicPreferences.bestScoreKey) private var bestScore = 0
 
     var body: some View {
-        DarkCard(padding: 18) {
-            VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .top, spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Weird Easter Eggs")
@@ -49,6 +48,7 @@ struct EasterEggLabCard: View {
                     KernelPanicArcade()
                 }
             }
-        }
+            .padding(18)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
     }
 }

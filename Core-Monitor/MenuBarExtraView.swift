@@ -8,50 +8,18 @@ private extension View {
     }
 }
 
-// MARK: - Shared colours (dark popover palette)
-private extension Color {
-    static let mbBG     = Color.clear
-    static let mbCard   = Color.white.opacity(0.06)
-    static let mbDiv    = Color.white.opacity(0.10)
-    static let mbAccent = Color.white.opacity(0.92)
-    static let mbTint   = Color(red: 0.66, green: 0.72, blue: 0.96)
-    static let mbBlue   = Color(red: 0.39, green: 0.66, blue: 1.00)
-    static let mbGreen  = Color(red: 0.25, green: 0.90, blue: 0.58)
-    static let mbOrange = Color(red: 1.00, green: 0.62, blue: 0.20)
-    static let mbPurple = Color(red: 0.72, green: 0.52, blue: 1.00)
-}
 
 // MARK: - Shared surface (used by all popovers)
 private struct MenuPopoverSurface<Content: View>: View {
-    @ObservedObject private var appearanceSettings = AppAppearanceSettings.shared
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        ZStack {
-            VisualEffectView(material: .underWindowBackground,
-                             blendingMode: .behindWindow,
-                             opacity: appearanceSettings.surfaceOpacity)
-
-            LinearGradient(
-                colors: [
-                    Color(red: 0.22, green: 0.24, blue: 0.33).opacity(0.06 * appearanceSettings.surfaceOpacity),
-                    Color(red: 0.11, green: 0.12, blue: 0.19).opacity(0.07 * appearanceSettings.surfaceOpacity)
-                ],
-                startPoint: .topLeading, endPoint: .bottom
-            )
-
-            VStack(spacing: 0) {
-                LinearGradient(colors: [Color.white.opacity(0.03 * appearanceSettings.surfaceOpacity), Color.clear],
-                               startPoint: .top, endPoint: .bottom)
-                    .frame(height: 1)
-                Spacer()
-            }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous)
-            .stroke(Color.white.opacity(0.05 * appearanceSettings.surfaceOpacity), lineWidth: 1))
-        .overlay(content())
-        .shadow(color: .black.opacity(0.10), radius: 18, y: 10)
+        content()
+            .background(.regularMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color(NSColor.separatorColor), lineWidth: 1))
+            .shadow(color: .black.opacity(0.10), radius: 10, y: 5)
     }
 }
 
@@ -61,12 +29,18 @@ private struct MBRow: View {
     let icon: String; let label: String; let value: String; let color: Color
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: icon)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(color.opacity(0.85)).frame(width: 16)
+            ZStack {
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(color.opacity(0.10))
+                    .frame(width: 22, height: 22)
+                Image(systemName: icon)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(color)
+                    .shadow(color: color.opacity(0.6), radius: 4)
+            }
             Text(label)
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.white.opacity(0.68)).frame(width: 80, alignment: .leading)
+                .foregroundStyle(.primary.opacity(0.68)).frame(width: 80, alignment: .leading)
             Spacer()
             Text(value)
                 .font(.system(size: 11, weight: .bold, design: .monospaced))
@@ -79,10 +53,14 @@ private struct MBRow: View {
 private struct MBSectionHeader: View {
     let title: String
     var body: some View {
-        HStack {
+        HStack(spacing: 6) {
+            RoundedRectangle(cornerRadius: 1, style: .continuous)
+                .fill(Color.accentColor)
+                .frame(width: 2, height: 10)
+                .shadow(color: Color.accentColor.opacity(0.7), radius: 4)
             Text(title)
                 .font(.system(size: 9, weight: .bold))
-                .foregroundStyle(Color.mbTint)
+                .foregroundStyle(Color.accentColor)
                 .mbTracking(1.2)
             Spacer()
         }
@@ -91,7 +69,7 @@ private struct MBSectionHeader: View {
 }
 
 private struct MBDivider: View {
-    var body: some View { Rectangle().fill(Color.mbDiv).frame(height: 1) }
+    var body: some View { Rectangle().fill(Color(NSColor.separatorColor)).frame(height: 1) }
 }
 
 private struct MenuBarMonitoringSummarySection: View {
@@ -107,7 +85,7 @@ private struct MenuBarMonitoringSummarySection: View {
                 HStack(spacing: 8) {
                     Text("STATUS")
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(Color.mbTint)
+                        .foregroundStyle(Color.accentColor)
                         .mbTracking(1.2)
                     Spacer()
                     Text(health.statusLabel.uppercased())
@@ -121,7 +99,7 @@ private struct MenuBarMonitoringSummarySection: View {
 
                 Text(summaryLine)
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.84))
+                    .foregroundStyle(.primary.opacity(0.84))
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text("\(health.ageDescription) • \(health.cadenceDescription)")
@@ -132,7 +110,7 @@ private struct MenuBarMonitoringSummarySection: View {
                 HStack(spacing: 8) {
                     summaryPill(health.statusLabel, color: freshnessColor(health))
                     summaryPill("Thermal \(thermalStateLabel(systemMonitor.thermalState))", color: thermalColor(systemMonitor.thermalState))
-                    summaryPill(systemMonitor.hasSMCAccess ? "SMC Ready" : "SMC Unavailable", color: systemMonitor.hasSMCAccess ? Color.mbGreen : .red)
+                    summaryPill(systemMonitor.hasSMCAccess ? "SMC Ready" : "SMC Unavailable", color: systemMonitor.hasSMCAccess ? Color.green : .red)
                 }
 
                 HStack(spacing: 8) {
@@ -171,9 +149,9 @@ private struct MenuBarMonitoringSummarySection: View {
 
     private func thermalColor(_ thermalState: ProcessInfo.ThermalState) -> Color {
         switch thermalState {
-        case .nominal: return Color.mbGreen
-        case .fair: return Color.mbBlue
-        case .serious: return Color.mbOrange
+        case .nominal: return Color.green
+        case .fair: return Color.blue
+        case .serious: return Color.orange
         case .critical: return .red
         @unknown default: return .white.opacity(0.55)
         }
@@ -182,11 +160,11 @@ private struct MenuBarMonitoringSummarySection: View {
     private func freshnessColor(_ health: MonitoringSnapshotHealth) -> Color {
         switch health.freshness {
         case .waiting:
-            return Color.mbTint
+            return Color.accentColor
         case .live:
-            return Color.mbGreen
+            return Color.green
         case .delayed:
-            return Color.mbOrange
+            return Color.orange
         case .stale:
             return .red
         }
@@ -209,11 +187,11 @@ private struct MenuBarMonitoringSummarySection: View {
         case .neutral:
             return .white.opacity(0.58)
         case .accent:
-            return Color.mbBlue
+            return Color.blue
         case .good:
-            return Color.mbGreen
+            return Color.green
         case .warning:
-            return Color.mbOrange
+            return Color.orange
         case .critical:
             return .red
         }
@@ -242,13 +220,13 @@ private struct MBActionButton: View {
         Button(action: action) {
             HStack(spacing: 10) {
                 Image(systemName: icon).font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(hovered ? Color.white : Color.white.opacity(0.72)).frame(width: 16)
+                    .foregroundStyle(hovered ? Color.primary : Color.primary.opacity(0.72)).frame(width: 16)
                 Text(label).font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(hovered ? Color.white : Color.white.opacity(0.78))
+                    .foregroundStyle(hovered ? Color.primary : Color.primary.opacity(0.78))
                 Spacer()
             }
             .padding(.horizontal, 14).padding(.vertical, 7)
-            .background(hovered ? Color.white.opacity(0.07) : Color.clear)
+            .background(hovered ? Color.primary.opacity(0.07) : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .contentShape(Rectangle())
         }
@@ -304,7 +282,7 @@ private struct BigRing: View {
                     .foregroundStyle(color)
                 Text(label)
                     .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(.primary.opacity(0.55))
                     .mbTracking(0.8)
             }
         }
@@ -348,9 +326,9 @@ private struct CoreCircle: View {
     let isPerformance: Bool
     var body: some View {
         ZStack {
-            Circle().stroke(Color.white.opacity(0.12), lineWidth: 2.5)
+            Circle().stroke(Color.primary.opacity(0.12), lineWidth: 2.5)
             Circle().trim(from: 0, to: fraction)
-                .stroke(isPerformance ? Color.mbBlue : Color.mbGreen,
+                .stroke(isPerformance ? Color.blue : Color.green,
                         style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .animation(.easeInOut(duration: 0.4), value: fraction)
@@ -367,11 +345,11 @@ private struct DonutChart: View {
         guard total > 0 else { return AnyView(EmptyView()) }
         return AnyView(
             ZStack {
-                Circle().stroke(Color.white.opacity(0.08), lineWidth: 14)
+                Circle().stroke(Color.primary.opacity(0.08), lineWidth: 14)
                 // Free (gray)
                 Circle()
                     .trim(from: 0, to: 1)
-                    .stroke(Color.white.opacity(0.18), style: StrokeStyle(lineWidth: 14, lineCap: .butt))
+                    .stroke(Color.primary.opacity(0.18), style: StrokeStyle(lineWidth: 14, lineCap: .butt))
                     .rotationEffect(.degrees(-90))
                 // Purgeable (pink)
                 Circle()
@@ -381,16 +359,16 @@ private struct DonutChart: View {
                 // Used (blue)
                 Circle()
                     .trim(from: 0, to: used / total)
-                    .stroke(Color.mbBlue, style: StrokeStyle(lineWidth: 14, lineCap: .butt))
+                    .stroke(Color.blue, style: StrokeStyle(lineWidth: 14, lineCap: .butt))
                     .rotationEffect(.degrees(-90))
                 // Center label
                 VStack(spacing: 2) {
                     Text(String(format: "%.0f", used))
                         .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color.mbBlue)
+                        .foregroundStyle(Color.blue)
                     Text("GB USED")
                         .font(.system(size: 7, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.45))
+                        .foregroundStyle(.primary.opacity(0.45))
                         .mbTracking(0.8)
                 }
             }
@@ -434,7 +412,7 @@ struct CPUMenuPopoverView: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
+
         .frame(width: 320)
     }
 
@@ -443,13 +421,13 @@ struct CPUMenuPopoverView: View {
         HStack(spacing: 10) {
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.mbBlue.opacity(0.15)).frame(width: 34, height: 34)
+                    .fill(Color.blue.opacity(0.15)).frame(width: 34, height: 34)
                 Image(systemName: "cpu.fill")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Color.mbBlue)
+                    .foregroundStyle(Color.blue)
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text("CPU").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(.white.opacity(0.92))
+                Text("CPU").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(.primary.opacity(0.92))
                 if let temp = systemMonitor.cpuTemperature {
                     Text(String(format: "%.0f°C", temp))
                         .font(.system(size: 10, weight: .medium))
@@ -462,7 +440,7 @@ struct CPUMenuPopoverView: View {
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(loadColor(systemMonitor.cpuUsagePercent))
                 Text("LOAD").font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.45)).mbTracking(0.8)
+                    .foregroundStyle(.primary.opacity(0.45)).mbTracking(0.8)
             }
         }
         .padding(.horizontal, 14).padding(.vertical, 12)
@@ -474,13 +452,13 @@ struct CPUMenuPopoverView: View {
             HStack {
                 Label("User", systemImage: "circle.fill")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(Color.mbBlue)
+                    .foregroundStyle(Color.blue)
                 Spacer()
                 Label("System", systemImage: "circle.fill")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(Color.mbOrange)
+                    .foregroundStyle(Color.orange)
             }
-            MiniSparkline(values: systemMonitor.cpuHistory, color: Color.mbBlue)
+            MiniSparkline(values: systemMonitor.cpuHistory, color: Color.blue)
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
     }
@@ -498,11 +476,11 @@ struct CPUMenuPopoverView: View {
                     Spacer()
                     Text(systemMonitor.efficiencyCoreUsagePercent.map { "\(Int($0.rounded()))%" } ?? "—")
                         .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Color.mbGreen)
+                        .foregroundStyle(Color.green)
                 }
                 HStack {
-                    Circle().fill(Color.mbGreen).frame(width: 6, height: 6)
-                    Text("Efficiency Cores").font(.system(size: 10, weight: .medium)).foregroundStyle(.white.opacity(0.65))
+                    Circle().fill(Color.green).frame(width: 6, height: 6)
+                    Text("Efficiency Cores").font(.system(size: 10, weight: .medium)).foregroundStyle(.primary.opacity(0.65))
                 }
             }
             // P-core circles
@@ -515,11 +493,11 @@ struct CPUMenuPopoverView: View {
                     Spacer()
                     Text(systemMonitor.performanceCoreUsagePercent.map { "\(Int($0.rounded()))%" } ?? "—")
                         .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Color.mbBlue)
+                        .foregroundStyle(Color.blue)
                 }
                 HStack {
-                    Circle().fill(Color.mbBlue).frame(width: 6, height: 6)
-                    Text("Performance Cores").font(.system(size: 10, weight: .medium)).foregroundStyle(.white.opacity(0.65))
+                    Circle().fill(Color.blue).frame(width: 6, height: 6)
+                    Text("Performance Cores").font(.system(size: 10, weight: .medium)).foregroundStyle(.primary.opacity(0.65))
                 }
             }
         }
@@ -532,15 +510,15 @@ struct CPUMenuPopoverView: View {
             MBSectionHeader(title: "GPU")
             HStack(spacing: 16) {
                 if let gt = systemMonitor.gpuTemperature {
-                    gpuRing(value: min(gt, 110) / 110 * 100, label: "TEMP", color: Color.mbOrange)
+                    gpuRing(value: min(gt, 110) / 110 * 100, label: "TEMP", color: Color.orange)
                 }
                 if let gpuW = systemMonitor.gpuPowerWatts {
-                    gpuRing(value: min(abs(gpuW) / 30.0 * 100, 100), label: "PWR", color: Color.mbPurple)
+                    gpuRing(value: min(abs(gpuW) / 30.0 * 100, 100), label: "PWR", color: Color.purple)
                 }
                 if systemMonitor.gpuTemperature == nil && systemMonitor.gpuPowerWatts == nil {
                     Text("GPU data unavailable")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.45))
+                        .foregroundStyle(.primary.opacity(0.45))
                         .padding(.horizontal, 14)
                 }
             }
@@ -557,7 +535,7 @@ struct CPUMenuPopoverView: View {
                     .rotationEffect(.degrees(-90))
             }
             .frame(width: 44, height: 44)
-            Text(label).font(.system(size: 9, weight: .bold)).foregroundStyle(.white.opacity(0.55)).mbTracking(0.5)
+            Text(label).font(.system(size: 9, weight: .bold)).foregroundStyle(.primary.opacity(0.55)).mbTracking(0.5)
         }
     }
 
@@ -584,7 +562,7 @@ struct CPUMenuPopoverView: View {
     }
 
     private func tempColor(_ t: Double) -> Color { t > 90 ? .red : t > 70 ? .orange : .green }
-    private func loadColor(_ l: Double) -> Color { l > 80 ? .red : l > 50 ? .orange : Color.mbBlue }
+    private func loadColor(_ l: Double) -> Color { l > 80 ? .red : l > 50 ? .orange : Color.blue }
 }
 
 // MARK: - ═══════════════════════════════════════════
@@ -621,7 +599,7 @@ struct MemoryMenuPopoverView: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
+
         .frame(width: 320)
         .onAppear {
             systemMonitor.setDetailedSamplingEnabled(true, reason: "menubar.memory")
@@ -635,7 +613,7 @@ struct MemoryMenuPopoverView: View {
         HStack(spacing: 20) {
             BigRing(value: freeMemoryPercent,
                     label: "FREE",
-                    color: Color.white.opacity(0.72))
+                    color: Color.primary.opacity(0.72))
             BigRing(value: systemMonitor.memoryUsagePercent,
                     label: "USED",
                     color: memColor)
@@ -645,7 +623,7 @@ struct MemoryMenuPopoverView: View {
                     .font(.system(size: 18, weight: .bold, design: .rounded))
                     .foregroundStyle(memColor)
                 Text(String(format: "of %.0f GB", systemMonitor.totalMemoryGB))
-                    .font(.system(size: 10)).foregroundStyle(.white.opacity(0.55))
+                    .font(.system(size: 10)).foregroundStyle(.primary.opacity(0.55))
             }
         }
         .padding(.horizontal, 14).padding(.vertical, 14)
@@ -659,10 +637,10 @@ struct MemoryMenuPopoverView: View {
                 value: pressureLabel,
                 color: pressureColor
             )
-            MBRow(icon: "circle.fill", label: "App",        value: String(format: "%.1f GB", systemMonitor.appMemoryGB), color: Color.mbBlue)
+            MBRow(icon: "circle.fill", label: "App",        value: String(format: "%.1f GB", systemMonitor.appMemoryGB), color: Color.blue)
             MBRow(icon: "circle.fill", label: "Wired",      value: String(format: "%.1f GB", systemMonitor.wiredMemoryGB), color: .pink)
-            MBRow(icon: "circle.fill", label: "Compressed", value: String(format: "%.0f MB", systemMonitor.compressedMemoryGB * 1024), color: Color.mbOrange)
-            MBRow(icon: "circle.fill", label: "Free",       value: String(format: "%.1f GB", systemMonitor.freeMemoryGB), color: Color.white.opacity(0.4))
+            MBRow(icon: "circle.fill", label: "Compressed", value: String(format: "%.0f MB", systemMonitor.compressedMemoryGB * 1024), color: Color.orange)
+            MBRow(icon: "circle.fill", label: "Free",       value: String(format: "%.1f GB", systemMonitor.freeMemoryGB), color: Color.primary.opacity(0.4))
         }
     }
 
@@ -671,7 +649,7 @@ struct MemoryMenuPopoverView: View {
             MBSectionHeader(title: "PROCESSES")
             let topProcesses = Array(systemMonitor.snapshot.topProcesses.topMemory.prefix(4))
             if privacySettings.processInsightsEnabled == false {
-                MBRow(icon: "lock.shield", label: "Processes", value: "Private", color: Color.mbTint)
+                MBRow(icon: "lock.shield", label: "Processes", value: "Private", color: Color.accentColor)
             } else if topProcesses.isEmpty {
                 MBRow(icon: "app.fill", label: "Processes", value: "Unavailable", color: .white.opacity(0.5))
             } else {
@@ -685,7 +663,7 @@ struct MemoryMenuPopoverView: View {
     private func memProcessRow(_ name: String, gb: Double, color: Color) -> some View {
         HStack(spacing: 10) {
             Image(systemName: "app.fill").font(.system(size: 10)).foregroundStyle(color.opacity(0.8)).frame(width: 14)
-            Text(name).font(.system(size: 11, weight: .medium)).foregroundStyle(.white.opacity(0.78))
+            Text(name).font(.system(size: 11, weight: .medium)).foregroundStyle(.primary.opacity(0.78))
             Spacer()
             Text(String(format: "%.1f GB", gb))
                 .font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundStyle(color)
@@ -709,8 +687,8 @@ struct MemoryMenuPopoverView: View {
             MBSectionHeader(title: "SWAP")
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Color.white.opacity(0.08)).frame(height: 6)
-                    Capsule().fill(Color.mbBlue)
+                    Capsule().fill(Color.primary.opacity(0.08)).frame(height: 6)
+                    Capsule().fill(Color.blue)
                         .frame(width: max(0, geo.size.width * swapRatio), height: 6)
                 }
             }
@@ -719,7 +697,7 @@ struct MemoryMenuPopoverView: View {
             HStack {
                 Text("\(formatByteCount(systemMonitor.swapUsedBytes)) of \(systemMonitor.swapTotalBytes > 0 ? formatByteCount(systemMonitor.swapTotalBytes) : "0 B")")
                     .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.62))
+                    .foregroundStyle(.primary.opacity(0.62))
                 Spacer()
             }
             .padding(.horizontal, 14).padding(.bottom, 8)
@@ -728,8 +706,8 @@ struct MemoryMenuPopoverView: View {
 
     private var memColor: Color {
         switch systemMonitor.memoryPressure {
-        case .green: return Color.mbGreen
-        case .yellow: return Color.mbOrange
+        case .green: return Color.green
+        case .yellow: return Color.orange
         case .red: return .red
         }
     }
@@ -754,9 +732,9 @@ struct MemoryMenuPopoverView: View {
             return .red
         }
         if memoryBytes > 1_000_000_000 {
-            return Color.mbOrange
+            return Color.orange
         }
-        return Color.mbBlue
+        return Color.blue
     }
 
     private func formatByteCount(_ bytes: UInt64) -> String {
@@ -802,7 +780,7 @@ struct DiskMenuPopoverView: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
+
         .frame(width: 320)
         .onAppear(perform: syncDiskProcessSampling)
         .onChange(of: privacySettings.processInsightsEnabled) { _ in
@@ -817,20 +795,20 @@ struct DiskMenuPopoverView: View {
         HStack(spacing: 10) {
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.mbBlue.opacity(0.15)).frame(width: 34, height: 34)
+                    .fill(Color.blue.opacity(0.15)).frame(width: 34, height: 34)
                 Image(systemName: "internaldrive.fill")
-                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.mbBlue)
+                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.blue)
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text("Macintosh HD").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(.white.opacity(0.92))
+                Text("Macintosh HD").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(.primary.opacity(0.92))
                 Text(String(format: "%.1f GB available", systemMonitor.diskStats.freeGB))
-                    .font(.system(size: 10, weight: .medium)).foregroundStyle(.white.opacity(0.55))
+                    .font(.system(size: 10, weight: .medium)).foregroundStyle(.primary.opacity(0.55))
             }
             Spacer()
             if let ssdTemp = systemMonitor.ssdTemperature {
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(Int(ssdTemp.rounded()))°").font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(Color.mbOrange)
-                    Text("TEMP").font(.system(size: 8, weight: .bold)).foregroundStyle(.white.opacity(0.45)).mbTracking(0.8)
+                    Text("\(Int(ssdTemp.rounded()))°").font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(Color.orange)
+                    Text("TEMP").font(.system(size: 8, weight: .bold)).foregroundStyle(.primary.opacity(0.45)).mbTracking(0.8)
                 }
             }
         }
@@ -845,11 +823,11 @@ struct DiskMenuPopoverView: View {
                 free:      systemMonitor.diskStats.freeGB
             )
             VStack(alignment: .leading, spacing: 8) {
-                diskLegendRow(color: Color.mbBlue, label: "Used",
+                diskLegendRow(color: Color.blue, label: "Used",
                               value: String(format: "%.1f GB", systemMonitor.diskStats.usedGB))
                 diskLegendRow(color: .pink, label: "Purgeable",
                               value: String(format: "%.1f GB", systemMonitor.diskStats.purgeableGB))
-                diskLegendRow(color: Color.white.opacity(0.35), label: "Free",
+                diskLegendRow(color: Color.primary.opacity(0.35), label: "Free",
                               value: String(format: "%.1f GB", systemMonitor.diskStats.freeGB))
                 Divider().opacity(0.3)
                 diskLegendRow(color: .white.opacity(0.6), label: "Total",
@@ -863,7 +841,7 @@ struct DiskMenuPopoverView: View {
     private func diskLegendRow(color: Color, label: String, value: String) -> some View {
         HStack(spacing: 6) {
             Circle().fill(color).frame(width: 7, height: 7)
-            Text(label).font(.system(size: 10, weight: .medium)).foregroundStyle(.white.opacity(0.65))
+            Text(label).font(.system(size: 10, weight: .medium)).foregroundStyle(.primary.opacity(0.65))
             Spacer()
             Text(value).font(.system(size: 10, weight: .bold, design: .monospaced)).foregroundStyle(color)
         }
@@ -876,11 +854,11 @@ struct DiskMenuPopoverView: View {
                 icon: "chart.pie.fill",
                 label: "Used",
                 value: String(format: "%.0f%%", systemMonitor.diskStats.usagePercent),
-                color: systemMonitor.diskStats.usagePercent > 90 ? .red : systemMonitor.diskStats.usagePercent > 75 ? Color.mbOrange : Color.mbBlue
+                color: systemMonitor.diskStats.usagePercent > 90 ? .red : systemMonitor.diskStats.usagePercent > 75 ? Color.orange : Color.blue
             )
             MBRow(icon: "internaldrive.fill", label: "Available",   value: String(format: "%.1f GB", systemMonitor.diskStats.freeGB), color: .white.opacity(0.72))
             MBRow(icon: "trash.slash.fill",   label: "Purgeable",   value: String(format: "%.1f GB", systemMonitor.diskStats.purgeableGB), color: .pink)
-            MBRow(icon: "thermometer",        label: "Temperature", value: systemMonitor.ssdTemperature.map { "\(Int($0.rounded()))°C" } ?? "—", color: Color.mbOrange)
+            MBRow(icon: "thermometer",        label: "Temperature", value: systemMonitor.ssdTemperature.map { "\(Int($0.rounded()))°C" } ?? "—", color: Color.orange)
         }
     }
 
@@ -889,7 +867,7 @@ struct DiskMenuPopoverView: View {
             MBSectionHeader(title: "PROCESS ACTIVITY  R / W")
             let topProcesses = diskProcessSampler.processes
             if privacySettings.processInsightsEnabled == false {
-                MBRow(icon: "lock.shield", label: "Processes", value: "Private", color: Color.mbTint)
+                MBRow(icon: "lock.shield", label: "Processes", value: "Private", color: Color.accentColor)
             } else if diskProcessSampler.hasSample == false {
                 MBRow(icon: "waveform.path.ecg", label: "Processes", value: "Sampling", color: .white.opacity(0.58))
             } else if topProcesses.isEmpty {
@@ -912,16 +890,16 @@ struct DiskMenuPopoverView: View {
         case 50_000_000...:
             return .red
         case 10_000_000...:
-            return Color.mbOrange
+            return Color.orange
         default:
-            return Color.mbBlue
+            return Color.blue
         }
     }
 
     private func diskProcessRow(_ name: String, r: String, w: String, color: Color) -> some View {
         HStack(spacing: 10) {
             Image(systemName: "app.fill").font(.system(size: 10)).foregroundStyle(color.opacity(0.8)).frame(width: 14)
-            Text(name).font(.system(size: 11, weight: .medium)).foregroundStyle(.white.opacity(0.78))
+            Text(name).font(.system(size: 11, weight: .medium)).foregroundStyle(.primary.opacity(0.78))
             Spacer()
             Text(r).font(.system(size: 10, weight: .bold, design: .monospaced)).foregroundStyle(.pink).frame(width: 44, alignment: .trailing)
             Text(w).font(.system(size: 10, weight: .bold, design: .monospaced)).foregroundStyle(color).frame(width: 44, alignment: .trailing)
@@ -964,7 +942,7 @@ struct NetworkMenuPopoverView: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
+
         .frame(width: 320)
     }
 
@@ -972,24 +950,24 @@ struct NetworkMenuPopoverView: View {
         HStack(spacing: 10) {
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.mbBlue.opacity(0.15))
+                    .fill(Color.blue.opacity(0.15))
                     .frame(width: 34, height: 34)
                 Image(systemName: "arrow.down.arrow.up")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Color.mbBlue)
+                    .foregroundStyle(Color.blue)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text("Network")
                     .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.92))
+                    .foregroundStyle(.primary.opacity(0.92))
                 Text("Live interface throughput")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(.primary.opacity(0.55))
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 4) {
-                rateBadge(label: "↓", value: currentDownloadRate, color: Color.mbBlue)
-                rateBadge(label: "↑", value: currentUploadRate, color: Color.mbGreen)
+                rateBadge(label: "↓", value: currentDownloadRate, color: Color.blue)
+                rateBadge(label: "↑", value: currentUploadRate, color: Color.green)
             }
         }
         .padding(.horizontal, 14)
@@ -1003,7 +981,7 @@ struct NetworkMenuPopoverView: View {
                 .foregroundStyle(color)
             Text(value)
                 .font(.system(size: 11, weight: .bold, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.84))
+                .foregroundStyle(.primary.opacity(0.84))
                 .monospacedDigit()
         }
         .padding(.horizontal, 8)
@@ -1019,25 +997,25 @@ struct NetworkMenuPopoverView: View {
                 icon: "arrow.down.circle.fill",
                 label: "Download",
                 value: currentDownloadRate,
-                color: Color.mbBlue
+                color: Color.blue
             )
             MBRow(
                 icon: "arrow.up.circle.fill",
                 label: "Upload",
                 value: currentUploadRate,
-                color: Color.mbGreen
+                color: Color.green
             )
             MBRow(
                 icon: "chart.line.uptrend.xyaxis",
                 label: "Peak Down",
                 value: summaryLabel(downloadSummary?.maximum),
-                color: Color.mbBlue.opacity(0.78)
+                color: Color.blue.opacity(0.78)
             )
             MBRow(
                 icon: "chart.line.uptrend.xyaxis",
                 label: "Peak Up",
                 value: summaryLabel(uploadSummary?.maximum),
-                color: Color.mbGreen.opacity(0.78)
+                color: Color.green.opacity(0.78)
             )
         }
     }
@@ -1048,13 +1026,13 @@ struct NetworkMenuPopoverView: View {
             if normalizedDownloadValues.isEmpty && normalizedUploadValues.isEmpty {
                 Text("Throughput history fills in after a few live samples.")
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(.primary.opacity(0.5))
                     .padding(.horizontal, 14)
                     .padding(.bottom, 10)
             } else {
                 historyRow(
                     title: "Download",
-                    color: Color.mbBlue,
+                    color: Color.blue,
                     current: currentDownloadRate,
                     average: summaryLabel(downloadSummary?.average),
                     peak: summaryLabel(downloadSummary?.maximum),
@@ -1062,7 +1040,7 @@ struct NetworkMenuPopoverView: View {
                 )
                 historyRow(
                     title: "Upload",
-                    color: Color.mbGreen,
+                    color: Color.green,
                     current: currentUploadRate,
                     average: summaryLabel(uploadSummary?.average),
                     peak: summaryLabel(uploadSummary?.maximum),
@@ -1085,7 +1063,7 @@ struct NetworkMenuPopoverView: View {
             HStack {
                 Text(title)
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.75))
+                    .foregroundStyle(.primary.opacity(0.75))
                 Spacer()
                 Text(current)
                     .font(.system(size: 11, weight: .bold, design: .monospaced))
@@ -1096,11 +1074,11 @@ struct NetworkMenuPopoverView: View {
             HStack {
                 Text("Avg \(average)")
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(.primary.opacity(0.55))
                 Spacer()
                 Text("Peak \(peak)")
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(.primary.opacity(0.55))
             }
         }
         .padding(.horizontal, 14)
@@ -1180,7 +1158,7 @@ struct TemperatureMenuPopoverView: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
+
         .frame(width: 320)
     }
 
@@ -1203,18 +1181,18 @@ struct TemperatureMenuPopoverView: View {
             // Fan
             VStack(spacing: 6) {
                 ZStack {
-                    Circle().stroke(Color.white.opacity(0.12), lineWidth: 5)
+                    Circle().stroke(Color.primary.opacity(0.12), lineWidth: 5)
                         .frame(width: 44, height: 44)
                     Image(systemName: systemMonitor.fanSpeeds.first.map { $0 > 0 ? "fanblades.fill" : "fanblades" } ?? "fanblades")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(systemMonitor.fanSpeeds.first.map { $0 > 0 ? Color.mbGreen : Color.white.opacity(0.4) } ?? Color.white.opacity(0.4))
+                        .foregroundStyle(systemMonitor.fanSpeeds.first.map { $0 > 0 ? Color.green : Color.primary.opacity(0.4) } ?? Color.primary.opacity(0.4))
                 }
                 Text("FANS")
                     .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.45)).mbTracking(0.5)
+                    .foregroundStyle(.primary.opacity(0.45)).mbTracking(0.5)
                 Text(systemMonitor.fanSpeeds.first.map { $0 > 0 ? "\($0)" : "OFF" } ?? "OFF")
                     .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .foregroundStyle(systemMonitor.fanSpeeds.first.map { $0 > 0 ? Color.mbGreen : Color.white.opacity(0.4) } ?? Color.white.opacity(0.4))
+                    .foregroundStyle(systemMonitor.fanSpeeds.first.map { $0 > 0 ? Color.green : Color.primary.opacity(0.4) } ?? Color.primary.opacity(0.4))
             }
             Spacer()
         }
@@ -1225,7 +1203,7 @@ struct TemperatureMenuPopoverView: View {
         let fraction = range.upperBound > 0 ? min(value, range.upperBound) / range.upperBound : 0
         return VStack(spacing: 4) {
             ZStack {
-                Circle().stroke(Color.white.opacity(0.12), lineWidth: 5)
+                Circle().stroke(Color.primary.opacity(0.12), lineWidth: 5)
                 Circle().trim(from: 0, to: fraction)
                     .stroke(color, style: StrokeStyle(lineWidth: 5, lineCap: .round))
                     .rotationEffect(.degrees(-90))
@@ -1235,7 +1213,7 @@ struct TemperatureMenuPopoverView: View {
                 }
             }
             .frame(width: 52, height: 52)
-            Text(label).font(.system(size: 9, weight: .bold)).foregroundStyle(.white.opacity(0.55)).mbTracking(0.5)
+            Text(label).font(.system(size: 9, weight: .bold)).foregroundStyle(.primary.opacity(0.55)).mbTracking(0.5)
         }
     }
 
@@ -1264,7 +1242,7 @@ struct TemperatureMenuPopoverView: View {
         HStack(spacing: 10) {
             Image(systemName: icon).font(.system(size: 10, weight: .medium))
                 .foregroundStyle(tempColor(value).opacity(0.85)).frame(width: 16)
-            Text(label).font(.system(size: 11, weight: .medium)).foregroundStyle(.white.opacity(0.72))
+            Text(label).font(.system(size: 11, weight: .medium)).foregroundStyle(.primary.opacity(0.72))
             Spacer()
             Text("\(Int(value.rounded()))°")
                 .font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundStyle(tempColor(value))
@@ -1277,13 +1255,13 @@ struct TemperatureMenuPopoverView: View {
         VStack(spacing: 0) {
             MBSectionHeader(title: "POWER")
             if let cpuW = systemMonitor.cpuPowerWatts {
-                MBRow(icon: "cpu.fill",   label: "CPU",      value: String(format: "%.0f mW", cpuW * 1000), color: Color.mbBlue)
+                MBRow(icon: "cpu.fill",   label: "CPU",      value: String(format: "%.0f mW", cpuW * 1000), color: Color.blue)
             }
             if let gpuW = systemMonitor.gpuPowerWatts {
-                MBRow(icon: "display",   label: "Graphics", value: String(format: "%.0f mW", gpuW * 1000), color: Color.mbPurple)
+                MBRow(icon: "display",   label: "Graphics", value: String(format: "%.0f mW", gpuW * 1000), color: Color.purple)
             }
             if let sysW = systemMonitor.totalSystemWatts {
-                MBRow(icon: "bolt.fill", label: "Total",    value: String(format: "%.1f W", abs(sysW)),     color: Color.mbGreen)
+                MBRow(icon: "bolt.fill", label: "Total",    value: String(format: "%.1f W", abs(sysW)),     color: Color.green)
             }
             if systemMonitor.cpuPowerWatts == nil && systemMonitor.gpuPowerWatts == nil && systemMonitor.totalSystemWatts == nil {
                 MBRow(icon: "bolt.slash", label: "Power", value: "No data", color: .white.opacity(0.4))
@@ -1302,7 +1280,7 @@ struct TemperatureMenuPopoverView: View {
                     MBRow(icon: "fanblades.fill",
                           label: "Fan \(i + 1)",
                           value: rpm > 0 ? "\(rpm) RPM" : "Off",
-                          color: rpm > 0 ? Color.mbGreen : .white.opacity(0.4))
+                          color: rpm > 0 ? Color.green : .white.opacity(0.4))
                 }
             }
         }
@@ -1311,14 +1289,14 @@ struct TemperatureMenuPopoverView: View {
     private var frequencySection: some View {
         VStack(spacing: 0) {
             MBSectionHeader(title: "CORE LAYOUT")
-            MBRow(icon: "cpu.fill",    label: "P-Cores",    value: "\(SystemMonitor.performanceCoreCount()) cores", color: Color.mbBlue)
-            MBRow(icon: "leaf.fill",   label: "E-Cores",    value: "\(SystemMonitor.efficiencyCoreCount()) cores", color: Color.mbGreen)
+            MBRow(icon: "cpu.fill",    label: "P-Cores",    value: "\(SystemMonitor.performanceCoreCount()) cores", color: Color.blue)
+            MBRow(icon: "leaf.fill",   label: "E-Cores",    value: "\(SystemMonitor.efficiencyCoreCount()) cores", color: Color.green)
         }
     }
 
     private var cpuTempColor: Color { tempColor(systemMonitor.cpuTemperature ?? 0) }
     private var gpuTempColor: Color { tempColor(systemMonitor.gpuTemperature ?? 0) }
-    private func tempColor(_ t: Double) -> Color { t > 90 ? .red : t > 70 ? Color.mbOrange : Color.mbGreen }
+    private func tempColor(_ t: Double) -> Color { t > 90 ? .red : t > 70 ? Color.orange : Color.green }
 }
 
 // MARK: - ═══════════════════════════════════════════
@@ -1389,7 +1367,7 @@ struct MenuBarMenuView: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
+
         .frame(width: 350)
     }
 
@@ -1397,12 +1375,12 @@ struct MenuBarMenuView: View {
         HStack(spacing: 10) {
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.white.opacity(0.07)).frame(width: 34, height: 34)
-                Image(systemName: "fanblades.fill").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.white.opacity(0.86))
+                    .fill(Color.primary.opacity(0.07)).frame(width: 34, height: 34)
+                Image(systemName: "fanblades.fill").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.primary.opacity(0.86))
             }
             VStack(alignment: .leading, spacing: 1) {
-                Text("Core Monitor").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(.white.opacity(0.92))
-                Text("System summary").font(.system(size: 10, weight: .medium)).foregroundStyle(.white.opacity(0.58))
+                Text("Core Monitor").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(.primary.opacity(0.92))
+                Text("System summary").font(.system(size: 10, weight: .medium)).foregroundStyle(.primary.opacity(0.58))
             }
             Spacer()
             statusPill(dot: systemMonitor.hasSMCAccess ? .green : .red,
@@ -1410,7 +1388,7 @@ struct MenuBarMenuView: View {
                        tint: nil)
         }
         .padding(.horizontal, 16).padding(.vertical, 14)
-        .background(Color.white.opacity(0.025))
+        .background(Color.primary.opacity(0.025))
     }
 
     private var metricsSection: some View {
@@ -1440,7 +1418,7 @@ struct MenuBarMenuView: View {
                           color: .green)
             }
             if let w = systemMonitor.totalSystemWatts {
-                metricRow(icon: "bolt.fill", label: "Power", value: String(format: "%.1f W", abs(w)), color: Color.mbAccent)
+                metricRow(icon: "bolt.fill", label: "Power", value: String(format: "%.1f W", abs(w)), color: Color.primary)
             }
             if systemMonitor.batteryInfo.hasBattery, let pct = systemMonitor.batteryInfo.chargePercent {
                 metricRow(icon: systemMonitor.batteryInfo.isCharging ? "battery.100.bolt" : "battery.75",
@@ -1451,7 +1429,7 @@ struct MenuBarMenuView: View {
             metricRow(icon: systemMonitor.currentVolume < 0.01 ? "speaker.slash.fill" : "speaker.wave.2.fill",
                       label: "Volume", value: "\(Int((systemMonitor.currentVolume * 100).rounded()))%", color: .yellow)
             metricRow(icon: "sun.max.fill", label: "Brightness",
-                      value: "\(Int((systemMonitor.currentBrightness * 100).rounded()))%", color: Color.mbAccent)
+                      value: "\(Int((systemMonitor.currentBrightness * 100).rounded()))%", color: Color.primary)
         }
         .padding(.vertical, 4)
     }
@@ -1461,7 +1439,7 @@ struct MenuBarMenuView: View {
             HStack {
                 Text("Fan Profile").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
                 Spacer()
-                Text(fanController.mode.title).font(.system(size: 10, weight: .bold)).foregroundStyle(.white.opacity(0.86))
+                Text(fanController.mode.title).font(.system(size: 10, weight: .bold)).foregroundStyle(.primary.opacity(0.86))
             }
             Menu {
                 ForEach(FanControlMode.quickModes, id: \.self) { mode in
@@ -1471,14 +1449,14 @@ struct MenuBarMenuView: View {
                 Button("Reset to System Auto") { fanController.resetToSystemAutomatic(); fanController.setMode(.automatic) }
             } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: "fanblades.fill").font(.system(size: 10, weight: .semibold)).foregroundStyle(.white.opacity(0.78))
+                    Image(systemName: "fanblades.fill").font(.system(size: 10, weight: .semibold)).foregroundStyle(.primary.opacity(0.78))
                     Text("Change Profile").font(.system(size: 12, weight: .semibold))
                     Spacer()
                     Image(systemName: "chevron.up.chevron.down").font(.system(size: 9, weight: .bold)).foregroundStyle(.secondary)
                 }
-                .foregroundStyle(.white.opacity(0.88))
+                .foregroundStyle(.primary.opacity(0.88))
                 .padding(.horizontal, 12).padding(.vertical, 8)
-                .background(Color.white.opacity(0.06))
+                .background(Color.primary.opacity(0.06))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             .menuStyle(.borderlessButton).menuIndicator(.hidden).buttonStyle(.plain)
@@ -1502,7 +1480,7 @@ struct MenuBarMenuView: View {
                         .frame(width: 18)
                     Text("Quit Core Monitor")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.92))
+                        .foregroundStyle(.primary.opacity(0.92))
                     Spacer()
                 }
                 .padding(.horizontal, 14)
@@ -1520,7 +1498,7 @@ struct MenuBarMenuView: View {
 
             Text("Hardware readings stay on your Mac. Weather and exported support reports stay opt in.")
                 .font(.system(size: 10.5, weight: .medium))
-                .foregroundStyle(.white.opacity(0.58))
+                .foregroundStyle(.primary.opacity(0.58))
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 14)
                 .padding(.top, 8)
@@ -1531,7 +1509,7 @@ struct MenuBarMenuView: View {
     private func metricRow(icon: String, label: String, value: String, color: Color) -> some View {
         HStack(spacing: 10) {
             Image(systemName: icon).font(.system(size: 12, weight: .medium)).foregroundStyle(color.opacity(0.85)).frame(width: 18)
-            Text(label).font(.system(size: 11, weight: .medium)).foregroundStyle(.white.opacity(0.70)).frame(width: 72, alignment: .leading)
+            Text(label).font(.system(size: 11, weight: .medium)).foregroundStyle(.primary.opacity(0.70)).frame(width: 72, alignment: .leading)
             Spacer()
             Text(value).font(.system(size: 12, weight: .bold, design: .monospaced)).foregroundStyle(color).monospacedDigit()
         }
@@ -1543,7 +1521,7 @@ struct MenuBarMenuView: View {
     }
 
     private var mbDivider: some View {
-        Rectangle().fill(Color.mbDiv).frame(height: 1)
+        Rectangle().fill(Color(NSColor.separatorColor)).frame(height: 1)
     }
 
     private func statusPill(dot: Color, label: String, tint: Color?) -> some View {
@@ -1552,14 +1530,14 @@ struct MenuBarMenuView: View {
             Text(label).font(.system(size: 10, weight: .semibold)).foregroundStyle(tint ?? .white.opacity(0.76))
         }
         .padding(.horizontal, 8).padding(.vertical, 4)
-        .background(Color.white.opacity(0.06))
+        .background(Color.primary.opacity(0.06))
         .clipShape(Capsule())
     }
 
     private func tempColor(_ t: Double?) -> Color {
         guard let t else { return .secondary }; return t > 90 ? .red : t > 70 ? .orange : .green
     }
-    private func loadColor(_ l: Double) -> Color { l > 80 ? .red : l > 50 ? .orange : Color.mbAccent }
+    private func loadColor(_ l: Double) -> Color { l > 80 ? .red : l > 50 ? .orange : Color.primary }
 }
 
 private struct MBLegacyActionButton: View {
@@ -1569,14 +1547,14 @@ private struct MBLegacyActionButton: View {
         Button(action: action) {
             HStack(spacing: 10) {
                 Image(systemName: icon).font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(tint ?? (isHovered ? Color.white : Color.white.opacity(0.72)))
+                    .foregroundStyle(tint ?? (isHovered ? Color.primary : Color.primary.opacity(0.72)))
                     .frame(width: 18)
                 Text(label).font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(tint ?? (isHovered ? Color.white : Color.white.opacity(0.78)))
+                    .foregroundStyle(tint ?? (isHovered ? Color.primary : Color.primary.opacity(0.78)))
                 Spacer()
             }
             .padding(.horizontal, 14).padding(.vertical, 7)
-            .background(isHovered ? Color.white.opacity(0.07) : Color.clear)
+            .background(isHovered ? Color.primary.opacity(0.07) : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .contentShape(Rectangle())
         }
@@ -1585,4 +1563,4 @@ private struct MBLegacyActionButton: View {
     }
 }
 
- 
+
