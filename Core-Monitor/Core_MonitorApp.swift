@@ -33,6 +33,35 @@ enum CoreMonitorSingleInstancePolicy {
     }
 }
 
+struct CoreMonitorDashboardHandoffRequest: Equatable {
+    private static let bundleIdentifierKey = "bundleIdentifier"
+    private static let targetProcessIdentifierKey = "targetProcessIdentifier"
+
+    let bundleIdentifier: String
+    let targetProcessIdentifier: pid_t
+
+    var userInfo: [AnyHashable: Any] {
+        [
+            Self.bundleIdentifierKey: bundleIdentifier,
+            Self.targetProcessIdentifierKey: NSNumber(value: targetProcessIdentifier)
+        ]
+    }
+
+    static func accepts(
+        userInfo: [AnyHashable: Any]?,
+        expectedBundleIdentifier: String,
+        currentProcessIdentifier: pid_t
+    ) -> Bool {
+        guard let requestedBundleIdentifier = userInfo?[bundleIdentifierKey] as? String,
+              requestedBundleIdentifier == expectedBundleIdentifier,
+              let requestedPID = userInfo?[targetProcessIdentifierKey] as? NSNumber else {
+            return false
+        }
+
+        return requestedPID.int32Value == currentProcessIdentifier
+    }
+}
+
 struct CoreMonitorLaunchEnvironment {
     static func shouldHandleDuplicateLaunch(environment: [String: String] = ProcessInfo.processInfo.environment) -> Bool {
         environment["XCTestConfigurationFilePath"] == nil
@@ -122,16 +151,17 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
         window.title = "Core Monitor"
         window.isReleasedWhenClosed = false
         window.delegate = self
-        window.isMovableByWindowBackground = true
-        window.isOpaque = false
-        window.backgroundColor = .clear
+        window.isMovableByWindowBackground = false
+        window.isOpaque = true
+        window.backgroundColor = .windowBackgroundColor
         window.hasShadow = true
         window.collectionBehavior = [.managed, .fullScreenPrimary]
-        window.styleMask.insert(.fullSizeContentView)
-        window.titleVisibility = .hidden
-        window.titlebarAppearsTransparent = true
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+        window.titleVisibility = .visible
+        window.titlebarAppearsTransparent = false
         window.minSize = DashboardWindowLayout.minimumContentSize
-        window.titlebarSeparatorStyle = .none
+        window.titlebarSeparatorStyle = .automatic
+        window.toolbarStyle = .automatic
 
         if DashboardWindowLayout.shouldResetFrame(windowFrame: window.frame, visibleFrame: window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame) {
             window.setContentSize(DashboardWindowLayout.targetContentSize(for: window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame))
@@ -334,16 +364,6 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         openHelpItem.target = self
         appMenu.addItem(openHelpItem)
 
-        let reopenWelcomeGuideItem = NSMenuItem(
-            title: "Show Welcome Guide",
-            action: #selector(reopenWelcomeGuideFromMenu(_:)),
-            keyEquivalent: ""
-        )
-        reopenWelcomeGuideItem.target = self
-        appMenu.addItem(reopenWelcomeGuideItem)
-
-        appMenu.addItem(.separator())
-
         let quitMenuItem = NSMenuItem(
             title: "Quit \(appName)",
             action: #selector(quitApplication(_:)),
@@ -365,11 +385,14 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
 
         distributedDashboardRequestObserver = DistributedNotificationCenter.default().addObserver(
             forName: Self.openDashboardRequestNotification,
-            object: nil,
+            object: bundleIdentifier,
             queue: .main
         ) { [weak self] notification in
-            let requestedBundleIdentifier = notification.userInfo?["bundleIdentifier"] as? String
-            guard requestedBundleIdentifier == nil || requestedBundleIdentifier == bundleIdentifier else {
+            guard CoreMonitorDashboardHandoffRequest.accepts(
+                userInfo: notification.userInfo,
+                expectedBundleIdentifier: bundleIdentifier,
+                currentProcessIdentifier: ProcessInfo.processInfo.processIdentifier
+            ) else {
                 return
             }
             Task { @MainActor [weak self] in
@@ -475,10 +498,15 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
             return false
         }
 
+        let request = CoreMonitorDashboardHandoffRequest(
+            bundleIdentifier: bundleIdentifier,
+            targetProcessIdentifier: target.processIdentifier
+        )
+
         DistributedNotificationCenter.default().postNotificationName(
             Self.openDashboardRequestNotification,
-            object: nil,
-            userInfo: ["bundleIdentifier": bundleIdentifier],
+            object: bundleIdentifier,
+            userInfo: request.userInfo,
             deliverImmediately: true
         )
         _ = targetApplication.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])

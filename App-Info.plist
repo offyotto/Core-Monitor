@@ -29,7 +29,7 @@
 	<key>SMPrivilegedExecutables</key>
 	<dict>
 		<key>ventaphobia.smc-helper</key>
-		<string>anchor apple generic and identifier "ventaphobia.smc-helper" and certificate leaf[subject.OU] = "6VDP675K4L"</string>
+		<string>anchor apple generic and identifier "ventaphobia.smc-helper" and certificate leaf[subject.OU] = "6VDP675K4L" and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate 1[field.1.2.840.113635.100.6.2.6] exists</string>
 	</dict>
 </dict>
 </plist>

@@ -6,14 +6,7 @@ private struct DashboardSurfaceCard<Content: View>: View {
     var body: some View {
         content()
             .padding(18)
-            .background(
-                CoreMonGlassBackground(
-                    cornerRadius: 18,
-                    tintOpacity: 0.12,
-                    strokeOpacity: 0.14,
-                    shadowRadius: 10
-                )
-            )
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
     }
 }
 

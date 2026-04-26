@@ -13,10 +13,10 @@ final class PrivilegedHelperRequirementStringsTests: XCTestCase {
 
         XCTAssertEqual(
             requirement,
-            #"anchor apple generic and identifier "ventaphobia.smc-helper" and certificate leaf[subject.OU] = "6VDP675K4L""#
+            #"anchor apple generic and identifier "ventaphobia.smc-helper" and certificate leaf[subject.OU] = "6VDP675K4L" and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate 1[field.1.2.840.113635.100.6.2.6] exists"#
         )
-        XCTAssertFalse(requirement.contains("1.2.840.113635.100.6.1.9"))
-        XCTAssertFalse(requirement.contains("1.2.840.113635.100.6.2.6"))
+        XCTAssertTrue(requirement.contains("1.2.840.113635.100.6.1.13"))
+        XCTAssertTrue(requirement.contains("1.2.840.113635.100.6.2.6"))
         assertRequirementCompiles(requirement)
     }
 
@@ -27,11 +27,11 @@ final class PrivilegedHelperRequirementStringsTests: XCTestCase {
 
         XCTAssertEqual(
             requirement,
-            #"anchor apple generic and identifier "CoreTools.Core-Monitor" and certificate leaf[subject.OU] = "6VDP675K4L""#
+            #"anchor apple generic and identifier "CoreTools.Core-Monitor" and certificate leaf[subject.OU] = "6VDP675K4L" and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate 1[field.1.2.840.113635.100.6.2.6] exists"#
         )
         XCTAssertEqual(authorizedClients.count, 1)
-        XCTAssertFalse(requirement.contains("1.2.840.113635.100.6.1.9"))
-        XCTAssertFalse(requirement.contains("1.2.840.113635.100.6.2.6"))
+        XCTAssertTrue(requirement.contains("1.2.840.113635.100.6.1.13"))
+        XCTAssertTrue(requirement.contains("1.2.840.113635.100.6.2.6"))
         assertRequirementCompiles(requirement)
     }
 
