@@ -22,6 +22,7 @@ final class SMCHelperManager: ObservableObject {
 
     private static let missingInstallMessage = "Fan write access unavailable: privileged helper not installed."
     private static let incompleteInstallMessage = "Fan write access unavailable: the privileged helper install is incomplete or stale. Repair it from this app build."
+    private static let expectedPrivilegedHelperLabel = "ventaphobia.smc-helper"
 
     private enum LegacyServiceManagementBridge {
         typealias JobRemoveFunction = @convention(c) (
@@ -387,7 +388,9 @@ final class SMCHelperManager: ObservableObject {
     }
 
     private func removeOrphanedHelperInstallInteractively() -> String? {
-        let shellScript = Self.orphanedHelperCleanupShellScript(label: helperLabel)
+        guard let shellScript = Self.orphanedHelperCleanupShellScript(label: helperLabel) else {
+            return "Could not prepare the stale helper cleanup script."
+        }
         let source = "do shell script \(Self.appleScriptStringLiteral(shellScript)) with administrator privileges"
 
         guard let appleScript = NSAppleScript(source: source) else {
@@ -420,11 +423,17 @@ final class SMCHelperManager: ObservableObject {
         return launchctlExitStatus != 0
     }
 
-    static func orphanedHelperCleanupShellScript(label: String) -> String {
+    static func orphanedHelperCleanupShellScript(label: String) -> String? {
+        guard isSupportedPrivilegedHelperLabel(label) else { return nil }
+
         let launchctlTarget = shellEscaped("system/\(label)")
         let helperPath = shellEscaped("/Library/PrivilegedHelperTools/\(label)")
         let launchDaemonPath = shellEscaped("/Library/LaunchDaemons/\(label).plist")
         return "/bin/launchctl bootout \(launchctlTarget) >/dev/null 2>&1 || true; /bin/rm -f \(helperPath) \(launchDaemonPath)"
+    }
+
+    static func isSupportedPrivilegedHelperLabel(_ label: String) -> Bool {
+        label == expectedPrivilegedHelperLabel
     }
 
     nonisolated static func shouldAttemptOrphanedInstallCleanup(afterBlessFailureMessage message: String) -> Bool {

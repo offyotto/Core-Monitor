@@ -16,14 +16,7 @@ struct MenuBarSettingsCard: View {
     let snapshot: Snapshot
 
     var body: some View {
-        CoreMonGlassPanel(
-            cornerRadius: 18,
-            tintOpacity: 0.12,
-            strokeOpacity: 0.14,
-            shadowRadius: 10,
-            contentPadding: 16
-        ) {
-            VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 14) {
                 header
                 presetSection
                 toggleSection
@@ -34,7 +27,8 @@ struct MenuBarSettingsCard: View {
                         .foregroundStyle(.orange)
                 }
             }
-        }
+            .padding(16)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
     }
 
     private var header: some View {

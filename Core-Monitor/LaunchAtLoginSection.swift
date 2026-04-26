@@ -7,14 +7,7 @@ struct LaunchAtLoginSection: View {
         let summary = startupManager.statusSummary
 
         VStack(alignment: .leading, spacing: 10) {
-            CoreMonGlassPanel(
-                cornerRadius: 18,
-                tintOpacity: 0.12,
-                strokeOpacity: 0.14,
-                shadowRadius: 10,
-                contentPadding: 16
-            ) {
-                HStack(spacing: 14) {
+            HStack(spacing: 14) {
                     Image(systemName: "power")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(iconColor(for: summary.tone))
@@ -42,17 +35,11 @@ struct LaunchAtLoginSection: View {
                     .toggleStyle(.switch)
                     .tint(.green)
                 }
-            }
+            .padding(16)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
 
             if let message = startupManager.errorMessage, message.isEmpty == false {
-                CoreMonGlassPanel(
-                    cornerRadius: 16,
-                    tintOpacity: 0.10,
-                    strokeOpacity: 0.12,
-                    shadowRadius: 8,
-                    contentPadding: 14
-                ) {
-                    VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 10) {
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundStyle(.orange)
@@ -76,7 +63,8 @@ struct LaunchAtLoginSection: View {
                             .controlSize(.small)
                         }
                     }
-                }
+                .padding(14)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
             }
         }
         .onAppear {
