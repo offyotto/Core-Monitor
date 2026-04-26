@@ -99,8 +99,7 @@ struct LocalizationSettingsCard: View {
     }
 
     var body: some View {
-        DarkCard(padding: 18) {
-            VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .top, spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Language & Locale")
@@ -172,7 +171,8 @@ struct LocalizationSettingsCard: View {
                     .foregroundStyle(Color.bdAccent)
                 }
             }
-        }
+            .padding(18)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
     }
 
     private func quickPickLabel(for identifier: String) -> some View {

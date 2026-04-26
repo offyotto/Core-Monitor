@@ -242,8 +242,7 @@ struct HelpView: View {
         }
         .preferredColorScheme(.dark)
         .background(
-            VisualEffectView(material: .underWindowBackground, blendingMode: .behindWindow)
-                .ignoresSafeArea()
+            .regularMaterial
         )
     }
 
@@ -397,13 +396,12 @@ private struct HelpCard<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        CoreMonGlassPanel(cornerRadius: 18, tintOpacity: 0.12, strokeOpacity: 0.16, shadowRadius: 10, contentPadding: 0) {
-            VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 10) {
                 content()
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-        }
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
     }
 }
 
@@ -411,8 +409,7 @@ private struct HelpSearchEmptyState: View {
     let query: String
 
     var body: some View {
-        CoreMonGlassPanel(cornerRadius: 18, tintOpacity: 0.12, strokeOpacity: 0.16, shadowRadius: 10, contentPadding: 18) {
-            VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 10) {
                 Label("No matching help topics", systemImage: "magnifyingglass.circle")
                     .font(.system(size: 15, weight: .semibold))
                 Text("No help sections matched \"\(query)\". Try terms like helper, weather, login items, menu bar, or Touch Bar.")
@@ -420,8 +417,9 @@ private struct HelpSearchEmptyState: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)
-        }
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
     }
 }
 

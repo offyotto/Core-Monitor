@@ -153,8 +153,13 @@ final class HelperDiagnosticsReportTests: XCTestCase {
     func testOrphanedHelperCleanupScriptTargetsInstalledHelperArtifacts() {
         let script = SMCHelperManager.orphanedHelperCleanupShellScript(label: "ventaphobia.smc-helper")
 
-        XCTAssertTrue(script.contains("/bin/launchctl bootout 'system/ventaphobia.smc-helper'"))
-        XCTAssertTrue(script.contains("/bin/rm -f '/Library/PrivilegedHelperTools/ventaphobia.smc-helper' '/Library/LaunchDaemons/ventaphobia.smc-helper.plist'"))
+        XCTAssertTrue(script?.contains("/bin/launchctl bootout 'system/ventaphobia.smc-helper'") == true)
+        XCTAssertTrue(script?.contains("/bin/rm -f '/Library/PrivilegedHelperTools/ventaphobia.smc-helper' '/Library/LaunchDaemons/ventaphobia.smc-helper.plist'") == true)
+    }
+
+    func testOrphanedHelperCleanupScriptRejectsUnexpectedLabels() {
+        XCTAssertNil(SMCHelperManager.orphanedHelperCleanupShellScript(label: "ventaphobia.smc-helper;rm -rf /"))
+        XCTAssertNil(SMCHelperManager.orphanedHelperCleanupShellScript(label: "com.example.other-helper"))
     }
 
     func testLaunchdBlessFailuresTriggerOrphanedCleanupRetry() {

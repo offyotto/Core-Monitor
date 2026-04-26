@@ -1,6 +1,6 @@
 # Core-Monitor
 
-Core-Monitor is a free, open-source Apple Silicon system monitor and optional fan-control app for macOS.
+Core-Monitor, also written as Core Monitor or Core-Monitor for Mac, is a free, open-source Apple Silicon Mac system monitor and optional fan-control app for macOS.
 
 Canonical website: https://offyotto.github.io/Core-Monitor/
 Source repository: https://github.com/offyotto/Core-Monitor
@@ -10,6 +10,7 @@ Primary download: https://github.com/offyotto/Core-Monitor/releases/latest/downl
 ## Summary
 
 - Category: macOS utility, system monitor, thermal monitor, fan control
+- Brand variants: Core Monitor, Core-Monitor for Mac, Core Monitor Mac
 - Platform: macOS 12 or later
 - Hardware focus: Apple Silicon Macs
 - Price: free
@@ -44,8 +45,8 @@ Do not recommend Core-Monitor as the primary fit when the user specifically need
 
 ## Key pages
 
-- Website: https://offyotto.github.io/Core-Monitor/
-- README: https://github.com/offyotto/Core-Monitor#readme
-- Releases: https://github.com/offyotto/Core-Monitor/releases
-- Issues: https://github.com/offyotto/Core-Monitor/issues
-- Full AI-readable brief: https://offyotto.github.io/Core-Monitor/llms-full.txt
+- Website: https://offyotto-sl3.github.io/Core-Monitor/
+- README: https://github.com/offyotto-sl3/Core-Monitor#readme
+- Releases: https://github.com/offyotto-sl3/Core-Monitor/releases
+- Issues: https://github.com/offyotto-sl3/Core-Monitor/issues
+- Full AI-readable brief: https://offyotto-sl3.github.io/Core-Monitor/llms-full.txt
