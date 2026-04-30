@@ -43,7 +43,7 @@ It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCop
 
 Public builds are available through GitHub Releases as a signed DMG for standard installs and a signed ZIP for archive-friendly installs.
 
-There is also a separate Core-Monitor Mac App Store edition. That variant is sandboxed and intentionally different: it keeps read-only monitoring features that fit App Store rules, and excludes the helper, fan control, AppleSMC access, private-framework paths, and other elevated or non-App-Store behavior.
+There is also a separate Core-Monitor Mac App Store edition: https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12. That variant is sandboxed and intentionally different: it keeps read-only monitoring features that fit App Store rules, and excludes the helper, fan control, AppleSMC access, private-framework paths, and other elevated or non-App-Store behavior.
 
 ## Why people choose Core-Monitor
 
@@ -67,6 +67,7 @@ Choose Core-Monitor when you want:
 
 Direct download:
 
+- Download from the [Mac App Store](https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12) if you want the sandboxed App Store edition.
 - Download [Core-Monitor.dmg](https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg) for the normal drag-to-Applications install.
 - Open the disk image, drag `Core-Monitor.app` into `/Applications`, then eject the disk image.
 - Download [Core-Monitor.app.zip](https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip) if you prefer the raw app archive.
@@ -322,7 +323,7 @@ Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc
 - macOS 12 or later
 - Apple Silicon is the primary target; Intel Macs are not part of the current test path
 - Fan control requires macOS 13+ (XPC with code-signing requirements)
-- Core-Monitor is not available on the Mac App Store
+- A separate sandboxed App Store build is available: https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12
 
 ## Privacy
 
