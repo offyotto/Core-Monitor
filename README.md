@@ -5,7 +5,7 @@
 <h1 align="center">Core-Monitor</h1>
 
 <p align="center">
-  A native Apple Silicon system monitor and fan-control app for macOS.
+  A native Apple Silicon system monitor and fan control app for macOS.
 </p>
 
 <p align="center">
