@@ -6,11 +6,13 @@ BUILD_DIR="${BUILD_DIR:-${ROOT_DIR}/build/release}"
 ARCHIVE_PATH="${ARCHIVE_PATH:-${BUILD_DIR}/Core-Monitor.xcarchive}"
 EXPORT_DIR="${EXPORT_DIR:-${BUILD_DIR}/export}"
 APP_PATH="${EXPORT_DIR}/Core-Monitor.app"
+HELPER_PATH="${APP_PATH}/Contents/Library/LaunchServices/ventaphobia.smc-helper"
 ZIP_PATH="${ZIP_PATH:-${BUILD_DIR}/Core-Monitor.app.zip}"
 DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-${ROOT_DIR}/build/DerivedData/release}"
 DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM:-6VDP675K4L}"
 RELEASE_CODE_SIGN_IDENTITY="${RELEASE_CODE_SIGN_IDENTITY:-Developer ID Application}"
 RELEASE_PROVISIONING_PROFILE_SPECIFIER="${RELEASE_PROVISIONING_PROFILE_SPECIFIER:-Mac Team Direct Provisioning Profile: CoreTools.Core-Monitor}"
+APP_ENTITLEMENTS="${APP_ENTITLEMENTS:-${ROOT_DIR}/Core-Monitor-WeatherKit.entitlements}"
 EXPORT_OPTIONS_PLIST="${EXPORT_OPTIONS_PLIST:-${BUILD_DIR}/exportOptions.plist}"
 RELEASE_ARCHS="${RELEASE_ARCHS:-arm64}"
 
@@ -60,6 +62,11 @@ xcodebuild \
   -exportPath "${EXPORT_DIR}" \
   -exportOptionsPlist "${EXPORT_OPTIONS_PLIST}"
 
+if [[ -f "${HELPER_PATH}" ]]; then
+  codesign --force --timestamp --options runtime --sign "${RELEASE_CODE_SIGN_IDENTITY}" "${HELPER_PATH}"
+fi
+
+codesign --force --timestamp --options runtime --entitlements "${APP_ENTITLEMENTS}" --sign "${RELEASE_CODE_SIGN_IDENTITY}" "${APP_PATH}"
 codesign --verify --deep --strict --verbose=2 "${APP_PATH}"
 ditto -c -k --keepParent --sequesterRsrc --zlibCompressionLevel 9 "${APP_PATH}" "${ZIP_PATH}"
 
