@@ -12,6 +12,7 @@ DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-${ROOT_DIR}/build/DerivedData/release}"
 DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM:-6VDP675K4L}"
 RELEASE_CODE_SIGN_IDENTITY="${RELEASE_CODE_SIGN_IDENTITY:-Developer ID Application}"
 RELEASE_PROVISIONING_PROFILE_SPECIFIER="${RELEASE_PROVISIONING_PROFILE_SPECIFIER:-Mac Team Direct Provisioning Profile: CoreTools.Core-Monitor}"
+RELEASE_PROVISIONING_PROFILE_PATH="${RELEASE_PROVISIONING_PROFILE_PATH:-}"
 APP_ENTITLEMENTS="${APP_ENTITLEMENTS:-${ROOT_DIR}/Core-Monitor-WeatherKit.entitlements}"
 EXPORT_OPTIONS_PLIST="${EXPORT_OPTIONS_PLIST:-${BUILD_DIR}/exportOptions.plist}"
 RELEASE_ARCHS="${RELEASE_ARCHS:-arm64}"
@@ -61,6 +62,10 @@ xcodebuild \
   -archivePath "${ARCHIVE_PATH}" \
   -exportPath "${EXPORT_DIR}" \
   -exportOptionsPlist "${EXPORT_OPTIONS_PLIST}"
+
+if [[ -n "${RELEASE_PROVISIONING_PROFILE_PATH}" && -f "${RELEASE_PROVISIONING_PROFILE_PATH}" ]]; then
+  cp "${RELEASE_PROVISIONING_PROFILE_PATH}" "${APP_PATH}/Contents/embedded.provisionprofile"
+fi
 
 if [[ -f "${HELPER_PATH}" ]]; then
   codesign --force --timestamp --options runtime --sign "${RELEASE_CODE_SIGN_IDENTITY}" "${HELPER_PATH}"
