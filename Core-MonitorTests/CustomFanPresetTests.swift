@@ -199,6 +199,30 @@ final class CustomFanPresetTests: XCTestCase {
         XCTAssertTrue(FanController.shouldRequestSystemAutomaticHandoff(lastAppliedSpeed: 1800))
     }
 
+    func testManualFanSpeedsExpandFromSharedFallback() {
+        let speeds = FanController.normalizedManualFanSpeeds(
+            [1800],
+            fanCount: 3,
+            fallback: 2200,
+            minSpeed: 1000,
+            maxSpeed: 6500
+        )
+
+        XCTAssertEqual(speeds, [1800, 2200, 2200])
+    }
+
+    func testManualFanSpeedsClampEachFanTarget() {
+        let speeds = FanController.normalizedManualFanSpeeds(
+            [600, 2400, 7200],
+            fanCount: 3,
+            fallback: 2200,
+            minSpeed: 1000,
+            maxSpeed: 6500
+        )
+
+        XCTAssertEqual(speeds, [1000, 2400, 6500])
+    }
+
     func testSilentCanonicalizesToSystemAutomatic() {
         XCTAssertEqual(FanControlMode.silent.canonicalMode, .automatic)
         XCTAssertFalse(FanControlMode.silent.requiresPrivilegedHelper)

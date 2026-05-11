@@ -105,8 +105,8 @@ enum FanControlMode: String, CaseIterable {
             )
         case .manual:
             return FanModeGuidance(
-                summary: "Writes one fixed RPM target across every controllable fan until you reset or quit.",
-                detail: "Best for short debugging sessions when you know the exact airflow target you want.",
+                summary: "Writes fixed RPM targets per controllable fan until you reset or quit.",
+                detail: "Best for short debugging sessions when you know the exact airflow target each fan should hold.",
                 ownership: .coreMonitor,
                 helperRequirement: .managedControl,
                 restoresSystemAutomaticOnExit: true,
@@ -381,6 +381,7 @@ final class FanController: ObservableObject {
 
     @Published var mode: FanControlMode = FanController.defaultMode
     @Published var manualSpeed: Int = 2200
+    @Published var manualFanSpeeds: [Int] = []
     @Published var autoAggressiveness: Double = 1.5
     @Published var autoMaxSpeed: Int = 6500
     @Published var statusMessage: String = "Idle"
@@ -397,6 +398,7 @@ final class FanController: ObservableObject {
     private weak var systemMonitor: SystemMonitor?
     private var controlTimer: Timer?
     private var lastAppliedSpeed: Int = 0
+    private var lastAppliedManualSpeeds: [Int] = []
     private let helperManager = SMCHelperManager.shared
     private var workspaceObservers: [NSObjectProtocol] = []
     private var customPreset: CustomFanPreset?
@@ -428,6 +430,20 @@ final class FanController: ObservableObject {
         return String(decoding: data, as: UTF8.self)
     }
 
+    static func normalizedManualFanSpeeds(
+        _ speeds: [Int],
+        fanCount: Int,
+        fallback: Int,
+        minSpeed: Int,
+        maxSpeed: Int
+    ) -> [Int] {
+        guard fanCount > 0 else { return [] }
+        return (0..<fanCount).map { index in
+            let rawSpeed = index < speeds.count ? speeds[index] : fallback
+            return max(minSpeed, min(maxSpeed, rawSpeed))
+        }
+    }
+
     var customPresetFilePath: String {
         customPresetFileURL().path
     }
@@ -457,15 +473,42 @@ final class FanController: ObservableObject {
         }
         self.mode = resolvedMode
         lastAppliedSpeed = 0
+        lastAppliedManualSpeeds = []
         saveSettings()
         applyCurrentMode(force: true)
     }
 
     func setManualSpeed(_ speed: Int) {
         manualSpeed = max(minSpeed, min(maxSpeed, speed))
+        let fanCount = max(resolvedFanCount(), manualFanSpeeds.count, 1)
+        manualFanSpeeds = Array(repeating: manualSpeed, count: fanCount)
+        lastAppliedManualSpeeds = []
         saveSettings()
         guard mode == .manual else { return }
-        applyFanSpeed(manualSpeed)
+        applyManualFanSpeeds(force: true)
+    }
+
+    func manualSpeed(for fanID: Int) -> Int {
+        guard fanID >= 0 else { return manualSpeed }
+        return manualFanSpeeds.indices.contains(fanID) ? manualFanSpeeds[fanID] : manualSpeed
+    }
+
+    func setManualFanSpeed(_ speed: Int, for fanID: Int) {
+        guard fanID >= 0 else { return }
+        let fanCount = max(resolvedFanCount(), fanID + 1)
+        var speeds = Self.normalizedManualFanSpeeds(
+            manualFanSpeeds,
+            fanCount: fanCount,
+            fallback: manualSpeed,
+            minSpeed: minSpeed,
+            maxSpeed: maxSpeed
+        )
+        speeds[fanID] = max(minSpeed, min(maxSpeed, speed))
+        manualFanSpeeds = speeds
+        manualSpeed = speeds.first ?? manualSpeed
+        saveSettings()
+        guard mode == .manual else { return }
+        applyManualFanSpeeds(force: true)
     }
 
     func setAutoAggressiveness(_ value: Double) {
@@ -717,9 +760,7 @@ final class FanController: ObservableObject {
             }
             lastAppliedSpeed = -1
         case .manual:
-            applyFanSpeed(manualSpeed)
-            lastAppliedSpeed = manualSpeed
-            statusMessage = "Manual: \(manualSpeed) RPM"
+            applyManualFanSpeeds(force: true)
             startControlLoop()
         case .smart, .balanced, .performance, .max, .custom:
             startControlLoop()
@@ -731,11 +772,7 @@ final class FanController: ObservableObject {
 
         switch mode {
         case .manual:
-            if abs(manualSpeed - lastAppliedSpeed) >= 50 || lastAppliedSpeed == 0 {
-                applyFanSpeed(manualSpeed)
-                lastAppliedSpeed = manualSpeed
-            }
-            statusMessage = "Manual: \(manualSpeed) RPM"
+            applyManualFanSpeeds(force: false)
 
         case .automatic, .silent:
             if Self.shouldRequestSystemAutomaticHandoff(lastAppliedSpeed: lastAppliedSpeed) {
@@ -914,6 +951,42 @@ final class FanController: ObservableObject {
         let fanCount = max(resolvedFanCount(), 1)
         let speeds = Array(repeating: speed, count: fanCount)
         _ = applyPerFanSpeeds(speeds, successMessage: "Applied \(speed) RPM")
+    }
+
+    private func applyManualFanSpeeds(force: Bool) {
+        let fanCount = max(resolvedFanCount(), 1)
+        let speeds = Self.normalizedManualFanSpeeds(
+            manualFanSpeeds,
+            fanCount: fanCount,
+            fallback: manualSpeed,
+            minSpeed: minSpeed,
+            maxSpeed: maxSpeed
+        )
+
+        manualFanSpeeds = speeds
+        manualSpeed = speeds.first ?? manualSpeed
+
+        let shouldApply = force
+            || lastAppliedManualSpeeds.count != speeds.count
+            || zip(speeds, lastAppliedManualSpeeds).contains { current, previous in
+                abs(current - previous) >= 50
+            }
+            || lastAppliedSpeed == 0
+
+        if shouldApply {
+            _ = applyPerFanSpeeds(speeds, successMessage: manualStatusMessage(for: speeds))
+            lastAppliedManualSpeeds = speeds
+            lastAppliedSpeed = speeds.max() ?? 0
+        } else {
+            statusMessage = manualStatusMessage(for: speeds)
+        }
+    }
+
+    private func manualStatusMessage(for speeds: [Int]) -> String {
+        guard speeds.count > 1 else {
+            return "Manual: \(speeds.first ?? manualSpeed) RPM"
+        }
+        return "Manual: " + speeds.map { "\($0)" }.joined(separator: " / ") + " RPM"
     }
 
     @discardableResult
@@ -1150,6 +1223,15 @@ final class FanController: ObservableObject {
             manualSpeed = savedSpeed
         }
 
+        let savedPerFanSpeeds = defaults.array(forKey: "manualFanSpeeds") as? [Int] ?? []
+        manualFanSpeeds = Self.normalizedManualFanSpeeds(
+            savedPerFanSpeeds,
+            fanCount: savedPerFanSpeeds.count,
+            fallback: manualSpeed,
+            minSpeed: minSpeed,
+            maxSpeed: maxSpeed
+        )
+
         let savedAggr = defaults.double(forKey: "autoAggressiveness")
         if savedAggr >= 0.0 && savedAggr <= 3.0 {
             autoAggressiveness = savedAggr
@@ -1165,6 +1247,7 @@ final class FanController: ObservableObject {
         let defaults = UserDefaults.standard
         defaults.set(mode.canonicalMode.rawValue, forKey: "fanControlMode")
         defaults.set(manualSpeed, forKey: "manualFanSpeed")
+        defaults.set(manualFanSpeeds, forKey: "manualFanSpeeds")
         defaults.set(autoAggressiveness, forKey: "autoAggressiveness")
         defaults.set(autoMaxSpeed, forKey: "autoMaxSpeed")
     }
