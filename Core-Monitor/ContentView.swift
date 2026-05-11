@@ -390,8 +390,19 @@ private struct NativeFansPage: View {
             if fanController.mode == .manual {
                 NativeDivider()
                 VStack(alignment: .leading, spacing: 8) {
-                    LabeledContent("Target Speed", value: "\(fanController.manualSpeed) RPM")
-                    Slider(value: manualSpeedBinding, in: Double(fanController.minSpeed)...Double(fanController.maxSpeed), step: 50)
+                    if manualFanCount > 1 {
+                        ForEach(0..<manualFanCount, id: \.self) { fanID in
+                            LabeledContent("Fan \(fanID + 1) Target", value: "\(fanController.manualSpeed(for: fanID)) RPM")
+                            Slider(
+                                value: manualSpeedBinding(for: fanID),
+                                in: manualSpeedRange(for: fanID),
+                                step: 50
+                            )
+                        }
+                    } else {
+                        LabeledContent("Target Speed", value: "\(fanController.manualSpeed) RPM")
+                        Slider(value: manualSpeedBinding, in: Double(fanController.minSpeed)...Double(fanController.maxSpeed), step: 50)
+                    }
                 }
             }
 
@@ -463,6 +474,28 @@ private struct NativeFansPage: View {
         } set: { value in
             fanController.setManualSpeed(Int(value.rounded()))
         }
+    }
+
+    private var manualFanCount: Int {
+        max(snapshot.fanSpeeds.count, snapshot.numberOfFans, fanController.manualFanSpeeds.count)
+    }
+
+    private func manualSpeedBinding(for fanID: Int) -> Binding<Double> {
+        Binding {
+            Double(fanController.manualSpeed(for: fanID))
+        } set: { value in
+            fanController.setManualFanSpeed(Int(value.rounded()), for: fanID)
+        }
+    }
+
+    private func manualSpeedRange(for fanID: Int) -> ClosedRange<Double> {
+        let minimum = snapshot.fanMinSpeeds.indices.contains(fanID)
+            ? snapshot.fanMinSpeeds[fanID]
+            : fanController.minSpeed
+        let maximum = snapshot.fanMaxSpeeds.indices.contains(fanID)
+            ? snapshot.fanMaxSpeeds[fanID]
+            : fanController.maxSpeed
+        return Double(min(minimum, maximum))...Double(max(minimum, maximum))
     }
 
     private var autoAggressivenessBinding: Binding<Double> {
