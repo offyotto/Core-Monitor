@@ -117,10 +117,12 @@ jobs:
 
           cp "${PROFILE_PATH}" "${PROFILE_DIR}/${PROFILE_UUID}.provisionprofile"
           echo "RELEASE_PROVISIONING_PROFILE_SPECIFIER=${PROFILE_NAME}" >> "${GITHUB_ENV}"
+          echo "RELEASE_PROVISIONING_PROFILE_PATH=${PROFILE_DIR}/${PROFILE_UUID}.provisionprofile" >> "${GITHUB_ENV}"
 
       - name: Build release archive
         env:
           RELEASE_PROVISIONING_PROFILE_SPECIFIER: ${{ env.RELEASE_PROVISIONING_PROFILE_SPECIFIER }}
+          RELEASE_PROVISIONING_PROFILE_PATH: ${{ env.RELEASE_PROVISIONING_PROFILE_PATH }}
         run: ./scripts/release/build_release.sh
 
       - name: Notarize and staple
