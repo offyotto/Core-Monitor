@@ -28,7 +28,7 @@ xcodebuild \
   ARCHS="${RELEASE_ARCHS}" \
   ONLY_ACTIVE_ARCH=YES \
   EXCLUDED_ARCHS=x86_64 \
-  CODE_SIGN_STYLE=Automatic \
+  CODE_SIGN_STYLE=Manual \
   CODE_SIGN_IDENTITY="${RELEASE_CODE_SIGN_IDENTITY}" \
   PROVISIONING_PROFILE_SPECIFIER="${RELEASE_PROVISIONING_PROFILE_SPECIFIER}" \
   -archivePath "${ARCHIVE_PATH}" \
@@ -42,7 +42,7 @@ cat > "${EXPORT_OPTIONS_PLIST}" <<EOF
   <key>method</key>
   <string>developer-id</string>
   <key>signingStyle</key>
-  <string>automatic</string>
+  <string>manual</string>
   <key>teamID</key>
   <string>${DEVELOPMENT_TEAM}</string>
   <key>signingCertificate</key>
