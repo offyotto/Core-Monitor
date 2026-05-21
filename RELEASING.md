@@ -72,7 +72,7 @@ Signed archive + zip:
 ./scripts/release/build_release.sh
 ```
 
-`build_release.sh` now archives with automatic signing against the WeatherKit-enabled development profile installed on the machine, pins the archive profile name from `ARCHIVE_PROVISIONING_PROFILE_SPECIFIER`, then performs a `developer-id` export so the release artifact keeps the WeatherKit entitlement while still shipping as a Developer ID app.
+`build_release.sh` archives with automatic signing against the WeatherKit-enabled development profile installed on the machine, then performs a `developer-id` export so the release artifact keeps the WeatherKit entitlement while still shipping as a Developer ID app. For local/manual release experiments, `ARCHIVE_CODE_SIGN_STYLE=Manual` can be combined with `ARCHIVE_PROVISIONING_PROFILE_SPECIFIER`, but the GitHub workflow intentionally keeps archive signing automatic so the app and helper targets can resolve their own signing requirements.
 
 The repository's `Release` configuration now uses the WeatherKit entitlement. The direct-download path therefore depends on both provisioning profile secrets listed above: the development profile for the archive phase and the direct-distribution profile for the export phase.
 
