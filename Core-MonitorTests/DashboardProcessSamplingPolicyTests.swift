@@ -25,7 +25,7 @@ final class DashboardProcessSamplingPolicyTests: XCTestCase {
 
     func testNonProcessDashboardViewsStayOnBackgroundSampling() {
         let lowDetailSelections: [SidebarItem] = [
-            .overview, .thermals, .fans, .battery, .system, .touchBar, .help, .about
+            .overview, .thermals, .fans, .battery, .rescue, .system, .touchBar, .help, .about
         ]
 
         for selection in lowDetailSelections {

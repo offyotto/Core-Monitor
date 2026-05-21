@@ -50,6 +50,7 @@ There is also a separate Core-Monitor Mac App Store edition: https://apps.apple.
 - Apple Silicon-first monitoring for thermals, power, battery, memory, and fan behavior
 - monitoring works without the privileged helper; helper-backed fan control stays optional
 - readable native dashboard plus menu bar status instead of a noisy wall of metrics
+- advanced USB-C controller checks for firmware-loaded state, I2C error counters, and copyable recovery commands
 - open-source code, no account requirement, and no telemetry in the core experience
 - Touch Bar widgets, launchers, and weather on supported Macs
 
@@ -105,6 +106,8 @@ brew install --cask offyotto/core-monitor/core-monitor
 **Battery** — charge, cycle count, health percentage, voltage, amperage, and power draw from `AppleSmartBattery` in the IO registry. Time remaining comes from `IOPSCopyPowerSourcesInfo`.
 
 **Thermals** — CPU die temperature from `TC0P`, `Tp09`, `TCXC`, and fallbacks, GPU from `Tg0e`/`Tg0f`. You can also browse all readable SMC keys from the sensor explorer.
+
+**Advanced rescue** — the dashboard's Rescue page reads AppleSmartBattery `PortControllerInfo` to surface USB-C controller firmware versions, I2C error counts, boot flags, and active power contracts. It also parses `smartctl` output when smartmontools is installed, so SSD wear and media-error counters can be checked without leaving the app. USB-C firmware recovery remains copy-only and explicit: Core-Monitor never silently runs `usbcfwflasher`.
 
 ## Fan control
 

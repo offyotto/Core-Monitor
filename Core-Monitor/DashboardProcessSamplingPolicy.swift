@@ -10,7 +10,7 @@ enum DashboardProcessSamplingPolicy {
         switch selection {
         case .memory:
             return true
-        case .overview, .thermals, .fans, .battery, .system, .touchBar, .help, .about:
+        case .overview, .thermals, .fans, .battery, .rescue, .system, .touchBar, .help, .about:
             return false
         }
     }

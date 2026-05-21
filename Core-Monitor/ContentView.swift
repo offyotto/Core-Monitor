@@ -26,6 +26,7 @@ enum SidebarItem: String, CaseIterable, Identifiable, Hashable {
     case memory = "Memory"
     case fans = "Fans"
     case battery = "Battery"
+    case rescue = "Rescue"
     case system = "System"
     case touchBar = "Touch Bar"
     case help = "Help"
@@ -40,6 +41,7 @@ enum SidebarItem: String, CaseIterable, Identifiable, Hashable {
         case .memory: return "memorychip"
         case .fans: return "fanblades"
         case .battery: return "battery.75"
+        case .rescue: return "stethoscope"
         case .system: return "gearshape"
         case .touchBar: return "rectangle.3.group"
         case .help: return "questionmark.circle"
@@ -54,6 +56,7 @@ enum SidebarItem: String, CaseIterable, Identifiable, Hashable {
         case .memory: return "Unified memory pressure and process usage"
         case .fans: return "Cooling mode, helper state, and fan speed"
         case .battery: return "Battery health, charge, and power"
+        case .rescue: return "USB-C controller state and storage health"
         case .system: return "Startup, privacy, and menu bar behavior"
         case .touchBar: return "Touch Bar layout and presentation"
         case .help: return "Common tasks and support notes"
@@ -90,6 +93,10 @@ struct ContentView: View {
                 Section("Settings") {
                     sidebarLink(.system)
                     sidebarLink(.touchBar)
+                }
+
+                Section("Advanced") {
+                    sidebarLink(.rescue)
                 }
 
                 Section("Support") {
@@ -192,6 +199,8 @@ private struct NativeDashboardDetail: View {
             NativeFansPage(fanController: fanController, snapshot: snapshot)
         case .battery:
             NativeBatteryPage(snapshot: snapshot)
+        case .rescue:
+            NativeRescuePage()
         case .system:
             NativeSystemPage(systemMonitor: systemMonitor, startupManager: startupManager)
         case .touchBar:
@@ -516,6 +525,147 @@ private struct NativeBatteryPage: View {
                 NativeDivider()
                 NativeValueRow("Current", value: BatteryDetailFormatter.amperageDescription(snapshot.batteryInfo.amperageA) ?? "Unavailable")
             }
+        }
+    }
+}
+
+private struct NativeRescuePage: View {
+    @StateObject private var viewModel = HardwareRescueViewModel()
+
+    var body: some View {
+        NativeSettingsSection("USB-C Controllers") {
+            if let snapshot = viewModel.snapshot {
+                NativeValueRow("Status", value: snapshot.usbStatusTitle, detail: snapshot.usbStatusDetail)
+                NativeDivider()
+                NativeValueRow("Apple Flasher", value: snapshot.usbcfwflasherAvailable ? "Available" : "Unavailable", detail: "/usr/bin/usbcfwflasher is only surfaced as a copyable technician command.")
+
+                if snapshot.usbControllers.isEmpty == false {
+                    NativeDivider()
+                    ForEach(snapshot.usbControllers) { controller in
+                        NativeControllerDiagnosticRow(controller: controller)
+                        if controller.id != snapshot.usbControllers.last?.id {
+                            NativeDivider()
+                        }
+                    }
+                }
+            } else {
+                NativeEmptyMessage("Run a scan to read USB-C controller firmware and error counters.")
+            }
+        }
+
+        NativeSettingsSection("Storage Health") {
+            if let storage = viewModel.snapshot?.storageHealth {
+                NativeValueRow("SMART", value: storage.statusTitle, detail: storage.statusDetail)
+                if let model = storage.model {
+                    NativeDivider()
+                    NativeValueRow("Model", value: model)
+                }
+                if let firmware = storage.firmware {
+                    NativeDivider()
+                    NativeValueRow("Firmware", value: firmware)
+                }
+                if let percentageUsed = storage.percentageUsed {
+                    NativeDivider()
+                    NativeProgressRow("Wear", value: "\(percentageUsed)% used", fraction: Double(percentageUsed) / 100)
+                }
+                if let dataWritten = storage.dataUnitsWritten {
+                    NativeDivider()
+                    NativeValueRow("Data Written", value: dataWritten)
+                }
+                if let unsafeShutdowns = storage.unsafeShutdowns {
+                    NativeDivider()
+                    NativeValueRow("Unsafe Shutdowns", value: "\(unsafeShutdowns)")
+                }
+                if let mediaErrors = storage.mediaErrors {
+                    NativeDivider()
+                    NativeValueRow("Media Errors", value: "\(mediaErrors)")
+                }
+            } else {
+                NativeEmptyMessage("Install smartmontools to show exact NVMe SMART health.")
+            }
+        }
+
+        NativeSettingsSection("Technician Toolkit") {
+            HStack(spacing: 10) {
+                Button {
+                    viewModel.refresh()
+                } label: {
+                    Label(viewModel.isRefreshing ? "Scanning" : "Scan", systemImage: "arrow.clockwise")
+                }
+                .disabled(viewModel.isRefreshing)
+
+                Button {
+                    viewModel.copyReport()
+                } label: {
+                    Label("Copy Report", systemImage: "doc.on.doc")
+                }
+                .disabled(viewModel.snapshot == nil)
+
+                Button {
+                    viewModel.copyDiagnosisCommands()
+                } label: {
+                    Label("Copy Checks", systemImage: "terminal")
+                }
+
+                Button {
+                    viewModel.copyRecoveryTemplate()
+                } label: {
+                    Label("Copy Recovery Template", systemImage: "exclamationmark.triangle")
+                }
+            }
+
+            Text("Recovery templates are intentionally copy-only. Run them only after a controller reports BOOT or firmware 0, and only with the exact matching Apple firmware image.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+
+            if let message = viewModel.pasteboardMessage {
+                NativeDivider()
+                NativeValueRow("Clipboard", value: message)
+            }
+        }
+        .onAppear {
+            if viewModel.snapshot == nil {
+                viewModel.refresh()
+            }
+        }
+    }
+}
+
+private struct NativeControllerDiagnosticRow: View {
+    let controller: USBPortControllerReport
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Label(controller.displayName, systemImage: controller.severity.symbolName)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(controller.severity.color)
+                Spacer()
+                Text(controller.stateTitle)
+                    .font(.callout)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(controller.severity.color)
+            }
+
+            Text(controller.stateDetail)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+
+            Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 6) {
+                GridRow {
+                    Text("Firmware").foregroundStyle(.secondary)
+                    Text(controller.firmwareVersionDescription).monospacedDigit()
+                    Text("I2C errors").foregroundStyle(.secondary)
+                    Text(controller.i2cErrorCountDescription).monospacedDigit()
+                }
+                GridRow {
+                    Text("Boot flags").foregroundStyle(.secondary)
+                    Text(controller.bootFlagsDescription).monospacedDigit()
+                    Text("Max power").foregroundStyle(.secondary)
+                    Text(controller.maxPowerDescription).monospacedDigit()
+                }
+            }
+            .font(.footnote)
         }
     }
 }
@@ -954,6 +1104,24 @@ private extension SMCHelperManager.ConnectionState {
         case .checking: return "Checking"
         case .reachable: return "Reachable"
         case .unreachable: return "Unavailable"
+        }
+    }
+}
+
+private extension USBPortControllerReport.Severity {
+    var symbolName: String {
+        switch self {
+        case .ok: return "checkmark.circle"
+        case .watch: return "exclamationmark.circle"
+        case .attention: return "exclamationmark.triangle"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .ok: return .green
+        case .watch: return .orange
+        case .attention: return .red
         }
     }
 }
