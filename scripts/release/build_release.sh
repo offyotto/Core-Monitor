@@ -9,6 +9,8 @@ APP_PATH="${EXPORT_DIR}/Core-Monitor.app"
 ZIP_PATH="${ZIP_PATH:-${BUILD_DIR}/Core-Monitor.app.zip}"
 DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-${ROOT_DIR}/build/DerivedData/release}"
 DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM:-6VDP675K4L}"
+ARCHIVE_CODE_SIGN_IDENTITY="${ARCHIVE_CODE_SIGN_IDENTITY:-Apple Development}"
+ARCHIVE_PROVISIONING_PROFILE_SPECIFIER="${ARCHIVE_PROVISIONING_PROFILE_SPECIFIER:-}"
 RELEASE_CODE_SIGN_IDENTITY="${RELEASE_CODE_SIGN_IDENTITY:-Developer ID Application}"
 RELEASE_PROVISIONING_PROFILE_SPECIFIER="${RELEASE_PROVISIONING_PROFILE_SPECIFIER:-Mac Team Direct Provisioning Profile: CoreTools.Core-Monitor}"
 EXPORT_OPTIONS_PLIST="${EXPORT_OPTIONS_PLIST:-${BUILD_DIR}/exportOptions.plist}"
@@ -17,6 +19,17 @@ RELEASE_ARCHS="${RELEASE_ARCHS:-arm64}"
 rm -rf "${BUILD_DIR}"
 mkdir -p "${EXPORT_DIR}"
 mkdir -p "${DERIVED_DATA_PATH}"
+
+archive_signing_args=(
+  CODE_SIGN_STYLE=Automatic
+  CODE_SIGN_IDENTITY="${ARCHIVE_CODE_SIGN_IDENTITY}"
+)
+
+if [[ -n "${ARCHIVE_PROVISIONING_PROFILE_SPECIFIER}" ]]; then
+  archive_signing_args+=(
+    PROVISIONING_PROFILE_SPECIFIER="${ARCHIVE_PROVISIONING_PROFILE_SPECIFIER}"
+  )
+fi
 
 xcodebuild \
   -project "${ROOT_DIR}/Core-Monitor.xcodeproj" \
@@ -28,7 +41,7 @@ xcodebuild \
   ARCHS="${RELEASE_ARCHS}" \
   ONLY_ACTIVE_ARCH=YES \
   EXCLUDED_ARCHS=x86_64 \
-  CODE_SIGN_STYLE=Automatic \
+  "${archive_signing_args[@]}" \
   -archivePath "${ARCHIVE_PATH}" \
   archive
 
