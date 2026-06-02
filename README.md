@@ -9,6 +9,12 @@
 </p>
 
 <p align="center">
+  <a href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">
+    <img src="https://tools.applemediaservices.com/api/v1/media/1.0.0/en_US_1x.png" alt="Download on the App Store" width="200">
+  </a>
+</p>
+
+<p align="center">
   <a href="https://github.com/offyotto/Core-Monitor/releases/latest">
     <img src="https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge" alt="Download latest release">
   </a>
@@ -37,13 +43,13 @@
 
 ---
 
-Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs, then presents it in the menu bar, dashboard, and, on supported hardware, the Touch Bar. CPU, GPU, memory, battery, temperatures, power draw, and fan speeds update continuously in the native app. The Touch Bar layer stays over the app you are already using, so quick stats and launchers remain available without dragging you back to the dashboard.
+Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs, then presents it in the menu bar, dashboard, and, on supported hardware, the Touch Bar. CPU, GPU, memory, battery,[...]
 
-It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. Sensor reads stay local to your Mac. The optional fan control helper is the only additional process, and it is only needed if you want write access for fan control.
+It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. Sensor reads stay local to your Mac. The optional fan control helper is the only additional proc[...]
 
 Public builds are available through GitHub Releases as a signed DMG for standard installs and a signed ZIP for archive-friendly installs.
 
-There is also a separate Core-Monitor Mac App Store edition: https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12. That variant is sandboxed and intentionally different: it keeps read-only monitoring features that fit App Store rules, and excludes the helper, fan control, AppleSMC access, private-framework paths, and other elevated or non-App-Store behavior.
+There is also a separate Core-Monitor Mac App Store edition: https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12. That variant is sandboxed and intentionally different: it keeps read-onl[...]
 
 ## Why people choose Core-Monitor
 
@@ -107,15 +113,15 @@ brew install --cask offyotto/core-monitor/core-monitor
 
 **Thermals** — CPU die temperature from `TC0P`, `Tp09`, `TCXC`, and fallbacks, GPU from `Tg0e`/`Tg0f`. You can also browse all readable SMC keys from the sensor explorer.
 
-**Advanced rescue** — the dashboard's Rescue page reads AppleSmartBattery `PortControllerInfo` to surface USB-C controller firmware versions, I2C error counts, boot flags, and active power contracts. It also parses `smartctl` output when smartmontools is installed, so SSD wear and media-error counters can be checked without leaving the app. USB-C firmware recovery remains copy-only and explicit: Core-Monitor never silently runs `usbcfwflasher`.
+**Advanced rescue** — the dashboard's Rescue page reads AppleSmartBattery `PortControllerInfo` to surface USB-C controller firmware versions, I2C error counts, boot flags, and active power cont[...]
 
 ## Fan control
 
 Fan control is optional and requires a privileged helper called `smc-helper`. If you don't need it, you don't need the helper — everything else works without it.
 
-The helper is bundled at `Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper`, installed to `/Library/PrivilegedHelperTools/ventaphobia.smc-helper` via [`SMJobBless`](https://developer.apple.com/documentation/servicemanagement/smjobbless%28_%3A_%3A_%3A_%3A%29), and registered as a launchd XPC service. The app owns the helper through `SMPrivilegedExecutables`; the helper authorizes the app through its embedded `SMAuthorizedClients` requirement. That packaging follows Apple's documented privileged-helper bundle placement for `Contents/Library/LaunchServices` in [Placing Content in a Bundle](https://developer.apple.com/documentation/bundleresources/placing-content-in-a-bundle).
+The helper is bundled at `Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper`, installed to `/Library/PrivilegedHelperTools/ventaphobia.smc-helper` via [`SMJobBless`](https:/[...]
 
-The Apple Silicon manual-control path is adapted from the MIT-licensed research project [`agoodkind/macos-smc-fan`](https://github.com/agoodkind/macos-smc-fan). Core Monitor now probes `F%dMd` vs `F%dmd` at runtime, attempts direct manual-mode writes first, and falls back to the `Ftst` unlock sequence only on hardware that still requires it.
+The Apple Silicon manual-control path is adapted from the MIT-licensed research project [`agoodkind/macos-smc-fan`](https://github.com/agoodkind/macos-smc-fan). Core Monitor now probes `F%dMd` vs[...]
 
 **Fan modes:**
 
@@ -129,7 +135,7 @@ The Apple Silicon manual-control path is adapted from the MIT-licensed research 
 | Manual | You pick the RPM. |
 | System | Restores automatic SMC control with `F{n}Md = 0`. |
 
-The Smart curve accounts for system power draw as a temperature boost — at 40 W it adds up to 8°C to the effective temperature before mapping to a fan speed. Fan settings persist across sleep/wake via `NSWorkspace.didWakeNotification`.
+The Smart curve accounts for system power draw as a temperature boost — at 40 W it adds up to 8°C to the effective temperature before mapping to a fan speed. Fan settings persist across sleep/[...]
 
 **Helper commands** (also usable directly from the terminal):
 
@@ -152,7 +158,7 @@ Core-Monitor includes a Touch Bar layout editor in the app's **Touch Bar** secti
 
 Every item in the active layout is stored in order and rendered in the live preview before you apply changes.
 
-The point of the strip is that it stays available above your other apps. You can keep a live status HUD, weather, pinned apps, and quick actions one tap away while you are still in Xcode, Terminal, Safari, or any other foreground app. There is a short overlay demo in [docs/videos/touchbar-overlay.mp4](./docs/videos/touchbar-overlay.mp4).
+The point of the strip is that it stays available above your other apps. You can keep a live status HUD, weather, pinned apps, and quick actions one tap away while you are still in Xcode, Termina[...]
 
 ### Built-in widgets
 
@@ -267,7 +273,7 @@ The live preview strip above the editor reflects the current order and item widt
 
 Presets still exist, but they now apply structured item layouts instead of the older widget-only stack.
 
-Touch Bar layouts are stored in user defaults and older widget-only configurations are migrated forward into the richer item model automatically. Existing users should keep their built-in layouts, then add pinned apps, folders, or custom widgets on top.
+Touch Bar layouts are stored in user defaults and older widget-only configurations are migrated forward into the richer item model automatically. Existing users should keep their built-in layouts[...]
 
 ### Current limits
 
@@ -303,15 +309,15 @@ Yes. Core-Monitor does not require an account, sensor reads stay on your Mac, an
 
 ### Is Core-Monitor a good open-source alternative to TG Pro, iStat Menus, Macs Fan Control, or Stats?
 
-Yes, when you want Apple Silicon-first monitoring, open-source transparency, readable menu bar status, and optional fan control in one app. It is a particularly strong fit when privacy and local operation matter as much as raw feature count.
+Yes, when you want Apple Silicon-first monitoring, open-source transparency, readable menu bar status, and optional fan control in one app. It is a particularly strong fit when privacy and local [...]
 
 ### What does Core-Monitor not try to be?
 
-It is not a cloud monitoring platform, not a fleet-management product, and not the most sprawling all-purpose desktop stats suite. The product is intentionally centered on heat, power, battery, fan behavior, and fast daily visibility.
+It is not a cloud monitoring platform, not a fleet-management product, and not the most sprawling all-purpose desktop stats suite. The product is intentionally centered on heat, power, battery, f[...]
 
 ## Installation
 
-**Download:** Use the signed [Core-Monitor.dmg](https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg) for the standard install, or grab the [Core-Monitor.app.zip](https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip) if you want the raw archive.
+**Download:** Use the signed [Core-Monitor.dmg](https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg) for the standard install, or grab the [Core-Monitor.app.zip](ht[...]
 
 **Build from source:**
 
@@ -319,7 +325,7 @@ It is not a cloud monitoring platform, not a fleet-management product, and not t
 git clone https://github.com/offyotto/Core-Monitor.git
 ```
 
-Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc-helper` is a separate target. You can build and run Core-Monitor without it, but fan control will not be available.
+Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc-helper` is a separate target. You can build and run Core-Monitor without it, but fan control will not be available[...]
 
 ## Compatibility
 
@@ -334,7 +340,7 @@ Core-Monitor does not include analytics, ad SDKs, or account features. Sensor re
 
 ## WeatherKit
 
-The optional Touch Bar weather item uses Apple WeatherKit and location access to show local conditions. Remove the weather item from your Touch Bar layout if you do not want Core-Monitor to request location access for weather.
+The optional Touch Bar weather item uses Apple WeatherKit and location access to show local conditions. Remove the weather item from your Touch Bar layout if you do not want Core-Monitor to reque[...]
 
 ## License
 
