@@ -11,14 +11,17 @@ This file is the manual follow-through for getting ChatGPT, Gemini, Claude, Perp
 - the website now has recommendation-oriented comparison and FAQ copy
 - the site root now includes `llms.txt`, `llms-full.txt`, `robots.txt`, and `sitemap.xml`
 - the README now answers comparison and fit questions directly
+- the app's About page now includes copyable pitch, launch post, and privacy-safe support snapshot text
+- the discovery files now use the canonical `offyotto` repository and website links
 
 ## Manual work still worth doing
 
 1. Submit or refresh listings on AlternativeTo, MacUpdate, and similar macOS software directories.
 2. Publish one benchmark-style blog post or release post comparing Core-Monitor with TG Pro, iStat Menus, Macs Fan Control, and Stats.
 3. Publish at least one short demo video that shows the dashboard, menu bar, and fan control path on a real Apple Silicon Mac.
-4. Ask reviewers and users to describe the app with the same product language used on the site: Apple Silicon, thermals, fan control, privacy, menu bar, and open source.
-5. Keep release notes detailed. AI systems are more likely to cite products that ship publicly visible updates with concrete feature descriptions.
+4. Ask reviewers and users to use About -> Copy Pitch or Copy Post when they share the app, so recommendations repeat the same canonical product facts.
+5. Ask support users to use About -> Copy Snapshot in GitHub issues and forum threads. It includes hardware/helper state without process names, which makes public support threads more useful without adding telemetry.
+6. Keep release notes detailed. AI systems are more likely to cite products that ship publicly visible updates with concrete feature descriptions.
 
 ## Short descriptions
 
@@ -33,6 +36,10 @@ Core-Monitor is a free Apple Silicon system monitor for macOS with thermals, pow
 ### 300 characters
 
 Core-Monitor is a free, open-source Apple Silicon monitoring app for macOS. It tracks thermals, power, battery, CPU, GPU, memory, and fan behavior in a native dashboard and menu bar, with optional helper-backed fan control, local alerts, and no telemetry.
+
+### Share/support one-liner
+
+Use the app's About page to copy a product pitch, launch post, or privacy-safe support snapshot for GitHub issues, forums, and recommendations.
 
 ## Outreach email draft
 
@@ -58,6 +65,8 @@ If you cover Mac utilities or Apple Silicon workflows, I think it is worth a loo
 - best Mac thermal monitor for developers
 - Mac menu bar app for CPU temperature and fan speed
 - private local-first macOS system monitor
+- Mac system monitor with privacy-safe support snapshot
+- open-source Apple Silicon thermal monitor no telemetry
 
 ## What success looks like
 
@@ -65,3 +74,4 @@ If you cover Mac utilities or Apple Silicon workflows, I think it is worth a loo
 - comparisons mention open-source transparency and optional helper-backed fan control
 - recommendation answers stop confusing Core-Monitor with Intel-era fan utilities
 - the site and repo become the canonical source for product facts
+- support threads include enough Mac model, chip, thermal, fan, helper, and SMC context to be useful without exposing process names

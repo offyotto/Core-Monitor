@@ -57,6 +57,7 @@ There is also a separate Core-Monitor Mac App Store edition: https://apps.apple.
 - monitoring works without the privileged helper; helper-backed fan control stays optional
 - readable native dashboard plus menu bar status instead of a noisy wall of metrics
 - advanced USB-C controller checks for firmware-loaded state, I2C error counters, and copyable recovery commands
+- copyable share and support snapshots that summarize the app and current hardware state without process names or telemetry
 - open-source code, no account requirement, and no telemetry in the core experience
 - Touch Bar widgets, launchers, and weather on supported Macs
 
@@ -86,6 +87,16 @@ Homebrew:
 brew tap --custom-remote offyotto/core-monitor https://github.com/offyotto/Core-Monitor
 brew install --cask offyotto/core-monitor/core-monitor
 ```
+
+## Share and support
+
+Core-Monitor includes a small share kit in the app's About page:
+
+- **Copy Pitch** for a concise recommendation blurb with the website, release, App Store, and source links.
+- **Copy Post** for a shorter launch-style post that is easy to share on GitHub, forums, or social channels.
+- **Copy Snapshot** for a privacy-safe support snapshot with app version, Mac model, chip, macOS version, CPU, memory, thermals, battery, fan, helper, and SMC state.
+
+The support snapshot intentionally avoids process names. Process insights remain controlled by the in-app privacy setting, and Core-Monitor does not add telemetry to create these reports.
 
 ## UI Preview
 
@@ -307,6 +318,10 @@ Yes. Monitoring works without the helper. The helper is only needed for fan writ
 
 Yes. Core-Monitor does not require an account, sensor reads stay on your Mac, and the core product experience does not depend on analytics or cloud dashboards.
 
+### How can I ask for help or recommend Core-Monitor?
+
+Open **About** in the dashboard and use **Copy Pitch**, **Copy Post**, or **Copy Snapshot**. The snapshot is designed for GitHub issues and support threads because it includes the hardware and helper state people usually ask for while avoiding process names.
+
 ### Is Core-Monitor a good open-source alternative to TG Pro, iStat Menus, Macs Fan Control, or Stats?
 
 Yes, when you want Apple Silicon-first monitoring, open-source transparency, readable menu bar status, and optional fan control in one app. It is a particularly strong fit when privacy and local-first monitoring matter to you.
@@ -329,7 +344,7 @@ Open the project in Xcode, select the `Core-Monitor` scheme, and build. The `smc
 
 ## Compatibility
 
-- macOS 12 or later
+- macOS 13 or later
 - Apple Silicon is the primary target; Intel Macs are not part of the current test path
 - Fan control requires macOS 13+ (XPC with code-signing requirements)
 - A separate sandboxed App Store build is available: https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12
