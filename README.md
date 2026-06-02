@@ -8,11 +8,8 @@
   A native Apple Silicon system monitor and fan control app for macOS.
 </p>
 
-<p align="center">
-  <a href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">
-    <img src="https://tools.applemediaservices.com/api/v1/media/1.0.0/en_US_1x.png" alt="Download on the App Store" width="200">
-  </a>
-</p>
+  <a "https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12" style="display: inline-block;">
+    <img src="https://toolbox.marketingtools.apple.com/api/v2/badges/download-on-the-app-store/black/en-us?releaseDate=1693267200" alt="Download on the App Store" style="width: 246px; height: 82px; vertical-align: middle; object-fit: contain;" />
 
 <p align="center">
   <a href="https://github.com/offyotto/Core-Monitor/releases/latest">
