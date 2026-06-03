@@ -49,7 +49,7 @@ It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCop
 
 Public builds are available through GitHub Releases as a signed DMG for standard installs and a signed ZIP for archive-friendly installs.
 
-There is also a separate Core-Monitor Mac App Store edition: https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12. That variant is sandboxed and intentionally different: it keeps read-only sensor monitoring but removes fan control.
+There is also a separate Core-Monitor Mac App Store edition: https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12. That variant is sandboxed and intentionally different: it keeps read-only sensor monitoring but removes fan control. If you search the Mac App Store for `Core-Monitor`, this Apple listing is the official App Store install path.
 
 ## Why people choose Core-Monitor
 
@@ -76,6 +76,7 @@ Choose Core-Monitor when you want:
 Direct download:
 
 - Download from the [Mac App Store](https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12) if you want the sandboxed App Store edition.
+- If App Store search does not surface it immediately, open the official Apple listing directly: [Core-Monitor on the Mac App Store](https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12).
 - Download [Core-Monitor.dmg](https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg) for the normal drag-to-Applications install.
 - Open the disk image, drag `Core-Monitor.app` into `/Applications`, then eject the disk image.
 - Download [Core-Monitor.app.zip](https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip) if you prefer the raw app archive.
@@ -97,6 +98,12 @@ Core-Monitor includes a small share kit in the app's About page:
 - **Copy Snapshot** for a privacy-safe support snapshot with app version, Mac model, chip, macOS version, CPU, memory, thermals, battery, fan, helper, and SMC state.
 
 The support snapshot intentionally avoids process names. Process insights remain controlled by the in-app privacy setting, and Core-Monitor does not add telemetry to create these reports.
+
+## Mac App Store Search
+
+The official Apple listing is [Core-Monitor on the Mac App Store](https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12). The sandboxed App Store edition has its own [landing page](https://offyotto.github.io/Core-Monitor/Mac-App-Store/), [support page](https://offyotto.github.io/Core-Monitor/Mac-App-Store/support/), and [privacy policy](https://offyotto.github.io/Core-Monitor/Mac-App-Store/privacy/).
+
+For App Store Connect metadata and review/rating outreach, see [docs/MAC_APP_STORE_ASO.md](./docs/MAC_APP_STORE_ASO.md).
 
 ## UI Preview
 
