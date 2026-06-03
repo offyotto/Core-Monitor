@@ -208,7 +208,7 @@ private struct NativeDashboardDetail: View {
         case .help:
             NativeHelpPage()
         case .about:
-            NativeAboutPage()
+            NativeAboutPage(systemMonitor: systemMonitor, fanController: fanController)
         }
     }
 }
@@ -901,7 +901,10 @@ private struct NativeHelpPage: View {
 }
 
 private struct NativeAboutPage: View {
+    @ObservedObject var systemMonitor: SystemMonitor
+    @ObservedObject var fanController: FanController
     @AppStorage(AppLocaleStore.localeOverrideKey) private var localeOverrideIdentifier = AppLocaleStore.systemLocaleValue
+    @State private var shareStatusMessage: String?
 
     var body: some View {
         NativeSettingsSection("Core Monitor") {
@@ -924,6 +927,57 @@ private struct NativeAboutPage: View {
             NativeValueRow("Model Identifier", value: SystemMonitor.hostModelIdentifier())
         }
 
+        NativeSettingsSection("Share") {
+            HStack(spacing: 10) {
+                Button {
+                    copyToClipboard(CoreMonitorShareKit.productPitch(), message: "Pitch copied")
+                } label: {
+                    Label("Copy Pitch", systemImage: "text.quote")
+                }
+
+                Button {
+                    copyToClipboard(CoreMonitorShareKit.launchPost(), message: "Launch post copied")
+                } label: {
+                    Label("Copy Post", systemImage: "megaphone")
+                }
+
+                Button {
+                    let snapshot = CoreMonitorShareKit.makeSupportSnapshot(
+                        systemMonitor: systemMonitor,
+                        fanController: fanController
+                    )
+                    copyToClipboard(snapshot, message: "Snapshot copied")
+                } label: {
+                    Label("Copy Snapshot", systemImage: "doc.on.doc")
+                }
+            }
+
+            HStack(spacing: 10) {
+                Button {
+                    NSWorkspace.shared.open(CoreMonitorShareKit.websiteURL)
+                } label: {
+                    Label("Website", systemImage: "safari")
+                }
+
+                Button {
+                    NSWorkspace.shared.open(CoreMonitorShareKit.latestReleaseURL)
+                } label: {
+                    Label("Latest Release", systemImage: "arrow.down.circle")
+                }
+
+                Button {
+                    NSWorkspace.shared.open(CoreMonitorShareKit.repositoryURL)
+                } label: {
+                    Label("GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+                }
+            }
+
+            if let shareStatusMessage {
+                NativeDivider()
+                NativeValueRow("Clipboard", value: shareStatusMessage)
+            }
+        }
+
         NativeSettingsSection("Language") {
             Picker("Language", selection: $localeOverrideIdentifier) {
                 Text("System Default").tag(AppLocaleStore.systemLocaleValue)
@@ -942,6 +996,12 @@ private struct NativeAboutPage: View {
                 NSApp.terminate(nil)
             }
         }
+    }
+
+    private func copyToClipboard(_ text: String, message: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        shareStatusMessage = message
     }
 }
 

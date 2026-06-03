@@ -12,6 +12,7 @@
 		7381A6E82B87236C00C0DE01 /* CustomFanPresetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7381A6E72B87236C00C0DE01 /* CustomFanPresetTests.swift */; };
 		DABD00032F95000100000003 /* DashboardProcessSamplingPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD00012F95000100000001 /* DashboardProcessSamplingPolicyTests.swift */; };
 		DABD00042F95000100000004 /* HardwareRescueDiagnosticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD00022F95000100000002 /* HardwareRescueDiagnosticsTests.swift */; };
+		DABD10022F96000100000002 /* CoreMonitorShareKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD10012F96000100000001 /* CoreMonitorShareKitTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +52,7 @@
 		8D6F3C76B69FEDB140682676 /* AlertEngineTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlertEngineTests.swift; sourceTree = "<group>"; };
 		DABD00012F95000100000001 /* DashboardProcessSamplingPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardProcessSamplingPolicyTests.swift; sourceTree = "<group>"; };
 		DABD00022F95000100000002 /* HardwareRescueDiagnosticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HardwareRescueDiagnosticsTests.swift; sourceTree = "<group>"; };
+		DABD10012F96000100000001 /* CoreMonitorShareKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreMonitorShareKitTests.swift; sourceTree = "<group>"; };
 		E5B12BED2CCB8BBEC03C227F /* Core-MonitorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Core-MonitorTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -98,6 +100,7 @@
 			children = (
 				8D6F3C76B69FEDB140682676 /* AlertEngineTests.swift */,
 				7381A6E72B87236C00C0DE01 /* CustomFanPresetTests.swift */,
+				DABD10012F96000100000001 /* CoreMonitorShareKitTests.swift */,
 				DABD00012F95000100000001 /* DashboardProcessSamplingPolicyTests.swift */,
 				DABD00022F95000100000002 /* HardwareRescueDiagnosticsTests.swift */,
 			);
@@ -304,6 +307,7 @@
 			files = (
 				23F2064CB38FDB73EE4AB471 /* AlertEngineTests.swift in Sources */,
 				7381A6E82B87236C00C0DE01 /* CustomFanPresetTests.swift in Sources */,
+				DABD10022F96000100000002 /* CoreMonitorShareKitTests.swift in Sources */,
 				DABD00032F95000100000003 /* DashboardProcessSamplingPolicyTests.swift in Sources */,
 				DABD00042F95000100000004 /* HardwareRescueDiagnosticsTests.swift in Sources */,
 			);

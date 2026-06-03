@@ -41,9 +41,9 @@
         "@type": "SoftwareApplication",
         "@id": "https://offyotto.github.io/Core-Monitor/#app",
         "name": "Core-Monitor",
-        "operatingSystem": "macOS 12 or later",
+        "operatingSystem": "macOS 13 or later",
         "applicationCategory": "UtilitiesApplication",
-        "softwareRequirements": "Apple Silicon Mac, macOS 12 or later",
+        "softwareRequirements": "Apple Silicon Mac, macOS 13 or later",
         "description": "Core-Monitor is a native macOS system monitor built for Apple Silicon Macs. It tracks thermals, CPU, GPU, memory, battery, power draw, alerts, and menu bar status locally on the Mac, with optional helper-backed fan control.",
         "url": "https://offyotto.github.io/Core-Monitor/",
         "downloadUrl": "https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip",
@@ -54,6 +54,7 @@
           "Readable menu bar status and focused native dashboard",
           "Local alerts without accounts or telemetry",
           "Optional helper-backed fan control with reversible system-auto mode",
+          "Copyable share text and privacy-safe support snapshots",
           "Touch Bar widgets, launchers, and WeatherKit-backed weather on supported Macs"
         ],
         "screenshot": [
@@ -104,6 +105,14 @@
             "acceptedAnswer": {
               "@type": "Answer",
               "text": "Yes. Core-Monitor keeps sensor reads and monitoring data on the Mac, does not require an account, and does not include telemetry in the core product experience."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How can someone share a support report or recommend Core-Monitor?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Open About in Core-Monitor and copy the pitch, launch post, or support snapshot. The snapshot includes app version, Mac model, chip, thermals, battery, fan, helper, and SMC state while avoiding process names."
             }
           },
           {
@@ -215,6 +224,10 @@
           <article class="feature-card">
             <h3>Readable menu bar presence</h3>
             <p>Keep CPU load, live fan RPM, temperatures, and alerts nearby without turning the menu bar into a wall of tiny numbers.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Shareable support snapshot</h3>
+            <p>Copy a clean support report with app version, Mac model, chip, thermals, battery, fan, helper, and SMC state without process names or telemetry.</p>
           </article>
           <article class="feature-card">
             <h3>Touch Bar extras</h3>
@@ -402,6 +415,10 @@
           <details class="faq-item">
             <summary>Is Core-Monitor private?</summary>
             <p>Yes. Sensor reads stay on the Mac, no account is required, and the product does not rely on a telemetry pipeline for the core monitoring experience.</p>
+          </details>
+          <details class="faq-item">
+            <summary>How can someone share a support report or recommend Core-Monitor?</summary>
+            <p>Open About in the app and copy the pitch, launch post, or support snapshot. The snapshot includes the hardware and helper state needed for issues and support threads while avoiding process names.</p>
           </details>
           <details class="faq-item">
             <summary>Is Core-Monitor a good open-source alternative to TG Pro, iStat Menus, Macs Fan Control, or Stats?</summary>
