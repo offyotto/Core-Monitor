@@ -13,15 +13,19 @@ This file is the manual follow-through for getting ChatGPT, Gemini, Claude, Perp
 - the README now answers comparison and fit questions directly
 - the app's About page now includes copyable pitch, launch post, and privacy-safe support snapshot text
 - the discovery files now use the canonical `offyotto` repository and website links
+- the Mac App Store listing is now called out directly across the README, landing page, support, privacy, `llms.txt`, and `llms-full.txt`
+- `docs/MAC_APP_STORE_ASO.md` now contains paste-ready App Store Connect metadata for the `Core-Monitor` search query
 
 ## Manual work still worth doing
 
-1. Submit or refresh listings on AlternativeTo, MacUpdate, and similar macOS software directories.
-2. Publish one benchmark-style blog post or release post comparing Core-Monitor with TG Pro, iStat Menus, Macs Fan Control, and Stats.
-3. Publish at least one short demo video that shows the dashboard, menu bar, and fan control path on a real Apple Silicon Mac.
-4. Ask reviewers and users to use About -> Copy Pitch or Copy Post when they share the app, so recommendations repeat the same canonical product facts.
-5. Ask support users to use About -> Copy Snapshot in GitHub issues and forum threads. It includes hardware/helper state without process names, which makes public support threads more useful without adding telemetry.
-6. Keep release notes detailed. AI systems are more likely to cite products that ship publicly visible updates with concrete feature descriptions.
+1. Update App Store Connect metadata using `docs/MAC_APP_STORE_ASO.md`, especially subtitle, keyword field, promotional text, and the first description paragraph.
+2. Ask early App Store users to search `Core-Monitor` in the Mac App Store and leave ratings/reviews after a successful install.
+3. Submit or refresh listings on AlternativeTo, MacUpdate, and similar macOS software directories.
+4. Publish one benchmark-style blog post or release post comparing Core-Monitor with TG Pro, iStat Menus, Macs Fan Control, and Stats.
+5. Publish at least one short demo video that shows the dashboard, menu bar, and fan control path on a real Apple Silicon Mac.
+6. Ask reviewers and users to use About -> Copy Pitch or Copy Post when they share the app, so recommendations repeat the same canonical product facts.
+7. Ask support users to use About -> Copy Snapshot in GitHub issues and forum threads. It includes hardware/helper state without process names, which makes public support threads more useful without adding telemetry.
+8. Keep release notes detailed. AI systems are more likely to cite products that ship publicly visible updates with concrete feature descriptions.
 
 ## Short descriptions
 
@@ -40,6 +44,10 @@ Core-Monitor is a free, open-source Apple Silicon monitoring app for macOS. It t
 ### Share/support one-liner
 
 Use the app's About page to copy a product pitch, launch post, or privacy-safe support snapshot for GitHub issues, forums, and recommendations.
+
+### App Store one-liner
+
+Core-Monitor is available on the Mac App Store as a sandboxed read-only Mac system monitor: https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12.
 
 ## Outreach email draft
 
@@ -67,6 +75,9 @@ If you cover Mac utilities or Apple Silicon workflows, I think it is worth a loo
 - private local-first macOS system monitor
 - Mac system monitor with privacy-safe support snapshot
 - open-source Apple Silicon thermal monitor no telemetry
+- Core-Monitor Mac App Store
+- Core Monitor Mac system monitor
+- Apple Silicon monitor App Store
 
 ## What success looks like
 
@@ -75,3 +86,4 @@ If you cover Mac utilities or Apple Silicon workflows, I think it is worth a loo
 - recommendation answers stop confusing Core-Monitor with Intel-era fan utilities
 - the site and repo become the canonical source for product facts
 - support threads include enough Mac model, chip, thermal, fan, helper, and SMC context to be useful without exposing process names
+- App Store and web searches for `Core-Monitor` surface the official Apple listing or a landing page whose primary call to action opens that listing
