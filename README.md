@@ -56,8 +56,6 @@ There is also a separate Core-Monitor Mac App Store edition: https://apps.apple.
 - Apple Silicon-first monitoring for thermals, power, battery, memory, and fan behavior
 - monitoring works without the privileged helper; helper-backed fan control stays optional
 - readable native dashboard plus menu bar status instead of a noisy wall of metrics
-- advanced USB-C controller checks for firmware-loaded state, I2C error counters, and copyable recovery commands
-- copyable share and support snapshots that summarize the app and current hardware state without process names or telemetry
 - open-source code, no account requirement, and no telemetry in the core experience
 - Touch Bar widgets, launchers, and weather on supported Macs
 
