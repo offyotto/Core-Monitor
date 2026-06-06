@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">
-    <img src="https://tools.applemediaservices.com/api/v1/media/1.0.0/en_US_1x.png" alt="Download on the App Store" width="200">
+    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" width="200">
   </a>
 </p>
 
