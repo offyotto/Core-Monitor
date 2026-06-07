@@ -43,7 +43,7 @@
 
 ---
 
-Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs, then presents it in the menu bar, dashboard, and, on supported hardware, the Touch Bar. CPU, GPU, memory, battery, thermals, power draw, USB-C controllers, and on supported Macs, the Touch Bar.
+Core-Monitor reads sensor data from the Apple SMC and standard macOS system APIs, then presents it in the menu bar, dashboard, and, on supported hardware, the Touch Bar. CPU, GPU, memory, battery, thermals, power draw, and on supported Macs, the Touch Bar.
 
 It is written in Swift and built around `host_statistics`, `IOKit`, and `IOPSCopyPowerSourcesInfo`. Sensor reads stay local to your Mac. The optional fan control helper is the only additional process.
 
@@ -87,16 +87,6 @@ brew tap --custom-remote offyotto/core-monitor https://github.com/offyotto/Core-
 brew install --cask offyotto/core-monitor/core-monitor
 ```
 
-## Share and support
-
-Core-Monitor includes a small share kit in the app's About page:
-
-- **Copy Pitch** for a concise recommendation blurb with the website, release, App Store, and source links.
-- **Copy Post** for a shorter launch-style post that is easy to share on GitHub, forums, or social channels.
-- **Copy Snapshot** for a privacy-safe support snapshot with app version, Mac model, chip, macOS version, CPU, memory, thermals, battery, fan, helper, and SMC state.
-
-The support snapshot intentionally avoids process names. Process insights remain controlled by the in-app privacy setting, and Core-Monitor does not add telemetry to create these reports.
-
 ## Mac App Store Search
 
 The official Apple listing is [Core-Monitor on the Mac App Store](https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12). The sandboxed App Store edition has its own [landing page](https://offyotto.github.io/Core-Monitor/Mac-App-Store/), [support page](https://offyotto.github.io/Core-Monitor/Mac-App-Store/support/), and [privacy policy](https://offyotto.github.io/Core-Monitor/Mac-App-Store/privacy/).
@@ -128,8 +118,6 @@ For App Store Connect metadata and review/rating outreach, see [docs/MAC_APP_STO
 **Battery** — charge, cycle count, health percentage, voltage, amperage, and power draw from `AppleSmartBattery` in the IO registry. Time remaining comes from `IOPSCopyPowerSourcesInfo`.
 
 **Thermals** — CPU die temperature from `TC0P`, `Tp09`, `TCXC`, and fallbacks, GPU from `Tg0e`/`Tg0f`. You can also browse all readable SMC keys from the sensor explorer.
-
-**Advanced rescue** — the dashboard's Rescue page reads AppleSmartBattery `PortControllerInfo` to surface USB-C controller firmware versions, I2C error counts, boot flags, and active power contracts.
 
 ## Fan control
 
