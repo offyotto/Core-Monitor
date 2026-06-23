@@ -1,3 +1,5 @@
+# PS: Don't ask claude code to make your pull request like a maniac.
+
 # Contributing to Core Monitor
 
 Core Monitor is a macOS utility with privileged-helper fan control, real-time monitoring, menu bar surfaces, alerts, onboarding, and optional Touch Bar support.
