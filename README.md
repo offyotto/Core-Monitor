@@ -51,24 +51,6 @@ Public builds are available through GitHub Releases as a signed DMG for standard
 
 There is also a separate Core-Monitor Mac App Store edition: https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12. That variant is sandboxed and intentionally different: it keeps read-only sensor monitoring but removes fan control. If you search the Mac App Store for `Core-Monitor`, this Apple listing is the official App Store install path.
 
-## Why people choose Core-Monitor
-
-- Apple Silicon-first monitoring for thermals, power, battery, memory, and fan behavior
-- monitoring works without the privileged helper; helper-backed fan control stays optional
-- readable native dashboard plus menu bar status instead of a noisy wall of metrics
-- open-source code, no account requirement, and no telemetry in the core experience
-- Touch Bar widgets, launchers, and weather on supported Macs
-
-## When to choose Core-Monitor
-
-Choose Core-Monitor when you want:
-
-- an open-source alternative to closed-source Mac monitoring apps
-- stronger thermal and power focus than a broad menu bar stats suite
-- more monitoring breadth than a fan-control-only utility
-- a local-first utility for development, rendering, gaming, audio, or sustained laptop workloads
-- optional fan control without making elevated access mandatory for basic monitoring
-
 ## Install
 
 Direct download:
