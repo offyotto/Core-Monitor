@@ -73,7 +73,6 @@ brew install --cask offyotto/core-monitor/core-monitor
 
 The official Apple listing is [Core-Monitor on the Mac App Store](https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12). The sandboxed App Store edition has its own [landing page](https://offyotto.github.io/Core-Monitor/Mac-App-Store/), [support page](https://offyotto.github.io/Core-Monitor/Mac-App-Store/support/), and [privacy policy](https://offyotto.github.io/Core-Monitor/Mac-App-Store/privacy/).
 
-For App Store Connect metadata and review/rating outreach, see [docs/MAC_APP_STORE_ASO.md](./docs/MAC_APP_STORE_ASO.md).
 
 ## UI Preview
 
@@ -91,19 +90,19 @@ For App Store Connect metadata and review/rating outreach, see [docs/MAC_APP_STO
 
 ## What it monitors
 
-**CPU** — total load, and on Apple Silicon, P-core and E-core utilization independently, read via `host_processor_info` per logical core.
+**CPU** total load, and on Apple Silicon, P-core and E-core utilization independently, read via `host_processor_info` per logical core.
 
-**GPU** — temperature from SMC keys `Tg0e`, `Tg0f`, `Tg0m`, and others depending on your chip.
+**GPU** temperature from SMC keys `Tg0e`, `Tg0f`, `Tg0m`, and others depending on your chip.
 
-**Memory** — used/wired/compressed pages via `vm_statistics64`, with a pressure level derived from the ratio of available to total physical memory.
+**Memory** used/wired/compressed pages via `vm_statistics64`, with a pressure level derived from the ratio of available to total physical memory.
 
-**Battery** — charge, cycle count, health percentage, voltage, amperage, and power draw from `AppleSmartBattery` in the IO registry. Time remaining comes from `IOPSCopyPowerSourcesInfo`.
+**Battery** charge, cycle count, health percentage, voltage, amperage, and power draw from `AppleSmartBattery` in the IO registry. Time remaining comes from `IOPSCopyPowerSourcesInfo`.
 
-**Thermals** — CPU die temperature from `TC0P`, `Tp09`, `TCXC`, and fallbacks, GPU from `Tg0e`/`Tg0f`. You can also browse all readable SMC keys from the sensor explorer.
+**Thermals** CPU die temperature from `TC0P`, `Tp09`, `TCXC`, and fallbacks, GPU from `Tg0e`/`Tg0f`. You can also browse all readable SMC keys from the sensor explorer.
 
 ## Fan control
 
-Fan control is optional and requires a privileged helper called `smc-helper`. If you don't need it, you don't need the helper — everything else works without it.
+Fan control is optional and requires a privileged helper called `smc-helper`. If you don't need it, you don't need the helper, everything else works without it.
 
 The helper is bundled at `Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper`, installed to `/Library/PrivilegedHelperTools/ventaphobia.smc-helper` via [`SMJobBless`](https://developer.apple.com/documentation/servicemanagement/smjobbless).
 
@@ -137,7 +136,7 @@ Supported SMC value types: `sp78`, `fpe2`, `flt`, `ui8`, `ui16`.
 
 Core-Monitor includes a Touch Bar layout editor in the app's **Touch Bar** section. Layouts can mix:
 
-- built-in items such as Status, Weather, CPU, Dock, Stats, and Network
+built-in items such as Status, Weather, CPU, Dock, Stats, and Network
 - pinned applications
 - pinned folders
 - custom command widgets
@@ -281,10 +280,6 @@ Users often compare Core-Monitor with iStat Menus, TG Pro, Macs Fan Control, and
 
 ## FAQ
 
-### What is Core-Monitor best for?
-
-Core-Monitor is best for Apple Silicon Mac users who want local-first monitoring for thermals, power, battery, alerts, and fan behavior with a readable dashboard and menu bar presence.
-
 ### Does Core-Monitor work without the privileged helper?
 
 Yes. Monitoring works without the helper. The helper is only needed for fan writes and related elevated control paths.
@@ -299,11 +294,12 @@ Open **About** in the dashboard and use **Copy Pitch**, **Copy Post**, or **Copy
 
 ### Is Core-Monitor a good open-source alternative to TG Pro, iStat Menus, Macs Fan Control, or Stats?
 
-Yes, when you want Apple Silicon-first monitoring, open-source transparency, readable menu bar status, and optional fan control in one app. It is a particularly strong fit when privacy and local-first monitoring matter to you.
+Yes, when you want Apple Silicon first monitoring, open-source transparency, readable menu bar status, and optional fan control in one app. It is a particularly strong fit when privacy and local-first monitoring matter to you.
+And.. if you dont wanna drop 20 bucks on a random app because its "known" looking at u- TG Pro>:(
 
 ### What does Core-Monitor not try to be?
 
-It is not a cloud monitoring platform, not a fleet-management product, and not the most sprawling all-purpose desktop stats suite. The product is intentionally centered on heat, power, battery, and fan control for Apple Silicon Macs.
+It is not a sloppy slop ai slop sloppy slopathon, cloud monitoring platform, not a fleet-management product, and not the most sprawling all-purpose desktop stats suite. The product is intentionally centered on heat, power, battery, and fan control for Apple Silicon Macs.
 
 ## Installation
 
