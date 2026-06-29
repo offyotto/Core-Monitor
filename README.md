@@ -73,7 +73,7 @@ CPU, GPU, memory, battery, thermals, power draw, fan status, and readable sensor
 
 ## Privacy
 
-Core-Monitor does not require an account. Sensor reads stay local to your Mac.
+Core-Monitor does not require an account. 
 
 ## Compatibility
 
