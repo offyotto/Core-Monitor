@@ -8,6 +8,9 @@ final class TopProcessSampler {
         let name: String
         let cpuPercent: Double
         let memoryBytes: UInt64
+        /// Raw CPU time captured this pass, reused as next pass's baseline so we
+        /// never re-fetch it (which double-counts and doubles syscalls).
+        let cpuTime: UInt64
     }
 
     private struct AggregatedProcess {
@@ -112,7 +115,7 @@ final class TopProcessSampler {
                     .map { ProcessActivity(pid: $0.pid, name: $0.name, cpuPercent: $0.cpuPercent, memoryBytes: $0.memoryBytes) }
             )
 
-            let nextCPUTimeByPID = Dictionary(uniqueKeysWithValues: sampled.map { ($0.pid, self.cpuTime(for: $0.pid) ?? 0) })
+            let nextCPUTimeByPID = Dictionary(sampled.map { ($0.pid, $0.cpuTime) }, uniquingKeysWith: { first, _ in first })
 
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
@@ -159,7 +162,8 @@ final class TopProcessSampler {
                     pid: pid,
                     name: displayName(for: pid),
                     cpuPercent: cpuPercent,
-                    memoryBytes: memoryBytes
+                    memoryBytes: memoryBytes,
+                    cpuTime: cpuTime
                 )
             }
     }

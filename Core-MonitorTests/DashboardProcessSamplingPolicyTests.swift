@@ -3,29 +3,32 @@ import XCTest
 
 final class DashboardProcessSamplingPolicyTests: XCTestCase {
     func testBasicModeNeverRequestsDetailedSampling() {
-        for selection in SidebarItem.allCases {
+        for selection in MonitorSection.allCases {
             XCTAssertFalse(
                 DashboardProcessSamplingPolicy.requiresDetailedSampling(
                     isBasicMode: true,
                     selection: selection
                 ),
-                "\(selection.rawValue) should stay on background sampling in Basic Mode."
+                "\(selection) should stay on background sampling in Basic Mode."
             )
         }
     }
 
-    func testMemoryViewRequestsDetailedSampling() {
-        XCTAssertTrue(
-            DashboardProcessSamplingPolicy.requiresDetailedSampling(
-                isBasicMode: false,
-                selection: .memory
+    func testCPUAndMemoryViewsRequestDetailedSampling() {
+        for selection in [MonitorSection.cpu, .memory] {
+            XCTAssertTrue(
+                DashboardProcessSamplingPolicy.requiresDetailedSampling(
+                    isBasicMode: false,
+                    selection: selection
+                ),
+                "\(selection) drives the process lists and needs detailed sampling."
             )
-        )
+        }
     }
 
     func testNonProcessDashboardViewsStayOnBackgroundSampling() {
-        let lowDetailSelections: [SidebarItem] = [
-            .overview, .thermals, .fans, .battery, .rescue, .system, .touchBar, .help, .about
+        let lowDetailSelections: [MonitorSection] = [
+            .overview, .thermal, .cooling, .power, .network, .storage, .rescue
         ]
 
         for selection in lowDetailSelections {
@@ -34,7 +37,7 @@ final class DashboardProcessSamplingPolicyTests: XCTestCase {
                     isBasicMode: false,
                     selection: selection
                 ),
-                "\(selection.rawValue) should not force detailed process sampling."
+                "\(selection) should not force detailed process sampling."
             )
         }
     }

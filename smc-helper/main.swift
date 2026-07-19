@@ -325,7 +325,10 @@ private final class SMCController {
     }
 
     private func unlockFansIfNeeded(for fanID: Int) throws {
-        if hasForceTest() {
+        // Only engage force-test (and pay the settling delay) when it is not
+        // already on, so steady-state adjustments do not re-write Ftst and
+        // sleep 0.5 s on every fan every cycle.
+        if hasForceTest(), !isForceTestEnabled() {
             try? writeValue(key: "Ftst", value: 1)
             Thread.sleep(forTimeInterval: 0.5)
         }

@@ -335,7 +335,8 @@ enum AlertEvaluator {
                     unavailableReason: nil
                 )
             }
-            let stalledFanIndex = input.snapshot.fanSpeeds.firstIndex { $0 <= 0 }
+            // Only a genuine 0 RPM reading is a stall; -1 marks a failed SMC read.
+            let stalledFanIndex = input.snapshot.fanSpeeds.firstIndex { $0 == 0 }
             if let stalledFanIndex, hottest >= (config.threshold.warning ?? 0) {
                 return AlertMeasurement(
                     severity: .critical,

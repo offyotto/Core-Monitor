@@ -456,7 +456,15 @@ final class FanController: ObservableObject {
             guard canActivatePrivilegedMode() else { return }
         }
         self.mode = resolvedMode
-        lastAppliedSpeed = 0
+        // Only clear the last-applied speed when entering a managed mode. For
+        // system-owned modes we must preserve it so applyCurrentMode can tell a
+        // real manual write happened and hand control back to the firmware.
+        switch resolvedMode {
+        case .automatic, .silent:
+            break
+        default:
+            lastAppliedSpeed = 0
+        }
         saveSettings()
         applyCurrentMode(force: true)
     }
@@ -592,9 +600,19 @@ final class FanController: ObservableObject {
         }
 
         do {
+            // Launch a detached helper that waits for this process to exit,
+            // then relaunches the bundle. Opening while we are still running
+            // would only activate the current instance (or trigger the
+            // single-instance handoff), so the app would quit without coming
+            // back. quotedBundlePath is escaped for safe shell interpolation.
+            let currentPID = ProcessInfo.processInfo.processIdentifier
+            let quotedBundlePath = "'" + bundlePath.replacingOccurrences(of: "'", with: "'\\''") + "'"
             let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-            process.arguments = [bundlePath]
+            process.executableURL = URL(fileURLWithPath: "/bin/sh")
+            process.arguments = [
+                "-c",
+                "while kill -0 \(currentPID) 2>/dev/null; do sleep 0.2; done; /usr/bin/open \(quotedBundlePath)"
+            ]
             try process.run()
             statusMessage = "Restarting Core Monitor to apply the custom preset…"
 

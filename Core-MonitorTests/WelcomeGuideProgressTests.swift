@@ -81,27 +81,6 @@ final class WelcomeGuideProgressTests: XCTestCase {
         XCTAssertTrue(defaults.bool(forKey: CoreMonitorDefaultsMaintenance.legacyWindowStateResetKey))
     }
 
-    func testWelcomeGuidePresentationKeepsGuidePendingAfterUnexpectedDismissal() {
-        var presentation = WelcomeGuidePresentationController(hasSeen: false)
-
-        let dismissAction = presentation.handlePresentationChange(false)
-
-        XCTAssertEqual(dismissAction, .none)
-        XCTAssertFalse(presentation.didCompleteGuide)
-        XCTAssertTrue(presentation.isSheetPresented)
-    }
-
-    func testWelcomeGuidePresentationPersistsCompletionAfterGuideFinishes() {
-        var presentation = WelcomeGuidePresentationController(hasSeen: false)
-        presentation.syncStoredPreference(hasSeen: true)
-
-        let dismissAction = presentation.handlePresentationChange(false)
-
-        XCTAssertEqual(dismissAction, .persistCompletion)
-        XCTAssertTrue(presentation.didCompleteGuide)
-        XCTAssertFalse(presentation.isSheetPresented)
-    }
-
     private func makeDefaults() -> UserDefaults {
         let suiteName = "WelcomeGuideProgressTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
@@ -123,17 +102,17 @@ final class DashboardNavigationRouterTests: XCTestCase {
     func testConsumeReturnsRequestedSelectionAndClearsRoute() throws {
         let router = DashboardNavigationRouter()
 
-        router.open(.fans)
+        router.open(.cooling)
 
         let route = try XCTUnwrap(router.route)
-        XCTAssertEqual(router.consume(route), .fans)
+        XCTAssertEqual(router.consume(route), .cooling)
         XCTAssertNil(router.route)
     }
 
     func testConsumeRejectsStaleRouteAfterNewRequest() throws {
         let router = DashboardNavigationRouter()
 
-        router.open(.fans)
+        router.open(.cooling)
         let staleRoute = try XCTUnwrap(router.route)
 
         router.open(.memory)

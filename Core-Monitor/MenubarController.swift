@@ -6,16 +6,18 @@ import SwiftUI
 enum MenuBarItemKind: CaseIterable {
     case cpu, fan, memory, network, disk, temperature
 
+    // Same glyph per metric as the dashboard sidebar, so the menu bar and the
+    // main window speak one visual language.
     var systemImageName: String {
         switch self {
         case .cpu:
             return "cpu"
         case .fan:
-            return "fanblades"
+            return "fan"
         case .memory:
             return "memorychip"
         case .network:
-            return "arrow.down.arrow.up"
+            return "network"
         case .disk:
             return "internaldrive"
         case .temperature:
@@ -123,14 +125,12 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         case critical
         case secondary
 
+        // Menu bar extras stay monochrome like the system's own items; severity
+        // color lives in the popovers and the dashboard, not up here.
         var color: NSColor {
             switch self {
-            case .normal:
+            case .normal, .warning, .critical:
                 return .labelColor
-            case .warning:
-                return .systemOrange
-            case .critical:
-                return .systemRed
             case .secondary:
                 return .secondaryLabelColor
             }
@@ -143,7 +143,7 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         let tone: StatusTone
     }
 
-    private static let labelFont = NSFont.monospacedSystemFont(ofSize: 11, weight: .semibold)
+    private static let labelFont = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
     let kind: MenuBarItemKind
     private var statusItem: NSStatusItem!
     private var popover: NSPopover?
@@ -156,7 +156,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
 
     // Keep the hosting controller alive
     private var hostingController: NSHostingController<AnyView>?
-    private var cachedIconAttachment: NSAttributedString?
     private var lastStatusState: StatusButtonState?
 
     init(
@@ -186,8 +185,10 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         button.target = self
         button.action = #selector(togglePopover(_:))
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-        button.imagePosition = .noImage
-        cachedIconAttachment = makeStatusBarIconAttachment()
+        // A template image next to a plain value label renders like a native
+        // status item: the system handles tinting, spacing, and appearance.
+        button.image = statusBarIcon()
+        button.imagePosition = .imageLeading
     }
 
     func refresh() {
@@ -205,22 +206,15 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         }
         guard lastStatusState != state else { return }
 
-        let full = NSMutableAttributedString()
-
-        if let iconAttachment = cachedIconAttachment {
-            full.append(iconAttachment)
-            full.append(NSAttributedString(string: " "))
-        }
-
-        full.append(NSAttributedString(
-            string: state.labelText,
+        // The icon stays a system-tinted template image; only the value text
+        // carries a tone color, and only when something needs attention.
+        button.attributedTitle = NSAttributedString(
+            string: " " + state.labelText,
             attributes: [
                 .foregroundColor: state.tone.color,
                 .font: Self.labelFont
             ]
-        ))
-
-        button.attributedTitle = full
+        )
         lastStatusState = state
     }
 
@@ -236,31 +230,30 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         )
     }
 
+    // The template icon already names the metric, so the label is just the
+    // value — icon + number, like the system battery and Wi-Fi items.
     private func statusLabel() -> (text: String, tone: StatusTone) {
         switch kind {
 
         case .cpu:
             let pct = Int(systemMonitor.cpuUsagePercent.rounded())
             let tone: StatusTone = pct > 80 ? .critical : pct > 50 ? .warning : .normal
-            return ("CPU \(pct)%", tone)
+            return ("\(pct)%", tone)
 
         case .fan:
             let speeds = systemMonitor.fanSpeeds.filter { $0 > 0 }
             guard let highestRPM = speeds.max() else {
-                return ("FAN --", .secondary)
+                return ("—", .secondary)
             }
 
             let utilization = Double(highestRPM) / Double(max(fanController.maxSpeed, 1))
             let tone: StatusTone = utilization > 0.85 ? .critical : utilization > 0.6 ? .warning : .normal
-            let formattedRPM = highestRPM >= 1000
-                ? String(format: "%.1fk", Double(highestRPM) / 1000.0).replacingOccurrences(of: ".0k", with: "k")
-                : "\(highestRPM)"
-            return ("FAN \(formattedRPM)", tone)
+            return (ReadingFormat.rpmShort(highestRPM), tone)
 
         case .memory:
             let pct = Int(systemMonitor.memoryUsagePercent.rounded())
             let tone: StatusTone = pct > 85 ? .critical : pct > 70 ? .warning : .normal
-            return ("MEM \(pct)%", tone)
+            return ("\(pct)%", tone)
 
         case .network:
             let download = systemMonitor.networkStats.downloadBytesPerSec
@@ -271,12 +264,12 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
                 .abbreviatedRate(bytesPerSecond: dominant)
                 .replacingOccurrences(of: " ", with: "")
             let tone: StatusTone = dominant < 1_000 ? .secondary : .normal
-            return ("NET \(arrow)\(label)", tone)
+            return ("\(arrow)\(label)", tone)
 
         case .disk:
             let pct = Int(systemMonitor.diskStats.usagePercent.rounded())
             let tone: StatusTone = pct > 90 ? .critical : pct > 75 ? .warning : .normal
-            return ("SSD \(pct)%", tone)
+            return ("\(pct)%", tone)
 
         case .temperature:
             if let t = systemMonitor.cpuTemperature {
@@ -289,39 +282,33 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
     }
 
     private func statusBarIcon() -> NSImage? {
-        let configuration = NSImage.SymbolConfiguration(pointSize: 10, weight: .medium)
-            .applying(.init(scale: .small))
-
-        return NSImage(systemSymbolName: kind.systemImageName, accessibilityDescription: nil)?
+        let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
+        let image = NSImage(systemSymbolName: kind.systemImageName, accessibilityDescription: kind.title)?
             .withSymbolConfiguration(configuration)
-    }
-
-    private func makeStatusBarIconAttachment() -> NSAttributedString? {
-        guard let icon = statusBarIcon() else { return nil }
-
-        let targetHeight: CGFloat = 11
-        let sourceSize = icon.size
-        let aspectRatio = sourceSize.height > 0 ? (sourceSize.width / sourceSize.height) : 1
-        let targetWidth = max(9, min(16, targetHeight * aspectRatio))
-
-        let attachment = NSTextAttachment()
-        attachment.image = icon
-        attachment.bounds = CGRect(x: 0, y: -1, width: targetWidth, height: targetHeight)
-        return NSAttributedString(attachment: attachment)
+        // Template rendering lets the menu bar tint the glyph for light/dark
+        // appearance and reduced-transparency wallpapers.
+        image?.isTemplate = true
+        return image
     }
 
     // MARK: - Popover setup
 
     private func setupPopover() {
-        let rootView = makePopoverView()
-        let hc = NSHostingController(rootView: rootView)
+        let rootView = MetricPopoverView(
+            kind: kind,
+            systemMonitor: systemMonitor,
+            fanController: fanController,
+            openSection: { [weak self] section in
+                self?.popover?.performClose(nil)
+                self?.openSelectionFromPopover(section)
+            }
+        )
+        let hc = NSHostingController(rootView: AnyView(rootView))
         hc.view.translatesAutoresizingMaskIntoConstraints = true
-        hc.view.wantsLayer = true
-        hc.view.layer?.backgroundColor = NSColor.clear.cgColor
         self.hostingController = hc
 
         popover = NSPopover()
-        popover?.contentSize = NSSize(width: 320, height: 500)
+        popover?.contentSize = NSSize(width: 300, height: 400)
         popover?.behavior = .transient
         popover?.animates = true
         popover?.contentViewController = hc
@@ -329,102 +316,7 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         popover?.appearance = nil
     }
 
-    private func makePopoverView() -> AnyView {
-        switch kind {
-        case .cpu:
-            return AnyView(
-                CPUMenuPopoverView(
-                    systemMonitor: systemMonitor,
-                    fanController: fanController,
-                    openDashboardAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openDashboardAction()
-                    },
-                    openHelpAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openSelectionFromPopover(.help)
-                    }
-                )
-            )
-        case .fan:
-            return AnyView(
-                TemperatureMenuPopoverView(
-                    systemMonitor: systemMonitor,
-                    fanController: fanController,
-                    openDashboardAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openDashboardAction()
-                    },
-                    openFansAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openSelectionFromPopover(.fans)
-                    }
-                )
-            )
-        case .memory:
-            return AnyView(
-                MemoryMenuPopoverView(
-                    systemMonitor: systemMonitor,
-                    fanController: fanController,
-                    openDashboardAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openDashboardAction()
-                    },
-                    openHelpAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openSelectionFromPopover(.help)
-                    }
-                )
-            )
-        case .disk:
-            return AnyView(
-                DiskMenuPopoverView(
-                    systemMonitor: systemMonitor,
-                    fanController: fanController,
-                    openDashboardAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openDashboardAction()
-                    },
-                    openHelpAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openSelectionFromPopover(.help)
-                    }
-                )
-            )
-        case .network:
-            return AnyView(
-                NetworkMenuPopoverView(
-                    systemMonitor: systemMonitor,
-                    fanController: fanController,
-                    openDashboardAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openDashboardAction()
-                    }
-                )
-            )
-        case .temperature:
-            return AnyView(
-                TemperatureMenuPopoverView(
-                    systemMonitor: systemMonitor,
-                    fanController: fanController,
-                    openDashboardAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openDashboardAction()
-                    },
-                    openFansAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openSelectionFromPopover(.fans)
-                    },
-                    openHelpAction: { [weak self] in
-                        self?.popover?.performClose(nil)
-                        self?.openSelectionFromPopover(.help)
-                    }
-                )
-            )
-        }
-    }
-
-    private func openSelectionFromPopover(_ selection: SidebarItem) {
+    private func openSelectionFromPopover(_ selection: MonitorSection) {
         DashboardNavigationRouter.shared.open(selection)
         openDashboardAction()
     }
@@ -444,10 +336,10 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         guard let button = statusItem.button else { return }
         ensurePopover()
         hostingController?.view.layoutSubtreeIfNeeded()
-        let fit    = hostingController?.view.fittingSize ?? NSSize(width: 320, height: 500)
-        let maxH   = max(300, min(640, (button.window?.screen?.visibleFrame.height ?? 900) - 100))
-        let height = min(max(fit.height, 300), maxH)
-        popover?.contentSize = NSSize(width: 320, height: height)
+        let fit    = hostingController?.view.fittingSize ?? NSSize(width: 300, height: 400)
+        let maxH   = max(240, min(640, (button.window?.screen?.visibleFrame.height ?? 900) - 100))
+        let height = min(max(fit.height, 240), maxH)
+        popover?.contentSize = NSSize(width: 300, height: height)
         popover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         popover?.contentViewController?.view.window?.makeKey()
     }
@@ -457,14 +349,6 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
     func popoverWillShow(_ notification: Notification) {
         systemMonitor.setInteractiveMonitoringEnabled(true, reason: "menubar.\(kind.title)")
         statusItem.button?.isHighlighted = true
-        DispatchQueue.main.async { [weak self] in
-            guard let win = self?.popover?.contentViewController?.view.window else { return }
-            win.isOpaque = false
-            win.backgroundColor = .clear
-            win.hasShadow = true
-            win.contentView?.wantsLayer = true
-            win.contentView?.layer?.backgroundColor = NSColor.clear.cgColor
-        }
     }
 
     func popoverDidClose(_ notification: Notification) {

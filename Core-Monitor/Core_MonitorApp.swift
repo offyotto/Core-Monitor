@@ -216,6 +216,11 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         ProcessInfo.processInfo.disableAutomaticTermination(Self.automaticTerminationReason)
         guard handOffToRunningInstanceIfNeeded() == false else { return }
         CoreMonitorDefaultsMaintenance.purgeDeprecatedState()
+        SettingsWindowManager.shared.configure(
+            systemMonitor: coordinator.systemMonitor,
+            fanController: coordinator.fanController,
+            startupManager: startupManager
+        )
         launchPresentation = WelcomeGuideProgress.launchPresentation()
         debugLaunch("bundleIdentifier=\(Bundle.main.bundleIdentifier ?? "nil")")
         debugLaunch("launchPresentation=\(launchPresentation) activationPolicy=\(NSApp.activationPolicy().rawValue)")
@@ -286,9 +291,13 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc
+    private func openSettingsFromMenu(_ sender: Any?) {
+        SettingsWindowManager.shared.show()
+    }
+
+    @objc
     private func openHelpFromMenu(_ sender: Any?) {
-        DashboardNavigationRouter.shared.open(.help)
-        openDashboard()
+        NSWorkspace.shared.open(CoreMonitorShareKit.websiteURL)
     }
 
     @objc
@@ -356,13 +365,34 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         openDashboardItem.target = self
         appMenu.addItem(openDashboardItem)
 
+        let settingsItem = NSMenuItem(
+            title: "Settings…",
+            action: #selector(openSettingsFromMenu(_:)),
+            keyEquivalent: ","
+        )
+        settingsItem.keyEquivalentModifierMask = [.command]
+        settingsItem.target = self
+        appMenu.addItem(settingsItem)
+
+        appMenu.addItem(.separator())
+
+        let welcomeItem = NSMenuItem(
+            title: "Welcome to Core Monitor…",
+            action: #selector(reopenWelcomeGuideFromMenu(_:)),
+            keyEquivalent: ""
+        )
+        welcomeItem.target = self
+        appMenu.addItem(welcomeItem)
+
         let openHelpItem = NSMenuItem(
-            title: "Open Help",
+            title: "Core Monitor Help",
             action: #selector(openHelpFromMenu(_:)),
             keyEquivalent: ""
         )
         openHelpItem.target = self
         appMenu.addItem(openHelpItem)
+
+        appMenu.addItem(.separator())
 
         let quitMenuItem = NSMenuItem(
             title: "Quit \(appName)",

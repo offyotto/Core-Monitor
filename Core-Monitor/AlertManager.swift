@@ -181,7 +181,7 @@ final class AlertManager: NSObject, ObservableObject {
     }
 
     func evaluateAlerts() {
-        var runtimesByKind = Dictionary(uniqueKeysWithValues: store.runtimes.map { ($0.kind, $0) })
+        var runtimesByKind = Dictionary(store.runtimes.map { ($0.kind, $0) }, uniquingKeysWith: { first, _ in first })
         var activeByKind: [AlertRuleKind: AlertActiveState] = [:]
         var nextAvailabilityReasons: [AlertRuleKind: String] = [:]
         var generatedEvents: [(AlertEvent, Bool)] = []
@@ -234,31 +234,39 @@ final class AlertManager: NSObject, ObservableObject {
     }
 
     private func observeInputs() {
+        // @Published fires during willSet, so hop to the main run loop before
+        // evaluating: by delivery time the property holds its new value, and
+        // evaluation is pinned to the main thread (publishers may fire off it).
         systemMonitor.$snapshot
+            .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.evaluateAlerts()
             }
             .store(in: &cancellables)
 
         fanController.$mode
+            .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.evaluateAlerts()
             }
             .store(in: &cancellables)
 
         helperManager.$isInstalled
+            .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.evaluateAlerts()
             }
             .store(in: &cancellables)
 
         helperManager.$statusMessage
+            .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.evaluateAlerts()
             }
             .store(in: &cancellables)
 
         helperManager.$connectionState
+            .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.evaluateAlerts()
             }
@@ -370,8 +378,8 @@ final class AlertManager: NSObject, ObservableObject {
 
     private static func normalize(_ store: AlertStore) -> AlertStore {
         let defaults = AlertStore.default()
-        let configMap = Dictionary(uniqueKeysWithValues: store.ruleConfigs.map { ($0.kind, $0) })
-        let runtimeMap = Dictionary(uniqueKeysWithValues: store.runtimes.map { ($0.kind, $0) })
+        let configMap = Dictionary(store.ruleConfigs.map { ($0.kind, $0) }, uniquingKeysWith: { first, _ in first })
+        let runtimeMap = Dictionary(store.runtimes.map { ($0.kind, $0) }, uniquingKeysWith: { first, _ in first })
 
         return AlertStore(
             selectedPreset: store.selectedPreset,

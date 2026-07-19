@@ -199,7 +199,7 @@ final class StartupManager: ObservableObject {
 @MainActor
 struct DashboardNavigationRoute: Equatable {
     let id: UUID
-    let selection: SidebarItem
+    let selection: MonitorSection
 }
 
 @MainActor
@@ -208,11 +208,11 @@ final class DashboardNavigationRouter: ObservableObject {
 
     @Published private(set) var route: DashboardNavigationRoute?
 
-    func open(_ selection: SidebarItem) {
+    func open(_ selection: MonitorSection) {
         route = DashboardNavigationRoute(id: UUID(), selection: selection)
     }
 
-    func consume(_ route: DashboardNavigationRoute) -> SidebarItem? {
+    func consume(_ route: DashboardNavigationRoute) -> MonitorSection? {
         guard self.route?.id == route.id else { return nil }
         self.route = nil
         return route.selection

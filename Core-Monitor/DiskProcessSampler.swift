@@ -223,7 +223,7 @@ final class DiskProcessSampler: ObservableObject {
                 previousCounters: previousCountersByPID,
                 limit: limit
             )
-            let nextCountersByPID = Dictionary(uniqueKeysWithValues: counters.map { ($0.pid, $0) })
+            let nextCountersByPID = Dictionary(counters.map { ($0.pid, $0) }, uniquingKeysWith: { first, _ in first })
 
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }

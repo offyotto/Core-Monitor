@@ -182,7 +182,8 @@ enum CoreMonitorShareKit {
 
     private static func fanSpeedsString(_ fanSpeeds: [Int]) -> String {
         guard fanSpeeds.isEmpty == false else { return "Unavailable" }
-        return fanSpeeds.map { "\($0) RPM" }.joined(separator: ", ")
+        // A negative value is the failed-read sentinel, not a real RPM.
+        return fanSpeeds.map { $0 < 0 ? "Unavailable" : "\($0) RPM" }.joined(separator: ", ")
     }
 
     private static func fanModeTitle(_ mode: FanControlMode) -> String {

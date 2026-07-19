@@ -168,6 +168,7 @@ final class SystemMonitor: ObservableObject {
     private(set) var cpuHistory:     [Double] = Array(repeating: 0, count: 60)
     private(set) var memHistory:     [Double] = Array(repeating: 0, count: 60)
     private(set) var cpuTempHistory: [Double] = Array(repeating: 0, count: 60)
+    private(set) var cpuUsageTrend = MonitoringTrendSeries()
     private(set) var cpuTemperatureTrend = MonitoringTrendSeries()
     private(set) var gpuTemperatureTrend = MonitoringTrendSeries()
     private(set) var totalPowerTrend = MonitoringTrendSeries()
@@ -230,6 +231,12 @@ final class SystemMonitor: ObservableObject {
     private var keyInfoCache: [UInt32: SMCKeyData_keyInfo_t] = [:]
     private let samplingQueue = DispatchQueue(label: "CoreMonitor.SystemMonitorSampling", qos: .utility)
     private var isSampling = false
+    // SMC connection state is owned exclusively by the sampling queue and only
+    // mirrored back into the @Published snapshot on the main thread. These plain
+    // vars must never be read or written off that queue.
+    private var smcAccessibleOnQueue = false
+    private var smcLastErrorOnQueue: String?
+    private var detectedFanCountOnQueue = 0
     private var isMonitoringActive = false
     private var supplementalSamplingState = SystemMonitorSupplementalSamplingState()
     private var cachedBatteryInfo = BatteryInfo()
@@ -278,7 +285,8 @@ final class SystemMonitor: ObservableObject {
 
     init(privacySettings: PrivacySettings? = nil) {
         self.privacySettings = privacySettings ?? .shared
-        _ = openSMCConnection()
+        // The SMC connection is opened lazily on the sampling queue during the
+        // first sample so all SMC state stays owned by that one queue.
         activitySampler.onUpdate = { [weak self] topProcesses in
             self?.updateTopProcesses(topProcesses)
         }
@@ -299,8 +307,8 @@ final class SystemMonitor: ObservableObject {
     func startMonitoring() {
         isMonitoringActive = true
         supplementalSamplingState.reset()
-        _ = openSMCConnection()
-        detectFans()
+        // SMC open + fan detection run inside the first sample on the sampling
+        // queue, keeping all SMC access confined to that queue.
         updateReadings()
         updateActivitySamplingMode()
         applyMonitoringIntervalIfNeeded()
@@ -366,17 +374,20 @@ final class SystemMonitor: ObservableObject {
         )
     }
 
+    /// Opens (or confirms) the SMC connection. Must run on the sampling queue;
+    /// it only touches queue-owned SMC state, never the @Published snapshot.
+    @discardableResult
     private func openSMCConnection() -> Bool {
         if smcConnection != 0 {
-            snapshot.hasSMCAccess = true
-            snapshot.lastError = nil
+            smcAccessibleOnQueue = true
+            smcLastErrorOnQueue = nil
             return true
         }
 
         let service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("AppleSMC"))
         guard service != 0 else {
-            snapshot.hasSMCAccess = false
-            snapshot.lastError = "AppleSMC service not found"
+            smcAccessibleOnQueue = false
+            smcLastErrorOnQueue = "AppleSMC service not found"
             return false
         }
 
@@ -384,13 +395,13 @@ final class SystemMonitor: ObservableObject {
 
         let result = IOServiceOpen(service, mach_task_self_, 0, &smcConnection)
         if result == kIOReturnSuccess {
-            snapshot.hasSMCAccess = true
-            snapshot.lastError = nil
+            smcAccessibleOnQueue = true
+            smcLastErrorOnQueue = nil
             return true
         }
 
-        snapshot.hasSMCAccess = false
-        snapshot.lastError = "Failed to open SMC connection (\(result))"
+        smcAccessibleOnQueue = false
+        smcLastErrorOnQueue = "Failed to open SMC connection (\(result))"
         return false
     }
 
@@ -401,9 +412,11 @@ final class SystemMonitor: ObservableObject {
         }
     }
 
+    /// Detects the fan count over SMC. Must run on the sampling queue; writes
+    /// only the queue-owned fan count, which is mirrored into the snapshot later.
     private func detectFans() {
         if let directCount = readSMCValue(key: "FNum").map(Int.init), directCount > 0 {
-            snapshot.numberOfFans = directCount
+            detectedFanCountOnQueue = directCount
             return
         }
 
@@ -418,16 +431,27 @@ final class SystemMonitor: ObservableObject {
                 count = i + 1
             }
         }
-        snapshot.numberOfFans = count
+        detectedFanCountOnQueue = count
     }
 
     private func updateReadings() {
         guard !isSampling else { return }
         isSampling = true
         let activeMonitoringInterval = monitoringInterval
+        // Captured on the main thread; the sampling queue must not read the
+        // @Published snapshot directly.
+        let carriedTopProcesses = snapshot.topProcesses
 
         samplingQueue.async { [weak self] in
             guard let self else { return }
+
+            // Ensure the SMC connection and fan count are ready before reading.
+            // Reconnect attempts stay on this queue so no @Published state is
+            // touched off the main thread.
+            self.openSMCConnection()
+            if self.detectedFanCountOnQueue == 0 {
+                self.detectFans()
+            }
 
             let sampledAt = Date()
             let cpuTemperature = self.readCPUTemperature()
@@ -477,15 +501,13 @@ final class SystemMonitor: ObservableObject {
                 ssdTemperature: ssdTemperature,
                 networkStats: networkStats,
                 thermalState: thermalState,
-                topProcesses: self.snapshot.topProcesses,
-                hasSMCAccess: self.hasSMCAccess,
-                lastError: self.lastError
+                topProcesses: carriedTopProcesses,
+                hasSMCAccess: self.smcAccessibleOnQueue,
+                lastError: self.smcLastErrorOnQueue
             )
 
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                snapshot.hasSMCAccess = self.hasSMCAccess
-                snapshot.lastError = self.lastError
 
                 self.cpuHistory.removeFirst()
                 self.cpuHistory.append(snapshot.cpuUsagePercent)
@@ -495,6 +517,7 @@ final class SystemMonitor: ObservableObject {
                 self.cpuTempHistory.removeFirst()
                 self.cpuTempHistory.append(normTemp)
                 let sampleTimestamp = snapshot.sampledAt == .distantPast ? Date() : snapshot.sampledAt
+                self.cpuUsageTrend.append(snapshot.cpuUsagePercent, at: sampleTimestamp)
                 self.cpuTemperatureTrend.append(snapshot.cpuTemperature, at: sampleTimestamp)
                 self.gpuTemperatureTrend.append(snapshot.gpuTemperature, at: sampleTimestamp)
                 self.totalPowerTrend.append(snapshot.totalSystemWatts.map(abs), at: sampleTimestamp)
@@ -691,7 +714,8 @@ final class SystemMonitor: ObservableObject {
     }
 
     private func readFanReadings() -> (speeds: [Int], mins: [Int], maxs: [Int]) {
-        guard numberOfFans > 0 else {
+        let fanCount = detectedFanCountOnQueue
+        guard fanCount > 0 else {
             return ([], [], [])
         }
 
@@ -699,7 +723,7 @@ final class SystemMonitor: ObservableObject {
         var mins: [Int] = []
         var maxs: [Int] = []
 
-        for i in 0..<numberOfFans {
+        for i in 0..<fanCount {
             let actualKey = String(format: "F%dAc", i)
             let minKey = String(format: "F%dMn", i)
             let maxKey = String(format: "F%dMx", i)
@@ -707,7 +731,9 @@ final class SystemMonitor: ObservableObject {
             if let speed = readSMCValue(key: actualKey) {
                 speeds.append(Int(speed))
             } else {
-                speeds.append(0)
+                // -1 marks a failed read (distinct from a genuine 0 RPM stall),
+                // so the stall alert never fires on a transient SMC miss.
+                speeds.append(-1)
             }
             mins.append(Int(readSMCValue(key: minKey) ?? 1000))
             maxs.append(Int(readSMCValue(key: maxKey) ?? 6500))
@@ -744,10 +770,12 @@ final class SystemMonitor: ObservableObject {
             )
         }
 
-        let user = Double(loadInfo.cpu_ticks.0 - previousCPULoadInfo.cpu_ticks.0)
-        let system = Double(loadInfo.cpu_ticks.1 - previousCPULoadInfo.cpu_ticks.1)
-        let idle = Double(loadInfo.cpu_ticks.2 - previousCPULoadInfo.cpu_ticks.2)
-        let nice = Double(loadInfo.cpu_ticks.3 - previousCPULoadInfo.cpu_ticks.3)
+        // cpu_ticks are UInt32 counters that wrap after long uptime; use
+        // wrapping subtraction so the delta never traps.
+        let user = Double(loadInfo.cpu_ticks.0 &- previousCPULoadInfo.cpu_ticks.0)
+        let system = Double(loadInfo.cpu_ticks.1 &- previousCPULoadInfo.cpu_ticks.1)
+        let idle = Double(loadInfo.cpu_ticks.2 &- previousCPULoadInfo.cpu_ticks.2)
+        let nice = Double(loadInfo.cpu_ticks.3 &- previousCPULoadInfo.cpu_ticks.3)
 
         previousCPULoadInfo = loadInfo
 
@@ -831,12 +859,18 @@ final class SystemMonitor: ObservableObject {
         var total: Double = 0
         let stride = Int(CPU_STATE_MAX)
 
+        // Per-core ticks are Int32 counters that wrap after long uptime.
+        // Take the delta on the unsigned bit pattern so subtraction never traps.
+        func tickDelta(_ now: integer_t, _ before: integer_t) -> Int {
+            Int(UInt32(bitPattern: now) &- UInt32(bitPattern: before))
+        }
+
         for processor in range {
             let base = processor * stride
-            let user = max(0, Int(current[base + Int(CPU_STATE_USER)] - previous[base + Int(CPU_STATE_USER)]))
-            let system = max(0, Int(current[base + Int(CPU_STATE_SYSTEM)] - previous[base + Int(CPU_STATE_SYSTEM)]))
-            let idle = max(0, Int(current[base + Int(CPU_STATE_IDLE)] - previous[base + Int(CPU_STATE_IDLE)]))
-            let nice = max(0, Int(current[base + Int(CPU_STATE_NICE)] - previous[base + Int(CPU_STATE_NICE)]))
+            let user = tickDelta(current[base + Int(CPU_STATE_USER)], previous[base + Int(CPU_STATE_USER)])
+            let system = tickDelta(current[base + Int(CPU_STATE_SYSTEM)], previous[base + Int(CPU_STATE_SYSTEM)])
+            let idle = tickDelta(current[base + Int(CPU_STATE_IDLE)], previous[base + Int(CPU_STATE_IDLE)])
+            let nice = tickDelta(current[base + Int(CPU_STATE_NICE)], previous[base + Int(CPU_STATE_NICE)])
 
             used += Double(user + system + nice)
             total += Double(user + system + idle + nice)

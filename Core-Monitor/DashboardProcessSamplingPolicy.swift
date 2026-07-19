@@ -3,14 +3,14 @@ import Foundation
 enum DashboardProcessSamplingPolicy {
     static func requiresDetailedSampling(
         isBasicMode: Bool,
-        selection: SidebarItem
+        selection: MonitorSection
     ) -> Bool {
         guard isBasicMode == false else { return false }
 
         switch selection {
-        case .memory:
+        case .cpu, .memory:
             return true
-        case .overview, .thermals, .fans, .battery, .rescue, .system, .touchBar, .help, .about:
+        case .overview, .thermal, .cooling, .power, .network, .storage, .rescue:
             return false
         }
     }
