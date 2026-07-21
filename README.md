@@ -34,7 +34,7 @@ core-monitor reads sensor data straight from the apple smc and standard macos sy
 it runs locally, needs no account, and is built native for apple silicon rather than wrapped from a web app.
 
 <p align="center">
-  <img src="./docs/images/ui/overview-2026.png" alt="core-monitor overview screen with cpu, memory, temperature, and power cards" width="860">
+  <img src="./docs/images/ui/overview-v16.png" alt="core-monitor overview screen with cpu, memory, temperature, cooling, power, network, and storage cards" width="860">
 </p>
 
 ## what it monitors
@@ -42,12 +42,17 @@ it runs locally, needs no account, and is built native for apple silicon rather 
 cpu, gpu, memory, battery, thermals, power draw, fan speeds, network, and disk. readings come from the apple smc and system apis, so the numbers match what the hardware actually reports.
 
 <p align="center">
-  <img src="./docs/images/ui/thermals-2026.png" alt="core-monitor thermals screen with cpu and gpu temperature cards and smc sensor detail" width="860">
+  <img src="./docs/images/ui/memory-v16.png" alt="core-monitor memory screen with usage history and memory breakdown" width="860">
+  <img src="./docs/images/ui/storage-v16.png" alt="core-monitor storage screen with used, purgeable, free, and total capacity" width="860">
 </p>
 
 ## fan control
 
 core-monitor can take over fan speeds through a small privileged helper, then hand control back to macos when you turn it off. you can set fixed speeds or build custom curves. the controls are explicit on purpose, since this touches cooling on a machine you care about.
+
+<p align="center">
+  <img src="./docs/images/ui/cooling-v16.png" alt="core-monitor cooling screen with fan speeds, cooling mode, and custom fan curve" width="860">
+</p>
 
 ## menu bar and touch bar
 
@@ -56,7 +61,8 @@ core-monitor can take over fan speeds through a small privileged helper, then ha
 - put live widgets on the touch bar if your mac has one
 
 <p align="center">
-  <img src="./docs/images/ui/menu-bar-2026.png" alt="core-monitor menu bar panel with quick system stats and smc status" width="480">
+  <img src="./docs/images/ui/menu-network-v16.png" alt="core-monitor network menu bar panel" width="400">
+  <img src="./docs/images/ui/menu-thermal-v16.png" alt="core-monitor thermal menu bar panel" width="400">
 </p>
 
 ## how it compares
