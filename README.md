@@ -21,6 +21,8 @@
   <img src="https://img.shields.io/badge/apple%20silicon-native-black?style=flat&logo=apple" alt="apple silicon native">
   <img src="https://img.shields.io/badge/price-free-2ea44f?style=flat" alt="free">
   <img src="https://img.shields.io/badge/license-gpl--3.0-blue?style=flat" alt="gpl-3.0 license">
+  <a href="https://github.com/offyotto/Core-Monitor/actions/workflows/ci.yml"><img src="https://github.com/offyotto/Core-Monitor/actions/workflows/ci.yml/badge.svg" alt="build and test"></a>
+  <a href="https://securityscorecards.dev/viewer/?uri=github.com/offyotto/Core-Monitor"><img src="https://api.securityscorecards.dev/projects/github.com/offyotto/Core-Monitor/badge" alt="openssf scorecard"></a>
 </p>
 
 ---
