@@ -16,6 +16,9 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
+  artifact-metadata: write
 
 jobs:
   notarized-release:
@@ -27,7 +30,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref }}
@@ -177,7 +180,7 @@ jobs:
           } >> "${GITHUB_ENV}"
 
       - name: Upload release artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: core-monitor-release
           path: |
@@ -187,6 +190,13 @@ jobs:
             build/release/Core-Monitor.dmg.sha256
             build/release/core-monitor.rb
             build/release/Core-Monitor.xcarchive
+
+      - name: Attest release artifacts
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4
+        with:
+          subject-path: |
+            build/release/Core-Monitor.app.zip
+            build/release/Core-Monitor.dmg
 
       - name: Create or update GitHub Release
         if: github.event_name == 'push' || github.event.inputs.create_release == 'true'

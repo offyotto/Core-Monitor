@@ -4,7 +4,7 @@
 
 Please do not open a public GitHub issue for security vulnerabilities.
 
-If you find a vulnerability in Core-Monitor, report it privately through the repository owner profile or by opening a private security advisory if that option is available.
+If you find a vulnerability in Core-Monitor, [open a private security advisory](https://github.com/offyotto/Core-Monitor/security/advisories/new).
 
 Include:
 
