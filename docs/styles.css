@@ -280,7 +280,7 @@ section {
 
 .showcase-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(260px, 0.72fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
   align-items: start;
 }
