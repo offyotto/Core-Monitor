@@ -411,31 +411,10 @@ p:last-child { margin-bottom: 0; }
   padding: 0;
   display: grid;
   gap: 1.1rem;
-  counter-reset: step;
 }
 
 .steps li {
   display: flex;
-  gap: 1rem;
-  counter-increment: step;
-}
-
-.step-index {
-  flex: none;
-  width: 26px;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--stroke);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-faint);
-}
-
-.steps li .step-index::before {
-  content: counter(step, decimal-leading-zero);
 }
 
 .step-body strong { display: block; color: var(--text); font-weight: 600; margin-bottom: 0.15rem; }
@@ -459,23 +438,6 @@ p:last-child { margin-bottom: 0; }
 }
 
 .card:hover { border-color: var(--text-faint); transform: translateY(-3px); }
-
-.card-glyph {
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  background: var(--signal);
-  color: var(--signal-ink);
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 0.9rem;
-  margin-bottom: 1.1rem;
-}
-
-.card.is-cool .card-glyph { background: var(--volt); color: var(--volt-ink); }
 
 .card h3 { margin: 0 0 0.5rem; font-size: 1.05rem; font-weight: 600; letter-spacing: -0.005em; }
 .card p { margin: 0; font-size: 0.95rem; color: var(--text-dim); }
@@ -563,14 +525,6 @@ p:last-child { margin-bottom: 0; }
   flex-direction: column;
   gap: 0.9rem;
   box-shadow: var(--shadow-card);
-}
-
-.route-index {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--signal);
 }
 
 .route h3 { margin: 0; font-size: 1.08rem; font-weight: 600; }

@@ -30,7 +30,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="styles.css?v=9">
   <link rel="stylesheet" href="https://unpkg.com/lenis@1.3.23/dist/lenis.css">
   <script type="application/ld+json">
   {
@@ -212,19 +212,15 @@
           <p>By default, Core-Monitor only watches the fans. Install the optional helper and you get three ways to drive them: a fixed speed, a boost profile, or a custom curve you draw yourself, point by point.</p>
           <ol class="steps">
             <li>
-              <span class="step-index" aria-hidden="true"></span>
               <span class="step-body"><strong>Hand it back anytime</strong><span>One button returns full control to macOS, no restart needed.</span></span>
             </li>
             <li>
-              <span class="step-index" aria-hidden="true"></span>
               <span class="step-body"><strong>Draw your own curve</strong><span>Map CPU or GPU temperature to fan speed across as many points as you want.</span></span>
             </li>
             <li>
-              <span class="step-index" aria-hidden="true"></span>
               <span class="step-body"><strong>Skip the helper entirely</strong><span>Monitoring works identically whether or not it is installed.</span></span>
             </li>
             <li>
-              <span class="step-index" aria-hidden="true"></span>
               <span class="step-body"><strong>Calibrate first</strong><span>Measure each fan's real minimum and maximum before trusting a profile to it.</span></span>
             </li>
           </ol>
@@ -242,32 +238,26 @@
       </div>
       <div class="cards">
         <article class="card" data-reveal>
-          <span class="card-glyph" aria-hidden="true">01</span>
           <h3>Compiling and exporting</h3>
           <p>Watch clock speed and heat while a long build or render runs, and see whether a slowdown is thermal or something else entirely.</p>
         </article>
         <article class="card" data-reveal>
-          <span class="card-glyph" aria-hidden="true">02</span>
           <h3>Away from the charger</h3>
           <p>Watts in and watts out, so the time-remaining figure reflects what the Mac is actually drawing right now, not a rough guess.</p>
         </article>
         <article class="card is-cool" data-reveal>
-          <span class="card-glyph" aria-hidden="true">03</span>
           <h3>Recording and calls</h3>
           <p>Pin the fans low before you hit record, check the temperature margin, then hand cooling back to macOS once you are done.</p>
         </article>
         <article class="card is-cool" data-reveal>
-          <span class="card-glyph" aria-hidden="true">04</span>
           <h3>Warnings that stay put</h3>
           <p>Set a threshold for heat, memory or battery and get a notification straight from the Mac itself, with no server involved.</p>
         </article>
         <article class="card" data-reveal>
-          <span class="card-glyph" aria-hidden="true">05</span>
           <h3>Nothing hidden</h3>
           <p>The full source is public, so anyone can check exactly what gets read, what the helper writes, and what never leaves the machine.</p>
         </article>
         <article class="card" data-reveal>
-          <span class="card-glyph" aria-hidden="true">06</span>
           <h3>No account needed</h3>
           <p>No sign-in, no subscription, and no analytics library anywhere in the binary. Process names can be hidden in memory views too.</p>
         </article>
@@ -339,7 +329,6 @@
       </div>
       <div class="routes">
         <article class="route" data-reveal>
-          <span class="route-index">01 / direct</span>
           <h3>Download the signed build</h3>
           <p>Grab it straight from GitHub. The DMG gives you the familiar drag-to-Applications install; the ZIP is the bare app bundle.</p>
           <div class="route-actions">
@@ -348,7 +337,6 @@
           </div>
         </article>
         <article class="route" data-reveal>
-          <span class="route-index">02 / terminal</span>
           <h3>Install through Homebrew</h3>
           <p>Add the tap once, then install and upgrade the cask the same way you handle everything else.</p>
           <pre class="code-block" id="brew-command">brew tap --custom-remote offyotto/core-monitor \
@@ -359,7 +347,6 @@ brew install --cask offyotto/core-monitor/core-monitor</pre>
           </div>
         </article>
         <article class="route" data-reveal>
-          <span class="route-index">03 / app store</span>
           <h3>Take the sandboxed edition</h3>
           <p>A read-only build reviewed by Apple. No helper and no fan writes, exactly as the App Store requires.</p>
           <div class="route-actions">
