@@ -2,9 +2,12 @@
    Core-Monitor site styles
    A flat, instrument-panel visual system. Every colour below is a solid
    value; nothing in this file blends two colours into one another. Panels
-   use square corners, screenshots sit in a bracket frame, and the one
-   moving part on the home page is a small telemetry
-   strip that ticks over like a real readout.
+   use square corners and screenshots sit in a bracket frame.
+
+   Colour lives entirely in the custom properties below, so the whole site
+   can switch between a dark and a light chassis by swapping one block of
+   variables. See the prefers-color-scheme: light block at the end of this
+   file for the light variant; everything above it is the dark default.
    ========================================================================== */
 
 :root {
@@ -23,8 +26,12 @@
   --volt: #c9ff4e;
   --volt-dim: #a3d43e;
   --volt-ink: #0e1400;
+  --link: var(--volt);
   --caution: #ffcf3f;
   --danger: #ff6b5e;
+  --header-glass: rgba(7, 8, 11, 0.88);
+
+
 
   --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -58,7 +65,7 @@ body {
 
 ::selection { background: rgba(255, 90, 31, 0.32); color: var(--text); }
 
-a { color: var(--volt); text-decoration: none; }
+a { color: var(--link); text-decoration: none; }
 a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 :focus-visible {
@@ -142,7 +149,7 @@ p:last-child { margin-bottom: 0; }
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(7, 8, 11, 0.88);
+  background: var(--header-glass);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--stroke-soft);
@@ -801,7 +808,6 @@ p:last-child { margin-bottom: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   [data-reveal] { opacity: 1; transform: none; transition: none; }
-  .live-dot { animation: none; }
 }
 
 /* ---------- responsive ---------- */
@@ -834,4 +840,42 @@ p:last-child { margin-bottom: 0; }
   .filmstrip { max-width: none; }
   .section { padding: 3.6rem 0; }
   .cta-inner { padding: 3rem 0; }
+}
+
+/* ---------- light chassis ----------
+   Swaps the whole palette when the visitor's system is set to light mode.
+   Everything above defaults to the dark chassis; nothing else in the file
+   needs to change because every colour reference above already runs
+   through these custom properties. Only the three rules with baked-in
+   hex values (the dot texture, the header glass, and the filmstrip
+   sprockets) need a matching override here. */
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --ink: #f1f2ef;
+    --panel: #ffffff;
+    --panel-raised: #ffffff;
+    --panel-soft: #e8eae4;
+    --stroke: #d9dbd4;
+    --stroke-soft: #e6e8e1;
+    --text: #14171a;
+    --text-dim: #52565c;
+    --text-faint: #666b70;
+    --signal: #d1450f;
+    --signal-bright: #b53a0c;
+    --signal-ink: #1c0800;
+    --link: #4a6b12;
+    --header-glass: rgba(241, 242, 239, 0.86);
+  }
+
+  body {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26'%3E%3Ccircle cx='1.3' cy='1.3' r='1.3' fill='%23e1e3dd'/%3E%3C/svg%3E");
+  }
+
+  ::selection { background: rgba(209, 69, 15, 0.2); }
+
+  .reel::before,
+  .reel::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='10'%3E%3Crect x='6' y='2' width='6' height='6' fill='%23f1f2ef'/%3E%3C/svg%3E");
+  }
 }
