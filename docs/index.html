@@ -4,29 +4,33 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Core-Monitor | Apple Silicon System Monitor and Fan Control for macOS</title>
-  <meta name="description" content="Core-Monitor is a free, open-source Apple Silicon system monitor for macOS with local-first thermals, power, battery, menu bar status, alerts, Touch Bar widgets, and optional fan control.">
+  <meta name="description" content="Core-Monitor is a free, open-source system monitor for Apple Silicon Macs. It reads CPU load, temperature, power draw, memory, battery and fan speed, and can hand you the fans when you want them. Nothing leaves the Mac.">
   <meta name="application-name" content="Core-Monitor">
   <meta name="apple-mobile-web-app-title" content="Core-Monitor">
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
-  <meta name="theme-color" content="#f5f5f7">
+  <meta name="theme-color" content="#07080b">
   <link rel="canonical" href="https://offyotto.github.io/Core-Monitor/">
   <link rel="alternate" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">
-  <link rel="icon" href="favicon.ico?v=4" sizes="any">
-  <link rel="icon" type="image/png" sizes="512x512" href="images/site/core-monitor-logo.png?v=4">
-  <link rel="shortcut icon" href="images/site/core-monitor-logo.png?v=4">
-  <link rel="apple-touch-icon" href="images/site/core-monitor-logo.png?v=4">
+  <link rel="icon" href="favicon.ico?v=6" sizes="any">
+  <link rel="icon" type="image/png" sizes="512x512" href="images/site/core-monitor-logo.png?v=6">
+  <link rel="shortcut icon" href="images/site/core-monitor-logo.png?v=6">
+  <link rel="apple-touch-icon" href="images/site/core-monitor-logo.png?v=6">
   <meta property="og:site_name" content="Core-Monitor">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Core-Monitor | Apple Silicon System Monitor and Fan Control for macOS">
-  <meta property="og:description" content="Open-source Apple Silicon monitoring with thermals, power, battery, alerts, menu bar status, Touch Bar widgets, and optional fan control.">
+  <meta property="og:description" content="A free, open-source monitor for Apple Silicon Macs. Temperature, power, memory, battery and fans in one native window. Nothing leaves the machine.">
   <meta property="og:url" content="https://offyotto.github.io/Core-Monitor/">
   <meta property="og:image" content="https://offyotto.github.io/Core-Monitor/images/ui/overview-v16.png?v=16">
-  <meta property="og:image:alt" content="Core-Monitor overview screen with CPU, thermals, battery, power, and fan cards.">
+  <meta property="og:image:alt" content="Core-Monitor dashboard showing CPU, memory, thermal, cooling, power, network and storage readings.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Core-Monitor | Apple Silicon System Monitor and Fan Control for macOS">
-  <meta name="twitter:description" content="Free, open-source Mac monitoring for thermals, power, battery, menu bar status, Touch Bar widgets, and optional fan control.">
+  <meta name="twitter:description" content="A free, open-source monitor for Apple Silicon Macs. Temperature, power, memory, battery and fans in one native window.">
   <meta name="twitter:image" content="https://offyotto.github.io/Core-Monitor/images/ui/overview-v16.png?v=16">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="https://unpkg.com/lenis@1.3.23/dist/lenis.css">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -36,7 +40,7 @@
         "@id": "https://offyotto.github.io/Core-Monitor/#website",
         "name": "Core-Monitor",
         "url": "https://offyotto.github.io/Core-Monitor/",
-        "description": "Core-Monitor is a free, open-source Apple Silicon system monitor for macOS with thermals, power, battery, alerts, menu bar status, Touch Bar widgets, and optional fan control."
+        "description": "Core-Monitor is a free, open-source system monitor for Apple Silicon Macs with temperature, power, memory, battery, menu bar readouts, local alerts, Touch Bar widgets, and optional fan control."
       },
       {
         "@type": "SoftwareApplication",
@@ -45,17 +49,17 @@
         "operatingSystem": "macOS 13 or later",
         "applicationCategory": "UtilitiesApplication",
         "softwareRequirements": "Apple Silicon Mac, macOS 13 or later",
-        "description": "Core-Monitor is a native macOS system monitor built for Apple Silicon Macs. It tracks thermals, CPU, GPU, memory, battery, power draw, alerts, and menu bar status locally on the Mac, with optional fan control.",
+        "description": "Core-Monitor is a native macOS system monitor for Apple Silicon. It reads temperature, CPU, GPU, memory, battery, power draw and fan speed locally, with alerts, menu bar readouts and optional fan control.",
         "url": "https://offyotto.github.io/Core-Monitor/",
         "downloadUrl": "https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg",
         "installUrl": "https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg",
         "isAccessibleForFree": true,
         "featureList": [
-          "Apple Silicon thermal, power, battery, CPU, GPU, memory, and fan monitoring",
-          "Readable menu bar status and focused native dashboard",
-          "Local alerts without accounts or telemetry",
-          "Optional fan control with reversible system-auto mode",
-          "Touch Bar widgets, launchers, and WeatherKit-backed weather on supported Macs"
+          "Temperature, power, battery, CPU, GPU, memory and fan readings on Apple Silicon",
+          "Menu bar readouts and a native dashboard",
+          "Local alerts with no account and no telemetry",
+          "Optional fan control that can hand cooling back to macOS at any time",
+          "Touch Bar widgets, launchers and WeatherKit weather on supported Macs"
         ],
         "screenshot": [
           "https://offyotto.github.io/Core-Monitor/images/ui/overview-v16.png?v=16",
@@ -65,11 +69,7 @@
           "https://offyotto.github.io/Core-Monitor/images/ui/menu-network-v16.png?v=16",
           "https://offyotto.github.io/Core-Monitor/images/ui/menu-thermal-v16.png?v=16"
         ],
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
         "license": "https://github.com/offyotto/Core-Monitor/blob/main/LICENSE",
         "codeRepository": "https://github.com/offyotto/Core-Monitor",
         "sameAs": [
@@ -77,11 +77,7 @@
           "https://github.com/offyotto/Core-Monitor/releases",
           "https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12"
         ],
-        "developer": {
-          "@type": "Person",
-          "name": "offyotto",
-          "url": "https://github.com/offyotto"
-        }
+        "developer": { "@type": "Person", "name": "offyotto", "url": "https://github.com/offyotto" }
       },
       {
         "@type": "FAQPage",
@@ -89,34 +85,34 @@
         "mainEntity": [
           {
             "@type": "Question",
-            "name": "What is Core-Monitor best for?",
+            "name": "Which Macs can run Core-Monitor?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Core-Monitor shows live thermals, power draw, battery, memory, and fan speeds on Apple Silicon Macs. Fan control is optional. Everything stays local with no accounts and no telemetry."
+              "text": "Apple Silicon Macs on macOS 13 or later. The sensors and fan interfaces it reads are specific to Apple's own chips, so Intel Macs are not supported."
             }
           },
           {
             "@type": "Question",
-            "name": "Do I need the system helper?",
+            "name": "Do I need to install the privileged helper?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "No. Monitoring works without it. The helper is only needed if you want to control fan speeds."
+              "text": "No. Every reading works without it. The helper exists only so the app can write fan speeds, and control can be handed back to macOS at any time."
             }
           },
           {
             "@type": "Question",
-            "name": "Is Core-Monitor private?",
+            "name": "Does Core-Monitor send data anywhere?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes. All data stays on your Mac. No account, no telemetry, no analytics."
+              "text": "No. There is no analytics code, no crash reporter, and no account. The only network feature is optional WeatherKit weather for the Touch Bar."
             }
           },
           {
             "@type": "Question",
-            "name": "How does Core-Monitor compare to iStat Menus, TG Pro, or Stats?",
+            "name": "How does it compare to iStat Menus, TG Pro or Stats?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Core-Monitor focuses on thermals and power with optional fan control. It's open source, free, and private. It sits between broad menu bar suites and fan-only tools."
+              "text": "Core-Monitor stays narrow on purpose, focused on heat, power and fans rather than every metric on the system. It is free, open source, and keeps everything local."
             }
           }
         ]
@@ -126,365 +122,316 @@
   </script>
 </head>
 <body>
-  <div class="page-shell">
-    <header class="site-header">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-row">
       <a class="brand" href="#top">
-        <img class="brand-logo" src="images/site/core-monitor-logo.png?v=4" alt="Core-Monitor app icon">
+        <img class="brand-mark" src="images/site/core-monitor-logo.png?v=6" alt="Core-Monitor app icon">
         <span class="brand-text">Core-Monitor</span>
       </a>
-      <nav class="site-nav" aria-label="Primary">
-        <a href="#screens">Screens</a>
-        <a href="#features">Features</a>
-        <a href="#recommend">Good Fit</a>
-        <a href="#compare">Compare</a>
-        <a href="#faq">FAQ</a>
+      <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav" aria-label="Toggle navigation">
+        <span></span>
+      </button>
+      <nav class="primary-nav" id="primary-nav" data-nav aria-label="Sections">
+        <a href="#dashboard">Dashboard</a>
+        <a href="#cooling">Cooling</a>
         <a href="#touchbar">Touch Bar</a>
-        <a href="#privacy">Privacy</a>
+        <a href="#compare">Compare</a>
         <a href="#install">Install</a>
+        <a href="#faq">FAQ</a>
       </nav>
-      <a class="nav-download" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download DMG</a>
-    </header>
-
-    <main id="top">
-      <section class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow">Apple Silicon system monitor for macOS</p>
-          <h1 class="hero-title">See your Mac clearly.</h1>
-          <p class="hero-lead">
-            Heat, power, memory, battery, and fans in one focused view.
-            Fast, readable, and kept on your Mac.
-          </p>
-          <div class="hero-actions">
-            <a class="button primary" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download DMG</a>
-            <a class="button secondary" href="Mac-App-Store/">Mac App Store</a>
-            <a class="button ghost" href="https://github.com/offyotto/Core-Monitor">View Source</a>
-          </div>
-          <p class="hero-subline">Free and open source. Signed releases. No accounts, no telemetry. Fan control is available when you want it. Touch Bar support on compatible Macs.</p>
-        </div>
-
-        <figure class="hero-shot">
-          <img src="images/ui/overview-v16.png?v=16" alt="Core-Monitor overview screen with CPU, memory, temperature, cooling, power, network, and storage cards.">
-        </figure>
-      </section>
-
-      <section class="screens" id="screens">
-        <div class="section-heading">
-          <p class="eyebrow">Screens</p>
-          <h2>Everything important. Nothing noisy.</h2>
-          <p class="section-copy">A dashboard for long sessions, a menu bar for quick checks, and focused views when you need detail.</p>
-        </div>
-        <div class="showcase-grid">
-          <figure class="showcase-card">
-            <img src="images/ui/overview-v16.png?v=16" alt="Core-Monitor overview screen with CPU, memory, temperature, cooling, power, network, and storage cards.">
-            <figcaption>
-              <strong>Overview</strong>
-            </figcaption>
-          </figure>
-          <figure class="showcase-card">
-            <img src="images/ui/memory-v16.png?v=16" alt="Core-Monitor memory screen with usage history and memory breakdown.">
-            <figcaption>
-              <strong>Memory</strong>
-            </figcaption>
-          </figure>
-          <figure class="showcase-card">
-            <img src="images/ui/storage-v16.png?v=16" alt="Core-Monitor storage screen with used, purgeable, free, and total capacity.">
-            <figcaption>
-              <strong>Storage</strong>
-            </figcaption>
-          </figure>
-          <figure class="showcase-card">
-            <img src="images/ui/cooling-v16.png?v=16" alt="Core-Monitor cooling screen with fan speeds, cooling mode, and custom fan curve.">
-            <figcaption>
-              <strong>Cooling</strong>
-            </figcaption>
-          </figure>
-          <figure class="showcase-card">
-            <img src="images/ui/menu-network-v16.png?v=16" alt="Core-Monitor network menu bar panel.">
-            <figcaption>
-              <strong>Network</strong>
-            </figcaption>
-          </figure>
-          <figure class="showcase-card">
-            <img src="images/ui/menu-thermal-v16.png?v=16" alt="Core-Monitor thermal menu bar panel.">
-            <figcaption>
-              <strong>Thermals</strong>
-            </figcaption>
-          </figure>
-        </div>
-      </section>
-
-      <section class="feature-band" id="features">
-        <div class="section-heading">
-          <p class="eyebrow">Features</p>
-          <h2>Focused by design.</h2>
-          <p class="section-copy">Built for the moments when heat, battery drain, and fan noise actually matter.</p>
-        </div>
-        <div class="feature-grid">
-          <article class="feature-card">
-            <h3>Live hardware readings</h3>
-            <p>CPU, GPU, memory, battery, power draw, storage, and fan RPM, all in one native window.</p>
-          </article>
-          <article class="feature-card">
-            <h3>Always current</h3>
-            <p>The dashboard shows what's happening right now: temperatures, pressure levels, connection state, and whether anything needs attention.</p>
-          </article>
-          <article class="feature-card">
-            <h3>Fan control when you want it</h3>
-            <p>Monitoring works out of the box. Add fan control later if you need manual speed overrides or managed profiles.</p>
-          </article>
-          <article class="feature-card">
-            <h3>Menu bar at a glance</h3>
-            <p>CPU load, fan speed, temperatures, and alerts visible in the menu bar without turning it into a wall of tiny numbers.</p>
-          </article>
-          <article class="feature-card">
-            <h3>Touch Bar extras</h3>
-            <p>Turn the Touch Bar into a live control strip with stats, weather, app launchers, and shortcuts. Readable, not cluttered.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="feature-band" id="recommend">
-        <div class="section-heading">
-          <p class="eyebrow">Good fit</p>
-          <h2>Made for real workloads.</h2>
-          <p class="section-copy">Core-Monitor works best when you actually push your Mac and want to see what's happening inside.</p>
-        </div>
-        <div class="feature-grid recommend-grid">
-          <article class="feature-card">
-            <h3>Long builds and heavy workflows</h3>
-            <p>When compiling, rendering, or running anything that pins the CPU for hours, you want to see heat and memory pressure in real time.</p>
-          </article>
-          <article class="feature-card">
-            <h3>Creators on MacBooks</h3>
-            <p>Helpful for export sessions, audio work, rendering, and travel workflows where battery, watts, and thermals all matter at once.</p>
-          </article>
-          <article class="feature-card">
-            <h3>Privacy without compromise</h3>
-            <p>No account, no subscription, no analytics, no cloud dashboard. Everything stays on your Mac.</p>
-          </article>
-          <article class="feature-card">
-            <h3>Monitoring without prerequisites</h3>
-            <p>Install and start watching immediately. Fan control is there when you need it, but it's not required to see your system.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="feature-band" id="compare">
-        <div class="section-heading">
-          <p class="eyebrow">Compare</p>
-          <h2>How it compares.</h2>
-          <p class="section-copy">Core-Monitor sits between broad menu bar suites and fan-only tools. Here's how it stacks up.</p>
-        </div>
-        <div class="comparison-grid">
-          <article class="comparison-card">
-            <h3>Vs. iStat Menus</h3>
-            <p>iStat Menus covers more metrics. Core-Monitor focuses on thermals and power with a calmer UI and open-source code.</p>
-          </article>
-          <article class="comparison-card">
-            <h3>Vs. TG Pro</h3>
-            <p>TG Pro is geared toward diagnostics and admin workflows. Core-Monitor is lighter, monitoring-first, with fan control available when you want it.</p>
-          </article>
-          <article class="comparison-card">
-            <h3>Vs. Macs Fan Control</h3>
-            <p>Macs Fan Control focuses on fan speeds. Core-Monitor adds a full dashboard, menu bar status, thermals, battery, and power alongside fan control.</p>
-          </article>
-          <article class="comparison-card">
-            <h3>Vs. Stats</h3>
-            <p>Stats is great for modular menu bar monitoring. Core-Monitor adds a full dashboard, fan control, and a stronger thermal focus.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="feature-band" id="touchbar">
-        <div class="section-heading">
-          <p class="eyebrow">Touch Bar</p>
-          <h2>A live HUD built from widgets.</h2>
-          <p class="section-copy">Core-Monitor can turn the Touch Bar into a full-width control surface with modular widgets, a compact status display, and live weather. It stays above whatever app you're using.</p>
-        </div>
-        <div class="feature-grid">
-          <article class="feature-card">
-            <h3>Widgets are modular</h3>
-            <p>Status, Weather, CPU, Dock, Stats, Network, Memory Pressure. Mix them with pinned apps, folders, and custom commands.</p>
-          </article>
-          <article class="feature-card">
-            <h3>Touch Bar HUD</h3>
-            <p>See a live preview before you apply changes. Arrange widgets intentionally instead of guessing.</p>
-          </article>
-          <article class="feature-card">
-            <h3>Over other apps</h3>
-            <p>Keep stats, launchers, and quick actions visible while you stay in whatever app you're already using.</p>
-          </article>
-          <article class="feature-card">
-            <h3>WeatherKit weather</h3>
-            <p>Shows local weather using Apple WeatherKit. Location is requested only when the weather widget is active, and it works without it too.</p>
-          </article>
-          <article class="feature-card">
-            <h3>Width stays visible</h3>
-            <p>The customization panel shows estimated width so you know when a layout fits the bar and when it's getting too crowded.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="video-section">
-        <div class="section-heading">
-          <p class="eyebrow">Always There</p>
-          <h2>Always there when you need it.</h2>
-          <p class="section-copy">The Touch Bar stays above your current app. Keep the dashboard closed and still reach live stats, launchers, and shortcuts while you work.</p>
-        </div>
-        <div class="video-layout">
-          <div class="video-copy">
-            <p>Not another floating window. The strip stays on top of whatever you're working in, available for a quick glance or a single tap.</p>
-            <div class="video-actions">
-              <a class="button secondary" href="videos/touchbar-overlay.mp4">Open Overlay Video</a>
-              <a class="button ghost" href="#touchbar">Read the Touch Bar guide</a>
-            </div>
-          </div>
-          <video class="install-video" controls preload="metadata">
-            <source src="videos/touchbar-overlay.mp4" type="video/mp4">
-            Your browser does not support this video. Use the direct file link instead.
-          </video>
-        </div>
-      </section>
-
-      <section class="privacy-band" id="privacy">
-        <div class="section-heading">
-          <p class="eyebrow">Privacy</p>
-          <h2>Privacy is part of the product.</h2>
-          <p class="section-copy">Everything runs on your Mac. Nothing phones home.</p>
-        </div>
-        <div class="feature-grid privacy-grid">
-          <article class="feature-card">
-            <h3>No telemetry</h3>
-            <p>No analytics pipeline. No tracking beacons. No background profile building.</p>
-          </article>
-          <article class="feature-card">
-            <h3>No account required</h3>
-            <p>You do not need to sign in, subscribe, or hand over an email address to use the app.</p>
-          </article>
-          <article class="feature-card">
-            <h3>Private controls</h3>
-            <p>Process details in memory views can be hidden, so even local monitoring stays as private as you want.</p>
-          </article>
-          <article class="feature-card">
-            <h3>Open source and signed</h3>
-            <p>The code is public on GitHub. Releases are signed and notarized for direct download.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="quick-install" id="install">
-        <div class="section-heading">
-          <p class="eyebrow">Install</p>
-          <h2>Set up in minutes.</h2>
-          <p class="section-copy">Start with monitoring. Add deeper control only if you want it.</p>
-        </div>
-        <div class="install-grid">
-          <article class="install-card install-card-main">
-            <p class="card-step">1</p>
-            <h3>Choose the DMG or the ZIP.</h3>
-            <p>Use the signed DMG for the normal drag-to-Applications install, or grab the ZIP if you want the raw app bundle archive.</p>
-            <div class="install-actions">
-              <a class="button primary" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download DMG</a>
-              <a class="button secondary" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip">Download ZIP</a>
-            </div>
-          </article>
-          <article class="install-card">
-            <p class="card-step">2</p>
-            <h3>Install with Homebrew.</h3>
-            <p>Use the tap once, then install the cask like any other Mac app. Homebrew will place Core-Monitor in <code>/Applications</code>.</p>
-            <p class="install-command"><code>brew tap --custom-remote offyotto/core-monitor https://github.com/offyotto/Core-Monitor</code></p>
-            <p class="install-command"><code>brew install --cask offyotto/core-monitor/core-monitor</code></p>
-            <p class="install-command"><code>brew upgrade --cask offyotto/core-monitor/core-monitor</code></p>
-          </article>
-          <article class="install-card">
-            <p class="card-step">3</p>
-            <h3>Elevated access is optional.</h3>
-            <p>Monitoring works immediately. Add the system helper later if you want fan control and managed profiles.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="faq-band" id="faq">
-        <div class="section-heading">
-          <p class="eyebrow">FAQ</p>
-          <h2>Common questions.</h2>
-          <p class="section-copy">What people usually want to know before installing.</p>
-        </div>
-        <div class="faq-list">
-          <details class="faq-item" open>
-            <summary>What does Core-Monitor do?</summary>
-            <p>It shows you live thermals, power draw, battery, memory, and fan speeds on your Apple Silicon Mac. Fan control is optional. Everything stays local.</p>
-          </details>
-          <details class="faq-item">
-            <summary>Do I need the system helper?</summary>
-            <p>No. Monitoring works without it. The helper is only needed if you want to control fan speeds.</p>
-          </details>
-          <details class="faq-item">
-            <summary>Is it private?</summary>
-            <p>Yes. All data stays on your Mac. No account, no telemetry, no analytics.</p>
-          </details>
-          <details class="faq-item">
-            <summary>How does it compare to iStat Menus, TG Pro, or Stats?</summary>
-            <p>Core-Monitor focuses on thermals and power with optional fan control. It's open source, free, and private. The Compare section above has specifics.</p>
-          </details>
-          <details class="faq-item">
-            <summary>What doesn't it do?</summary>
-            <p>It's not a cloud platform, not a fleet tool, and not trying to be the biggest stats suite. It's focused on heat, power, battery, and fans.</p>
-          </details>
-          <details class="faq-item">
-            <summary>Where do I get it?</summary>
-            <p>Download the DMG or ZIP from GitHub Releases, install via Homebrew, or get the read-only edition from the Mac App Store.</p>
-          </details>
-        </div>
-      </section>
-
-      <section class="video-section">
-        <div class="section-heading">
-          <p class="eyebrow">Preview</p>
-          <h2>See the Touch Bar HUD in motion.</h2>
-          <p class="section-copy">A walkthrough of widgets, weather, layout presets, and the always-on strip before you enable it on your Mac.</p>
-        </div>
-        <div class="video-layout">
-          <div class="video-copy">
-            <p>Use the full layout for a denser Touch Bar, or keep a narrow preset if you prefer the standard strip. Weather is opt-in, and the preview shows when things get too wide.</p>
-            <div class="video-actions">
-              <a class="button secondary" href="videos/touchbar-showcase.mp4">Open Touch Bar Video</a>
-              <a class="button ghost" href="#touchbar">Read the widget guide</a>
-            </div>
-          </div>
-          <video class="install-video" controls preload="metadata">
-            <source src="videos/touchbar-showcase.mp4" type="video/mp4">
-            Your browser does not support this video. Use the direct file link instead.
-          </video>
-        </div>
-      </section>
-
-      <section class="cta-band">
-        <div>
-          <p class="eyebrow">Ready</p>
-          <h2>Get Core-Monitor.</h2>
-        </div>
-        <div class="cta-actions">
-          <a class="button primary" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download DMG</a>
-          <a class="button ghost" href="https://github.com/offyotto/Core-Monitor">View Source</a>
-        </div>
-      </section>
-    </main>
-
-    <footer class="site-footer">
-      <div class="footer-brand">
-        <img class="footer-logo" src="images/site/core-monitor-logo.png" alt="Core-Monitor" width="28" height="28">
-        <span>Core-Monitor</span>
+      <div class="header-actions">
+        <a class="icon-link" href="https://github.com/offyotto/Core-Monitor" aria-label="Core-Monitor on GitHub" title="Core-Monitor on GitHub">
+          <img src="images/site/github-mark-light.png" alt="" width="24" height="24">
+        </a>
+        <a class="btn btn-solid btn-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Get the app</a>
       </div>
-      <nav class="footer-links" aria-label="Footer">
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="wrap hero" id="top">
+      <div class="hero-copy">
+        <h1>Your Mac already knows how hot it's running. <span class="mark">Now you can watch too.</span></h1>
+        <div class="hero-actions btn-group">
+          <a class="btn btn-solid" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download for macOS</a>
+          <a class="btn btn-outline" href="Mac-App-Store/">Mac App Store edition</a>
+          <a class="btn btn-ghost" href="https://github.com/offyotto/Core-Monitor">Read the source</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <figure class="frame">
+          <span class="corner tl" aria-hidden="true"></span>
+          <span class="corner tr" aria-hidden="true"></span>
+          <span class="corner bl" aria-hidden="true"></span>
+          <span class="corner br" aria-hidden="true"></span>
+          <img src="images/ui/overview-v16.png?v=16" alt="Core-Monitor dashboard with CPU, memory, thermal, cooling, power, network and storage readings." width="1192" height="884">
+        </figure>
+      </div>
+    </section>
+
+    <section class="wrap section" id="dashboard">
+      <div class="section-head">
+        <h2>One panel, seven screens</h2>
+        <p>Every subsystem gets its own screen with history behind it, and the menu bar carries a short version so the window can stay closed most of the day.</p>
+      </div>
+      <div class="gallery">
+        <figure class="gallery-item" data-reveal>
+          <img src="images/ui/overview-v16.png?v=16" alt="Overview screen summarizing CPU, memory, thermal, cooling, power, network and storage." loading="lazy">
+          <figcaption class="gallery-caption"><strong>Overview</strong></figcaption>
+        </figure>
+        <figure class="gallery-item" data-reveal>
+          <img src="images/ui/cooling-v16.png?v=16" alt="Cooling screen with fan speeds, cooling mode and a custom fan curve editor." loading="lazy">
+          <figcaption class="gallery-caption"><strong>Cooling</strong></figcaption>
+        </figure>
+        <figure class="gallery-item" data-reveal>
+          <img src="images/ui/memory-v16.png?v=16" alt="Memory screen with usage history and a pressure breakdown." loading="lazy">
+          <figcaption class="gallery-caption"><strong>Memory</strong></figcaption>
+        </figure>
+        <figure class="gallery-item" data-reveal>
+          <img src="images/ui/storage-v16.png?v=16" alt="Storage screen with used, purgeable and free capacity." loading="lazy">
+          <figcaption class="gallery-caption"><strong>Storage</strong></figcaption>
+        </figure>
+        <figure class="gallery-item" data-reveal>
+          <img src="images/ui/menu-thermal-v16.png?v=16" alt="Thermal panel opened from the menu bar." loading="lazy">
+          <figcaption class="gallery-caption"><strong>Thermal panel</strong></figcaption>
+        </figure>
+        <figure class="gallery-item" data-reveal>
+          <img src="images/ui/menu-network-v16.png?v=16" alt="Network panel opened from the menu bar." loading="lazy">
+          <figcaption class="gallery-caption"><strong>Network panel</strong></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="wrap section" id="cooling">
+      <div class="feature">
+        <div class="feature-copy">
+          <p class="eyebrow">Cooling</p>
+          <h2>Read only, until you decide otherwise</h2>
+          <p>By default, Core-Monitor only watches the fans. Install the optional helper and you get three ways to drive them: a fixed speed, a boost profile, or a custom curve you draw yourself, point by point.</p>
+          <ol class="steps">
+            <li>
+              <span class="step-index" aria-hidden="true"></span>
+              <span class="step-body"><strong>Hand it back anytime</strong><span>One button returns full control to macOS, no restart needed.</span></span>
+            </li>
+            <li>
+              <span class="step-index" aria-hidden="true"></span>
+              <span class="step-body"><strong>Draw your own curve</strong><span>Map CPU or GPU temperature to fan speed across as many points as you want.</span></span>
+            </li>
+            <li>
+              <span class="step-index" aria-hidden="true"></span>
+              <span class="step-body"><strong>Skip the helper entirely</strong><span>Monitoring works identically whether or not it is installed.</span></span>
+            </li>
+            <li>
+              <span class="step-index" aria-hidden="true"></span>
+              <span class="step-body"><strong>Calibrate first</strong><span>Measure each fan's real minimum and maximum before trusting a profile to it.</span></span>
+            </li>
+          </ol>
+        </div>
+        <figure class="frame">
+          <span class="corner tl" aria-hidden="true"></span>
+          <span class="corner tr" aria-hidden="true"></span>
+          <span class="corner bl" aria-hidden="true"></span>
+          <span class="corner br" aria-hidden="true"></span>
+          <img src="images/ui/cooling-v16.png?v=16" alt="Cooling screen showing two fans near 2,900 rpm, a custom curve mode, and a button that hands cooling back to macOS." loading="lazy">
+        </figure>
+      </div>
+    </section>
+
+    <section class="wrap section">
+      <div class="section-head">
+        <h2>Where people actually reach for it</h2>
+        <p>The moments this was made around: the fans wind up and you want to know exactly why.</p>
+      </div>
+      <div class="cards">
+        <article class="card" data-reveal>
+          <span class="card-glyph" aria-hidden="true">01</span>
+          <h3>Compiling and exporting</h3>
+          <p>Watch clock speed and heat while a long build or render runs, and see whether a slowdown is thermal or something else entirely.</p>
+        </article>
+        <article class="card" data-reveal>
+          <span class="card-glyph" aria-hidden="true">02</span>
+          <h3>Away from the charger</h3>
+          <p>Watts in and watts out, so the time-remaining figure reflects what the Mac is actually drawing right now, not a rough guess.</p>
+        </article>
+        <article class="card is-cool" data-reveal>
+          <span class="card-glyph" aria-hidden="true">03</span>
+          <h3>Recording and calls</h3>
+          <p>Pin the fans low before you hit record, check the temperature margin, then hand cooling back to macOS once you are done.</p>
+        </article>
+        <article class="card is-cool" data-reveal>
+          <span class="card-glyph" aria-hidden="true">04</span>
+          <h3>Warnings that stay put</h3>
+          <p>Set a threshold for heat, memory or battery and get a notification straight from the Mac itself, with no server involved.</p>
+        </article>
+        <article class="card" data-reveal>
+          <span class="card-glyph" aria-hidden="true">05</span>
+          <h3>Nothing hidden</h3>
+          <p>The full source is public, so anyone can check exactly what gets read, what the helper writes, and what never leaves the machine.</p>
+        </article>
+        <article class="card" data-reveal>
+          <span class="card-glyph" aria-hidden="true">06</span>
+          <h3>No account needed</h3>
+          <p>No sign-in, no subscription, and no analytics library anywhere in the binary. Process names can be hidden in memory views too.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="wrap section" id="touchbar">
+      <div class="section-head">
+        <h2>The Touch Bar, put back to work</h2>
+        <p>On Macs that still have one, Core-Monitor turns the Touch Bar into a strip of live instruments that sits above whatever app has focus.</p>
+      </div>
+      <div class="filmstrip">
+        <figure class="reel" data-reveal>
+          <video controls preload="metadata" width="1280" height="720">
+            <source src="videos/touchbar-showcase.mp4" type="video/mp4">
+          </video>
+          <div class="reel-info">
+            <strong>Widgets, overlays and shortcuts</strong>
+            Stats, weather, shortcuts and memory pressure, arranged with a live width preview so a layout never runs off the edge of the strip. The strip holds its place across apps, so you can check a reading or launch something without switching windows.
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="wrap section" id="compare">
+      <div class="section-head">
+        <h2>How it stacks up</h2>
+        <p>A handful of good Mac monitors already exist. This is where Core-Monitor sits next to them, stated plainly.</p>
+      </div>
+      <div class="compare-wrap" data-reveal>
+        <table class="compare">
+          <thead>
+            <tr>
+              <th scope="col">App</th>
+              <th scope="col">Strong at</th>
+              <th scope="col">Where Core-Monitor differs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>iStat Menus</td>
+              <td>Covers dozens of metrics across many menu bar modules.</td>
+              <td>Narrower on purpose. Heat, power and fans, open source, with no license to buy.</td>
+            </tr>
+            <tr>
+              <td>TG Pro</td>
+              <td>Deep per-sensor diagnostics.</td>
+              <td>Monitoring comes first here; writing fan speed is an optional layer, not the whole app.</td>
+            </tr>
+            <tr>
+              <td>Macs Fan Control</td>
+              <td>Direct control over fan speed.</td>
+              <td>Wraps that control in a full dashboard, with history, alerts and menu bar readouts.</td>
+            </tr>
+            <tr>
+              <td>Stats</td>
+              <td>Free, modular menu bar widgets.</td>
+              <td>One dedicated window with history, built specifically around thermals.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="wrap section" id="install">
+      <div class="section-head">
+        <h2>Three doors, same app</h2>
+        <p>Pick whichever matches how you manage software on your Mac. Every route below is free.</p>
+      </div>
+      <div class="routes">
+        <article class="route" data-reveal>
+          <span class="route-index">01 / direct</span>
+          <h3>Download the signed build</h3>
+          <p>Grab it straight from GitHub. The DMG gives you the familiar drag-to-Applications install; the ZIP is the bare app bundle.</p>
+          <div class="route-actions">
+            <a class="btn btn-solid btn-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">DMG</a>
+            <a class="btn btn-outline btn-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip">ZIP</a>
+          </div>
+        </article>
+        <article class="route" data-reveal>
+          <span class="route-index">02 / terminal</span>
+          <h3>Install through Homebrew</h3>
+          <p>Add the tap once, then install and upgrade the cask the same way you handle everything else.</p>
+          <pre class="code-block" id="brew-command">brew tap --custom-remote offyotto/core-monitor \
+  https://github.com/offyotto/Core-Monitor
+brew install --cask offyotto/core-monitor/core-monitor</pre>
+          <div class="route-actions">
+            <button class="copy-btn" type="button" data-copy="#brew-command">Copy command</button>
+          </div>
+        </article>
+        <article class="route" data-reveal>
+          <span class="route-index">03 / app store</span>
+          <h3>Take the sandboxed edition</h3>
+          <p>A read-only build reviewed by Apple. No helper and no fan writes, exactly as the App Store requires.</p>
+          <div class="route-actions">
+            <a class="btn btn-outline btn-sm" href="Mac-App-Store/">About this edition</a>
+            <a class="btn btn-ghost btn-sm" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">Open listing</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="wrap section" id="faq">
+      <div class="section-head">
+        <h2>Questions before you install</h2>
+        <p>Short, direct answers to what people usually check first.</p>
+      </div>
+      <div class="faq">
+        <details class="faq-item" open>
+          <summary class="faq-q">Which Macs can run it?<span class="faq-icon" aria-hidden="true"></span></summary>
+          <p>Apple Silicon Macs on macOS 13 or later. The sensors and fan interfaces it reads are specific to Apple's own chips, so Intel Macs are not supported.</p>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">Do I need the helper installed?<span class="faq-icon" aria-hidden="true"></span></summary>
+          <p>No. Every reading works without it. It exists only so the app can write fan speeds, and you can hand control back to macOS whenever you like.</p>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">Does it phone home?<span class="faq-icon" aria-hidden="true"></span></summary>
+          <p>No. There is no analytics code and no account anywhere in the app. The one network call is optional WeatherKit weather for the Touch Bar, and it only runs if you switch it on.</p>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">Can fan control damage my Mac?<span class="faq-icon" aria-hidden="true"></span></summary>
+          <p>macOS keeps its own thermal limits regardless of what any app requests. Core-Monitor also keeps an obvious way out: one click gives full control back to the system.</p>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">What is deliberately left out?<span class="faq-icon" aria-hidden="true"></span></summary>
+          <p>Cloud dashboards, fleet management, and a metric for every corner of the OS. The scope stays heat, power, memory, battery and fans, done properly.</p>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-q">Where do bug reports go?<span class="faq-icon" aria-hidden="true"></span></summary>
+          <p>Open an issue on the <a href="https://github.com/offyotto/Core-Monitor/issues">GitHub tracker</a>. Release notes and older builds live on the <a href="https://github.com/offyotto/Core-Monitor/releases">releases page</a>.</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="wrap cta-inner">
+        <h2>The sensors are already in your Mac. Go look at them.</h2>
+        <div class="cta-actions btn-group">
+          <a class="btn btn-solid" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download for macOS</a>
+          <a class="btn btn-outline" href="https://github.com/offyotto/Core-Monitor">Star it on GitHub</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-row">
+      <p class="footer-brand"><img src="images/site/core-monitor-logo.png?v=6" alt="" width="22" height="22">Core-Monitor</p>
+      <nav class="footer-nav" aria-label="Footer">
         <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
         <a href="https://github.com/offyotto/Core-Monitor/releases/latest">Releases</a>
         <a href="Mac-App-Store/">Mac App Store</a>
         <a href="Mac-App-Store/privacy/">Privacy</a>
         <a href="Mac-App-Store/support/">Support</a>
       </nav>
-      <p class="footer-legal">&copy; 2026 Nazish Faizan</p>
-    </footer>
-  </div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/lenis@1.3.23/dist/lenis.min.js"></script>
+  <script src="script.js?v=6"></script>
 </body>
 </html>

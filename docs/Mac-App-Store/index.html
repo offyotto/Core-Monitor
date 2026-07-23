@@ -3,30 +3,34 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Core-Monitor Mac App Store | Apple Silicon System Monitor for macOS</title>
-  <meta name="description" content="Find Core-Monitor on the Mac App Store. Core-Monitor is a sandboxed Apple Silicon system monitor for macOS with CPU, memory, storage, battery, network, thermal state, menu bar status, and local weather.">
+  <title>Core-Monitor on the Mac App Store | Read-Only Edition for macOS</title>
+  <meta name="description" content="The Mac App Store edition of Core-Monitor: a sandboxed, read-only system monitor for macOS with CPU, memory, storage, battery, network, thermal state, a menu bar extra, and optional local weather.">
   <meta name="application-name" content="Core-Monitor">
   <meta name="apple-mobile-web-app-title" content="Core-Monitor">
   <meta name="robots" content="index,follow,max-image-preview:large">
-  <meta name="theme-color" content="#eef2f6">
+  <meta name="theme-color" content="#07080b">
   <link rel="canonical" href="https://offyotto.github.io/Core-Monitor/Mac-App-Store/">
   <link rel="alternate" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">
-  <link rel="icon" href="../favicon.ico?v=4" sizes="any">
-  <link rel="icon" type="image/png" sizes="512x512" href="../images/site/core-monitor-logo.png?v=4">
-  <link rel="shortcut icon" href="../images/site/core-monitor-logo.png?v=4">
-  <link rel="apple-touch-icon" href="../images/site/core-monitor-logo.png?v=4">
+  <link rel="icon" href="../favicon.ico?v=6" sizes="any">
+  <link rel="icon" type="image/png" sizes="512x512" href="../images/site/core-monitor-logo.png?v=6">
+  <link rel="shortcut icon" href="../images/site/core-monitor-logo.png?v=6">
+  <link rel="apple-touch-icon" href="../images/site/core-monitor-logo.png?v=6">
   <meta property="og:site_name" content="Core-Monitor">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Core-Monitor Mac App Store | Apple Silicon System Monitor for macOS">
-  <meta property="og:description" content="Official Core-Monitor Mac App Store landing page with a direct Apple App Store link for the sandboxed Apple Silicon system monitor.">
+  <meta property="og:title" content="Core-Monitor on the Mac App Store | Read-Only Edition for macOS">
+  <meta property="og:description" content="The sandboxed, read-only edition of Core-Monitor, reviewed and delivered by Apple.">
   <meta property="og:url" content="https://offyotto.github.io/Core-Monitor/Mac-App-Store/">
-  <meta property="og:image" content="https://offyotto.github.io/Core-Monitor/docs/images/ui/mac-app-store/app-store-dashboard.png">
-  <meta property="og:image:alt" content="Core-Monitor Mac App Store edition showing CPU activity, memory, thermal state, weather, and other system cards.">
+  <meta property="og:image" content="https://offyotto.github.io/Core-Monitor/images/ui/mac-app-store/app-store-dashboard.png">
+  <meta property="og:image:alt" content="Core-Monitor Mac App Store edition dashboard with CPU, memory, thermal state and weather cards.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Core-Monitor Mac App Store | Apple Silicon System Monitor">
-  <meta name="twitter:description" content="Find Core-Monitor on the Mac App Store for read-only Apple Silicon system monitoring.">
-  <meta name="twitter:image" content="https://offyotto.github.io/Core-Monitor/docs/images/ui/mac-app-store/app-store-dashboard.png">
-  <link rel="stylesheet" href="styles.css">
+  <meta name="twitter:title" content="Core-Monitor on the Mac App Store">
+  <meta name="twitter:description" content="The sandboxed, read-only edition of Core-Monitor for macOS.">
+  <meta name="twitter:image" content="https://offyotto.github.io/Core-Monitor/images/ui/mac-app-store/app-store-dashboard.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css?v=6">
+  <link rel="stylesheet" href="https://unpkg.com/lenis@1.3.23/dist/lenis.css">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -36,20 +40,18 @@
         "@id": "https://offyotto.github.io/Core-Monitor/Mac-App-Store/#webpage",
         "name": "Core-Monitor Mac App Store Edition",
         "url": "https://offyotto.github.io/Core-Monitor/Mac-App-Store/",
-        "description": "Official Core-Monitor Mac App Store landing page with a direct Apple App Store listing link.",
-        "about": {
-          "@id": "https://offyotto.github.io/Core-Monitor/Mac-App-Store/#app"
-        }
+        "description": "The Mac App Store edition of Core-Monitor, with a direct link to the Apple listing.",
+        "about": { "@id": "https://offyotto.github.io/Core-Monitor/Mac-App-Store/#app" }
       },
       {
         "@type": "SoftwareApplication",
         "@id": "https://offyotto.github.io/Core-Monitor/Mac-App-Store/#app",
         "name": "Core-Monitor",
-        "alternateName": ["Core Monitor", "Core-Monitor Mac App Store", "Core Monitor Mac"],
+        "alternateName": ["Core Monitor", "Core-Monitor Mac App Store"],
         "operatingSystem": "macOS 14 or later",
         "applicationCategory": "UtilitiesApplication",
         "softwareRequirements": "Mac with macOS 14 or later",
-        "description": "Core-Monitor is a sandboxed Mac App Store system monitor for macOS. It shows CPU activity, memory pressure, storage, battery, network, thermal state, menu bar status, and local weather.",
+        "description": "Core-Monitor on the Mac App Store is a sandboxed, read-only system monitor showing CPU activity, memory pressure, storage, battery, network, thermal state, a menu bar extra, and optional local weather.",
         "url": "https://offyotto.github.io/Core-Monitor/Mac-App-Store/",
         "downloadUrl": "https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12",
         "installUrl": "https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12",
@@ -61,156 +63,136 @@
         "featureList": [
           "CPU activity and per-core load",
           "Memory pressure and storage usage",
-          "Battery, network, uptime, and thermal state",
-          "Menu bar status for Mac system monitoring",
-          "Local weather when location access is enabled"
+          "Battery, network, uptime and thermal state",
+          "Menu bar extra with a live summary",
+          "Local weather when location access is granted"
         ],
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
-        "developer": {
-          "@type": "Person",
-          "name": "Nazish Faizan"
-        }
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "developer": { "@type": "Person", "name": "Nazish Faizan" }
       }
     ]
   }
   </script>
 </head>
 <body>
-  <div class="page-shell">
-    <header class="site-header">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-row">
       <a class="brand" href="../">
-        <img class="brand-logo" src="../images/site/core-monitor-logo.png?v=4" alt="Core-Monitor app icon">
-        <span class="brand-copy">
-          <span class="brand-title">Core-Monitor</span>
-          <span class="brand-subtitle">Mac App Store Edition</span>
-        </span>
+        <img class="brand-mark" src="../images/site/core-monitor-logo.png?v=6" alt="Core-Monitor app icon">
+        <span class="brand-text">Core-Monitor<small>App Store edition</small></span>
       </a>
       <div class="header-actions">
-        <a class="back-link" href="support/">Support</a>
-        <a class="back-link" href="privacy/">Privacy Policy</a>
-        <a class="back-link" href="../">Direct Download</a>
+        <a class="btn btn-ghost btn-sm" href="support/">Support</a>
+        <a class="btn btn-ghost btn-sm" href="privacy/">Privacy</a>
+        <a class="icon-link" href="https://github.com/offyotto/Core-Monitor" aria-label="Core-Monitor on GitHub" title="Core-Monitor on GitHub">
+          <img src="../images/site/github-mark-light.png" alt="" width="24" height="24">
+        </a>
+        <a class="btn btn-solid btn-sm" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">View on App Store</a>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <main>
-      <section class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow">Mac App Store Edition</p>
-          <h1>Core-Monitor for the Mac App Store</h1>
-          <p class="hero-lead">The read-only edition of Core-Monitor, available on the Mac App Store.</p>
-          <div class="hero-actions">
-            <a class="button primary" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12" target="_blank" rel="noopener">Open Apple App Store Listing</a>
-            <a class="button secondary" href="#scope">See App Store Scope</a>
-            <a class="button secondary" href="support/">Support</a>
-            <a class="button secondary" href="privacy/">Privacy Policy</a>
-          </div>
-          <ul class="hero-list" aria-label="Highlights">
-            <li>CPU, memory, storage, battery, and network</li>
-            <li>Local weather when you allow it</li>
-            <li>No helpers. No fan control.</li>
-          </ul>
-        </div>
+  <main id="main">
+    <section class="wrap intro">
+      <p class="eyebrow">Mac App Store edition</p>
+      <h1>The same monitor, kept inside Apple's sandbox</h1>
+      <p class="hero-text">This build of Core-Monitor is reviewed and delivered by Apple. It reads and displays; it never writes to hardware. If fan control matters to you, the <a href="../">direct download</a> is the build to use instead.</p>
+      <div class="btn-group">
+        <a class="btn btn-solid" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">Open the Apple listing</a>
+        <a class="btn btn-outline" href="#scope">What is in this edition</a>
+      </div>
+    </section>
 
-        <div class="hero-media" aria-hidden="true">
-          <figure class="window main-shot">
-            <img src="../images/ui/mac-app-store/app-store-dashboard.png" alt="">
-          </figure>
-          <figure class="window float-shot">
-            <img src="../images/ui/mac-app-store/app-store-menubar.png" alt="">
-          </figure>
-        </div>
-      </section>
+    <section class="wrap section section-tight">
+      <div class="gallery" style="grid-template-columns: repeat(2, 1fr);">
+        <figure class="gallery-item" data-reveal>
+          <img src="../images/ui/mac-app-store/app-store-dashboard.png" alt="App Store edition dashboard with CPU activity, memory, thermal state and weather cards." loading="lazy">
+          <figcaption class="gallery-caption"><strong>Dashboard</strong></figcaption>
+        </figure>
+        <figure class="gallery-item" data-reveal>
+          <img src="../images/ui/mac-app-store/app-store-menubar.png" alt="App Store edition menu bar extra with a live status summary." loading="lazy">
+          <figcaption class="gallery-caption"><strong>Menu bar extra</strong></figcaption>
+        </figure>
+      </div>
+    </section>
 
-      <section class="spec-strip" aria-label="Product highlights">
-        <article class="spec">
-          <strong>Live dashboard</strong>
-          <p>CPU, memory, thermal state, storage, uptime, and power, all in one window.</p>
-        </article>
-        <article class="spec">
-          <strong>Menu bar extra</strong>
-          <p>A live status summary that stays visible while you work.</p>
-        </article>
-        <article class="spec">
-          <strong>WeatherKit</strong>
-          <p>Local weather appears after location access is approved.</p>
-        </article>
-        <article class="spec">
-          <strong>Install from Apple</strong>
-          <p>Get Core-Monitor directly from the Mac App Store. reviewed, signed, and updated by Apple.</p>
-        </article>
-      </section>
-
-      <section class="content-grid">
-        <article class="panel intro-panel">
-          <p class="eyebrow">Included</p>
-          <h2>Core-Monitor on the Mac App Store.</h2>
-          <p class="panel-copy">System monitoring without the extras. CPU, memory, thermals, battery, storage, network, weather. all read-only, all local.</p>
-        </article>
-
-        <aside class="panel quote-panel">
-          <p class="panel-kicker">Mac App Store edition.</p>
-          <p class="quote">Local weather, a clean menu bar extra, and zero background services.</p>
-          <p class="panel-copy">Get Core-Monitor from the App Store: <a class="inline-link" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12" target="_blank" rel="noopener">apps.apple.com/us/app/core-monitor/id6762558526</a>.</p>
-        </aside>
-      </section>
-
-      <section class="panel checklist" id="scope">
-        <div class="list">
-          <h3>In this edition</h3>
+    <section class="wrap section" id="scope">
+      <div class="section-head">
+        <h2>Exactly what the sandbox allows</h2>
+        <p>App Store rules shape this edition, so the boundaries are written down plainly instead of left implied.</p>
+      </div>
+      <div class="ledger">
+        <div class="ledger-col" data-reveal>
+          <h3>Included</h3>
           <ul>
             <li>Overall CPU activity and per-core load</li>
             <li>Memory usage and pressure</li>
             <li>Network throughput and startup disk usage</li>
-            <li>Battery status, thermal state, uptime, and load averages</li>
-            <li>Local weather when location access is enabled</li>
-            <li>SwiftUI dashboard and menu bar extra</li>
+            <li>Battery status, thermal state, uptime and load averages</li>
+            <li>Local weather, only after you grant location access</li>
+            <li>SwiftUI dashboard and a menu bar extra</li>
           </ul>
         </div>
-
-        <div class="list list-muted">
-          <h3>Not in this edition</h3>
+        <div class="ledger-col is-out" data-reveal>
+          <h3>Left out, by design</h3>
           <ul>
-            <li>Privileged helper and system services</li>
-            <li>Fan control and hardware writes</li>
+            <li>Privileged helper and background services</li>
+            <li>Fan control and any hardware writes</li>
             <li>Direct sensor access and private frameworks</li>
             <li>Touch Bar overlays and custom widgets</li>
-            <li>Terminal commands and auto-update</li>
+            <li>Shell commands and self-updating</li>
           </ul>
         </div>
-      </section>
-
-      <section class="closing">
-        <div>
-          <p class="closing-label">Core-Monitor</p>
-          <p class="closing-copy">Official Mac App Store Edition landing page.</p>
-        </div>
-        <div class="closing-actions">
-          <a class="button secondary" href="support/">Support</a>
-          <a class="button secondary" href="privacy/">Privacy Policy</a>
-          <a class="button primary" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12" target="_blank" rel="noopener">Open Apple App Store Listing</a>
-        </div>
-      </section>
-    </main>
-
-    <footer class="site-footer">
-      <div class="footer-brand">
-        <img class="footer-logo" src="../images/site/core-monitor-logo.png" alt="Core-Monitor" width="28" height="28">
-        <span>Core-Monitor</span>
       </div>
-      <nav class="footer-links" aria-label="Footer">
+    </section>
+
+    <section class="wrap section">
+      <div class="cards">
+        <article class="card" data-reveal>
+          <span class="card-glyph" aria-hidden="true">01</span>
+          <h3>Installed by Apple</h3>
+          <p>Reviewed, signed and updated through the App Store, inside the standard sandbox that comes with it.</p>
+        </article>
+        <article class="card is-cool" data-reveal>
+          <span class="card-glyph" aria-hidden="true">02</span>
+          <h3>WeatherKit, on request</h3>
+          <p>The weather card asks for location only when you turn it on. Decline, and the rest of the app runs unchanged.</p>
+        </article>
+        <article class="card" data-reveal>
+          <span class="card-glyph" aria-hidden="true">03</span>
+          <h3>Nothing collected</h3>
+          <p>No account, no analytics, no advertising code. The <a href="privacy/">privacy policy</a> is a short read on purpose.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="wrap cta-inner">
+        <h2>Get it from the App Store.</h2>
+        <div class="btn-group">
+          <a class="btn btn-solid" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">Open the Apple listing</a>
+          <a class="btn btn-outline" href="support/">Get support</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-row">
+      <p class="footer-brand"><img src="../images/site/core-monitor-logo.png?v=6" alt="" width="22" height="22">Core-Monitor</p>
+      <nav class="footer-nav" aria-label="Footer">
         <a href="../">Home</a>
         <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
         <a href="https://github.com/offyotto/Core-Monitor/releases/latest">Releases</a>
-        <a href="./">Mac App Store</a>
         <a href="privacy/">Privacy</a>
         <a href="support/">Support</a>
       </nav>
-      <p class="footer-legal">&copy; 2026 Nazish Faizan</p>
-    </footer>
-  </div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/lenis@1.3.23/dist/lenis.min.js"></script>
+  <script src="../script.js?v=6"></script>
 </body>
 </html>
