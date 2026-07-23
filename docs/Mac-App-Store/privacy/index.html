@@ -30,7 +30,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../styles.css?v=7">
+  <link rel="stylesheet" href="../../styles.css?v=8">
   <link rel="stylesheet" href="https://unpkg.com/lenis@1.3.23/dist/lenis.css">
 </head>
 <body>
@@ -40,13 +40,16 @@
     <div class="wrap header-row">
       <a class="brand" href="../">
         <img class="brand-mark" src="../../images/site/core-monitor-logo.png?v=6" alt="Core-Monitor app icon">
-        <span class="brand-text">Core-Monitor<small>App Store edition</small></span>
+        <span class="brand-text">Core-Monitor</span>
       </a>
       <div class="header-actions">
         <a class="btn btn-ghost btn-sm" href="../support/">Support</a>
         <a class="btn btn-ghost btn-sm" href="../">Edition page</a>
         <a class="icon-link" href="https://github.com/offyotto/Core-Monitor" aria-label="Core-Monitor on GitHub" title="Core-Monitor on GitHub">
-          <img src="../../images/site/github-mark-light.png" alt="" width="24" height="24">
+          <picture>
+            <source media="(prefers-color-scheme: light)" srcset="../../images/site/github-mark.png">
+            <img src="../../images/site/github-mark-light.png" alt="" width="24" height="24">
+          </picture>
         </a>
       </div>
     </div>

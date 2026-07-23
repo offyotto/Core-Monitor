@@ -1,8 +1,9 @@
 /* ==========================================================================
    Core-Monitor site styles
-   A flat, instrument-panel visual system. Every colour below is a solid
-   value; nothing in this file blends two colours into one another. Panels
-   use square corners and screenshots sit in a bracket frame.
+   A rounded, native-feeling system built on macOS's own colour language:
+   system blue for interactive elements and links, system orange for the
+   thermal/heat theme, system green for "cool" states. Every colour is a
+   solid value, nothing blends two colours together.
 
    Colour lives entirely in the custom properties below, so the whole site
    can switch between a dark and a light chassis by swapping one block of
@@ -20,18 +21,25 @@
   --text: #f1f3f6;
   --text-dim: #9aa3b0;
   --text-faint: #5c6572;
-  --signal: #ff5a1f;
-  --signal-bright: #ff7c46;
-  --signal-ink: #200900;
-  --volt: #c9ff4e;
-  --volt-dim: #a3d43e;
-  --volt-ink: #0e1400;
-  --link: var(--volt);
-  --caution: #ffcf3f;
-  --danger: #ff6b5e;
+
+  --accent: #0a84ff;
+  --accent-bright: #409cff;
+  --accent-ink: #ffffff;
+  --signal: #ff9f0a;
+  --signal-bright: #ffb43d;
+  --signal-ink: #241200;
+  --volt: #32d74b;
+  --volt-dim: #28b23d;
+  --volt-ink: #04210b;
+  --link: var(--accent);
+  --caution: #ffd60a;
+  --danger: #ff453a;
   --header-glass: rgba(7, 8, 11, 0.88);
+  --shadow-card: none;
 
-
+  --radius-lg: 18px;
+  --radius: 12px;
+  --radius-sm: 9px;
 
   --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -63,13 +71,13 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-::selection { background: rgba(255, 90, 31, 0.32); color: var(--text); }
+::selection { background: rgba(10, 132, 255, 0.35); color: var(--text); }
 
 a { color: var(--link); text-decoration: none; }
 a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 :focus-visible {
-  outline: 2px solid var(--signal);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -96,9 +104,10 @@ p:last-child { margin-bottom: 0; }
   left: -999px;
   top: 1rem;
   z-index: 100;
-  background: var(--signal);
-  color: var(--signal-ink);
+  background: var(--accent);
+  color: var(--accent-ink);
   padding: 0.6rem 1rem;
+  border-radius: var(--radius-sm);
   font-weight: 600;
   font-size: 0.9rem;
 }
@@ -112,7 +121,7 @@ p:last-child { margin-bottom: 0; }
   justify-content: center;
   gap: 0.55rem;
   padding: 0.78rem 1.35rem;
-  border-radius: 3px;
+  border-radius: var(--radius);
   border: 1px solid transparent;
   font-family: var(--font-body);
   font-size: 0.94rem;
@@ -126,8 +135,8 @@ p:last-child { margin-bottom: 0; }
 .btn:hover { text-decoration: none; transform: translateY(-1px); }
 .btn:active { transform: translateY(0); }
 
-.btn-solid { background: var(--signal); color: var(--signal-ink); }
-.btn-solid:hover { background: var(--signal-bright); }
+.btn-solid { background: var(--accent); color: var(--accent-ink); }
+.btn-solid:hover { background: var(--accent-bright); }
 
 .btn-outline { border-color: var(--stroke); color: var(--text); }
 .btn-outline:hover { border-color: var(--text-faint); background: var(--panel); }
@@ -171,7 +180,7 @@ p:last-child { margin-bottom: 0; }
 }
 .brand:hover { text-decoration: none; }
 
-.brand-mark { width: 30px; height: 30px; border-radius: 6px; flex: none; }
+.brand-mark { width: 30px; height: 30px; border-radius: 8px; flex: none; }
 
 .brand-text { display: block; line-height: 1.15; font-size: 1rem; }
 
@@ -192,7 +201,7 @@ p:last-child { margin-bottom: 0; }
   height: 34px;
   border: 1px solid var(--stroke);
   background: var(--panel);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   position: relative;
   cursor: pointer;
 }
@@ -213,8 +222,8 @@ p:last-child { margin-bottom: 0; }
 .nav-toggle span::after { top: 8px; }
 
 .nav-toggle[aria-expanded="true"] span { background: transparent; }
-.nav-toggle[aria-expanded="true"] span::before { top: 0; transform: rotate(45deg); background: var(--signal); }
-.nav-toggle[aria-expanded="true"] span::after { top: 0; transform: rotate(-45deg); background: var(--signal); }
+.nav-toggle[aria-expanded="true"] span::before { top: 0; transform: rotate(45deg); background: var(--accent); }
+.nav-toggle[aria-expanded="true"] span::after { top: 0; transform: rotate(-45deg); background: var(--accent); }
 
 .primary-nav {
   display: flex;
@@ -240,7 +249,7 @@ p:last-child { margin-bottom: 0; }
   display: inline-flex;
   padding: 4px;
   color: var(--text-dim);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
 }
 .icon-link:hover { color: var(--text); background: var(--panel); }
 .icon-link img { width: 24px; height: 24px; }
@@ -305,23 +314,15 @@ p:last-child { margin-bottom: 0; }
 .hero-visual { position: relative; }
 
 .frame {
-  position: relative;
   margin: 0;
   padding: 10px;
   background: var(--panel-soft);
   border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
 }
 
-.corner {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  pointer-events: none;
-}
-.corner.tl { top: -1px; left: -1px; border-top: 2px solid var(--signal); border-left: 2px solid var(--signal); }
-.corner.tr { top: -1px; right: -1px; border-top: 2px solid var(--signal); border-right: 2px solid var(--signal); }
-.corner.bl { bottom: -1px; left: -1px; border-bottom: 2px solid var(--signal); border-left: 2px solid var(--signal); }
-.corner.br { right: -1px; bottom: -1px; border-right: 2px solid var(--signal); border-bottom: 2px solid var(--signal); }
+.frame img { border-radius: 12px; }
 
 /* ---------- sections ---------- */
 
@@ -358,9 +359,11 @@ p:last-child { margin-bottom: 0; }
 .gallery-item {
   margin: 0;
   border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
   background: var(--panel);
   overflow: hidden;
-  transition: border-color 180ms ease, transform 180ms ease;
+  box-shadow: var(--shadow-card);
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
 
 .gallery-item:hover { border-color: var(--text-faint); transform: translateY(-3px); }
@@ -425,6 +428,7 @@ p:last-child { margin-bottom: 0; }
   align-items: center;
   justify-content: center;
   border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--text-faint);
@@ -448,8 +452,10 @@ p:last-child { margin-bottom: 0; }
 .card {
   background: var(--panel);
   border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
   padding: 1.6rem 1.5rem;
-  transition: border-color 180ms ease, transform 180ms ease;
+  box-shadow: var(--shadow-card);
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
 
 .card:hover { border-color: var(--text-faint); transform: translateY(-3px); }
@@ -460,6 +466,7 @@ p:last-child { margin-bottom: 0; }
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: var(--radius-sm);
   background: var(--signal);
   color: var(--signal-ink);
   font-family: var(--font-mono);
@@ -483,24 +490,11 @@ p:last-child { margin-bottom: 0; }
 .reel {
   margin: 0;
   border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
   background: var(--panel);
-  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
 }
-
-.reel::before,
-.reel::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 10px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='10'%3E%3Crect x='6' y='2' width='6' height='6' fill='%2307080b'/%3E%3C/svg%3E");
-  background-repeat: repeat-x;
-  background-color: var(--panel-raised);
-  z-index: 1;
-}
-.reel::before { top: 0; }
-.reel::after { bottom: 0; }
 
 .reel video { width: 100%; display: block; }
 
@@ -517,7 +511,10 @@ p:last-child { margin-bottom: 0; }
 
 .compare-wrap {
   border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
   overflow-x: auto;
+  box-shadow: var(--shadow-card);
 }
 
 .compare {
@@ -560,10 +557,12 @@ p:last-child { margin-bottom: 0; }
 .route {
   background: var(--panel);
   border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
   padding: 1.7rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+  box-shadow: var(--shadow-card);
 }
 
 .route-index {
@@ -583,6 +582,7 @@ p:last-child { margin-bottom: 0; }
   padding: 0.9rem 1rem;
   background: var(--panel-soft);
   border: 1px solid var(--stroke-soft);
+  border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 0.74rem;
   line-height: 1.55;
@@ -593,6 +593,7 @@ p:last-child { margin-bottom: 0; }
 
 .copy-btn {
   border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
   background: none;
   color: var(--text-dim);
   font-family: var(--font-mono);
@@ -607,10 +608,17 @@ p:last-child { margin-bottom: 0; }
 
 /* ---------- faq ---------- */
 
-.faq { max-width: 44rem; }
+.faq {
+  max-width: 44rem;
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
+  padding: 0 1.35rem;
+  box-shadow: var(--shadow-card);
+}
 
 .faq-item { border-bottom: 1px solid var(--stroke-soft); }
-.faq-item:first-of-type { border-top: 1px solid var(--stroke-soft); }
+.faq-item:last-of-type { border-bottom: 0; }
 
 .faq-q {
   display: flex;
@@ -742,7 +750,9 @@ p:last-child { margin-bottom: 0; }
 .ledger-col {
   background: var(--panel);
   border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
   padding: 1.7rem 1.6rem;
+  box-shadow: var(--shadow-card);
 }
 
 .ledger-col h3 { margin: 0 0 1rem; font-size: 1.04rem; font-weight: 600; }
@@ -768,6 +778,7 @@ p:last-child { margin-bottom: 0; }
   flex: none;
   width: 7px;
   height: 7px;
+  border-radius: 2px;
   transform: translateY(-1px);
   background: var(--volt);
 }
@@ -843,12 +854,12 @@ p:last-child { margin-bottom: 0; }
 }
 
 /* ---------- light chassis ----------
-   Swaps the whole palette when the visitor's system is set to light mode.
-   Everything above defaults to the dark chassis; nothing else in the file
-   needs to change because every colour reference above already runs
-   through these custom properties. Only the three rules with baked-in
-   hex values (the dot texture, the header glass, and the filmstrip
-   sprockets) need a matching override here. */
+   Swaps the whole palette when the visitor's system is set to light mode,
+   using Apple's own light-appearance system colours. Everything above
+   defaults to the dark chassis; nothing else in the file needs to change
+   because every colour reference already runs through these custom
+   properties. Only the dot texture and the header glass bake in raw hex
+   values, so they get a matching override here too. */
 
 @media (prefers-color-scheme: light) {
   :root {
@@ -861,21 +872,19 @@ p:last-child { margin-bottom: 0; }
     --text: #14171a;
     --text-dim: #52565c;
     --text-faint: #666b70;
-    --signal: #d1450f;
-    --signal-bright: #b53a0c;
-    --signal-ink: #1c0800;
-    --link: #4a6b12;
+
+    --accent: #007aff;
+    --accent-bright: #0064d6;
+    --signal: #ff9500;
+    --signal-bright: #e2830a;
+    --volt: #34c759;
     --header-glass: rgba(241, 242, 239, 0.86);
+    --shadow-card: 0 1px 2px rgba(20, 23, 26, 0.06), 0 14px 28px rgba(20, 23, 26, 0.08);
   }
 
   body {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26'%3E%3Ccircle cx='1.3' cy='1.3' r='1.3' fill='%23e1e3dd'/%3E%3C/svg%3E");
   }
 
-  ::selection { background: rgba(209, 69, 15, 0.2); }
-
-  .reel::before,
-  .reel::after {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='10'%3E%3Crect x='6' y='2' width='6' height='6' fill='%23f1f2ef'/%3E%3C/svg%3E");
-  }
+  ::selection { background: rgba(0, 122, 255, 0.22); }
 }
