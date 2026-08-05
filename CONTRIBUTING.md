@@ -21,3 +21,7 @@ Use Xcode on macOS. Build the app before submitting code changes. Run relevant t
 - Call out any runtime behavior that could not be tested.
 
 Core Monitor is easier to maintain when improvements are steady, scoped, and verified.
+
+## AI use
+
+AI is allowed for use in PR's and Issues, although they will receive the same checking and review process as any other PR. 
