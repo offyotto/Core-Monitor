@@ -4,12 +4,14 @@ on:
   push:
     branches:
       - main
-      - feature/**
-      - release/**
   pull_request:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   macos-tests:
@@ -26,10 +28,26 @@ jobs:
         with:
           xcode-version: latest-stable
 
+      - name: Record toolchain versions
+        run: |
+          sw_vers
+          xcodebuild -version
+
       - name: Run macOS test suite
         run: |
           xcodebuild test \
             -project Core-Monitor.xcodeproj \
             -scheme Core-Monitor \
             -destination 'platform=macOS' \
+            -enableCodeCoverage YES \
+            -resultBundlePath build/ci/Core-Monitor.xcresult \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload test result bundle
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: core-monitor-ci-results
+          path: build/ci/Core-Monitor.xcresult
+          if-no-files-found: warn
+          retention-days: 7
