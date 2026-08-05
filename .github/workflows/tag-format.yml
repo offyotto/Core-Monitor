@@ -1,0 +1,29 @@
+name: Tag Format
+
+on:
+  push:
+    tags:
+      - "**"
+
+permissions:
+  contents: read
+
+jobs:
+  check-tag-format:
+    name: Check Release Tag Format
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Require vMAJOR.MINOR.PATCH
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          if printf '%s' "${TAG_NAME}" | grep -Eq '^v[0-9]+[.][0-9]+[.][0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "Tag ${TAG_NAME} matches vMAJOR.MINOR.PATCH."
+            exit 0
+          fi
+
+          echo "Tag ${TAG_NAME} is not a valid release tag." >&2
+          echo "Expected vMAJOR.MINOR.PATCH, for example v16.0.0, with an optional prerelease suffix such as v16.0.0-rc.1." >&2
+          exit 1
