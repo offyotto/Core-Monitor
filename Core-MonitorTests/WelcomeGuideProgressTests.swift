@@ -125,7 +125,7 @@ final class DashboardNavigationRouterTests: XCTestCase {
 }
 
 @MainActor
-final class TouchBarCustomizationSettingsTests: XCTestCase {
+final class TouchBarCustomizationSettingsMigrationTests: XCTestCase {
     func testFreshSettingsDefaultToSystemPresentationMode() {
         let defaults = makeDefaults()
 
@@ -146,7 +146,7 @@ final class TouchBarCustomizationSettingsTests: XCTestCase {
     }
 
     private func makeDefaults() -> UserDefaults {
-        let suiteName = "TouchBarCustomizationSettingsTests.\(UUID().uuidString)"
+        let suiteName = "TouchBarCustomizationSettingsMigrationTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defaults.removePersistentDomain(forName: suiteName)
         addTeardownBlock {

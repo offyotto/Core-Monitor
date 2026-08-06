@@ -13,6 +13,25 @@
 		DABD00032F95000100000003 /* DashboardProcessSamplingPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD00012F95000100000001 /* DashboardProcessSamplingPolicyTests.swift */; };
 		DABD00042F95000100000004 /* HardwareRescueDiagnosticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD00022F95000100000002 /* HardwareRescueDiagnosticsTests.swift */; };
 		DABD10022F96000100000002 /* CoreMonitorShareKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD10012F96000100000001 /* CoreMonitorShareKitTests.swift */; };
+		DABD30012F97000100000001 /* AppRuntimeContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20012F97000100000001 /* AppRuntimeContextTests.swift */; };
+		DABD30022F97000100000001 /* BatteryDetailFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20022F97000100000001 /* BatteryDetailFormatterTests.swift */; };
+		DABD30032F97000100000001 /* CoreMonitorLaunchEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20032F97000100000001 /* CoreMonitorLaunchEnvironmentTests.swift */; };
+		DABD30042F97000100000001 /* CoreMonitorPlatformCopyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20042F97000100000001 /* CoreMonitorPlatformCopyTests.swift */; };
+		DABD30052F97000100000001 /* CoreMonitorSingleInstancePolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20052F97000100000001 /* CoreMonitorSingleInstancePolicyTests.swift */; };
+		DABD30062F97000100000001 /* DashboardShortcutConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20062F97000100000001 /* DashboardShortcutConfigurationTests.swift */; };
+		DABD30072F97000100000001 /* DashboardWindowLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20072F97000100000001 /* DashboardWindowLayoutTests.swift */; };
+		DABD30082F97000100000001 /* DiskProcessSamplerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20082F97000100000001 /* DiskProcessSamplerTests.swift */; };
+		DABD30092F97000100000001 /* DiskStatsRefreshPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20092F97000100000001 /* DiskStatsRefreshPolicyTests.swift */; };
+		DABD30102F97000100000001 /* HelperDiagnosticsReportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20102F97000100000001 /* HelperDiagnosticsReportTests.swift */; };
+		DABD30112F97000100000001 /* LaunchAtLoginStatusSummaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20112F97000100000001 /* LaunchAtLoginStatusSummaryTests.swift */; };
+		DABD30122F97000100000001 /* MacModelRegistryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20122F97000100000001 /* MacModelRegistryTests.swift */; };
+		DABD30132F97000100000001 /* NetworkThroughputFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20132F97000100000001 /* NetworkThroughputFormatterTests.swift */; };
+		DABD30142F97000100000001 /* PrivilegedHelperRequirementStringsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20142F97000100000001 /* PrivilegedHelperRequirementStringsTests.swift */; };
+		DABD30152F97000100000001 /* SystemMonitorSupplementalSamplingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20152F97000100000001 /* SystemMonitorSupplementalSamplingTests.swift */; };
+		DABD30162F97000100000001 /* TouchBarCustomizationSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20162F97000100000001 /* TouchBarCustomizationSettingsTests.swift */; };
+		DABD30172F97000100000001 /* WeatherViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20172F97000100000001 /* WeatherViewModelTests.swift */; };
+		DABD30182F97000100000001 /* WeatherWidgetLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20182F97000100000001 /* WeatherWidgetLayoutTests.swift */; };
+		DABD30192F97000100000001 /* WelcomeGuideProgressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20192F97000100000001 /* WelcomeGuideProgressTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +72,25 @@
 		DABD00012F95000100000001 /* DashboardProcessSamplingPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardProcessSamplingPolicyTests.swift; sourceTree = "<group>"; };
 		DABD00022F95000100000002 /* HardwareRescueDiagnosticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HardwareRescueDiagnosticsTests.swift; sourceTree = "<group>"; };
 		DABD10012F96000100000001 /* CoreMonitorShareKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreMonitorShareKitTests.swift; sourceTree = "<group>"; };
+		DABD20012F97000100000001 /* AppRuntimeContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRuntimeContextTests.swift; sourceTree = "<group>"; };
+		DABD20022F97000100000001 /* BatteryDetailFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryDetailFormatterTests.swift; sourceTree = "<group>"; };
+		DABD20032F97000100000001 /* CoreMonitorLaunchEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreMonitorLaunchEnvironmentTests.swift; sourceTree = "<group>"; };
+		DABD20042F97000100000001 /* CoreMonitorPlatformCopyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreMonitorPlatformCopyTests.swift; sourceTree = "<group>"; };
+		DABD20052F97000100000001 /* CoreMonitorSingleInstancePolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreMonitorSingleInstancePolicyTests.swift; sourceTree = "<group>"; };
+		DABD20062F97000100000001 /* DashboardShortcutConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardShortcutConfigurationTests.swift; sourceTree = "<group>"; };
+		DABD20072F97000100000001 /* DashboardWindowLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardWindowLayoutTests.swift; sourceTree = "<group>"; };
+		DABD20082F97000100000001 /* DiskProcessSamplerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskProcessSamplerTests.swift; sourceTree = "<group>"; };
+		DABD20092F97000100000001 /* DiskStatsRefreshPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskStatsRefreshPolicyTests.swift; sourceTree = "<group>"; };
+		DABD20102F97000100000001 /* HelperDiagnosticsReportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperDiagnosticsReportTests.swift; sourceTree = "<group>"; };
+		DABD20112F97000100000001 /* LaunchAtLoginStatusSummaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginStatusSummaryTests.swift; sourceTree = "<group>"; };
+		DABD20122F97000100000001 /* MacModelRegistryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacModelRegistryTests.swift; sourceTree = "<group>"; };
+		DABD20132F97000100000001 /* NetworkThroughputFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkThroughputFormatterTests.swift; sourceTree = "<group>"; };
+		DABD20142F97000100000001 /* PrivilegedHelperRequirementStringsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivilegedHelperRequirementStringsTests.swift; sourceTree = "<group>"; };
+		DABD20152F97000100000001 /* SystemMonitorSupplementalSamplingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitorSupplementalSamplingTests.swift; sourceTree = "<group>"; };
+		DABD20162F97000100000001 /* TouchBarCustomizationSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchBarCustomizationSettingsTests.swift; sourceTree = "<group>"; };
+		DABD20172F97000100000001 /* WeatherViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherViewModelTests.swift; sourceTree = "<group>"; };
+		DABD20182F97000100000001 /* WeatherWidgetLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherWidgetLayoutTests.swift; sourceTree = "<group>"; };
+		DABD20192F97000100000001 /* WelcomeGuideProgressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeGuideProgressTests.swift; sourceTree = "<group>"; };
 		E5B12BED2CCB8BBEC03C227F /* Core-MonitorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Core-MonitorTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -103,6 +141,25 @@
 				DABD10012F96000100000001 /* CoreMonitorShareKitTests.swift */,
 				DABD00012F95000100000001 /* DashboardProcessSamplingPolicyTests.swift */,
 				DABD00022F95000100000002 /* HardwareRescueDiagnosticsTests.swift */,
+				DABD20012F97000100000001 /* AppRuntimeContextTests.swift */,
+				DABD20022F97000100000001 /* BatteryDetailFormatterTests.swift */,
+				DABD20032F97000100000001 /* CoreMonitorLaunchEnvironmentTests.swift */,
+				DABD20042F97000100000001 /* CoreMonitorPlatformCopyTests.swift */,
+				DABD20052F97000100000001 /* CoreMonitorSingleInstancePolicyTests.swift */,
+				DABD20062F97000100000001 /* DashboardShortcutConfigurationTests.swift */,
+				DABD20072F97000100000001 /* DashboardWindowLayoutTests.swift */,
+				DABD20082F97000100000001 /* DiskProcessSamplerTests.swift */,
+				DABD20092F97000100000001 /* DiskStatsRefreshPolicyTests.swift */,
+				DABD20102F97000100000001 /* HelperDiagnosticsReportTests.swift */,
+				DABD20112F97000100000001 /* LaunchAtLoginStatusSummaryTests.swift */,
+				DABD20122F97000100000001 /* MacModelRegistryTests.swift */,
+				DABD20132F97000100000001 /* NetworkThroughputFormatterTests.swift */,
+				DABD20142F97000100000001 /* PrivilegedHelperRequirementStringsTests.swift */,
+				DABD20152F97000100000001 /* SystemMonitorSupplementalSamplingTests.swift */,
+				DABD20162F97000100000001 /* TouchBarCustomizationSettingsTests.swift */,
+				DABD20172F97000100000001 /* WeatherViewModelTests.swift */,
+				DABD20182F97000100000001 /* WeatherWidgetLayoutTests.swift */,
+				DABD20192F97000100000001 /* WelcomeGuideProgressTests.swift */,
 			);
 			path = "Core-MonitorTests";
 			sourceTree = "<group>";
@@ -310,6 +367,25 @@
 				DABD10022F96000100000002 /* CoreMonitorShareKitTests.swift in Sources */,
 				DABD00032F95000100000003 /* DashboardProcessSamplingPolicyTests.swift in Sources */,
 				DABD00042F95000100000004 /* HardwareRescueDiagnosticsTests.swift in Sources */,
+				DABD30012F97000100000001 /* AppRuntimeContextTests.swift in Sources */,
+				DABD30022F97000100000001 /* BatteryDetailFormatterTests.swift in Sources */,
+				DABD30032F97000100000001 /* CoreMonitorLaunchEnvironmentTests.swift in Sources */,
+				DABD30042F97000100000001 /* CoreMonitorPlatformCopyTests.swift in Sources */,
+				DABD30052F97000100000001 /* CoreMonitorSingleInstancePolicyTests.swift in Sources */,
+				DABD30062F97000100000001 /* DashboardShortcutConfigurationTests.swift in Sources */,
+				DABD30072F97000100000001 /* DashboardWindowLayoutTests.swift in Sources */,
+				DABD30082F97000100000001 /* DiskProcessSamplerTests.swift in Sources */,
+				DABD30092F97000100000001 /* DiskStatsRefreshPolicyTests.swift in Sources */,
+				DABD30102F97000100000001 /* HelperDiagnosticsReportTests.swift in Sources */,
+				DABD30112F97000100000001 /* LaunchAtLoginStatusSummaryTests.swift in Sources */,
+				DABD30122F97000100000001 /* MacModelRegistryTests.swift in Sources */,
+				DABD30132F97000100000001 /* NetworkThroughputFormatterTests.swift in Sources */,
+				DABD30142F97000100000001 /* PrivilegedHelperRequirementStringsTests.swift in Sources */,
+				DABD30152F97000100000001 /* SystemMonitorSupplementalSamplingTests.swift in Sources */,
+				DABD30162F97000100000001 /* TouchBarCustomizationSettingsTests.swift in Sources */,
+				DABD30172F97000100000001 /* WeatherViewModelTests.swift in Sources */,
+				DABD30182F97000100000001 /* WeatherWidgetLayoutTests.swift in Sources */,
+				DABD30192F97000100000001 /* WelcomeGuideProgressTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
