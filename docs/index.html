@@ -41,7 +41,7 @@
        fetched at the same priority as the stylesheet rather than waiting for
        the parser to reach the <img>. -->
   <link rel="preload" as="image" href="images/ui/overview-v16.png?v=16" fetchpriority="high">
-  <link rel="stylesheet" href="styles.css?v=16">
+  <link rel="stylesheet" href="styles.css?v=17">
   <!-- Type is set in the system UI font (SF Pro on macOS), so there are no
        webfont requests and nothing about a visitor reaches a third party. -->
   <script src="script.js?v=7" defer></script>
@@ -193,15 +193,13 @@
   <main id="main">
     <section class="wrap hero" id="top">
       <div class="hero-copy">
-        <p class="eyebrow">Free &middot; Open source &middot; Apple silicon</p>
-        <h1>Your Mac already knows how hot it&rsquo;s running. <span class="mark">Now you can watch too.</span></h1>
+        <h1>Your Mac already knows how hot it&rsquo;s running. Now you can watch too.</h1>
         <p class="hero-text">Core-Monitor reads temperature, CPU and GPU load, power draw, memory, battery and fan speed straight from your Mac&rsquo;s own sensors, then puts them in one native window and the menu bar. No account, no telemetry, and optional fan control for when you want it.</p>
         <div class="hero-actions btn-group">
           <a class="btn btn-solid" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download for macOS</a>
           <a class="btn btn-outline" href="Mac-App-Store/">Mac App Store edition</a>
           <a class="btn btn-ghost" href="https://github.com/offyotto/Core-Monitor">Read the source</a>
         </div>
-        <p class="meta-line">macOS 13 or later &middot; Apple silicon &middot; About 5 MB</p>
       </div>
       <div class="hero-visual">
         <figure class="frame">
@@ -216,45 +214,39 @@
         <p>Every subsystem gets its own screen with history behind it, and the menu bar carries a short version so the window can stay closed most of the day.</p>
       </div>
       <div class="gallery">
-        <figure class="gallery-item" data-reveal>
+        <figure class="gallery-item">
           <a class="gallery-link" href="images/ui/overview-v16.png?v=16" data-lightbox="Overview" aria-label="Enlarge the Overview screenshot">
             <img src="images/ui/overview-v16.png?v=16" alt="Overview screen summarizing CPU, memory, thermal, cooling, power, network and storage." loading="lazy" decoding="async">
-            <span class="gallery-zoom" aria-hidden="true"></span>
           </a>
           <figcaption class="gallery-caption"><strong>Overview</strong></figcaption>
         </figure>
-        <figure class="gallery-item" data-reveal>
+        <figure class="gallery-item">
           <a class="gallery-link" href="images/ui/cooling-v16.png?v=16" data-lightbox="Cooling" aria-label="Enlarge the Cooling screenshot">
             <img src="images/ui/cooling-v16.png?v=16" alt="Cooling screen with fan speeds, cooling mode and a custom fan curve editor." loading="lazy" decoding="async">
-            <span class="gallery-zoom" aria-hidden="true"></span>
           </a>
           <figcaption class="gallery-caption"><strong>Cooling</strong></figcaption>
         </figure>
-        <figure class="gallery-item" data-reveal>
+        <figure class="gallery-item">
           <a class="gallery-link" href="images/ui/memory-v16.png?v=16" data-lightbox="Memory" aria-label="Enlarge the Memory screenshot">
             <img src="images/ui/memory-v16.png?v=16" alt="Memory screen with usage history and a pressure breakdown." loading="lazy" decoding="async">
-            <span class="gallery-zoom" aria-hidden="true"></span>
           </a>
           <figcaption class="gallery-caption"><strong>Memory</strong></figcaption>
         </figure>
-        <figure class="gallery-item" data-reveal>
+        <figure class="gallery-item">
           <a class="gallery-link" href="images/ui/storage-v16.png?v=16" data-lightbox="Storage" aria-label="Enlarge the Storage screenshot">
             <img src="images/ui/storage-v16.png?v=16" alt="Storage screen with used, purgeable and free capacity." loading="lazy" decoding="async">
-            <span class="gallery-zoom" aria-hidden="true"></span>
           </a>
           <figcaption class="gallery-caption"><strong>Storage</strong></figcaption>
         </figure>
-        <figure class="gallery-item is-tall" data-reveal>
+        <figure class="gallery-item is-tall">
           <a class="gallery-link" href="images/ui/menu-thermal-v16.png?v=16" data-lightbox="Thermal panel" aria-label="Enlarge the Thermal panel screenshot">
             <img src="images/ui/menu-thermal-v16.png?v=16" alt="Thermal panel opened from the menu bar." loading="lazy" decoding="async">
-            <span class="gallery-zoom" aria-hidden="true"></span>
           </a>
           <figcaption class="gallery-caption"><strong>Thermal panel</strong></figcaption>
         </figure>
-        <figure class="gallery-item is-tall" data-reveal>
+        <figure class="gallery-item is-tall">
           <a class="gallery-link" href="images/ui/menu-network-v16.png?v=16" data-lightbox="Network panel" aria-label="Enlarge the Network panel screenshot">
             <img src="images/ui/menu-network-v16.png?v=16" alt="Network panel opened from the menu bar." loading="lazy" decoding="async">
-            <span class="gallery-zoom" aria-hidden="true"></span>
           </a>
           <figcaption class="gallery-caption"><strong>Network panel</strong></figcaption>
         </figure>
@@ -293,27 +285,27 @@
         <p>The moments this was made around: the fans wind up and you want to know exactly why.</p>
       </div>
       <div class="cards">
-        <article class="card" data-reveal>
+        <article class="card">
           <h3>Compiling and exporting</h3>
           <p>Watch clock speed and heat while a long build or render runs, and see whether a slowdown is thermal or something else entirely.</p>
         </article>
-        <article class="card" data-reveal>
+        <article class="card">
           <h3>Away from the charger</h3>
           <p>Watts in and watts out, so the time-remaining figure reflects what the Mac is actually drawing right now, not a rough guess.</p>
         </article>
-        <article class="card is-cool" data-reveal>
+        <article class="card is-cool">
           <h3>Recording and calls</h3>
           <p>Pin the fans low before you hit record, check the temperature margin, then hand cooling back to macOS once you are done.</p>
         </article>
-        <article class="card is-cool" data-reveal>
+        <article class="card is-cool">
           <h3>Warnings that stay put</h3>
           <p>Set a threshold for heat, memory or battery and get a notification straight from the Mac itself, with no server involved.</p>
         </article>
-        <article class="card" data-reveal>
+        <article class="card">
           <h3>Nothing hidden</h3>
           <p>The full source is public, so anyone can check exactly what gets read, what the helper writes, and what never leaves the machine.</p>
         </article>
-        <article class="card" data-reveal>
+        <article class="card">
           <h3>No account needed</h3>
           <p>No sign-in, no subscription, and no analytics library anywhere in the binary. Process names can be hidden in memory views too.</p>
         </article>
@@ -326,7 +318,7 @@
         <p>On Macs that still have one, Core-Monitor turns the Touch Bar into a strip of live instruments that sits above whatever app has focus.</p>
       </div>
       <div class="filmstrip">
-        <figure class="reel" data-reveal>
+        <figure class="reel">
           <video controls playsinline preload="metadata" width="1280" height="720" title="Core-Monitor Touch Bar widgets in use">
             <source src="videos/touchbar-showcase.mp4" type="video/mp4">
             <p class="reel-fallback">Your browser cannot play this clip. <a href="videos/touchbar-showcase.mp4" download>Download the MP4</a> instead.</p>
@@ -344,7 +336,7 @@
         <h2 id="compare-title">How it stacks up</h2>
         <p>A handful of good Mac monitors already exist. This is where Core-Monitor sits next to them, stated plainly.</p>
       </div>
-      <div class="compare-wrap" data-reveal tabindex="0" role="region" aria-labelledby="compare-title">
+      <div class="compare-wrap" tabindex="0" role="region" aria-labelledby="compare-title">
         <table class="compare">
           <caption>Written by the Core-Monitor developer. Check each app&rsquo;s own site for its current feature list.</caption>
           <thead>
@@ -386,7 +378,7 @@
         <p>Pick whichever matches how you manage software on your Mac. Every route below is free.</p>
       </div>
       <div class="routes">
-        <article class="route" data-reveal>
+        <article class="route">
           <h3>Download the signed build</h3>
           <p>Grab it straight from GitHub. The DMG gives you the familiar drag-to-Applications install; the ZIP is the bare app bundle.</p>
           <div class="route-actions">
@@ -394,7 +386,7 @@
             <a class="btn btn-outline btn-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip">ZIP</a>
           </div>
         </article>
-        <article class="route" data-reveal>
+        <article class="route">
           <h3>Install through Homebrew</h3>
           <p>Add the tap once, then install and upgrade the cask the same way you handle everything else.</p>
           <pre class="code-block" id="brew-command">brew tap --custom-remote offyotto/core-monitor \
@@ -404,7 +396,7 @@ brew install --cask offyotto/core-monitor/core-monitor</pre>
             <button class="copy-btn" type="button" data-copy="#brew-command">Copy command</button>
           </div>
         </article>
-        <article class="route" data-reveal>
+        <article class="route">
           <h3>Take the sandboxed edition</h3>
           <p>A read-only build reviewed by Apple. No helper and no fan writes, exactly as the App Store requires.</p>
           <div class="route-actions">
