@@ -101,6 +101,12 @@ img, video { max-width: 100%; height: auto; display: block; }
 p { margin: 0 0 1em; }
 p:last-child { margin-bottom: 0; }
 
+/* Headings are short enough that balancing them is cheap and stops a lone
+   word stranding on the last line. Body copy gets the looser "pretty" pass,
+   which only adjusts the final few lines. */
+h1, h2, h3 { text-wrap: balance; }
+.hero-text, .section-head p, .card p, .route > p { text-wrap: pretty; }
+
 .wrap {
   width: min(var(--max), calc(100% - 3rem));
   margin: 0 auto;
@@ -306,6 +312,60 @@ p:last-child { margin-bottom: 0; }
 }
 .icon-link:hover { color: var(--text); background: var(--panel); }
 .icon-link img { width: 24px; height: 24px; }
+
+/* ---------- github star button ----------
+   An ordinary link to the repository that happens to carry the star count.
+   The number ships in the markup, so it is present with JavaScript blocked
+   and the button never changes width after load; script.js only refreshes
+   it. */
+
+.star-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0.35rem 0.45rem 0.35rem 0.7rem;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 140ms ease, border-color 140ms ease, background-color 140ms ease;
+}
+.star-btn:hover {
+  color: var(--text);
+  border-color: var(--text-faint);
+  background: var(--panel);
+  text-decoration: none;
+}
+.star-btn img { width: 16px; height: 16px; }
+
+.star-btn-count {
+  padding: 0.05rem 0.4rem;
+  border-radius: 5px;
+  background: var(--panel-raised);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Same treatment for the count sitting inside the closing call to action. */
+.btn-count {
+  margin-left: 0.1rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 5px;
+  background: var(--panel-raised);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (pointer: coarse) {
+  .star-btn { min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star-btn { transition: none; }
+}
 
 /* ---------- hero ---------- */
 
@@ -935,8 +995,18 @@ p:last-child { margin-bottom: 0; }
   .hero { padding-bottom: 2.5rem; }
   .header-actions { gap: 0.5rem; }
   .header-actions .icon-link { display: none; }
+  .star-btn-label { display: none; }
+  .star-btn { padding-inline: 0.45rem; gap: 0.4rem; }
   .btn-group .btn { flex: 1 1 auto; }
   .lightbox { width: calc(100vw - 1.25rem); }
+}
+
+/* Narrower than this the star button starts shoving the download button off
+   the screen, and the download button is the one that matters here. The
+   count is still on the page: the closing call to action carries it. */
+
+@media (max-width: 560px) {
+  .star-btn { display: none; }
 }
 
 /* ---------- print ---------- */

@@ -7,7 +7,7 @@
   <!-- Everything this page needs is served from this origin, so the policy can
        stay strict. If you ever add a webfont, analytics or an embed, widen the
        matching directive below or the browser will silently block it. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self' https://api.github.com; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
   <title>Core-Monitor | Apple Silicon System Monitor and Fan Control for macOS</title>
   <meta name="description" content="Core-Monitor is a free, open-source system monitor for Apple Silicon Macs. It reads CPU load, temperature, power draw, memory, battery and fan speed, and can hand you the fans when you want them. Nothing leaves the Mac.">
   <meta name="application-name" content="Core-Monitor">
@@ -41,10 +41,10 @@
        fetched at the same priority as the stylesheet rather than waiting for
        the parser to reach the <img>. -->
   <link rel="preload" as="image" href="images/ui/overview-v16.png?v=16" fetchpriority="high">
-  <link rel="stylesheet" href="styles.css?v=17">
+  <link rel="stylesheet" href="styles.css?v=18">
   <!-- Type is set in the system UI font (SF Pro on macOS), so there are no
        webfont requests and nothing about a visitor reaches a third party. -->
-  <script src="script.js?v=7" defer></script>
+  <script src="script.js?v=8" defer></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -179,11 +179,14 @@
         <a href="#faq">FAQ</a>
       </nav>
       <div class="header-actions">
-        <a class="icon-link" href="https://github.com/offyotto/Core-Monitor" aria-label="Core-Monitor on GitHub" title="Core-Monitor on GitHub">
+        <a class="star-btn" href="https://github.com/offyotto/Core-Monitor">
           <picture>
             <source media="(prefers-color-scheme: light)" srcset="images/site/github-mark.png">
-            <img src="images/site/github-mark-light.png" alt="" width="24" height="24">
+            <img src="images/site/github-mark-light.png" alt="" width="16" height="16">
           </picture>
+          <span class="star-btn-label">Star</span>
+          <span class="star-btn-count" data-star-count>27</span>
+          <span class="visually-hidden">stars on GitHub</span>
         </a>
         <a class="btn btn-solid btn-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Get the app</a>
       </div>
@@ -274,7 +277,7 @@
           </ul>
         </div>
         <figure class="frame">
-          <img src="images/ui/cooling-v16.png?v=16" alt="Cooling screen showing two fans near 2,900 rpm, a custom curve mode, and a button that hands cooling back to macOS." loading="lazy" decoding="async">
+          <img src="images/ui/cooling-v16.png?v=16" alt="Cooling screen showing two fans near 2,900 rpm, a custom curve mode, and a button that hands cooling back to macOS." width="1192" height="884" loading="lazy" decoding="async">
         </figure>
       </div>
     </section>
@@ -338,7 +341,7 @@
       </div>
       <div class="compare-wrap" tabindex="0" role="region" aria-labelledby="compare-title">
         <table class="compare">
-          <caption>Written by me. Check each app&rsquo;s own site for its current feature list.</caption>
+          <caption>Written by the Core-Monitor developer. Check each app&rsquo;s own site for its current feature list.</caption>
           <thead>
             <tr>
               <th scope="col">App</th>
@@ -446,7 +449,7 @@ brew install --cask offyotto/core-monitor/core-monitor</pre>
         <h2>The sensors are already in your Mac. Go look at them.</h2>
         <div class="cta-actions btn-group">
           <a class="btn btn-solid" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download for macOS</a>
-          <a class="btn btn-outline" href="https://github.com/offyotto/Core-Monitor">Star it on GitHub</a>
+          <a class="btn btn-outline" href="https://github.com/offyotto/Core-Monitor">Star it on GitHub<span class="btn-count" data-star-count>27</span></a>
         </div>
       </div>
     </section>
