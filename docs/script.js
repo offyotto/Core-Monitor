@@ -1,124 +1,228 @@
-// Core-Monitor site behaviour: mobile nav, scroll reveal, clipboard copy,
-// and a slowed-down smooth scroll powered by Lenis.
+/* ==========================================================================
+   Core-Monitor site behaviour
+
+   Everything here is a progressive enhancement: the page is fully readable,
+   navigable and usable with this file blocked or broken. Notably the
+   scroll reveal animations are pure CSS now, so no content can ever be left
+   stuck at opacity 0 by a JavaScript failure.
+
+   No third-party libraries and no network requests.
+   ========================================================================== */
+
 (function () {
   "use strict";
 
-  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var doc = document;
 
-  function setupNav() {
-    var toggle = document.querySelector("[data-nav-toggle]");
-    var nav = document.querySelector("[data-nav]");
-    if (!toggle || !nav) return;
+  var closest = function (node, selector) {
+    return node && node.closest ? node.closest(selector) : null;
+  };
 
-    toggle.addEventListener("click", function () {
-      var open = !nav.classList.contains("is-open");
+  /* ---------- sticky header gets a shadow once you leave the top ---------- */
+
+  var header = doc.querySelector(".site-header");
+  if (header) {
+    var syncHeader = function () {
+      header.classList.toggle("is-scrolled", window.scrollY > 8);
+    };
+    syncHeader();
+    window.addEventListener("scroll", syncHeader, { passive: true });
+  }
+
+  /* ---------- mobile navigation ---------- */
+
+  var toggle = doc.querySelector(".nav-toggle");
+  var nav = doc.getElementById("primary-nav");
+
+  if (toggle && nav) {
+    var setNav = function (open) {
       nav.classList.toggle("is-open", open);
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    };
+
+    var navIsOpen = function () {
+      return nav.classList.contains("is-open");
+    };
+
+    setNav(false);
+
+    toggle.addEventListener("click", function () {
+      setNav(!navIsOpen());
     });
 
-    nav.querySelectorAll("a").forEach(function (link) {
-      link.addEventListener("click", function () {
-        nav.classList.remove("is-open");
-        toggle.setAttribute("aria-expanded", "false");
-      });
+    // Tapping a section link should close the sheet behind you.
+    nav.addEventListener("click", function (event) {
+      if (closest(event.target, "a")) setNav(false);
+    });
+
+    doc.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && navIsOpen()) {
+        setNav(false);
+        toggle.focus();
+      }
+    });
+
+    doc.addEventListener("click", function (event) {
+      if (!navIsOpen()) return;
+      if (nav.contains(event.target) || toggle.contains(event.target)) return;
+      setNav(false);
     });
   }
 
-  function setupReveal() {
-    var items = document.querySelectorAll("[data-reveal]");
-    if (!items.length) return;
+  /* ---------- scroll spy: highlight the section you are reading ---------- */
 
-    if (reduceMotion || typeof IntersectionObserver === "undefined") {
-      items.forEach(function (el) { el.classList.add("is-visible"); });
-      return;
-    }
+  var navLinks = Array.prototype.slice.call(
+    doc.querySelectorAll('.primary-nav a[href^="#"]')
+  );
 
-    var watcher = new IntersectionObserver(
+  if (navLinks.length && "IntersectionObserver" in window) {
+    var linkFor = {};
+    var sections = [];
+
+    navLinks.forEach(function (link) {
+      var id = link.getAttribute("href").slice(1);
+      var section = id ? doc.getElementById(id) : null;
+      if (!section) return;
+      linkFor[id] = link;
+      sections.push(section);
+    });
+
+    var onScreen = {};
+
+    var paintCurrent = function () {
+      var current = null;
+      sections.forEach(function (section) {
+        if (!current && onScreen[section.id]) current = section.id;
+      });
+
+      navLinks.forEach(function (link) {
+        if (current && linkFor[current] === link) {
+          link.setAttribute("aria-current", "true");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+    };
+
+    var spy = new IntersectionObserver(
       function (entries) {
         entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add("is-visible");
-          watcher.unobserve(entry.target);
+          onScreen[entry.target.id] = entry.isIntersecting;
         });
+        paintCurrent();
       },
-      { threshold: 0.2, rootMargin: "0px 0px -40px 0px" }
+      { rootMargin: "-30% 0px -60% 0px" }
     );
 
-    items.forEach(function (el, index) {
-      el.style.transitionDelay = Math.min(index % 6, 5) * 70 + "ms";
-      watcher.observe(el);
+    sections.forEach(function (section) {
+      spy.observe(section);
     });
   }
 
-  function setupCopyButtons() {
-    document.querySelectorAll("[data-copy]").forEach(function (button) {
-      var target = document.querySelector(button.getAttribute("data-copy"));
-      if (!target) return;
-      var restLabel = button.textContent;
+  /* ---------- copy-to-clipboard buttons ---------- */
+
+  var liveRegion = doc.getElementById("copy-status");
+
+  var announce = function (message) {
+    if (liveRegion) liveRegion.textContent = message;
+  };
+
+  Array.prototype.slice
+    .call(doc.querySelectorAll("[data-copy]"))
+    .forEach(function (button) {
+      var restingLabel = button.textContent;
+      var resetTimer = null;
+
+      var settle = function (ok) {
+        button.textContent = ok ? "Copied" : "Copy failed";
+        button.setAttribute("data-state", ok ? "done" : "failed");
+        announce(
+          ok
+            ? "Command copied to the clipboard."
+            : "Copying failed. Select the command and copy it manually."
+        );
+
+        window.clearTimeout(resetTimer);
+        resetTimer = window.setTimeout(function () {
+          button.textContent = restingLabel;
+          button.removeAttribute("data-state");
+          announce("");
+        }, 2400);
+      };
 
       button.addEventListener("click", function () {
-        var text = target.textContent.replace(/\s+\n/g, "\n").trim();
+        // data-copy holds a selector pointing at the block to copy, so the
+        // command itself lives in exactly one place: the markup people read.
+        var raw = button.getAttribute("data-copy") || "";
+        var text = raw;
 
-        function announce(label) {
-          button.textContent = label;
-          window.setTimeout(function () {
-            button.textContent = restLabel;
-          }, 1700);
+        if (raw.charAt(0) === "#") {
+          var source = doc.getElementById(raw.slice(1));
+          if (source) text = source.textContent;
         }
+
+        text = text.replace(/\s+$/, "");
 
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(text).then(
-            function () { announce("Copied"); },
-            function () { announce("Copy failed"); }
+            function () {
+              settle(true);
+            },
+            function () {
+              settle(false);
+            }
           );
           return;
         }
 
-        var area = document.createElement("textarea");
-        area.value = text;
-        area.setAttribute("readonly", "");
-        area.style.position = "fixed";
-        area.style.opacity = "0";
-        document.body.appendChild(area);
-        area.select();
-        try {
-          document.execCommand("copy");
-          announce("Copied");
-        } catch (err) {
-          announce("Copy failed");
-        }
-        document.body.removeChild(area);
+        settle(false);
       });
     });
-  }
 
-  function setupSmoothScroll() {
-    if (reduceMotion) return;
-    if (typeof window.Lenis !== "function") return;
-    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+  /* ---------- screenshot lightbox ----------
+     The gallery tiles are ordinary links to the full-size image, so with
+     this disabled they still open the screenshot. When <dialog> is
+     available we intercept and show it in place instead. Escape, backdrop
+     clicks and focus restoration all come free from the dialog element. */
 
-    var lenis = new window.Lenis({
-      duration: 1.05,
-      easing: function (t) {
-        return Math.min(1, 1.001 - Math.pow(2, -10 * t));
-      },
-      autoRaf: true
+  var lightbox = doc.getElementById("lightbox");
+
+  if (lightbox && typeof lightbox.showModal === "function") {
+    var stage = lightbox.querySelector(".lightbox-img");
+    var stageCaption = lightbox.querySelector(".lightbox-caption");
+
+    doc.addEventListener("click", function (event) {
+      var trigger = closest(event.target, "[data-lightbox]");
+      if (!trigger) return;
+
+      // Let people open the raw image in a new tab if they mean to.
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (typeof event.button === "number" && event.button !== 0) return;
+
+      var thumb = trigger.querySelector("img");
+      event.preventDefault();
+
+      stage.setAttribute("src", trigger.getAttribute("href"));
+      stage.setAttribute("alt", thumb ? thumb.getAttribute("alt") || "" : "");
+      if (stageCaption) {
+        stageCaption.textContent = trigger.getAttribute("data-lightbox") || "";
+      }
+
+      lightbox.showModal();
     });
 
-    document.querySelectorAll('a[href^="#"]').forEach(function (link) {
-      link.addEventListener("click", function (event) {
-        var id = link.getAttribute("href").slice(1);
-        if (!id) return;
-        var dest = document.getElementById(id);
-        if (!dest) return;
-        event.preventDefault();
-        lenis.scrollTo(dest);
-      });
+    lightbox.addEventListener("click", function (event) {
+      if (
+        event.target === lightbox ||
+        closest(event.target, "[data-lightbox-close]")
+      ) {
+        lightbox.close();
+      }
+    });
+
+    lightbox.addEventListener("close", function () {
+      stage.removeAttribute("src");
     });
   }
-
-  setupNav();
-  setupReveal();
-  setupCopyButtons();
-  setupSmoothScroll();
 })();

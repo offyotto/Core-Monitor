@@ -1,0 +1,28 @@
+{
+  "name": "Core-Monitor",
+  "short_name": "Core-Monitor",
+  "description": "A free, open-source system monitor for Apple Silicon Macs. Temperature, CPU and GPU load, power draw, memory, battery and fan speed, read locally with optional fan control.",
+  "id": "/Core-Monitor/",
+  "start_url": "/Core-Monitor/",
+  "scope": "/Core-Monitor/",
+  "display": "minimal-ui",
+  "background_color": "#07080b",
+  "theme_color": "#07080b",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    {
+      "src": "images/site/core-monitor-logo.png?v=6",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/site/core-monitor-logo.png?v=6",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
