@@ -317,27 +317,6 @@ p:last-child { margin-bottom: 0; }
   align-items: center;
 }
 
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin: 0 0 1.25rem;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-
-.eyebrow::before {
-  content: "";
-  width: 9px;
-  height: 9px;
-  background: var(--signal);
-  flex: none;
-}
-
 .hero h1 {
   margin: 0 0 1.2rem;
   font-family: var(--font-display);
@@ -345,15 +324,6 @@ p:last-child { margin-bottom: 0; }
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.022em;
-}
-
-.mark {
-  background: var(--volt);
-  color: var(--volt-ink);
-  padding: 0 0.15em;
-  border-radius: 4px;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
 }
 
 .hero-text {
@@ -446,34 +416,6 @@ p:last-child { margin-bottom: 0; }
 }
 
 .gallery-item:hover img { transform: scale(1.03); }
-
-/* Tiny affordance so it reads as "click to enlarge". */
-.gallery-zoom {
-  position: absolute;
-  right: 0.7rem;
-  bottom: 0.7rem;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--scrim);
-  border: 1px solid var(--stroke);
-  opacity: 0;
-  transition: opacity 180ms ease;
-}
-.gallery-zoom::before,
-.gallery-zoom::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  background: #ffffff;
-  transform: translate(-50%, -50%);
-}
-.gallery-zoom::before { width: 12px; height: 1.5px; }
-.gallery-zoom::after { width: 1.5px; height: 12px; }
-
-.gallery-item:hover .gallery-zoom,
-.gallery-item:focus-within .gallery-zoom { opacity: 1; }
 
 .gallery-caption {
   padding: 0.85rem 1rem;
@@ -573,24 +515,16 @@ p:last-child { margin-bottom: 0; }
   gap: 0.85rem;
 }
 
-/* These points are parallel guarantees, not an ordered procedure, so the
-   list is unordered and each item is marked with a check rather than a
-   number that would imply a sequence. */
+/* Parallel guarantees rather than an ordered procedure, so the list is
+   unordered and marked with a neutral dot, not a number. */
 .steps li::before {
-  content: "\2713";
+  content: "";
   flex: none;
-  width: 25px;
-  height: 25px;
-  margin-top: 0.15rem;
-  border-radius: 8px;
-  background: var(--panel-raised);
-  border: 1px solid var(--stroke);
-  color: var(--volt);
-  font-size: 0.82rem;
-  font-weight: 700;
-  line-height: 1;
-  display: grid;
-  place-items: center;
+  width: 6px;
+  height: 6px;
+  margin-top: 0.6rem;
+  border-radius: 50%;
+  background: var(--text-faint);
 }
 
 .step-body strong { display: block; color: var(--text); font-weight: 600; margin-bottom: 0.15rem; }
@@ -610,10 +544,7 @@ p:last-child { margin-bottom: 0; }
   border-radius: var(--radius-lg);
   padding: 1.6rem 1.5rem;
   box-shadow: var(--shadow-card);
-  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
 }
-
-.card:hover { border-color: var(--text-faint); transform: translateY(-3px); }
 
 /* "is-cool" cards are the ones about handing heat back under control. */
 .card.is-cool { border-color: var(--volt-edge); }
@@ -621,10 +552,6 @@ p:last-child { margin-bottom: 0; }
 
 .card h3 { margin: 0 0 0.5rem; font-size: 1.06rem; font-weight: 600; letter-spacing: -0.005em; }
 .card p { margin: 0; font-size: 0.96rem; color: var(--text-dim); }
-
-@media (prefers-reduced-motion: reduce) {
-  .card, .card:hover { transform: none; transition: none; }
-}
 
 /* ---------- filmstrip (touch bar video) ---------- */
 
@@ -972,36 +899,6 @@ p:last-child { margin-bottom: 0; }
 
 .void p { margin: 0; color: var(--text-dim); max-width: 30rem; }
 
-/* ---------- motion ----------
-   Reveal-on-scroll is pure CSS. Browsers with scroll-driven animation
-   support tie the fade to the element entering the viewport; everywhere
-   else it degrades to one gentle fade as the page loads. Either way the
-   content is never left invisible, which is the risk an opacity:0 plus
-   IntersectionObserver setup carries if its script fails to run.
-
-   The keyframes move the element with `translate`, not `transform`, so the
-   hover lift on cards and gallery tiles keeps working after the animation
-   has finished and filled forwards. */
-
-@keyframes reveal-in {
-  from { opacity: 0; translate: 0 16px; }
-  to { opacity: 1; translate: none; }
-}
-
-[data-reveal] { animation: reveal-in 620ms ease both; }
-
-@supports (animation-timeline: view()) {
-  [data-reveal] {
-    animation: reveal-in linear both;
-    animation-timeline: view();
-    animation-range: entry 4% cover 20%;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [data-reveal] { animation: none; }
-}
-
 /* ---------- responsive ---------- */
 
 @media (max-width: 980px) {
@@ -1045,11 +942,10 @@ p:last-child { margin-bottom: 0; }
 /* ---------- print ---------- */
 
 @media print {
-  .site-header, .cta, .nav-toggle, .gallery-zoom, .lightbox { display: none !important; }
+  .site-header, .cta, .nav-toggle, .lightbox { display: none !important; }
   body { background: #ffffff; color: #000000; font-size: 11pt; }
   a { color: #000000; text-decoration: underline; }
   .card, .route, .ledger-col, .faq, .compare-wrap, .frame { border-color: #cccccc; box-shadow: none; }
-  [data-reveal] { animation: none !important; opacity: 1 !important; translate: none !important; }
 }
 
 /* ---------- light chassis ----------
@@ -1088,9 +984,6 @@ p:last-child { margin-bottom: 0; }
   body {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26'%3E%3Ccircle cx='1.3' cy='1.3' r='1.3' fill='%23e1e3dd'/%3E%3C/svg%3E");
   }
-
-  /* The green highlight needs dark ink on it in light mode. */
-  .mark { background: #34c759; color: #04210b; }
 
   .site-header.is-scrolled { box-shadow: 0 10px 30px rgba(20, 23, 26, 0.09); }
 
