@@ -3,35 +3,48 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <!-- Everything this page needs is served from this origin, so the policy can
+       stay strict. If you ever add a webfont, analytics or an embed, widen the
+       matching directive below or the browser will silently block it. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
   <title>Core-Monitor | Apple Silicon System Monitor and Fan Control for macOS</title>
   <meta name="description" content="Core-Monitor is a free, open-source system monitor for Apple Silicon Macs. It reads CPU load, temperature, power draw, memory, battery and fan speed, and can hand you the fans when you want them. Nothing leaves the Mac.">
   <meta name="application-name" content="Core-Monitor">
   <meta name="apple-mobile-web-app-title" content="Core-Monitor">
+  <meta name="author" content="offyotto">
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
   <meta name="theme-color" content="#07080b" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#f1f2ef" media="(prefers-color-scheme: light)">
   <link rel="canonical" href="https://offyotto.github.io/Core-Monitor/">
-  <link rel="alternate" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.ico?v=6" sizes="any">
   <link rel="icon" type="image/png" sizes="512x512" href="images/site/core-monitor-logo.png?v=6">
-  <link rel="shortcut icon" href="images/site/core-monitor-logo.png?v=6">
   <link rel="apple-touch-icon" href="images/site/core-monitor-logo.png?v=6">
   <meta property="og:site_name" content="Core-Monitor">
   <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
   <meta property="og:title" content="Core-Monitor | Apple Silicon System Monitor and Fan Control for macOS">
   <meta property="og:description" content="A free, open-source monitor for Apple Silicon Macs. Temperature, power, memory, battery and fans in one native window. Nothing leaves the machine.">
   <meta property="og:url" content="https://offyotto.github.io/Core-Monitor/">
   <meta property="og:image" content="https://offyotto.github.io/Core-Monitor/images/ui/overview-v16.png?v=16">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1192">
+  <meta property="og:image:height" content="884">
   <meta property="og:image:alt" content="Core-Monitor dashboard showing CPU, memory, thermal, cooling, power, network and storage readings.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Core-Monitor | Apple Silicon System Monitor and Fan Control for macOS">
   <meta name="twitter:description" content="A free, open-source monitor for Apple Silicon Macs. Temperature, power, memory, battery and fans in one native window.">
   <meta name="twitter:image" content="https://offyotto.github.io/Core-Monitor/images/ui/overview-v16.png?v=16">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=9">
-  <link rel="stylesheet" href="https://unpkg.com/lenis@1.3.23/dist/lenis.css">
+  <meta name="twitter:image:alt" content="Core-Monitor dashboard showing CPU, memory, thermal, cooling, power, network and storage readings.">
+  <!-- The hero screenshot is the largest element on first paint, so it is
+       fetched at the same priority as the stylesheet rather than waiting for
+       the parser to reach the <img>. -->
+  <link rel="preload" as="image" href="images/ui/overview-v16.png?v=16" fetchpriority="high">
+  <link rel="stylesheet" href="styles.css?v=16">
+  <!-- Type is set in the system UI font (SF Pro on macOS), so there are no
+       webfont requests and nothing about a visitor reaches a third party. -->
+  <script src="script.js?v=7" defer></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -41,6 +54,7 @@
         "@id": "https://offyotto.github.io/Core-Monitor/#website",
         "name": "Core-Monitor",
         "url": "https://offyotto.github.io/Core-Monitor/",
+        "inLanguage": "en",
         "description": "Core-Monitor is a free, open-source system monitor for Apple Silicon Macs with temperature, power, memory, battery, menu bar readouts, local alerts, Touch Bar widgets, and optional fan control."
       },
       {
@@ -49,11 +63,13 @@
         "name": "Core-Monitor",
         "operatingSystem": "macOS 13 or later",
         "applicationCategory": "UtilitiesApplication",
+        "applicationSubCategory": "System monitor",
         "softwareRequirements": "Apple Silicon Mac, macOS 13 or later",
         "description": "Core-Monitor is a native macOS system monitor for Apple Silicon. It reads temperature, CPU, GPU, memory, battery, power draw and fan speed locally, with alerts, menu bar readouts and optional fan control.",
         "url": "https://offyotto.github.io/Core-Monitor/",
         "downloadUrl": "https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg",
         "installUrl": "https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg",
+        "releaseNotes": "https://github.com/offyotto/Core-Monitor/releases/latest",
         "isAccessibleForFree": true,
         "featureList": [
           "Temperature, power, battery, CPU, GPU, memory and fan readings on Apple Silicon",
@@ -73,6 +89,10 @@
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
         "license": "https://github.com/offyotto/Core-Monitor/blob/main/LICENSE",
         "codeRepository": "https://github.com/offyotto/Core-Monitor",
+        "softwareHelp": {
+          "@type": "CreativeWork",
+          "url": "https://offyotto.github.io/Core-Monitor/Mac-App-Store/support/"
+        },
         "sameAs": [
           "https://github.com/offyotto/Core-Monitor",
           "https://github.com/offyotto/Core-Monitor/releases",
@@ -86,7 +106,7 @@
         "mainEntity": [
           {
             "@type": "Question",
-            "name": "Which Macs can run Core-Monitor?",
+            "name": "Which Macs can run it?",
             "acceptedAnswer": {
               "@type": "Answer",
               "text": "Apple Silicon Macs on macOS 13 or later. The sensors and fan interfaces it reads are specific to Apple's own chips, so Intel Macs are not supported."
@@ -94,26 +114,42 @@
           },
           {
             "@type": "Question",
-            "name": "Do I need to install the privileged helper?",
+            "name": "Do I need the helper installed?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "No. Every reading works without it. The helper exists only so the app can write fan speeds, and control can be handed back to macOS at any time."
+              "text": "No. Every reading works without it. It exists only so the app can write fan speeds, and you can hand control back to macOS whenever you like."
             }
           },
           {
             "@type": "Question",
-            "name": "Does Core-Monitor send data anywhere?",
+            "name": "Does it phone home?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "No. There is no analytics code, no crash reporter, and no account. The only network feature is optional WeatherKit weather for the Touch Bar."
+              "text": "No. There is no analytics code and no account anywhere in the app. The one network call is optional WeatherKit weather for the Touch Bar, and it only runs if you switch it on."
             }
           },
           {
             "@type": "Question",
-            "name": "How does it compare to iStat Menus, TG Pro or Stats?",
+            "name": "Can fan control damage my Mac?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Core-Monitor stays narrow on purpose, focused on heat, power and fans rather than every metric on the system. It is free, open source, and keeps everything local."
+              "text": "macOS keeps its own thermal limits regardless of what any app requests. Core-Monitor also keeps an obvious way out: one click gives full control back to the system."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is deliberately left out?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Cloud dashboards, fleet management, and a metric for every corner of the OS. The scope stays heat, power, memory, battery and fans, done properly."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Where do bug reports go?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Open an issue on the GitHub tracker at https://github.com/offyotto/Core-Monitor/issues. Release notes and older builds live on the releases page at https://github.com/offyotto/Core-Monitor/releases."
             }
           }
         ]
@@ -128,10 +164,10 @@
   <header class="site-header">
     <div class="wrap header-row">
       <a class="brand" href="#top">
-        <img class="brand-mark" src="images/site/core-monitor-logo.png?v=6" alt="Core-Monitor app icon">
+        <img class="brand-mark" src="images/site/core-monitor-logo.png?v=6" alt="" width="30" height="30">
         <span class="brand-text">Core-Monitor</span>
       </a>
-      <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav" aria-label="Toggle navigation">
+      <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav" aria-label="Open menu">
         <span></span>
       </button>
       <nav class="primary-nav" id="primary-nav" data-nav aria-label="Sections">
@@ -157,16 +193,19 @@
   <main id="main">
     <section class="wrap hero" id="top">
       <div class="hero-copy">
-        <h1>Your Mac already knows how hot it's running. <span class="mark">Now you can watch too.</span></h1>
+        <p class="eyebrow">Free &middot; Open source &middot; Apple silicon</p>
+        <h1>Your Mac already knows how hot it&rsquo;s running. <span class="mark">Now you can watch too.</span></h1>
+        <p class="hero-text">Core-Monitor reads temperature, CPU and GPU load, power draw, memory, battery and fan speed straight from your Mac&rsquo;s own sensors, then puts them in one native window and the menu bar. No account, no telemetry, and optional fan control for when you want it.</p>
         <div class="hero-actions btn-group">
           <a class="btn btn-solid" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download for macOS</a>
           <a class="btn btn-outline" href="Mac-App-Store/">Mac App Store edition</a>
           <a class="btn btn-ghost" href="https://github.com/offyotto/Core-Monitor">Read the source</a>
         </div>
+        <p class="meta-line">macOS 13 or later &middot; Apple silicon &middot; About 5 MB</p>
       </div>
       <div class="hero-visual">
         <figure class="frame">
-          <img src="images/ui/overview-v16.png?v=16" alt="Core-Monitor dashboard with CPU, memory, thermal, cooling, power, network and storage readings." width="1192" height="884">
+          <img src="images/ui/overview-v16.png?v=16" alt="Core-Monitor dashboard with CPU, memory, thermal, cooling, power, network and storage readings." width="1192" height="884" fetchpriority="high" decoding="async">
         </figure>
       </div>
     </section>
@@ -178,27 +217,45 @@
       </div>
       <div class="gallery">
         <figure class="gallery-item" data-reveal>
-          <img src="images/ui/overview-v16.png?v=16" alt="Overview screen summarizing CPU, memory, thermal, cooling, power, network and storage." loading="lazy">
+          <a class="gallery-link" href="images/ui/overview-v16.png?v=16" data-lightbox="Overview" aria-label="Enlarge the Overview screenshot">
+            <img src="images/ui/overview-v16.png?v=16" alt="Overview screen summarizing CPU, memory, thermal, cooling, power, network and storage." loading="lazy" decoding="async">
+            <span class="gallery-zoom" aria-hidden="true"></span>
+          </a>
           <figcaption class="gallery-caption"><strong>Overview</strong></figcaption>
         </figure>
         <figure class="gallery-item" data-reveal>
-          <img src="images/ui/cooling-v16.png?v=16" alt="Cooling screen with fan speeds, cooling mode and a custom fan curve editor." loading="lazy">
+          <a class="gallery-link" href="images/ui/cooling-v16.png?v=16" data-lightbox="Cooling" aria-label="Enlarge the Cooling screenshot">
+            <img src="images/ui/cooling-v16.png?v=16" alt="Cooling screen with fan speeds, cooling mode and a custom fan curve editor." loading="lazy" decoding="async">
+            <span class="gallery-zoom" aria-hidden="true"></span>
+          </a>
           <figcaption class="gallery-caption"><strong>Cooling</strong></figcaption>
         </figure>
         <figure class="gallery-item" data-reveal>
-          <img src="images/ui/memory-v16.png?v=16" alt="Memory screen with usage history and a pressure breakdown." loading="lazy">
+          <a class="gallery-link" href="images/ui/memory-v16.png?v=16" data-lightbox="Memory" aria-label="Enlarge the Memory screenshot">
+            <img src="images/ui/memory-v16.png?v=16" alt="Memory screen with usage history and a pressure breakdown." loading="lazy" decoding="async">
+            <span class="gallery-zoom" aria-hidden="true"></span>
+          </a>
           <figcaption class="gallery-caption"><strong>Memory</strong></figcaption>
         </figure>
         <figure class="gallery-item" data-reveal>
-          <img src="images/ui/storage-v16.png?v=16" alt="Storage screen with used, purgeable and free capacity." loading="lazy">
+          <a class="gallery-link" href="images/ui/storage-v16.png?v=16" data-lightbox="Storage" aria-label="Enlarge the Storage screenshot">
+            <img src="images/ui/storage-v16.png?v=16" alt="Storage screen with used, purgeable and free capacity." loading="lazy" decoding="async">
+            <span class="gallery-zoom" aria-hidden="true"></span>
+          </a>
           <figcaption class="gallery-caption"><strong>Storage</strong></figcaption>
         </figure>
-        <figure class="gallery-item" data-reveal>
-          <img src="images/ui/menu-thermal-v16.png?v=16" alt="Thermal panel opened from the menu bar." loading="lazy">
+        <figure class="gallery-item is-tall" data-reveal>
+          <a class="gallery-link" href="images/ui/menu-thermal-v16.png?v=16" data-lightbox="Thermal panel" aria-label="Enlarge the Thermal panel screenshot">
+            <img src="images/ui/menu-thermal-v16.png?v=16" alt="Thermal panel opened from the menu bar." loading="lazy" decoding="async">
+            <span class="gallery-zoom" aria-hidden="true"></span>
+          </a>
           <figcaption class="gallery-caption"><strong>Thermal panel</strong></figcaption>
         </figure>
-        <figure class="gallery-item" data-reveal>
-          <img src="images/ui/menu-network-v16.png?v=16" alt="Network panel opened from the menu bar." loading="lazy">
+        <figure class="gallery-item is-tall" data-reveal>
+          <a class="gallery-link" href="images/ui/menu-network-v16.png?v=16" data-lightbox="Network panel" aria-label="Enlarge the Network panel screenshot">
+            <img src="images/ui/menu-network-v16.png?v=16" alt="Network panel opened from the menu bar." loading="lazy" decoding="async">
+            <span class="gallery-zoom" aria-hidden="true"></span>
+          </a>
           <figcaption class="gallery-caption"><strong>Network panel</strong></figcaption>
         </figure>
       </div>
@@ -209,7 +266,7 @@
         <div class="feature-copy">
           <h2>Read only, until you decide otherwise</h2>
           <p>By default, Core-Monitor only watches the fans. Install the optional helper and you get three ways to drive them: a fixed speed, a boost profile, or a custom curve you draw yourself, point by point.</p>
-          <ol class="steps">
+          <ul class="steps">
             <li>
               <span class="step-body"><strong>Hand it back anytime</strong><span>One button returns full control to macOS, no restart needed.</span></span>
             </li>
@@ -220,12 +277,12 @@
               <span class="step-body"><strong>Skip the helper entirely</strong><span>Monitoring works identically whether or not it is installed.</span></span>
             </li>
             <li>
-              <span class="step-body"><strong>Calibrate first</strong><span>Measure each fan's real minimum and maximum before trusting a profile to it.</span></span>
+              <span class="step-body"><strong>Calibrate first</strong><span>Measure each fan&rsquo;s real minimum and maximum before trusting a profile to it.</span></span>
             </li>
-          </ol>
+          </ul>
         </div>
         <figure class="frame">
-          <img src="images/ui/cooling-v16.png?v=16" alt="Cooling screen showing two fans near 2,900 rpm, a custom curve mode, and a button that hands cooling back to macOS." loading="lazy">
+          <img src="images/ui/cooling-v16.png?v=16" alt="Cooling screen showing two fans near 2,900 rpm, a custom curve mode, and a button that hands cooling back to macOS." loading="lazy" decoding="async">
         </figure>
       </div>
     </section>
@@ -270,12 +327,13 @@
       </div>
       <div class="filmstrip">
         <figure class="reel" data-reveal>
-          <video controls preload="metadata" width="1280" height="720">
+          <video controls playsinline preload="metadata" width="1280" height="720" title="Core-Monitor Touch Bar widgets in use">
             <source src="videos/touchbar-showcase.mp4" type="video/mp4">
+            <p class="reel-fallback">Your browser cannot play this clip. <a href="videos/touchbar-showcase.mp4" download>Download the MP4</a> instead.</p>
           </video>
           <div class="reel-info">
             <strong>Widgets, overlays and shortcuts</strong>
-            Stats, weather, shortcuts and memory pressure, arranged with a live width preview so a layout never runs off the edge of the strip. The strip holds its place across apps, so you can check a reading or launch something without switching windows.
+            <p>Stats, weather, shortcuts and memory pressure, arranged with a live width preview so a layout never runs off the edge of the strip. The strip holds its place across apps, so you can check a reading or launch something without switching windows.</p>
           </div>
         </figure>
       </div>
@@ -283,11 +341,12 @@
 
     <section class="wrap section" id="compare">
       <div class="section-head">
-        <h2>How it stacks up</h2>
+        <h2 id="compare-title">How it stacks up</h2>
         <p>A handful of good Mac monitors already exist. This is where Core-Monitor sits next to them, stated plainly.</p>
       </div>
-      <div class="compare-wrap" data-reveal>
+      <div class="compare-wrap" data-reveal tabindex="0" role="region" aria-labelledby="compare-title">
         <table class="compare">
+          <caption>Written by the Core-Monitor developer. Check each app&rsquo;s own site for its current feature list.</caption>
           <thead>
             <tr>
               <th scope="col">App</th>
@@ -297,22 +356,22 @@
           </thead>
           <tbody>
             <tr>
-              <td>iStat Menus</td>
+              <th scope="row">iStat Menus</th>
               <td>Covers dozens of metrics across many menu bar modules.</td>
               <td>Narrower on purpose. Heat, power and fans, open source, with no license to buy.</td>
             </tr>
             <tr>
-              <td>TG Pro</td>
+              <th scope="row">TG Pro</th>
               <td>Deep per-sensor diagnostics.</td>
               <td>Monitoring comes first here; writing fan speed is an optional layer, not the whole app.</td>
             </tr>
             <tr>
-              <td>Macs Fan Control</td>
+              <th scope="row">Macs Fan Control</th>
               <td>Direct control over fan speed.</td>
               <td>Wraps that control in a full dashboard, with history, alerts and menu bar readouts.</td>
             </tr>
             <tr>
-              <td>Stats</td>
+              <th scope="row">Stats</th>
               <td>Free, modular menu bar widgets.</td>
               <td>One dedicated window with history, built specifically around thermals.</td>
             </tr>
@@ -354,6 +413,7 @@ brew install --cask offyotto/core-monitor/core-monitor</pre>
           </div>
         </article>
       </div>
+      <p class="visually-hidden" id="copy-status" role="status" aria-live="polite"></p>
     </section>
 
     <section class="wrap section" id="faq">
@@ -364,7 +424,7 @@ brew install --cask offyotto/core-monitor/core-monitor</pre>
       <div class="faq">
         <details class="faq-item" open>
           <summary class="faq-q">Which Macs can run it?<span class="faq-icon" aria-hidden="true"></span></summary>
-          <p>Apple Silicon Macs on macOS 13 or later. The sensors and fan interfaces it reads are specific to Apple's own chips, so Intel Macs are not supported.</p>
+          <p>Apple Silicon Macs on macOS 13 or later. The sensors and fan interfaces it reads are specific to Apple&rsquo;s own chips, so Intel Macs are not supported.</p>
         </details>
         <details class="faq-item">
           <summary class="faq-q">Do I need the helper installed?<span class="faq-icon" aria-hidden="true"></span></summary>
@@ -411,9 +471,17 @@ brew install --cask offyotto/core-monitor/core-monitor</pre>
         <a href="Mac-App-Store/support/">Support</a>
       </nav>
     </div>
+    <p class="wrap footer-legal">&copy; 2026 Nazish Faizan &middot; <a href="https://github.com/offyotto/Core-Monitor/blob/main/LICENSE">License</a></p>
   </footer>
 
-  <script src="https://unpkg.com/lenis@1.3.23/dist/lenis.min.js"></script>
-  <script src="script.js?v=6"></script>
+  <!-- Screenshot viewer. The gallery tiles are plain links to the full-size
+       image, so this is purely an enhancement. -->
+  <dialog class="lightbox" id="lightbox" aria-label="Screenshot viewer">
+    <img class="lightbox-img" alt="">
+    <div class="lightbox-bar">
+      <p class="lightbox-caption"></p>
+      <button class="lightbox-close" type="button" data-lightbox-close aria-label="Close screenshot">&times;</button>
+    </div>
+  </dialog>
 </body>
 </html>
