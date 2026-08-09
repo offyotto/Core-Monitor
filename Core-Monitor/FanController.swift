@@ -488,7 +488,9 @@ final class FanController: ObservableObject {
     func setAutoMaxSpeed(_ speed: Int) {
         autoMaxSpeed = max(minSpeed, min(maxSpeed, speed))
         saveSettings()
-        if mode == .smart || mode == .automatic {
+        // The ceiling only feeds the smart profile. Re-running the control loop
+        // in a system-owned mode would just churn the status line.
+        if mode == .smart {
             lastAppliedSpeed = 0
             updateManagedControl()
         }
@@ -567,8 +569,6 @@ final class FanController: ObservableObject {
             if mode == .custom {
                 lastAppliedSpeed = 0
                 applyCurrentMode(force: true)
-            }
-            if mode == .custom {
                 statusMessage = "Custom preset \"\(preset.name)\" applied."
             }
             return .success(customPresetStatus)
@@ -653,9 +653,18 @@ final class FanController: ObservableObject {
                 allSuccess = false
             }
         }
-        if allSuccess {
-        }
         statusMessage = allSuccess ? "System automatic control restored" : "Failed to restore automatic control"
+    }
+
+    /// Hands every fan back to the firmware curve without ever prompting for a
+    /// helper install. Choosing a system-owned mode must never escalate
+    /// privileges, so with no helper present we only report the passive state.
+    private func requestSystemAutomaticHandoff() {
+        guard helperManager.isInstalled else {
+            statusMessage = passiveStatusMessage(for: mode)
+            return
+        }
+        resetToSystemAutomatic()
     }
 
     func calibrateFanControl() {
@@ -728,8 +737,12 @@ final class FanController: ObservableObject {
 
         switch mode {
         case .automatic, .silent:
-            if Self.shouldRequestSystemAutomaticHandoff(lastAppliedSpeed: lastAppliedSpeed) {
-                resetToSystemAutomatic()
+            // `force` means the user just picked this mode, so always hand the
+            // fans back. lastAppliedSpeed only tracks writes made by this
+            // process: after a relaunch, a crash, or an earlier handoff it
+            // reads 0 or -1 while the fans may still be pinned from before.
+            if force || Self.shouldRequestSystemAutomaticHandoff(lastAppliedSpeed: lastAppliedSpeed) {
+                requestSystemAutomaticHandoff()
             } else {
                 statusMessage = passiveStatusMessage(for: mode)
             }
@@ -745,7 +758,7 @@ final class FanController: ObservableObject {
     }
 
     private func updateManagedControl() {
-        guard let _ = systemMonitor else { return }
+        guard systemMonitor != nil else { return }
 
         switch mode {
         case .manual:
@@ -757,9 +770,9 @@ final class FanController: ObservableObject {
 
         case .automatic, .silent:
             if Self.shouldRequestSystemAutomaticHandoff(lastAppliedSpeed: lastAppliedSpeed) {
-                resetToSystemAutomatic()
+                requestSystemAutomaticHandoff()
             } else {
-                statusMessage = "System automatic mode is active"
+                statusMessage = passiveStatusMessage(for: mode)
             }
             lastAppliedSpeed = -1
 
