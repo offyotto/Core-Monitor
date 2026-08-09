@@ -6,6 +6,7 @@ xcuserdata/
 
 # Build output
 build/
+.build/
 DerivedData/
 .deriveddata/
 *.app
