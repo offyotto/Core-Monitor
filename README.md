@@ -2,7 +2,7 @@
   <img src="./Core-Monitor/Assets.xcassets/AppIcon.appiconset/icon-512.png" alt="core-monitor icon" width="140">
 </p>
 
-<h1 align="center">core-monitor</h1>
+<h1 align="center">Core-Monitor</h1>
 
 <p align="center">a native system monitor and fan controller for apple silicon macs. live readings in the menu bar, a full dashboard, and touch bar widgets. free.</p>
 
