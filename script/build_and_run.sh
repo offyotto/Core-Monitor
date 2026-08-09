@@ -6,7 +6,7 @@ PROJECT_PATH="${ROOT_DIR}/Core-Monitor.xcodeproj"
 SCHEME="Core-Monitor"
 APP_NAME="Core-Monitor"
 BUNDLE_ID="CoreTools.Core-Monitor"
-DERIVED_DATA_DIR="${ROOT_DIR}/.codex-build/DerivedData"
+DERIVED_DATA_DIR="${ROOT_DIR}/.build/DerivedData"
 CONFIGURATION="Debug"
 ACTION="run"
 
