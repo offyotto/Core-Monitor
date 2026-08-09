@@ -26,7 +26,7 @@ final class SettingsWindowManager: NSObject, NSWindowDelegate {
     }
 
     func show(tab: SettingsTab = .general) {
-        guard let systemMonitor, let fanController, let startupManager else { return }
+        guard let startupManager else { return }
 
         if let window {
             window.makeKeyAndOrderFront(nil)
@@ -35,8 +35,6 @@ final class SettingsWindowManager: NSObject, NSWindowDelegate {
         }
 
         let rootView = SettingsView(
-            systemMonitor: systemMonitor,
-            fanController: fanController,
             startupManager: startupManager,
             initialTab: tab
         )
@@ -88,19 +86,13 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 // MARK: - Root
 
 struct SettingsView: View {
-    @ObservedObject var systemMonitor: SystemMonitor
-    @ObservedObject var fanController: FanController
     @ObservedObject var startupManager: StartupManager
     @State private var tab: SettingsTab
 
     init(
-        systemMonitor: SystemMonitor,
-        fanController: FanController,
         startupManager: StartupManager,
         initialTab: SettingsTab = .general
     ) {
-        self.systemMonitor = systemMonitor
-        self.fanController = fanController
         self.startupManager = startupManager
         _tab = State(initialValue: initialTab)
     }
@@ -119,7 +111,7 @@ struct SettingsView: View {
                 .tabItem { Label(SettingsTab.touchBar.title, systemImage: SettingsTab.touchBar.symbolName) }
                 .tag(SettingsTab.touchBar)
 
-            AboutSettingsTab(systemMonitor: systemMonitor, fanController: fanController)
+            AboutSettingsTab()
                 .tabItem { Label(SettingsTab.about.title, systemImage: SettingsTab.about.symbolName) }
                 .tag(SettingsTab.about)
         }
@@ -375,10 +367,6 @@ private struct TouchBarSettingsTab: View {
 // MARK: - About
 
 private struct AboutSettingsTab: View {
-    @ObservedObject var systemMonitor: SystemMonitor
-    @ObservedObject var fanController: FanController
-    @State private var clipboardMessage: String?
-
     var body: some View {
         Form {
             Section {
@@ -405,41 +393,11 @@ private struct AboutSettingsTab: View {
             }
 
             Section {
-                Button("Copy Support Snapshot") {
-                    let snapshot = CoreMonitorShareKit.makeSupportSnapshot(
-                        systemMonitor: systemMonitor,
-                        fanController: fanController
-                    )
-                    copy(snapshot, confirmation: "Support snapshot copied")
-                }
-                Button("Copy Product Pitch") {
-                    copy(CoreMonitorShareKit.productPitch(), confirmation: "Pitch copied")
-                }
-                Button("Copy Launch Post") {
-                    copy(CoreMonitorShareKit.launchPost(), confirmation: "Launch post copied")
-                }
-            } header: {
-                Text("Share")
-            } footer: {
-                if let clipboardMessage {
-                    Text(clipboardMessage)
-                } else {
-                    Text("The support snapshot is privacy-safe: readings and versions, no personal data.")
-                }
-            }
-
-            Section {
                 Button("Quit Core Monitor", role: .destructive) {
                     NSApp.terminate(nil)
                 }
             }
         }
         .formStyle(.grouped)
-    }
-
-    private func copy(_ text: String, confirmation: String) {
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(text, forType: .string)
-        clipboardMessage = confirmation
     }
 }
