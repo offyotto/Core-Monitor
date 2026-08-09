@@ -30,3 +30,6 @@ General crashes, UI bugs, feature requests, and unsupported hardware behavior sh
 ## Supported Versions
 
 Only the latest public release and the current `main` branch are actively considered for security fixes.
+
+## AI assisted "vulerabillites"
+These ARE allowed, but must be properly reviewed, tested, and confirmed before sent.
