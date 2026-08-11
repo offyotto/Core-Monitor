@@ -194,7 +194,7 @@
 
     var ENDPOINT = "https://api.github.com/repos/offyotto/Core-Monitor";
     var KEY = "core-monitor:stars";
-    var MAX_AGE = 6 * 60 * 60 * 1000;
+    var MAX_AGE = 10 * 60 * 1000;
 
     var recall = function () {
       try {
