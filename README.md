@@ -84,7 +84,7 @@ no account, no sign in, no telemetry required. everything runs on your machine.
 ## compatibility
 
 - macos 13 or later
-- apple silicon is the primary target
+- apple silicon is the only supported architecture
 
 ## license
 
