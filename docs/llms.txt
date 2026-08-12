@@ -9,6 +9,8 @@ Primary download: https://github.com/offyotto/Core-Monitor/releases/latest/downl
 Mac App Store listing: https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12
 Mac App Store edition page: https://offyotto.github.io/Core-Monitor/Mac-App-Store/
 
+Core-Monitor is available on the Mac App Store as Apple app ID 6762558526.
+
 ## Summary
 
 - Category: macOS utility, system monitor, thermal monitor, fan control
