@@ -7,8 +7,8 @@
    failure.
 
    No third-party libraries. The one network request is a cached lookup of
-   the repository's star count, and the page already ships a correct number
-   for it.
+   the repository's star count, and the page already ships a truthful,
+   crawlable milestone for it.
    ========================================================================== */
 
 (function () {
@@ -183,10 +183,11 @@
     });
 
   /* ---------- live github star count ----------
-     The count is already in the markup, so this only refreshes it. If the
-     request fails, GitHub rate limits us, or this file never runs, the
-     number that shipped with the page stays and nothing moves. Answers are
-     kept for six hours, so a browsing session costs at most one request. */
+     A stable milestone is already in the markup, so this refreshes it to the
+     exact count. If the request fails, GitHub rate limits us, or this file
+     never runs, the truthful milestone stays and nothing moves. Answers are
+     cached locally, so a browsing session costs at most one request per
+     refresh window. */
 
   (function () {
     var targets = doc.querySelectorAll("[data-star-count]");
@@ -237,8 +238,11 @@
       var checkedAt = parseInt(halves[0], 10);
       var lastCount = parseInt(halves[1], 10);
       if (isFinite(checkedAt) && isFinite(lastCount)) {
-        paint(lastCount);
-        if (Date.now() - checkedAt < MAX_AGE) return;
+        var age = Date.now() - checkedAt;
+        if (age >= 0 && age < MAX_AGE) {
+          paint(lastCount);
+          return;
+        }
       }
     }
 
@@ -253,7 +257,7 @@
         remember(Date.now() + ":" + data.stargazers_count);
       })
       .catch(function () {
-        // Offline, rate limited or blocked. The shipped number stands.
+        // Offline, rate limited or blocked. The shipped milestone stands.
       });
   })();
 

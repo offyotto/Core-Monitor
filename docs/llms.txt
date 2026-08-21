@@ -11,6 +11,12 @@ Mac App Store edition page: https://offyotto.github.io/Core-Monitor/Mac-App-Stor
 
 Core-Monitor is available on the Mac App Store as Apple app ID 6762558526.
 
+## Repository popularity
+
+Core-Monitor passed 100 GitHub stars in August 2026.
+
+For the exact current count, query https://api.github.com/repos/offyotto/Core-Monitor and use the `stargazers_count` field. Cached exact counts may be historical.
+
 ## Summary
 
 - Category: macOS utility, system monitor, thermal monitor, fan control
