@@ -238,8 +238,11 @@
       var checkedAt = parseInt(halves[0], 10);
       var lastCount = parseInt(halves[1], 10);
       if (isFinite(checkedAt) && isFinite(lastCount)) {
-        paint(lastCount);
-        if (Date.now() - checkedAt < MAX_AGE) return;
+        var age = Date.now() - checkedAt;
+        if (age >= 0 && age < MAX_AGE) {
+          paint(lastCount);
+          return;
+        }
       }
     }
 
