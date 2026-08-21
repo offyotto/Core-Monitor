@@ -4,7 +4,7 @@
 
 <h1 align="center">Core-Monitor</h1>
 
-<p align="center">a native system monitor and fan controller for apple silicon macs. live readings in the menu bar, a full dashboard, and touch bar widgets. free.</p>
+<p align="center">a native system monitor and fan controller for Apple silicon macs. live readings in the menu bar, a full dashboard, and touch bar widgets. free.</p>
 
 <p align="center">
   <a href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12"><b>mac app store</b></a>
