@@ -127,6 +127,22 @@ enum SMCTemperatureSensorCatalog {
         return values.reduce(0, +) / Double(values.count)
     }
 
+    /// Returns the hottest reading among the given sensor keys instead of the average,
+    /// so a single hot core isn't masked by cooler sensors when reporting overall temperature.
+    nonisolated static func peakTemperature(
+        for keys: [String],
+        readValue: (String) -> Double?
+    ) -> Double? {
+        let values = keys.compactMap { key -> Double? in
+            guard let value = readValue(key), isValidTemperature(value, upperBound: 150) else {
+                return nil
+            }
+            return value
+        }
+
+        return values.max()
+    }
+
     nonisolated static func firstStorageTemperature(
         for sensors: [SMCStorageTemperatureSensor],
         readValue: (String) -> Double?

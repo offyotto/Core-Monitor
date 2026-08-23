@@ -605,13 +605,13 @@ final class SystemMonitor: ObservableObject {
     }
 
     private func readCPUTemperature() -> Double? {
-        SMCTemperatureSensorCatalog.averageTemperature(for: temperatureSensors.cpuKeys) { key in
+        SMCTemperatureSensorCatalog.peakTemperature(for: temperatureSensors.cpuKeys) { key in
             readSMCValue(key: key)
         }
     }
 
     private func readGPUTemperature() -> Double? {
-        SMCTemperatureSensorCatalog.averageTemperature(for: temperatureSensors.gpuKeys) { key in
+        SMCTemperatureSensorCatalog.peakTemperature(for: temperatureSensors.gpuKeys) { key in
             readSMCValue(key: key)
         }
     }

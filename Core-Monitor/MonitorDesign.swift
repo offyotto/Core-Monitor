@@ -333,8 +333,9 @@ struct TrendChart: View {
         let values = visible.map(\.value)
         let low = values.min() ?? 0
         let high = values.max() ?? 1
-        guard high > low else { return low - 1...high + 1 }
-        let padding = (high - low) * 0.15
+        let minimumPadding = 1.5
+        guard high > low else { return low - minimumPadding...high + minimumPadding }
+        let padding = max((high - low) * 0.15, minimumPadding)
         return (low - padding)...(high + padding)
     }
 }
