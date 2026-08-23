@@ -238,7 +238,7 @@ enum AlertEvaluator {
     ) -> AlertMeasurement {
         switch kind {
         case .cpuTemperature:
-            guard let value = input.snapshot.cpuTemperature else {
+            guard let value = input.snapshot.cpuSafetyTemperature else {
                 return unavailable(kind, reason: "CPU temperature is unavailable on this Mac.")
             }
             let severity = severityForHighValue(value, threshold: config.threshold, activeSeverity: runtime.activeSeverity)
@@ -246,14 +246,14 @@ enum AlertEvaluator {
                 severity: severity,
                 metricValue: value,
                 title: severity == .critical ? "CPU temperature is critical" : "CPU temperature is elevated",
-                message: String(format: "CPU temperature reached %.0f°C.", value),
+                message: String(format: "CPU peak temperature reached %.0f°C.", value),
                 context: topCPUContext(from: input.snapshot.topProcesses, enabled: input.processInsightsEnabled),
                 isAvailable: true,
                 unavailableReason: nil
             )
 
         case .gpuTemperature:
-            guard let value = input.snapshot.gpuTemperature else {
+            guard let value = input.snapshot.gpuSafetyTemperature else {
                 return unavailable(kind, reason: "GPU temperature is unavailable on this Mac.")
             }
             let severity = severityForHighValue(value, threshold: config.threshold, activeSeverity: runtime.activeSeverity)
@@ -261,7 +261,7 @@ enum AlertEvaluator {
                 severity: severity,
                 metricValue: value,
                 title: severity == .critical ? "GPU temperature is critical" : "GPU temperature is elevated",
-                message: String(format: "GPU temperature reached %.0f°C.", value),
+                message: String(format: "GPU peak temperature reached %.0f°C.", value),
                 context: topCPUContext(from: input.snapshot.topProcesses, enabled: input.processInsightsEnabled),
                 isAvailable: true,
                 unavailableReason: nil
@@ -323,7 +323,7 @@ enum AlertEvaluator {
             guard input.snapshot.numberOfFans > 0 else {
                 return unavailable(kind, reason: "No fan sensors were detected on this Mac.")
             }
-            let hottest = max(input.snapshot.cpuTemperature ?? 0, input.snapshot.gpuTemperature ?? 0)
+            let hottest = max(input.snapshot.cpuSafetyTemperature ?? 0, input.snapshot.gpuSafetyTemperature ?? 0)
             guard hottest > 0 else {
                 return AlertMeasurement(
                     severity: .none,

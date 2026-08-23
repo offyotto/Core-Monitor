@@ -82,7 +82,7 @@ struct OverviewPage: View {
             section: .thermal,
             reading: ReadingFormat.celsius(snapshot.cpuTemperature),
             caption: thermalCaption(snapshot),
-            severity: snapshot.cpuTemperature.map(ReadingThresholds.temperature)
+            severity: snapshot.cpuSafetyTemperature.map(ReadingThresholds.temperature)
                 ?? ReadingThresholds.thermalState(snapshot.thermalState),
             points: systemMonitor.cpuTemperatureTrend.points,
             openSection: openSection

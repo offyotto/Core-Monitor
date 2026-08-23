@@ -30,6 +30,31 @@ final class AlertEngineTests: XCTestCase {
         XCTAssertEqual(criticalOutcome.event?.severity, .critical)
     }
 
+    func testPeakTemperatureDrivesSafetyWithoutReplacingAverage() {
+        let config = AlertRuleConfig(
+            kind: .cpuTemperature,
+            isEnabled: true,
+            threshold: .init(warning: 80, critical: 90, hysteresis: 3),
+            cooldownMinutes: 10,
+            debounceSamples: 1,
+            desktopNotificationsEnabled: true
+        )
+
+        let input = makeInput { snapshot in
+            snapshot.cpuTemperature = 60
+            snapshot.cpuPeakTemperature = 96
+        }
+        let outcome = AlertEvaluator.evaluate(
+            config: config,
+            runtime: .initial(for: .cpuTemperature),
+            input: input
+        )
+
+        XCTAssertEqual(input.snapshot.cpuTemperature, 60)
+        XCTAssertEqual(outcome.activeState?.severity, .critical)
+        XCTAssertEqual(outcome.runtime.lastMetricValue, 96)
+    }
+
     func testHysteresisKeepsAlertActiveUntilMetricRecoversPastFloor() {
         let config = AlertRuleConfig(
             kind: .cpuTemperature,

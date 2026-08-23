@@ -285,10 +285,12 @@ struct TrendChart: View {
                 }
                 .frame(maxWidth: .infinity, minHeight: height)
             } else {
+                let domain = resolvedDomain(for: visible)
                 Chart(visible, id: \.timestamp) { point in
                     AreaMark(
                         x: .value("Time", point.timestamp),
-                        y: .value("Value", point.value)
+                        yStart: .value("Scale minimum", domain.lowerBound),
+                        yEnd: .value("Value", point.value)
                     )
                     .interpolationMethod(.monotone)
                     .foregroundStyle(
@@ -307,8 +309,14 @@ struct TrendChart: View {
                     .foregroundStyle(tint)
                     .lineStyle(StrokeStyle(lineWidth: 1.5))
                 }
-                .chartXScale(domain: Date().addingTimeInterval(-range.duration)...Date())
-                .chartYScale(domain: resolvedDomain(for: visible))
+                .chartXScale(
+                    domain: Date().addingTimeInterval(-range.duration)...Date(),
+                    range: .plotDimension(startPadding: 6, endPadding: 6)
+                )
+                .chartYScale(
+                    domain: domain,
+                    range: .plotDimension(startPadding: 6, endPadding: 6)
+                )
                 .chartXAxis {
                     AxisMarks(values: .automatic(desiredCount: 3)) { _ in
                         AxisGridLine()
@@ -377,6 +385,8 @@ struct Sparkline: View {
                 .chartXAxis(.hidden)
                 .chartYAxis(.hidden)
                 .chartLegend(.hidden)
+                .chartXScale(range: .plotDimension(startPadding: 3, endPadding: 3))
+                .chartYScale(range: .plotDimension(startPadding: 3, endPadding: 3))
                 .frame(height: height)
             }
         }

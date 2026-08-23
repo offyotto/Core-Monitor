@@ -16,7 +16,7 @@ struct ThermalPage: View {
                     value: ReadingFormat.celsius(snapshot.cpuTemperature),
                     label: "CPU average temperature",
                     tint: MetricTint.thermal,
-                    severity: snapshot.cpuTemperature.map(ReadingThresholds.temperature) ?? .nominal
+                    severity: snapshot.cpuSafetyTemperature.map(ReadingThresholds.temperature) ?? .nominal
                 )
                 TrendRangePicker(range: $range)
                 TrendChart(
@@ -33,7 +33,9 @@ struct ThermalPage: View {
 
             Panel("Sensors") {
                 temperatureRow("CPU average", snapshot.cpuTemperature)
+                temperatureRow("CPU peak", snapshot.cpuPeakTemperature)
                 temperatureRow("GPU average", snapshot.gpuTemperature)
+                temperatureRow("GPU peak", snapshot.gpuPeakTemperature)
                 temperatureRow(
                     snapshot.storageTemperatureLabel,
                     snapshot.ssdTemperature,

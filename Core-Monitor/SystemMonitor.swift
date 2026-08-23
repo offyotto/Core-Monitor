@@ -11,6 +11,29 @@ struct CPUStats {
     let efficiencyCoreUsagePercent: Double?
 }
 
+struct CPUClusterProcessorRanges: Equatable {
+    let performance: Range<Int>
+    let efficiency: Range<Int>?
+
+    static func resolve(
+        cpuCount: Int,
+        performanceCoreCount: Int,
+        efficiencyCoreCount: Int
+    ) -> CPUClusterProcessorRanges? {
+        let performanceCount = min(max(performanceCoreCount, 0), cpuCount)
+        let efficiencyCount = min(max(efficiencyCoreCount, 0), max(0, cpuCount - performanceCount))
+        guard performanceCount > 0, performanceCount + efficiencyCount <= cpuCount else {
+            return nil
+        }
+
+        let performanceStart = efficiencyCount
+        return CPUClusterProcessorRanges(
+            performance: performanceStart..<(performanceStart + performanceCount),
+            efficiency: efficiencyCount > 0 ? 0..<efficiencyCount : nil
+        )
+    }
+}
+
 enum MemoryPressureLevel {
     case green
     case yellow
@@ -120,6 +143,8 @@ final class SystemMonitor: ObservableObject {
 
     var cpuTemperature: Double? { snapshot.cpuTemperature }
     var gpuTemperature: Double? { snapshot.gpuTemperature }
+    var cpuSafetyTemperature: Double? { snapshot.cpuSafetyTemperature }
+    var gpuSafetyTemperature: Double? { snapshot.gpuSafetyTemperature }
     var fanSpeeds: [Int] { snapshot.fanSpeeds }
     var fanMinSpeeds: [Int] { snapshot.fanMinSpeeds }
     var fanMaxSpeeds: [Int] { snapshot.fanMaxSpeeds }
@@ -466,8 +491,10 @@ final class SystemMonitor: ObservableObject {
 
             var snapshot = SystemMonitorSnapshot(
                 sampledAt: sampledAt,
-                cpuTemperature: cpuTemperature,
-                gpuTemperature: gpuTemperature,
+                cpuTemperature: cpuTemperature?.average,
+                gpuTemperature: gpuTemperature?.average,
+                cpuPeakTemperature: cpuTemperature?.peak,
+                gpuPeakTemperature: gpuTemperature?.peak,
                 fanSpeeds: fanReadings.speeds,
                 fanMinSpeeds: fanReadings.mins,
                 fanMaxSpeeds: fanReadings.maxs,
@@ -604,14 +631,14 @@ final class SystemMonitor: ObservableObject {
         snapshot = updatedSnapshot
     }
 
-    private func readCPUTemperature() -> Double? {
-        SMCTemperatureSensorCatalog.peakTemperature(for: temperatureSensors.cpuKeys) { key in
+    private func readCPUTemperature() -> SMCTemperatureSummary? {
+        SMCTemperatureSensorCatalog.temperatureSummary(for: temperatureSensors.cpuKeys) { key in
             readSMCValue(key: key)
         }
     }
 
-    private func readGPUTemperature() -> Double? {
-        SMCTemperatureSensorCatalog.peakTemperature(for: temperatureSensors.gpuKeys) { key in
+    private func readGPUTemperature() -> SMCTemperatureSummary? {
+        SMCTemperatureSensorCatalog.temperatureSummary(for: temperatureSensors.gpuKeys) { key in
             readSMCValue(key: key)
         }
     }
@@ -826,18 +853,21 @@ final class SystemMonitor: ObservableObject {
 
         defer { previousProcessorLoadInfo = sample }
 
-        let pCoreCount = min(SystemMonitor.performanceCoreCount(), cpuCount)
-        let eCoreCount = min(SystemMonitor.efficiencyCoreCount(), max(0, cpuCount - pCoreCount))
-        guard pCoreCount > 0, pCoreCount + eCoreCount <= cpuCount else {
+        guard let clusterRanges = CPUClusterProcessorRanges.resolve(
+            cpuCount: cpuCount,
+            performanceCoreCount: SystemMonitor.performanceCoreCount(),
+            efficiencyCoreCount: SystemMonitor.efficiencyCoreCount()
+        ) else {
             return (performanceCoreUsagePercent, efficiencyCoreUsagePercent)
         }
 
-        let performanceUsage = usageForProcessorRange(0..<pCoreCount, current: sample, previous: previousProcessorLoadInfo)
-        let efficiencyUsage: Double?
-        if eCoreCount > 0 {
-            efficiencyUsage = usageForProcessorRange(pCoreCount..<(pCoreCount + eCoreCount), current: sample, previous: previousProcessorLoadInfo)
-        } else {
-            efficiencyUsage = nil
+        let performanceUsage = usageForProcessorRange(
+            clusterRanges.performance,
+            current: sample,
+            previous: previousProcessorLoadInfo
+        )
+        let efficiencyUsage = clusterRanges.efficiency.flatMap {
+            usageForProcessorRange($0, current: sample, previous: previousProcessorLoadInfo)
         }
 
         return (performanceUsage, efficiencyUsage)

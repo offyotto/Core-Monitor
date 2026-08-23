@@ -798,8 +798,8 @@ final class FanController: ObservableObject {
     private func updateSmartProfile() {
         guard let monitor = systemMonitor else { return }
 
-        let cpuTemp = monitor.cpuTemperature ?? 0
-        let gpuTemp = monitor.gpuTemperature ?? 0
+        let cpuTemp = monitor.cpuSafetyTemperature ?? 0
+        let gpuTemp = monitor.gpuSafetyTemperature ?? 0
         let maxTemp = max(cpuTemp, gpuTemp)
         guard maxTemp > 0 else { return }
 
@@ -846,8 +846,8 @@ final class FanController: ObservableObject {
             return
         }
 
-        let cpuTemp = monitor.cpuTemperature ?? 0
-        let gpuTemp = monitor.gpuTemperature ?? 0
+        let cpuTemp = monitor.cpuSafetyTemperature ?? 0
+        let gpuTemp = monitor.gpuSafetyTemperature ?? 0
 
         let baseTemperature: Double
         let sensorLabel: String
