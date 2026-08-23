@@ -11,6 +11,11 @@ struct SMCTemperatureSensorSet: Equatable, Sendable {
     let storageSensors: [SMCStorageTemperatureSensor]
 }
 
+struct SMCTemperatureSummary: Equatable, Sendable {
+    let average: Double
+    let peak: Double
+}
+
 enum SMCTemperatureSensorCatalog {
     private nonisolated static let intelCPUKeys = [
         "TC0P", "TCXC", "TC0E", "TC0F", "TC0D", "TC1C", "TC2C", "TC3C", "TC4C"
@@ -116,23 +121,20 @@ enum SMCTemperatureSensorCatalog {
         for keys: [String],
         readValue: (String) -> Double?
     ) -> Double? {
-        let values = keys.compactMap { key -> Double? in
-            guard let value = readValue(key), isValidTemperature(value, upperBound: 150) else {
-                return nil
-            }
-            return value
-        }
-
-        guard values.isEmpty == false else { return nil }
-        return values.reduce(0, +) / Double(values.count)
+        temperatureSummary(for: keys, readValue: readValue)?.average
     }
 
-    /// Returns the hottest reading among the given sensor keys instead of the average,
-    /// so a single hot core isn't masked by cooler sensors when reporting overall temperature.
     nonisolated static func peakTemperature(
         for keys: [String],
         readValue: (String) -> Double?
     ) -> Double? {
+        temperatureSummary(for: keys, readValue: readValue)?.peak
+    }
+
+    nonisolated static func temperatureSummary(
+        for keys: [String],
+        readValue: (String) -> Double?
+    ) -> SMCTemperatureSummary? {
         let values = keys.compactMap { key -> Double? in
             guard let value = readValue(key), isValidTemperature(value, upperBound: 150) else {
                 return nil
@@ -140,7 +142,11 @@ enum SMCTemperatureSensorCatalog {
             return value
         }
 
-        return values.max()
+        guard let peak = values.max() else { return nil }
+        return SMCTemperatureSummary(
+            average: values.reduce(0, +) / Double(values.count),
+            peak: peak
+        )
     }
 
     nonisolated static func firstStorageTemperature(

@@ -81,7 +81,7 @@ enum SystemStatusNarrator {
         if snapshot.memoryPressure == .yellow {
             return "Running fine, with elevated memory pressure."
         }
-        if let temperature = snapshot.cpuTemperature, temperature >= 70 {
+        if let temperature = snapshot.cpuSafetyTemperature, temperature >= 70 {
             return "Running warm but within normal limits."
         }
         return "Running cool. Everything looks normal."

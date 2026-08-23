@@ -274,7 +274,8 @@ final class SingleMenuBarItemController: NSObject, NSPopoverDelegate {
         case .temperature:
             if let t = systemMonitor.cpuTemperature {
                 let ti = Int(t.rounded())
-                let tone: StatusTone = t > 90 ? .critical : t > 70 ? .warning : .normal
+                let safetyTemperature = systemMonitor.cpuSafetyTemperature ?? t
+                let tone: StatusTone = safetyTemperature > 90 ? .critical : safetyTemperature > 70 ? .warning : .normal
                 return ("\(ti)°", tone)
             }
             return ("—°", .secondary)

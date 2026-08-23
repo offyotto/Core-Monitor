@@ -96,7 +96,7 @@ struct MetricPopoverView: View {
         case .memory: return "of \(ReadingFormat.gigabytes(snapshot.totalMemoryGB))"
         case .disk: return "used"
         case .network: return "↑ " + ReadingFormat.rate(snapshot.networkStats.uploadBytesPerSec)
-        case .temperature: return "CPU"
+        case .temperature: return "CPU average"
         case .fan:
             let active = snapshot.fanSpeeds.filter { $0 > 0 }.count
             if active == 0 { return "fans idle" }
@@ -115,7 +115,7 @@ struct MetricPopoverView: View {
         case .network, .fan:
             return .nominal
         case .temperature:
-            return snapshot.cpuTemperature.map(ReadingThresholds.temperature) ?? .nominal
+            return snapshot.cpuSafetyTemperature.map(ReadingThresholds.temperature) ?? .nominal
         }
     }
 
@@ -223,7 +223,9 @@ struct MetricPopoverView: View {
 
         case .temperature:
             var stats: [(String, String)] = [
+                ("CPU peak", ReadingFormat.celsiusLong(snapshot.cpuPeakTemperature)),
                 ("GPU average", ReadingFormat.celsiusLong(snapshot.gpuTemperature)),
+                ("GPU peak", ReadingFormat.celsiusLong(snapshot.gpuPeakTemperature)),
                 (snapshot.storageTemperatureLabel, ReadingFormat.celsiusLong(snapshot.ssdTemperature))
             ]
             if let fastest = snapshot.fanSpeeds.filter({ $0 > 0 }).max() {

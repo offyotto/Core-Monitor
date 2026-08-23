@@ -186,6 +186,8 @@ struct SystemMonitorSnapshot {
     var sampledAt: Date = .distantPast
     var cpuTemperature: Double?
     var gpuTemperature: Double?
+    var cpuPeakTemperature: Double?
+    var gpuPeakTemperature: Double?
     var fanSpeeds: [Int] = []
     var fanMinSpeeds: [Int] = []
     var fanMaxSpeeds: [Int] = []
@@ -220,6 +222,14 @@ struct SystemMonitorSnapshot {
     var topProcesses: TopProcessSnapshot = .empty
     var hasSMCAccess: Bool = false
     var lastError: String?
+
+    var cpuSafetyTemperature: Double? {
+        cpuPeakTemperature ?? cpuTemperature
+    }
+
+    var gpuSafetyTemperature: Double? {
+        gpuPeakTemperature ?? gpuTemperature
+    }
 
     static let empty = SystemMonitorSnapshot()
 }

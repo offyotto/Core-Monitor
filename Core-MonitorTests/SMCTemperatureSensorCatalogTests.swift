@@ -2,6 +2,28 @@ import XCTest
 @testable import Core_Monitor
 
 final class SMCTemperatureSensorCatalogTests: XCTestCase {
+    func testAppleSiliconClusterRangesPutEfficiencyCoresFirst() {
+        let ranges = CPUClusterProcessorRanges.resolve(
+            cpuCount: 8,
+            performanceCoreCount: 6,
+            efficiencyCoreCount: 2
+        )
+
+        XCTAssertEqual(ranges?.efficiency, 0..<2)
+        XCTAssertEqual(ranges?.performance, 2..<8)
+    }
+
+    func testSingleClusterUsesTheFullProcessorRange() {
+        let ranges = CPUClusterProcessorRanges.resolve(
+            cpuCount: 12,
+            performanceCoreCount: 12,
+            efficiencyCoreCount: 0
+        )
+
+        XCTAssertNil(ranges?.efficiency)
+        XCTAssertEqual(ranges?.performance, 0..<12)
+    }
+
     func testCatalogUsesGenerationSpecificKeys() {
         let cases = [
             ("Apple M1 Max", "Tp0H", "Tg0D"),
@@ -32,7 +54,7 @@ final class SMCTemperatureSensorCatalogTests: XCTestCase {
         XCTAssertEqual(Set(sensors.gpuKeys).count, sensors.gpuKeys.count)
     }
 
-    func testAverageTemperatureUsesEveryValidReading() {
+    func testTemperatureSummaryUsesEveryValidReading() {
         let values: [String: Double] = [
             "A": 40,
             "B": 50,
@@ -41,12 +63,18 @@ final class SMCTemperatureSensorCatalogTests: XCTestCase {
             "E": 200
         ]
 
-        let average = SMCTemperatureSensorCatalog.averageTemperature(
+        var reads: [String] = []
+        let summary = SMCTemperatureSensorCatalog.temperatureSummary(
             for: ["A", "B", "C", "D", "E", "missing"],
-            readValue: { values[$0] }
+            readValue: {
+                reads.append($0)
+                return values[$0]
+            }
         )
 
-        XCTAssertEqual(average ?? 0, 50, accuracy: 0.001)
+        XCTAssertEqual(summary?.average ?? 0, 50, accuracy: 0.001)
+        XCTAssertEqual(summary?.peak ?? 0, 60, accuracy: 0.001)
+        XCTAssertEqual(reads, ["A", "B", "C", "D", "E", "missing"])
     }
 
     func testAppleStorageUsesTheNANDSensor() {
