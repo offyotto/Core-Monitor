@@ -196,11 +196,11 @@ final class SystemMonitor: ObservableObject {
     }
 
     static func chipName() -> String {
-        if let targetType = sysctlString(named: "hw.targettype"), !targetType.isEmpty {
-            return targetType
-        }
         if let brand = sysctlString(named: "machdep.cpu.brand_string"), !brand.isEmpty {
             return brand
+        }
+        if let targetType = sysctlString(named: "hw.targettype"), !targetType.isEmpty {
+            return targetType
         }
         return isAppleSilicon ? "Apple Silicon" : "Intel"
     }
@@ -245,6 +245,7 @@ final class SystemMonitor: ObservableObject {
     private var interactiveMonitoringReasons = Set<String>()
     private var monitoringIntervalOverrides: [String: TimeInterval] = [:]
     private let privacySettings: PrivacySettings
+    private let temperatureSensors: SMCTemperatureSensorSet
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Basic mode adaptive polling
@@ -260,17 +261,8 @@ final class SystemMonitor: ObservableObject {
     private var previousProcessorLoadInfo: [integer_t] = []
     private var hasPreviousProcessorInfo = false
 
-    private let cpuTempKeys = [
-        "TC0P", "TCXC", "TC0E", "TC0F", "TC0D", "TC1C", "TC2C", "TC3C", "TC4C",
-        "Tp09", "Tp0T", "Tp01", "Tp05", "Tp0D", "Tp0b"
-    ]
-
-    private let gpuTempKeys = ["TGDD", "TG0P", "TG0D", "TG0E", "TG0F", "Tg0T", "Tg05"]
-
-    // SSD / NAND temperature keys
-    private let ssdTempKeys = ["TM0P", "Ts0S", "TH0A", "TH0B", "TH0C"]
-
     private let dataTypeFlt = fourCharCodeFrom("flt ")
+    private let dataTypeIoft = fourCharCodeFrom("ioft")
     private let dataTypeSp78 = fourCharCodeFrom("sp78")
     private let dataTypeFpe2 = fourCharCodeFrom("fpe2")
     private let dataTypeUInt8 = fourCharCodeFrom("ui8 ")
@@ -285,6 +277,10 @@ final class SystemMonitor: ObservableObject {
 
     init(privacySettings: PrivacySettings? = nil) {
         self.privacySettings = privacySettings ?? .shared
+        self.temperatureSensors = SMCTemperatureSensorCatalog.sensors(
+            chipName: Self.chipName(),
+            isAppleSilicon: Self.isAppleSilicon
+        )
         // The SMC connection is opened lazily on the sampling queue during the
         // first sample so all SMC state stays owned by that one queue.
         activitySampler.onUpdate = { [weak self] topProcesses in
@@ -464,7 +460,7 @@ final class SystemMonitor: ObservableObject {
             let diskStats = self.readDiskStats(now: sampledAt)
             let cpuPowerWatts = self.readSMCValue(key: "PCPU")
             let gpuPowerWatts = self.readSMCValue(key: "PGPU")
-            let ssdTemperature = self.readSSDTemperature()
+            let storageTemperature = self.readStorageTemperature()
             let networkStats = self.readNetworkStats()
             let thermalState = ProcessInfo.processInfo.thermalState
 
@@ -498,7 +494,13 @@ final class SystemMonitor: ObservableObject {
                 diskStats: diskStats,
                 cpuPowerWatts: cpuPowerWatts,
                 gpuPowerWatts: gpuPowerWatts,
-                ssdTemperature: ssdTemperature,
+                ssdTemperature: storageTemperature?.value,
+                storageTemperatureLabel: storageTemperature?.sensor.label
+                    ?? self.temperatureSensors.storageSensors.first?.label
+                    ?? "Storage (SMC)",
+                storageTemperatureNote: storageTemperature.map {
+                    "Sensor \($0.sensor.key). This may differ from NVMe SMART."
+                },
                 networkStats: networkStats,
                 thermalState: thermalState,
                 topProcesses: carriedTopProcesses,
@@ -603,30 +605,21 @@ final class SystemMonitor: ObservableObject {
     }
 
     private func readCPUTemperature() -> Double? {
-        for key in cpuTempKeys {
-            if let temp = readSMCValue(key: key), temp > 0, temp < 150 {
-                return temp
-            }
+        SMCTemperatureSensorCatalog.peakTemperature(for: temperatureSensors.cpuKeys) { key in
+            readSMCValue(key: key)
         }
-        return nil
     }
 
     private func readGPUTemperature() -> Double? {
-        for key in gpuTempKeys {
-            if let temp = readSMCValue(key: key), temp > 0, temp < 150 {
-                return temp
-            }
+        SMCTemperatureSensorCatalog.peakTemperature(for: temperatureSensors.gpuKeys) { key in
+            readSMCValue(key: key)
         }
-        return nil
     }
 
-    private func readSSDTemperature() -> Double? {
-        for key in ssdTempKeys {
-            if let temp = readSMCValue(key: key), temp > 0, temp < 100 {
-                return temp
-            }
+    private func readStorageTemperature() -> (sensor: SMCStorageTemperatureSensor, value: Double)? {
+        SMCTemperatureSensorCatalog.firstStorageTemperature(for: temperatureSensors.storageSensors) { key in
+            readSMCValue(key: key)
         }
-        return nil
     }
 
     // MARK: - Network throughput via getifaddrs
@@ -1129,6 +1122,9 @@ final class SystemMonitor: ObservableObject {
             if dataSize == 4 {
                 return decodeSMCFloat(raw, key: key)
             }
+
+        case dataTypeIoft:
+            return SMCIOFloatDecoder.decode(raw, dataSize: dataSize)
 
         case dataTypeSp78:
             if dataSize == 2 {
