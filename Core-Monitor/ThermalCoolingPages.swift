@@ -14,7 +14,7 @@ struct ThermalPage: View {
             Panel {
                 HeroReading(
                     value: ReadingFormat.celsius(snapshot.cpuTemperature),
-                    label: "CPU temperature",
+                    label: "CPU average temperature",
                     tint: MetricTint.thermal,
                     severity: snapshot.cpuTemperature.map(ReadingThresholds.temperature) ?? .nominal
                 )
@@ -32,9 +32,13 @@ struct ThermalPage: View {
             }
 
             Panel("Sensors") {
-                temperatureRow("CPU", snapshot.cpuTemperature)
-                temperatureRow("GPU", snapshot.gpuTemperature)
-                temperatureRow("SSD", snapshot.ssdTemperature)
+                temperatureRow("CPU average", snapshot.cpuTemperature)
+                temperatureRow("GPU average", snapshot.gpuTemperature)
+                temperatureRow(
+                    snapshot.storageTemperatureLabel,
+                    snapshot.ssdTemperature,
+                    note: snapshot.storageTemperatureNote
+                )
                 if let battery = snapshot.batteryInfo.temperatureC {
                     temperatureRow("Battery", battery)
                 }
@@ -62,11 +66,12 @@ struct ThermalPage: View {
         }
     }
 
-    private func temperatureRow(_ label: String, _ value: Double?) -> some View {
+    private func temperatureRow(_ label: String, _ value: Double?, note: String? = nil) -> some View {
         let severity = value.map(ReadingThresholds.temperature) ?? .nominal
         return ReadingRow(
             label,
             value: ReadingFormat.celsiusLong(value),
+            note: note,
             valueColor: severity > .elevated ? severity.color : .primary
         )
     }

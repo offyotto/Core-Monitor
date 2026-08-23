@@ -193,7 +193,7 @@ struct MetricPopoverView: View {
             if let efficiency = snapshot.efficiencyCoreUsagePercent {
                 stats.append(("Efficiency cores", ReadingFormat.percent(efficiency)))
             }
-            stats.append(("CPU temperature", ReadingFormat.celsiusLong(snapshot.cpuTemperature)))
+            stats.append(("CPU average temperature", ReadingFormat.celsiusLong(snapshot.cpuTemperature)))
             if let watts = snapshot.totalSystemWatts {
                 stats.append(("System power", ReadingFormat.watts(watts)))
             }
@@ -223,8 +223,8 @@ struct MetricPopoverView: View {
 
         case .temperature:
             var stats: [(String, String)] = [
-                ("GPU", ReadingFormat.celsiusLong(snapshot.gpuTemperature)),
-                ("SSD", ReadingFormat.celsiusLong(snapshot.ssdTemperature))
+                ("GPU average", ReadingFormat.celsiusLong(snapshot.gpuTemperature)),
+                (snapshot.storageTemperatureLabel, ReadingFormat.celsiusLong(snapshot.ssdTemperature))
             ]
             if let fastest = snapshot.fanSpeeds.filter({ $0 > 0 }).max() {
                 stats.append(("Fastest fan", ReadingFormat.rpm(fastest)))
@@ -237,7 +237,7 @@ struct MetricPopoverView: View {
                 let value = rpm < 0 ? "Unavailable" : (rpm > 0 ? ReadingFormat.rpm(rpm) : "At rest")
                 return ("Fan \(index + 1)", value)
             }
-            stats.append(("CPU temperature", ReadingFormat.celsiusLong(snapshot.cpuTemperature)))
+            stats.append(("CPU average temperature", ReadingFormat.celsiusLong(snapshot.cpuTemperature)))
             return stats
         }
     }

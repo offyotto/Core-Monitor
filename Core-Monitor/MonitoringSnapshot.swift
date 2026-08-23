@@ -213,6 +213,8 @@ struct SystemMonitorSnapshot {
     var cpuPowerWatts: Double?
     var gpuPowerWatts: Double?
     var ssdTemperature: Double?
+    var storageTemperatureLabel: String = "Storage (SMC)"
+    var storageTemperatureNote: String?
     var networkStats = SystemMonitor.NetworkStats()
     var thermalState: ProcessInfo.ThermalState = .nominal
     var topProcesses: TopProcessSnapshot = .empty

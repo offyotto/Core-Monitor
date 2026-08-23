@@ -68,6 +68,7 @@ private final class SMCController {
 
     private let typeFpe2 = fourCharCodeFrom("fpe2")
     private let typeFlt = fourCharCodeFrom("flt ")
+    private let typeIoft = fourCharCodeFrom("ioft")
     private let typeUi8 = fourCharCodeFrom("ui8 ")
     private let typeUi16 = fourCharCodeFrom("ui16")
     private let conservativeMinimumRPM = 1_000
@@ -412,6 +413,14 @@ private final class SMCController {
 
         if dataType == typeFlt, dataSize == 4 {
             return decodeSMCFloat(raw, key: key)
+        }
+
+        if dataType == typeIoft, dataSize == 8 {
+            var value: UInt64 = 0
+            for index in (0..<8).reversed() {
+                value = (value << 8) | UInt64(raw[index])
+            }
+            return Double(value) / 65_536.0
         }
 
         return nil
