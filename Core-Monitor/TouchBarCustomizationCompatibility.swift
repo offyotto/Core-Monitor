@@ -245,17 +245,17 @@ struct TouchBarPreset: Identifiable, Equatable {
     static let classic = TouchBarPreset(
         id: "classic",
         title: "Classic",
-        subtitle: "Status, weather, controls, dock, and CPU",
+        subtitle: "Status, controls, dock, and CPU",
         theme: .dark,
-        items: [.builtIn(.worldClocks), .builtIn(.weather), .builtIn(.controlCenter), .builtIn(.dock), .builtIn(.cpu)]
+        items: [.builtIn(.worldClocks), .builtIn(.controlCenter), .builtIn(.dock), .builtIn(.cpu)]
     )
 
     static let detailed = TouchBarPreset(
         id: "detailed",
         title: "Detailed",
-        subtitle: "Status with weather and expanded stats",
+        subtitle: "Status with controls and expanded stats",
         theme: .light,
-        items: [.builtIn(.worldClocks), .builtIn(.weather), .builtIn(.controlCenter), .builtIn(.detailedStats)]
+        items: [.builtIn(.worldClocks), .builtIn(.controlCenter), .builtIn(.detailedStats)]
     )
 
     static let fullStrip = TouchBarPreset(
@@ -265,7 +265,6 @@ struct TouchBarPreset: Identifiable, Equatable {
         theme: .dark,
         items: [
             .builtIn(.worldClocks),
-            .builtIn(.weather),
             .builtIn(.controlCenter),
             .builtIn(.dock),
             .builtIn(.cpu),
@@ -280,15 +279,22 @@ struct TouchBarPreset: Identifiable, Equatable {
     static let compact = TouchBarPreset(
         id: "compact",
         title: "Compact",
-        subtitle: "Weather, CPU, network, and memory pressure",
+        subtitle: "CPU, network, and memory pressure",
         theme: .dark,
-        items: [.builtIn(.weather), .builtIn(.cpu), .builtIn(.network), .builtIn(.ramPressure)]
+        items: [.builtIn(.cpu), .builtIn(.network), .builtIn(.ramPressure)]
     )
 
     static let all: [TouchBarPreset] = [.classic, .detailed, .fullStrip, .compact]
 }
 
-private struct PersistedTouchBarConfigurationV6: Codable {
+private struct PersistedTouchBarConfigurationV7: Codable {
+    var theme: StoredTouchBarTheme
+    var items: [TouchBarItemConfiguration]
+    var presentationMode: TouchBarPresentationMode
+    var weatherEnabled: Bool
+}
+
+private struct LegacyPersistedTouchBarConfigurationV6: Codable {
     var theme: StoredTouchBarTheme
     var items: [TouchBarItemConfiguration]
     var presentationMode: TouchBarPresentationMode
@@ -339,6 +345,13 @@ final class TouchBarCustomizationSettings: ObservableObject {
         }
     }
 
+    @Published private(set) var weatherEnabled: Bool {
+        didSet {
+            guard isApplyingConfiguration == false else { return }
+            persistAndNotify()
+        }
+    }
+
     var estimatedWidth: CGFloat {
         let gaps = max(CGFloat(items.count - 1), 0) * TB.groupGap
         return items.reduce(0) { $0 + $1.estimatedWidth } + gaps
@@ -354,8 +367,9 @@ final class TouchBarCustomizationSettings: ObservableObject {
         }
     }
 
-    private let defaultsKey = "coremonitor.touchBarConfiguration.v6"
-    private let legacyDefaultsKey = "coremonitor.touchBarConfiguration.v5"
+    private let defaultsKey = "coremonitor.touchBarConfiguration.v7"
+    private let legacyDefaultsKey = "coremonitor.touchBarConfiguration.v6"
+    private let olderLegacyDefaultsKey = "coremonitor.touchBarConfiguration.v5"
     private let legacyWidgetOnlyDefaultsKey = "coremonitor.touchBarConfiguration.v4"
     private let legacyPresentationModeKey = "coremonitor.touchBarMode"
     private let defaults: UserDefaults
@@ -368,18 +382,31 @@ final class TouchBarCustomizationSettings: ObservableObject {
         ) ?? .app
 
         if let data = defaults.data(forKey: defaultsKey),
-           let decoded = try? JSONDecoder().decode(PersistedTouchBarConfigurationV6.self, from: data) {
+           let decoded = try? JSONDecoder().decode(PersistedTouchBarConfigurationV7.self, from: data) {
+            let normalizedItems = Self.normalizedItems(decoded.items)
             theme = decoded.theme.theme
-            items = Self.normalizedItems(decoded.items)
+            items = normalizedItems
             presentationMode = decoded.presentationMode
+            weatherEnabled = decoded.weatherEnabled
+                && normalizedItems.contains(where: { $0.builtInKind == .weather })
             return
         }
 
         if let data = defaults.data(forKey: legacyDefaultsKey),
+           let decoded = try? JSONDecoder().decode(LegacyPersistedTouchBarConfigurationV6.self, from: data) {
+            theme = decoded.theme.theme
+            items = Self.normalizedItems(decoded.items)
+            presentationMode = decoded.presentationMode
+            weatherEnabled = false
+            return
+        }
+
+        if let data = defaults.data(forKey: olderLegacyDefaultsKey),
            let decoded = try? JSONDecoder().decode(LegacyPersistedTouchBarConfigurationV5.self, from: data) {
             theme = decoded.theme.theme
             items = Self.normalizedItems(decoded.items)
             presentationMode = fallbackPresentation
+            weatherEnabled = false
             return
         }
 
@@ -388,24 +415,35 @@ final class TouchBarCustomizationSettings: ObservableObject {
             theme = decoded.theme.theme
             items = Self.normalizedItems(decoded.widgets.map(TouchBarItemConfiguration.builtIn))
             presentationMode = fallbackPresentation
+            weatherEnabled = false
             return
         }
 
         theme = Self.defaultPreset.theme
         items = Self.defaultPreset.items
         presentationMode = fallbackPresentation
+        weatherEnabled = false
     }
 
     func applyPreset(_ preset: TouchBarPreset) {
-        applyConfiguration(theme: preset.theme, items: preset.items)
+        applyConfiguration(theme: preset.theme, items: preset.items, weatherEnabled: false)
     }
 
     func restoreDefaults() {
         applyConfiguration(
             theme: Self.defaultPreset.theme,
             items: Self.defaultPreset.items,
-            presentationMode: .app
+            presentationMode: .app,
+            weatherEnabled: false
         )
+    }
+
+    func setWeatherEnabled(_ enabled: Bool) {
+        var updatedItems = items
+        if enabled && contains(.weather) == false {
+            updatedItems.append(.builtIn(.weather))
+        }
+        applyConfiguration(items: updatedItems, weatherEnabled: enabled)
     }
 
     func contains(_ kind: TouchBarWidgetKind) -> Bool {
@@ -414,13 +452,17 @@ final class TouchBarCustomizationSettings: ObservableObject {
 
     func toggle(_ kind: TouchBarWidgetKind) {
         var updatedItems = items
+        var updatedWeatherEnabled: Bool?
         if let index = items.firstIndex(where: { $0.builtInKind == kind }) {
             guard updatedItems.count > 1 else { return }
             updatedItems.remove(at: index)
+            if kind == .weather {
+                updatedWeatherEnabled = false
+            }
         } else {
             updatedItems.append(.builtIn(kind))
         }
-        applyConfiguration(items: updatedItems)
+        applyConfiguration(items: updatedItems, weatherEnabled: updatedWeatherEnabled)
     }
 
     func moveUp(_ item: TouchBarItemConfiguration) {
@@ -441,7 +483,10 @@ final class TouchBarCustomizationSettings: ObservableObject {
         guard let index = items.firstIndex(of: item), items.count > 1 else { return }
         var updatedItems = items
         updatedItems.remove(at: index)
-        applyConfiguration(items: updatedItems)
+        applyConfiguration(
+            items: updatedItems,
+            weatherEnabled: item.builtInKind == .weather ? false : nil
+        )
     }
 
     func addPinnedApps(urls: [URL]) {
@@ -502,10 +547,11 @@ final class TouchBarCustomizationSettings: ObservableObject {
     }
 
     private func persistAndNotify() {
-        let payload = PersistedTouchBarConfigurationV6(
+        let payload = PersistedTouchBarConfigurationV7(
             theme: StoredTouchBarTheme(theme: theme),
             items: items,
-            presentationMode: presentationMode
+            presentationMode: presentationMode,
+            weatherEnabled: weatherEnabled
         )
 
         if let data = try? JSONEncoder().encode(payload) {
@@ -518,15 +564,18 @@ final class TouchBarCustomizationSettings: ObservableObject {
     private func applyConfiguration(
         theme: TouchBarTheme? = nil,
         items: [TouchBarItemConfiguration]? = nil,
-        presentationMode: TouchBarPresentationMode? = nil
+        presentationMode: TouchBarPresentationMode? = nil,
+        weatherEnabled: Bool? = nil
     ) {
         let resolvedTheme = theme ?? self.theme
         let resolvedItems = Self.normalizedItems(items ?? self.items)
         let resolvedPresentationMode = presentationMode ?? self.presentationMode
+        let resolvedWeatherEnabled = weatherEnabled ?? self.weatherEnabled
 
         guard resolvedTheme != self.theme
             || resolvedItems != self.items
-            || resolvedPresentationMode != self.presentationMode else {
+            || resolvedPresentationMode != self.presentationMode
+            || resolvedWeatherEnabled != self.weatherEnabled else {
             return
         }
 
@@ -534,6 +583,7 @@ final class TouchBarCustomizationSettings: ObservableObject {
         self.theme = resolvedTheme
         self.items = resolvedItems
         self.presentationMode = resolvedPresentationMode
+        self.weatherEnabled = resolvedWeatherEnabled
         isApplyingConfiguration = false
         persistAndNotify()
     }

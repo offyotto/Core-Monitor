@@ -287,8 +287,8 @@ KNOWN_NOTES: dict[str, list[str]] = {
         "The versioned persisted structs are the compatibility boundary for old user layouts.",
     ],
     "Core-Monitor/WeatherService.swift": [
-        "Owns WeatherKit capability detection, optional location access, fallback coordinates, attribution, and view-model state.",
-        "Startup behavior is intentionally permission-safe: location prompting should only happen after explicit user intent.",
+        "Owns WeatherKit capability detection, opt-in location access, attribution, and view-model state.",
+        "It never fetches weather without both authorization and a current location; location prompting only happens after explicit user intent.",
     ],
     "Core-Monitor/HelperDiagnosticsExporter.swift": [
         "Builds exportable JSON reports for helper signing, helper installation, launch-at-login, menu bar reachability, and recovery recommendations.",
@@ -693,7 +693,7 @@ See {file_link('All-Deleted-Paths.md', 'All Deleted Paths')}.
 
 - Product removals include the retired alerts screen, CoreVisor/QEMU, benchmark/leaderboard surfaces, updater deltas, the old topbar extension, old diagnostics experiments, and replaced media.
 - Repository hygiene removals include Xcode caches, packaged app artifacts, old generated projects, and stale workflow files.
-- The current product is narrower and clearer: Apple Silicon monitoring, local dashboard/menu bar status, optional helper-backed fan control, Touch Bar widgets, WeatherKit when entitled, support diagnostics, and signed release distribution.
+- The current product is narrower and clearer: Apple Silicon monitoring, local dashboard/menu bar status, optional helper-backed fan control, Touch Bar widgets, opt-in WeatherKit when entitled, support diagnostics, and signed release distribution.
 """,
     )
 
@@ -989,7 +989,7 @@ Use it when helper install, fan writes, signing mismatch, launch-at-login, or me
         """
 Touch Bar support combines AppKit `NSTouchBar`, custom NSViews, Pock-style widget wrappers, and SwiftUI configuration UI.
 
-`CoreMonTouchBarController` presents and rebuilds items. `TouchBarCustomizationCompatibility` persists layouts, pinned apps, pinned folders, custom command widgets, themes, presets, and compatibility migrations. `TouchBarUtilityWidgets`, `GroupViews`, `WeatherTouchBarView`, `NowPlayingTouchBarView`, and Pock widget sources render the visible strip.
+`CoreMonTouchBarController` presents and rebuilds items. `TouchBarCustomizationCompatibility` persists layouts, pinned apps, pinned folders, custom command widgets, themes, presets, weather consent, and compatibility migrations. `TouchBarUtilityWidgets`, `GroupViews`, `WeatherTouchBarView`, and Pock widget sources render the visible strip.
 
 The point of the Touch Bar layer is persistent quick access above other apps: live status, weather, launchers, folders, and scripts without dragging users back to the dashboard.
 
@@ -1011,18 +1011,18 @@ Persistence uses versioned configuration structs so older layouts can migrate fo
         "Weather-And-Location.md",
         "Weather And Location",
         """
-Weather is optional and WeatherKit-dependent. `WeatherService.swift` abstracts providers and location access. `WeatherLocationAccessSection.swift`, `WeatherTouchBarItem.swift`, `WeatherTouchBarView.swift`, and the Pock Weather widget consume the model.
+Weather is optional and WeatherKit-dependent. `WeatherService.swift` abstracts providers and location access. The Live Weather toggle in `SettingsWindow.swift`, `WeatherTouchBarItem.swift`, `WeatherTouchBarView.swift`, and the Pock Weather widget consume the model.
 
-The critical behavior is permission gating. Weather should not trigger a location prompt at launch. The user must explicitly opt in. Builds without WeatherKit entitlement should show clear capability messaging instead of a vague failure.
+The critical behavior is permission and network gating. Live Weather is persisted as a separate consent flag and defaults to off, including migrations from older configurations. Only an explicit opt-in may start the view model, request location permission, or contact Apple WeatherKit. Builds without the WeatherKit entitlement should show clear capability messaging instead of a vague failure.
 
-Weather attribution is loaded separately and should respect appearance. Fallback coordinates and dormant states are tested because launch-time prompts were a real regression.
+Weather attribution is loaded separately and should respect appearance. There are no fallback coordinates: without authorization and a current location, the provider is not called. Tests cover dormant state, consent persistence, legacy migration, and permission gating.
 """,
     ),
     (
         "Privacy-And-Permissions.md",
         "Privacy And Permissions",
         """
-The product promise is local-first monitoring. Sensor reads stay on the Mac. No account is required. The helper is optional. Weather location access is opt-in. Helper diagnostics are explicit export files, not background telemetry.
+The product promise is local-first monitoring. Sensor reads stay on the Mac. No account is required. The helper is optional. Live Weather is off by default and contacts Apple WeatherKit only after explicit opt-in and location authorization. The developer does not receive that data. Helper diagnostics are explicit export files, not background telemetry.
 
 Privacy-sensitive areas include top-process sampling, disk process activity, battery/power information, helper diagnostics, location access, and custom command widgets.
 

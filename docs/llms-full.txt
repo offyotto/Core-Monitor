@@ -79,7 +79,7 @@ No for monitoring. Yes only for fan writes and related control modes.
 
 ### Is Core-Monitor private?
 
-Yes. Sensor reads stay on the Mac, the app does not require an account, and the core experience does not depend on telemetry.
+Yes. Sensor reads stay on the Mac, and the app has no account, advertising, or analytics. Live Weather is off by default. If the user explicitly enables it, the app asks macOS for location access and requests weather from Apple WeatherKit; the Core-Monitor developer does not receive that data.
 
 ### Does Core-Monitor support Touch Bar?
 

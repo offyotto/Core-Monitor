@@ -14,6 +14,8 @@
 		DABD00042F95000100000004 /* HardwareRescueDiagnosticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD00022F95000100000002 /* HardwareRescueDiagnosticsTests.swift */; };
 		DABD10022F96000100000002 /* CoreMonitorShareKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD10012F96000100000001 /* CoreMonitorShareKitTests.swift */; };
 		DABD20022F97000100000002 /* SMCTemperatureSensorCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD20012F97000100000001 /* SMCTemperatureSensorCatalogTests.swift */; };
+		DABD30022F98000100000002 /* WeatherViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD30012F98000100000001 /* WeatherViewModelTests.swift */; };
+		DABD30042F98000100000004 /* TouchBarCustomizationSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DABD30032F98000100000003 /* TouchBarCustomizationSettingsTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +57,8 @@
 		DABD00022F95000100000002 /* HardwareRescueDiagnosticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HardwareRescueDiagnosticsTests.swift; sourceTree = "<group>"; };
 		DABD10012F96000100000001 /* CoreMonitorShareKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreMonitorShareKitTests.swift; sourceTree = "<group>"; };
 		DABD20012F97000100000001 /* SMCTemperatureSensorCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMCTemperatureSensorCatalogTests.swift; sourceTree = "<group>"; };
+		DABD30012F98000100000001 /* WeatherViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherViewModelTests.swift; sourceTree = "<group>"; };
+		DABD30032F98000100000003 /* TouchBarCustomizationSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchBarCustomizationSettingsTests.swift; sourceTree = "<group>"; };
 		E5B12BED2CCB8BBEC03C227F /* Core-MonitorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Core-MonitorTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -106,6 +110,8 @@
 				DABD00012F95000100000001 /* DashboardProcessSamplingPolicyTests.swift */,
 				DABD00022F95000100000002 /* HardwareRescueDiagnosticsTests.swift */,
 				DABD20012F97000100000001 /* SMCTemperatureSensorCatalogTests.swift */,
+				DABD30012F98000100000001 /* WeatherViewModelTests.swift */,
+				DABD30032F98000100000003 /* TouchBarCustomizationSettingsTests.swift */,
 			);
 			path = "Core-MonitorTests";
 			sourceTree = "<group>";
@@ -314,6 +320,8 @@
 				DABD00032F95000100000003 /* DashboardProcessSamplingPolicyTests.swift in Sources */,
 				DABD00042F95000100000004 /* HardwareRescueDiagnosticsTests.swift in Sources */,
 				DABD20022F97000100000002 /* SMCTemperatureSensorCatalogTests.swift in Sources */,
+				DABD30022F98000100000002 /* WeatherViewModelTests.swift in Sources */,
+				DABD30042F98000100000004 /* TouchBarCustomizationSettingsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

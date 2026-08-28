@@ -268,6 +268,14 @@ private struct TouchBarSettingsTab: View {
                 }
             }
 
+            Section {
+                Toggle("Enable Live Weather", isOn: weatherBinding)
+            } header: {
+                Text("Live Weather")
+            } footer: {
+                Text("Off by default. Enabling this adds the Weather widget, requests location access, and contacts Apple WeatherKit and CoreLocation. Core-Monitor does not receive this data.")
+            }
+
             Section("Presets") {
                 ForEach(TouchBarPreset.all) { preset in
                     HStack {
@@ -331,7 +339,7 @@ private struct TouchBarSettingsTab: View {
             }
 
             Section("Built-In Widgets") {
-                ForEach(TouchBarWidgetKind.allCases) { kind in
+                ForEach(TouchBarWidgetKind.allCases.filter { $0 != .weather }) { kind in
                     Toggle(kind.title, isOn: widgetBinding(kind))
                 }
             }
@@ -352,6 +360,14 @@ private struct TouchBarSettingsTab: View {
             settings.theme
         } set: { theme in
             settings.theme = theme
+        }
+    }
+
+    private var weatherBinding: Binding<Bool> {
+        Binding {
+            settings.weatherEnabled
+        } set: { enabled in
+            settings.setWeatherEnabled(enabled)
         }
     }
 

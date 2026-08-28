@@ -79,7 +79,7 @@ the mac app store build is sandboxed and does not include fan control, since tha
 
 ## privacy
 
-no account, no sign in, no telemetry required. everything runs on your machine.
+no account, no sign in, no ads, and no analytics. monitoring data stays on your mac. live weather is off by default; if you explicitly enable it, core-monitor asks macos for location access and requests weather from apple weatherkit. the developer never receives that data.
 
 ## compatibility
 

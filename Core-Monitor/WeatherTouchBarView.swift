@@ -108,7 +108,7 @@ final class WeatherTouchBarView: NSView {
     private func estimatedWidth() -> CGFloat {
         switch state {
         case .idle:
-            return 82
+            return 105
         case .loading:
             return 80
         case .loaded(let s):
@@ -137,7 +137,7 @@ final class WeatherTouchBarView: NSView {
         switch state {
         case .idle:
             hideAll()
-            tempLabel.stringValue = "Waiting"
+            tempLabel.stringValue = "Weather Off"
             tempLabel.isHidden = false
             tempLabel.sizeToFit()
             tempLabel.frame = NSRect(
