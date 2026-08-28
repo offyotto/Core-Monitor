@@ -75,7 +75,7 @@
             <li>Network throughput</li>
             <li>Startup disk usage</li>
             <li>Uptime and load averages</li>
-            <li>Your location, only if you enable the weather card</li>
+            <li>Your location, only if you enable Live Weather</li>
           </ul>
         </div>
         <div class="ledger-col is-out" data-reveal>
@@ -94,16 +94,16 @@
     <section class="wrap section">
       <div class="cards">
         <article class="card" data-reveal>
-          <h3>Location is the only ask</h3>
-          <p>The app requests location only after you press Enable Location in the weather card. It never asks for camera, microphone, contacts, photos, accessibility, input monitoring, automation, or full disk access.</p>
+          <h3>Location is explicitly opt-in</h3>
+          <p>Live Weather is off by default. The app requests location only after you turn on Enable Live Weather in Settings. It never asks for camera, microphone, contacts, photos, accessibility, input monitoring, automation, or full disk access.</p>
         </article>
         <article class="card is-cool" data-reveal>
-          <h3>One network use</h3>
-          <p>The network carries WeatherKit data and the Apple Weather attribution required while weather is active. Nothing else goes out.</p>
+          <h3>WeatherKit, only while enabled</h3>
+          <p>While Live Weather is enabled, the app sends the device location to Apple WeatherKit and receives weather data for that location. The Core-Monitor developer does not receive it. Core-Monitor&rsquo;s own source makes no other network requests; macOS and App Store components may independently contact Apple services.</p>
         </article>
         <article class="card" data-reveal>
           <h3>Revoke any time</h3>
-          <p>Turn weather off in the app, or withdraw location access in macOS System Settings. Everything else keeps working either way.</p>
+          <p>Turn Live Weather off in the app, or withdraw location access in macOS System Settings. Turning it off stops Core-Monitor&rsquo;s weather requests. Everything else keeps working either way.</p>
         </article>
       </div>
     </section>

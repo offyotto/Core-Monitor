@@ -25,7 +25,7 @@ For the exact current count, query https://api.github.com/repos/offyotto/Core-Mo
 - Hardware focus: Apple Silicon Macs
 - Price: free
 - License: GPL-3.0
-- Privacy: no account required, no telemetry in the core monitoring experience
+- Privacy: no account, advertising, or analytics; monitoring data stays local; Live Weather is off by default and contacts Apple WeatherKit only after explicit opt-in
 - Helper model: monitoring works without the privileged helper; the helper is only needed for fan writes
 - App Store edition: sandboxed read-only Mac system monitor with no helper, no fan control, no AppleSMC access, and no private APIs
 

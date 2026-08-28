@@ -3,6 +3,54 @@ import XCTest
 
 @MainActor
 final class TouchBarCustomizationSettingsTests: XCTestCase {
+    func testFreshConfigurationKeepsLiveWeatherOff() {
+        let settings = makeSettings(suiteName: "TouchBarCustomizationSettingsTests.freshWeather")
+
+        XCTAssertFalse(settings.weatherEnabled)
+        XCTAssertFalse(settings.contains(.weather))
+    }
+
+    func testEnablingLiveWeatherAddsWidgetAndPersistsConsent() {
+        let suiteName = "TouchBarCustomizationSettingsTests.enableWeather"
+        guard let defaults = UserDefaults(suiteName: suiteName) else {
+            return XCTFail("Expected a dedicated defaults suite for Touch Bar tests.")
+        }
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let settings = TouchBarCustomizationSettings(defaults: defaults)
+        settings.setWeatherEnabled(true)
+
+        XCTAssertTrue(settings.weatherEnabled)
+        XCTAssertTrue(settings.contains(.weather))
+
+        let restored = TouchBarCustomizationSettings(defaults: defaults)
+        XCTAssertTrue(restored.weatherEnabled)
+        XCTAssertTrue(restored.contains(.weather))
+    }
+
+    func testLegacyConfigurationDoesNotImplicitlyConsentToLiveWeather() throws {
+        let suiteName = "TouchBarCustomizationSettingsTests.legacyWeather"
+        guard let defaults = UserDefaults(suiteName: suiteName) else {
+            return XCTFail("Expected a dedicated defaults suite for Touch Bar tests.")
+        }
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let legacyConfiguration = LegacyTouchBarConfigurationV6(
+            theme: "dark",
+            items: [.builtIn(.weather), .builtIn(.cpu)],
+            presentationMode: .app
+        )
+        defaults.set(
+            try JSONEncoder().encode(legacyConfiguration),
+            forKey: "coremonitor.touchBarConfiguration.v6"
+        )
+
+        let settings = TouchBarCustomizationSettings(defaults: defaults)
+
+        XCTAssertFalse(settings.weatherEnabled)
+        XCTAssertTrue(settings.contains(.weather))
+    }
+
     func testNormalizedItemsDeduplicatesBuiltInsAndPinnedPaths() {
         let appPath = "/Applications/Utilities/Terminal.app"
         let folderPath = "/Applications"
@@ -90,8 +138,33 @@ final class TouchBarCustomizationSettingsTests: XCTestCase {
     }
 }
 
+private struct LegacyTouchBarConfigurationV6: Encodable {
+    let theme: String
+    let items: [TouchBarItemConfiguration]
+    let presentationMode: TouchBarPresentationMode
+}
+
 @MainActor
 final class CoreMonTouchBarControllerTests: XCTestCase {
+    func testWeatherMonitoringStaysIdleWithoutExplicitOptIn() async {
+        let settings = makeSettings(suiteName: "CoreMonTouchBarControllerTests.weatherOptIn")
+        settings.items = [.builtIn(.weather), .builtIn(.cpu)]
+        let monitor = SystemMonitor()
+        let controller = CoreMonTouchBarController(
+            weatherProvider: MockWeatherService(),
+            monitor: monitor,
+            customizationSettings: settings
+        )
+
+        controller.start()
+        try? await Task.sleep(nanoseconds: 50_000_000)
+        controller.stop()
+
+        guard case .idle = controller.weatherViewModel.state else {
+            return XCTFail("Weather monitoring must not start without persisted opt-in.")
+        }
+    }
+
     func testReloadCustomizationRebuildsTouchBarWithUpdatedIdentifiers() {
         let settings = makeSettings(suiteName: "CoreMonTouchBarControllerTests.reloadCustomization")
         settings.items = [.builtIn(.weather), .builtIn(.cpu)]

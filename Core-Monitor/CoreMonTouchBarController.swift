@@ -165,7 +165,9 @@ final class CoreMonTouchBarController: NSObject {
     }
 
     private func updateWeatherMonitoring() {
-        let shouldRunWeather = isStarted && configuredItems.values.contains(where: { $0.builtInKind == .weather })
+        let shouldRunWeather = isStarted
+            && customizationSettings.weatherEnabled
+            && configuredItems.values.contains(where: { $0.builtInKind == .weather })
         guard shouldRunWeather != isWeatherRunning else { return }
 
         isWeatherRunning = shouldRunWeather

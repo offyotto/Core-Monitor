@@ -688,7 +688,7 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
                 name: app.localizedName ?? "App",
                 bundleIdentifier: app.bundleIdentifier,
                 url: nil,
-                icon: app.icon ?? NSWorkspace.shared.icon(forFile: "/System/Applications/App Store.app"),
+                icon: app.icon ?? fallbackApplicationIcon(),
                 isRunning: true
             )
         }
@@ -705,9 +705,15 @@ final class DockTouchBarWidget: NSStackView, TouchBarThemable {
             let bundleIdentifier = tileData["bundle-identifier"] as? String
             let fileURLString = (tileData["file-data"] as? [String: Any])?["_CFURLString"] as? String
             let url = fileURLString.flatMap { URL(string: $0) }
-            let icon = url.map { NSWorkspace.shared.icon(forFile: $0.path) } ?? NSWorkspace.shared.icon(forFile: "/System/Applications/App Store.app")
+            let icon = url.map { NSWorkspace.shared.icon(forFile: $0.path) } ?? fallbackApplicationIcon()
             return DockTouchBarItem(index: index + 100, name: label, bundleIdentifier: bundleIdentifier, url: url, icon: icon, isRunning: false)
         }
+    }
+
+    private func fallbackApplicationIcon() -> NSImage {
+        let image = NSImage(systemSymbolName: "app.fill", accessibilityDescription: "Application") ?? NSImage()
+        image.isTemplate = true
+        return image
     }
 }
 

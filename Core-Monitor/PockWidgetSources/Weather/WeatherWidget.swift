@@ -49,14 +49,14 @@ final class WeatherWidget: NSView, TouchBarThemable {
         let tooltip: String
         switch state {
         case .idle:
-            compactTitleLabel.stringValue = "Weather"
-            compactSubtitleLabel.stringValue = "Waiting for location"
-            expandedTitleLabel.stringValue = "Weather"
-            expandedSubtitleLabel.stringValue = "Waiting for location"
+            compactTitleLabel.stringValue = "Weather Off"
+            compactSubtitleLabel.stringValue = "Enable in Settings"
+            expandedTitleLabel.stringValue = "Weather Off"
+            expandedSubtitleLabel.stringValue = "Enable Live Weather in Settings"
             detailLabel.stringValue = ""
             compactIconView.image = defaultImage()
             expandedIconView.image = defaultImage()
-            tooltip = "Waiting for location"
+            tooltip = "Enable Live Weather in Settings"
         case .loading:
             compactTitleLabel.stringValue = "Weather"
             compactSubtitleLabel.stringValue = "Updating weather"

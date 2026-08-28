@@ -120,7 +120,7 @@
             "name": "Does it phone home?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "No. There is no analytics code and no account anywhere in the app. The one network call is optional WeatherKit weather for the Touch Bar, and it only runs if you switch it on."
+              "text": "Core-Monitor has no account, advertising, or analytics, and it does not send monitoring data to the developer. Live Weather is off by default. If you explicitly enable it, the app asks macOS for location access and requests weather from Apple WeatherKit."
             }
           },
           {
@@ -323,7 +323,7 @@
           </video>
           <div class="reel-info">
             <strong>Widgets, overlays and shortcuts</strong>
-            <p>Stats, weather, shortcuts and memory pressure, arranged with a live width preview so a layout never runs off the edge of the strip. The strip holds its place across apps, so you can check a reading or launch something without switching windows.</p>
+            <p>Stats, optional live weather, shortcuts and memory pressure, arranged with a live width preview so a layout never runs off the edge of the strip. Live weather stays off until you enable it. The strip holds its place across apps, so you can check a reading or launch something without switching windows.</p>
           </div>
         </figure>
       </div>
@@ -422,7 +422,7 @@ brew install --cask offyotto/core-monitor/core-monitor</pre>
         </details>
         <details class="faq-item">
           <summary class="faq-q">Does it phone home?<span class="faq-icon" aria-hidden="true"></span></summary>
-          <p>No. There is no analytics code and no account anywhere in the app. The one network call is optional WeatherKit weather for the Touch Bar, and it only runs if you switch it on.</p>
+          <p>Core-Monitor has no account, advertising, or analytics, and it does not send monitoring data to the developer. Live Weather is off by default. If you explicitly enable it, the app asks macOS for location access and requests weather from Apple WeatherKit. Turning it off stops Core-Monitor&rsquo;s weather requests; macOS and App Store components may still make their own connections to Apple services.</p>
         </details>
         <details class="faq-item">
           <summary class="faq-q">Can fan control damage my Mac?<span class="faq-icon" aria-hidden="true"></span></summary>

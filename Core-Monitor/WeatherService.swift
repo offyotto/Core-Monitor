@@ -236,11 +236,8 @@ final class WeatherLocationAccessController: NSObject, ObservableObject, CLLocat
 @available(macOS 13.0, *)
 @MainActor
 final class LiveWeatherService: WeatherProviding {
-
-    private let service = WeatherService()
-
     nonisolated func currentWeather(for location: CLLocation) async throws -> WeatherSnapshot {
-        let weather = try await service.weather(for: location)
+        let weather = try await WeatherService.shared.weather(for: location)
         let current = weather.currentWeather
         let locationName = await Self.locationName(for: location)
         let nextRainSummary = Self.nextRainSummary(from: weather)
@@ -379,15 +376,13 @@ final class WeatherViewModel: ObservableObject {
     private var isRunning = false
     private var lastSnapshot: WeatherSnapshot?
 
-    private static let fallbackLocation = CLLocation(latitude: 37.3346, longitude: -122.0090)
-
     /// Refresh interval in seconds (default 10 min)
     var refreshInterval: TimeInterval = 600
 
     init(provider: WeatherProviding) {
         self.provider = provider
         self.locationAccess = WeatherLocationAccessController.shared
-        self.fallbackProvider = provider is MockWeatherService ? nil : MockWeatherService()
+        self.fallbackProvider = nil
         self.weatherCapabilityEnabled = WeatherKitCapability.isEnabled
         bindLocationAccess()
     }
@@ -409,6 +404,9 @@ final class WeatherViewModel: ObservableObject {
         guard !isRunning else { return }
         isRunning = true
         locationAccess.refreshStatus()
+        if weatherCapabilityEnabled(), locationAccess.authorizationStatus == .notDetermined {
+            locationAccess.requestAccess()
+        }
         scheduleRefresh()
     }
 
@@ -447,7 +445,7 @@ final class WeatherViewModel: ObservableObject {
 
     func refreshNow() async {
         guard weatherCapabilityEnabled() else {
-            await refreshFallbackWeather()
+            state = .error("WeatherKit is unavailable in this build.")
             return
         }
 
@@ -460,13 +458,21 @@ final class WeatherViewModel: ObservableObject {
         case .authorizedAlways, .authorizedWhenInUse:
             if let currentLocation = locationAccess.currentLocation {
                 location = currentLocation
+            } else if let currentLocation = await locationAccess.requestCurrentLocation() {
+                location = currentLocation
             } else {
-                location = await locationAccess.requestCurrentLocation() ?? Self.fallbackLocation
+                state = .error("Current location is unavailable. Try again after macOS resolves your location.")
+                return
             }
-        case .notDetermined, .denied, .restricted:
-            location = Self.fallbackLocation
+        case .notDetermined:
+            state = .error("Allow location access to load live weather.")
+            return
+        case .denied, .restricted:
+            state = .error("Enable location access in System Settings to load live weather.")
+            return
         @unknown default:
-            location = Self.fallbackLocation
+            state = .error("Location access is unavailable.")
+            return
         }
 
         state = .loading
@@ -482,46 +488,13 @@ final class WeatherViewModel: ObservableObject {
             if let fallbackProvider,
                let fallbackSnapshot = try? await fetchWeatherSnapshot(
                     using: fallbackProvider,
-                    location: Self.fallbackLocation
+                    location: location
                ) {
                 applyLoadedSnapshot(fallbackSnapshot)
                 return
             }
 
-            state = .error(errorMessage(for: authorizationStatus, underlyingError: error))
-        }
-    }
-
-    private func errorMessage(
-        for authorizationStatus: CLAuthorizationStatus,
-        underlyingError: Error
-    ) -> String {
-        switch authorizationStatus {
-        case .notDetermined:
-            return "Weather fallback is unavailable right now. Request location from Touch Bar settings for live local weather."
-        case .denied, .restricted:
-            return "Weather fallback is unavailable right now. Enable location in System Settings for live local weather."
-        default:
-            return underlyingError.localizedDescription
-        }
-    }
-
-    private func refreshFallbackWeather() async {
-        state = .loading
-
-        do {
-            let snapshot = try await fetchWeatherSnapshot(
-                using: fallbackProvider ?? provider,
-                location: Self.fallbackLocation
-            )
-            applyLoadedSnapshot(snapshot)
-        } catch {
-            if let lastSnapshot {
-                state = .loaded(lastSnapshot)
-                return
-            }
-
-            state = .error("Weather fallback is unavailable right now.")
+            state = .error(error.localizedDescription)
         }
     }
 
