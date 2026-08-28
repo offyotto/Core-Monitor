@@ -177,7 +177,10 @@ final class CoreMonTouchBarControllerTests: XCTestCase {
         let initialTouchBar = controller.touchBar
         XCTAssertEqual(
             controller.touchBar.defaultItemIdentifiers,
-            [.builtIn(.weather).touchBarIdentifier, .builtIn(.cpu).touchBarIdentifier]
+            [
+                TouchBarItemConfiguration.builtIn(.weather).touchBarIdentifier,
+                TouchBarItemConfiguration.builtIn(.cpu).touchBarIdentifier
+            ]
         )
 
         settings.items = [.builtIn(.cpu), .builtIn(.network)]
@@ -186,7 +189,10 @@ final class CoreMonTouchBarControllerTests: XCTestCase {
         XCTAssertFalse(controller.touchBar === initialTouchBar)
         XCTAssertEqual(
             controller.touchBar.defaultItemIdentifiers,
-            [.builtIn(.cpu).touchBarIdentifier, .builtIn(.network).touchBarIdentifier]
+            [
+                TouchBarItemConfiguration.builtIn(.cpu).touchBarIdentifier,
+                TouchBarItemConfiguration.builtIn(.network).touchBarIdentifier
+            ]
         )
     }
 

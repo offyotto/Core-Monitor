@@ -32,7 +32,7 @@ final class WeatherViewModelTests: XCTestCase {
     func testRefreshNowDoesNotFetchWhenWeatherKitCapabilityIsMissing() async {
         let provider = RecordingWeatherProvider()
         let fallbackProvider = RecordingWeatherProvider()
-        let locationAccess = MockWeatherLocationAccess(status: .authorizedWhenInUse, currentLocation: nil)
+        let locationAccess = MockWeatherLocationAccess(status: .authorizedAlways, currentLocation: nil)
         let viewModel = WeatherViewModel(
             provider: provider,
             locationAccess: locationAccess,
@@ -60,7 +60,7 @@ final class WeatherViewModelTests: XCTestCase {
         let provider = RecordingWeatherProvider()
         let currentLocation = CLLocation(latitude: 24.8607, longitude: 67.0011)
         let locationAccess = MockWeatherLocationAccess(
-            status: .authorizedWhenInUse,
+            status: .authorizedAlways,
             currentLocation: nil,
             requestedCurrentLocation: currentLocation
         )
@@ -83,7 +83,7 @@ final class WeatherViewModelTests: XCTestCase {
 
     func testRefreshNowDoesNotFetchWhenCurrentLocationIsUnavailable() async {
         let provider = RecordingWeatherProvider()
-        let locationAccess = MockWeatherLocationAccess(status: .authorizedWhenInUse, currentLocation: nil)
+        let locationAccess = MockWeatherLocationAccess(status: .authorizedAlways, currentLocation: nil)
         let viewModel = WeatherViewModel(
             provider: provider,
             locationAccess: locationAccess,
@@ -141,7 +141,7 @@ final class WeatherViewModelTests: XCTestCase {
 
         let currentLocation = CLLocation(latitude: 24.8607, longitude: 67.0011)
         locationAccess.emitChange(
-            status: .authorizedWhenInUse,
+            status: .authorizedAlways,
             currentLocation: currentLocation
         )
 
@@ -162,7 +162,7 @@ final class WeatherViewModelTests: XCTestCase {
         let fallbackProvider = RecordingWeatherProvider()
         let currentLocation = CLLocation(latitude: 24.8607, longitude: 67.0011)
         let locationAccess = MockWeatherLocationAccess(
-            status: .authorizedWhenInUse,
+            status: .authorizedAlways,
             currentLocation: currentLocation
         )
         let viewModel = WeatherViewModel(
