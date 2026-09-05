@@ -1059,3 +1059,117 @@ h1, h2, h3 { text-wrap: balance; }
 
   ::selection { background: rgba(0, 105, 217, 0.2); }
 }
+
+/* Privacy section. These styles do not affect the rest of the website. */
+.privacy-section {
+  padding-block: 110px;
+  background: #0b1016;
+  color: #edf2f6;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.privacy-section .privacy-layout {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 100px;
+  width: min(1280px, calc(100% - 112px));
+  margin-inline: auto;
+  padding-top: 95px;
+  border-top: 1px solid #ffffff19;
+}
+
+.privacy-section h2 {
+  max-width: 550px;
+  margin: 0;
+  font-size: clamp(2.4rem, 4.4vw, 4.4rem);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -.055em;
+  text-wrap: balance;
+}
+
+.privacy-section .privacy-copy > p {
+  margin: 0 0 26px;
+  color: #a4b0bd;
+  font-size: 18px;
+}
+
+.privacy-section .privacy-facts {
+  display: flex;
+  gap: 30px;
+  margin-block: 35px;
+}
+
+.privacy-section .privacy-facts p {
+  margin: 0;
+  color: #edf2f6;
+  font-size: 14px;
+}
+
+.privacy-section .privacy-facts svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  margin-bottom: 12px;
+  fill: none;
+  stroke: #b8d8ef;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.privacy-section .privacy-copy .privacy-footnote {
+  font-size: 13px;
+}
+
+.privacy-section .privacy-source {
+  display: inline-flex;
+  align-items: center;
+  color: #edf2f6;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  text-decoration-color: #ffffff50;
+}
+
+.privacy-section .privacy-source:hover {
+  text-decoration-color: currentColor;
+}
+
+.privacy-section :focus-visible {
+  outline: 2px solid #b8d8ef;
+  outline-offset: 6px;
+}
+
+@media (max-width: 1150px) {
+  .privacy-section .privacy-layout {
+    width: calc(100% - 72px);
+    gap: 60px;
+  }
+}
+
+@media (max-width: 850px) {
+  .privacy-section {
+    padding-block: 65px;
+  }
+
+  .privacy-section .privacy-layout {
+    grid-template-columns: 1fr;
+    gap: 45px;
+    width: calc(100% - 48px);
+    padding-top: 65px;
+  }
+}
+
+@media (max-width: 540px) {
+  .privacy-section .privacy-layout {
+    width: calc(100% - 36px);
+  }
+
+  .privacy-section .privacy-facts {
+    gap: 25px;
+  }
+}

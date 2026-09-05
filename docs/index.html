@@ -41,7 +41,7 @@
        fetched at the same priority as the stylesheet rather than waiting for
        the parser to reach the <img>. -->
   <link rel="preload" as="image" href="images/ui/overview-v16.png?v=16" fetchpriority="high">
-  <link rel="stylesheet" href="styles.css?v=18">
+  <link rel="stylesheet" href="styles.css?v=19">
   <!-- Type is set in the system UI font (SF Pro on macOS), so there are no
        webfont requests and nothing about a visitor reaches a third party. -->
   <script src="script.js?v=8" defer></script>
@@ -326,6 +326,39 @@
             <p>Stats, optional live weather, shortcuts and memory pressure, arranged with a live width preview so a layout never runs off the edge of the strip. Live weather stays off until you enable it. The strip holds its place across apps, so you can check a reading or launch something without switching windows.</p>
           </div>
         </figure>
+      </div>
+    </section>
+
+    <section class="privacy-section" id="privacy" aria-labelledby="privacy-title">
+      <div class="privacy-layout">
+        <h2 id="privacy-title">Your Mac has<br>a private life.<br>Keep it that way.</h2>
+        <div class="privacy-copy">
+          <p>Core-Monitor reads your system, then keeps that data on your Mac. There is no account to create and no telemetry to switch off.</p>
+          <div class="privacy-facts">
+            <p>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="10" width="14" height="11" rx="2"/>
+                <path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/>
+              </svg>
+              Local data
+            </p>
+            <p>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="7" r="4"/>
+                <path d="M4 21v-2a8 8 0 0 1 16 0v2"/>
+              </svg>
+              No account
+            </p>
+            <p>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m8 6-6 6 6 6m8-12 6 6-6 6m-3-15-2 18"/>
+              </svg>
+              Open source
+            </p>
+          </div>
+          <p class="privacy-footnote">Live Weather is off by default. If you enable it, Apple WeatherKit receives your location after you grant permission.</p>
+          <a class="privacy-source" href="https://github.com/offyotto/Core-Monitor">Read the source code</a>
+        </div>
       </div>
     </section>
 
