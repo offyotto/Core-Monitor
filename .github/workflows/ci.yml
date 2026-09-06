@@ -43,6 +43,9 @@ jobs:
             -resultBundlePath build/ci/Core-Monitor.xcresult \
             CODE_SIGNING_ALLOWED=NO
 
+      - name: Check optimized helper lifetime
+        run: ./scripts/tests/check_helper_lifetime.sh
+
       - name: Upload test result bundle
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
