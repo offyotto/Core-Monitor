@@ -130,6 +130,9 @@ jobs:
           RELEASE_PROVISIONING_PROFILE_SPECIFIER: ${{ env.RELEASE_PROVISIONING_PROFILE_SPECIFIER }}
         run: ./scripts/release/build_release.sh
 
+      - name: Check exported helper lifetime
+        run: ./scripts/tests/check_helper_lifetime.sh build/release/export/Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper
+
       - name: Notarize and staple
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}

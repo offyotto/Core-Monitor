@@ -725,8 +725,11 @@ private func runXPCServiceMode() -> Never {
     let service = SMCHelperXPCService()
     let listener = NSXPCListener(machServiceName: helperMachServiceName)
     listener.delegate = service
-    listener.resume()
-    RunLoop.current.run()
+    // The listener's delegate is weak. Retain the service throughout the loop.
+    withExtendedLifetime((service, listener)) {
+        listener.resume()
+        RunLoop.current.run()
+    }
     Foundation.exit(0)
 }
 
