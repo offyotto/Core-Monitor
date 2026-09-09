@@ -1,5 +1,6 @@
 import XCTest
 import CoreGraphics
+import Darwin
 @testable import Core_Monitor
 
 @MainActor
@@ -341,6 +342,54 @@ final class MenuBarSettingsTests: XCTestCase {
 
 @MainActor
 final class TopProcessSamplerTests: XCTestCase {
+    func testCPUPercentConvertsAppleSiliconTicksToSeconds() {
+        // At 24 MHz, 24 million ticks equal one CPU second.
+        XCTAssertEqual(
+            TopProcessSampler.cpuPercent(
+                delta: 24_000_000, elapsed: 1, processorCount: 8,
+                timebase: mach_timebase_info_data_t(numer: 125, denom: 3)
+            ),
+            12.5, accuracy: 0.000_001
+        )
+    }
+
+    func testCPUPercentPreservesIntelNanosecondTimebase() {
+        XCTAssertEqual(
+            TopProcessSampler.cpuPercent(
+                delta: 1_000_000_000, elapsed: 1, processorCount: 8,
+                timebase: mach_timebase_info_data_t(numer: 1, denom: 1)
+            ),
+            12.5, accuracy: 0.000_001
+        )
+    }
+
+    func testCPUPercentUsesElapsedTimeAndLogicalCoreCount() {
+        XCTAssertEqual(
+            TopProcessSampler.cpuPercent(
+                delta: 120_000_000, elapsed: 5, processorCount: 10,
+                timebase: mach_timebase_info_data_t(numer: 125, denom: 3)
+            ),
+            10, accuracy: 0.000_001
+        )
+    }
+
+    func testCPUPercentReturnsZeroForIdleProcessOrInvalidInterval() {
+        let timebase = mach_timebase_info_data_t(numer: 125, denom: 3)
+        XCTAssertEqual(TopProcessSampler.cpuPercent(delta: 0, elapsed: 1, processorCount: 8, timebase: timebase), 0)
+        XCTAssertEqual(TopProcessSampler.cpuPercent(delta: 24_000_000, elapsed: 0, processorCount: 8, timebase: timebase), 0)
+        XCTAssertEqual(TopProcessSampler.cpuPercent(delta: 24_000_000, elapsed: -1, processorCount: 8, timebase: timebase), 0)
+    }
+
+    func testCPUPercentCapsAtMachineCapacityWithoutIntegerOverflow() {
+        XCTAssertEqual(
+            TopProcessSampler.cpuPercent(
+                delta: UInt64.max, elapsed: 1, processorCount: 8,
+                timebase: mach_timebase_info_data_t(numer: 125, denom: 3)
+            ),
+            100
+        )
+    }
+
     func testSamplerDoesNotRestartWhenSameIntervalIsAlreadyActive() {
         XCTAssertFalse(
             TopProcessSampler.shouldRestartTimer(
@@ -368,4 +417,3 @@ final class TopProcessSamplerTests: XCTestCase {
         )
     }
 }
-

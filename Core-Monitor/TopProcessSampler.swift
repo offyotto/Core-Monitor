@@ -3,6 +3,12 @@ import Darwin
 import Foundation
 
 final class TopProcessSampler {
+    private static let cpuTimebase: mach_timebase_info_data_t = {
+        var timebase = mach_timebase_info_data_t()
+        mach_timebase_info(&timebase)
+        return timebase
+    }()
+
     private struct SampledProcess {
         let pid: pid_t
         let name: String
@@ -154,9 +160,12 @@ final class TopProcessSampler {
                 let cpuTime = cpuTime(for: pid) ?? 0
                 let previousCPUTime = previousCPUTimeByPID[pid] ?? cpuTime
                 let delta = cpuTime >= previousCPUTime ? cpuTime - previousCPUTime : 0
-                let cpuPercent = elapsed > 0
-                    ? min(100.0, (Double(delta) / 1_000_000_000.0) / (elapsed * Double(processorCount)) * 100.0)
-                    : 0
+                let cpuPercent = Self.cpuPercent(
+                    delta: delta,
+                    elapsed: elapsed,
+                    processorCount: processorCount,
+                    timebase: Self.cpuTimebase
+                )
 
                 return SampledProcess(
                     pid: pid,
@@ -166,6 +175,19 @@ final class TopProcessSampler {
                     cpuTime: cpuTime
                 )
             }
+    }
+
+    static func cpuPercent(
+        delta: UInt64,
+        elapsed: TimeInterval,
+        processorCount: Int,
+        timebase: mach_timebase_info_data_t
+    ) -> Double {
+        guard elapsed > 0 else { return 0 }
+        // proc_pid_rusage reports CPU time in Mach ticks, not nanoseconds.
+        // Convert the delta in Double to avoid integer multiplication overflow.
+        let cpuSeconds = Double(delta) * Double(timebase.numer) / Double(timebase.denom) / 1_000_000_000.0
+        return min(100.0, cpuSeconds / (elapsed * Double(processorCount)) * 100.0)
     }
 
     private func aggregateProcesses(_ processes: [SampledProcess]) -> [AggregatedProcess] {
