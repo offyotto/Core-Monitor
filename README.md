@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./Core-Monitor/Assets.xcassets/AppIcon.appiconset/icon-512.png" alt="core-monitor icon" width="140">
+  <img src="./Core-Monitor/Assets.xcassets/AppIcon.appiconset/icon-512.png?v=3" alt="core-monitor icon" width="140">
 </p>
 
 <h1 align="center">Core-Monitor</h1>
