@@ -6,7 +6,7 @@ cask "core-monitor" do
       verified: "github.com/offyotto/Core-Monitor/"
   name "Core-Monitor"
   desc "Native Apple Silicon system monitor with menu bar stats, alerts, and SMC-backed fan control"
-  homepage "https://offyotto.github.io/Core-Monitor/"
+  homepage "https://xnu.is-a.dev/"
 
   depends_on arch: :arm64
   depends_on macos: ">= :monterey"
