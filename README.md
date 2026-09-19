@@ -11,7 +11,7 @@
   ·
   <a href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip">direct download</a>
   ·
-  <a href="https://offyotto.github.io/Core-Monitor/">website</a>
+  <a href="https://xnu.is-a.dev/">website</a>
   ·
   <a href="./LICENSE">license</a>
 </p>

@@ -5,7 +5,7 @@ final class CoreMonitorShareKitTests: XCTestCase {
     func testCanonicalLinksPointAtTheOfficialHosts() {
         XCTAssertEqual(
             CoreMonitorShareKit.websiteURL.absoluteString,
-            "https://offyotto.github.io/Core-Monitor/"
+            "https://xnu.is-a.dev/"
         )
         XCTAssertEqual(
             CoreMonitorShareKit.repositoryURL.absoluteString,
