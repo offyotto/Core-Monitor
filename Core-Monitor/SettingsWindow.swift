@@ -278,7 +278,7 @@ private struct TouchBarSettingsTab: View {
             } header: {
                 Text("Live Weather")
             } footer: {
-                Text("Off by default. Enabling this adds the Weather widget, requests location access, and contacts Apple WeatherKit and CoreLocation. Core-Monitor does not receive this data.")
+                Text("Off by default. Enabling weather requests location access. The app uses your location on this Mac and sends it to Apple WeatherKit and CoreLocation to retrieve weather and place names. Core-Monitor's developer does not receive your location or weather data.")
             }
 
             Section("Presets") {

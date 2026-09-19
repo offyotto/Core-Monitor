@@ -32,6 +32,15 @@ struct DiskProcessCounter: Equatable {
     let name: String
     let readBytes: UInt64
     let writtenBytes: UInt64
+    let startTime: UInt64
+
+    init(pid: pid_t, name: String, readBytes: UInt64, writtenBytes: UInt64, startTime: UInt64 = 0) {
+        self.pid = pid
+        self.name = name
+        self.readBytes = readBytes
+        self.writtenBytes = writtenBytes
+        self.startTime = startTime
+    }
 }
 
 enum DiskProcessSampling {
@@ -43,8 +52,11 @@ enum DiskProcessSampling {
         var aggregatedByName: [String: DiskProcessActivity] = [:]
 
         for counter in counters {
-            let readDelta = deltaBytes(current: counter.readBytes, previous: previousCounters[counter.pid]?.readBytes)
-            let writeDelta = deltaBytes(current: counter.writtenBytes, previous: previousCounters[counter.pid]?.writtenBytes)
+            let previous = previousCounters[counter.pid].flatMap {
+                $0.startTime == counter.startTime ? $0 : nil
+            }
+            let readDelta = deltaBytes(current: counter.readBytes, previous: previous?.readBytes)
+            let writeDelta = deltaBytes(current: counter.writtenBytes, previous: previous?.writtenBytes)
             guard readDelta > 0 || writeDelta > 0 else { continue }
 
             let current = aggregatedByName[counter.name] ?? DiskProcessActivity(
@@ -101,7 +113,8 @@ enum DiskProcessSampling {
                     pid: pid,
                     name: displayName(for: pid),
                     readBytes: usage.ri_diskio_bytesread,
-                    writtenBytes: usage.ri_diskio_byteswritten
+                    writtenBytes: usage.ri_diskio_byteswritten,
+                    startTime: usage.ri_proc_start_abstime
                 )
             }
     }

@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A19700032026091900000002 /* DiskProcessSamplerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A19700032026091900000001 /* DiskProcessSamplerTests.swift */; };
+		A19700022026091900000002 /* CoreMonitorSingleInstancePolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A19700022026091900000001 /* CoreMonitorSingleInstancePolicyTests.swift */; };
+		A19700012026091900000002 /* FollowupRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A19700012026091900000001 /* FollowupRegressionTests.swift */; };
 		A19600032026091900000002 /* BatteryDetailFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A19600032026091900000001 /* BatteryDetailFormatterTests.swift */; };
 		A19600022026091900000002 /* HelperXPCClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A19600022026091900000001 /* HelperXPCClientTests.swift */; };
 		A19600012026091900000002 /* RuntimeSafetyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A19600012026091900000001 /* RuntimeSafetyTests.swift */; };
@@ -54,6 +57,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A19700032026091900000001 /* DiskProcessSamplerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskProcessSamplerTests.swift; sourceTree = "<group>"; };
+		A19700022026091900000001 /* CoreMonitorSingleInstancePolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreMonitorSingleInstancePolicyTests.swift; sourceTree = "<group>"; };
+		A19700012026091900000001 /* FollowupRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowupRegressionTests.swift; sourceTree = "<group>"; };
 		A19600032026091900000001 /* BatteryDetailFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryDetailFormatterTests.swift; sourceTree = "<group>"; };
 		A19600022026091900000001 /* HelperXPCClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperXPCClientTests.swift; sourceTree = "<group>"; };
 		A19600012026091900000001 /* RuntimeSafetyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeSafetyTests.swift; sourceTree = "<group>"; };
@@ -121,6 +127,9 @@
 		1A2F97F19E4BA4C0B1070411 /* Core-MonitorTests */ = {
 			isa = PBXGroup;
 			children = (
+				A19700032026091900000001 /* DiskProcessSamplerTests.swift */,
+				A19700022026091900000001 /* CoreMonitorSingleInstancePolicyTests.swift */,
+				A19700012026091900000001 /* FollowupRegressionTests.swift */,
 				A19600032026091900000001 /* BatteryDetailFormatterTests.swift */,
 				A19600022026091900000001 /* HelperXPCClientTests.swift */,
 				A19600012026091900000001 /* RuntimeSafetyTests.swift */,
@@ -340,6 +349,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A19700032026091900000002 /* DiskProcessSamplerTests.swift in Sources */,
+				A19700022026091900000002 /* CoreMonitorSingleInstancePolicyTests.swift in Sources */,
+				A19700012026091900000002 /* FollowupRegressionTests.swift in Sources */,
 				A19600032026091900000002 /* BatteryDetailFormatterTests.swift in Sources */,
 				A19600022026091900000002 /* HelperXPCClientTests.swift in Sources */,
 				A19600012026091900000002 /* RuntimeSafetyTests.swift in Sources */,

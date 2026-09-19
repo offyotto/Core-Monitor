@@ -274,6 +274,7 @@ final class AlertManager: NSObject, ObservableObject {
 
         privacySettings.$processInsightsEnabled
             .removeDuplicates()
+            .receive(on: RunLoop.main)
             .sink { [weak self] enabled in
                 guard let self else { return }
                 self.processInsightsEnabled = enabled

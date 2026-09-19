@@ -13,23 +13,13 @@ struct CoreMonitorRunningInstance: Equatable {
 enum CoreMonitorSingleInstancePolicy {
     static func handoffTarget(
         from runningInstances: [CoreMonitorRunningInstance],
-        currentPID: pid_t
+        currentPID: pid_t,
+        ownerPID: pid_t?
     ) -> CoreMonitorRunningInstance? {
-        runningInstances
-            .filter { instance in
-                instance.processIdentifier != currentPID &&
-                instance.isFinishedLaunching &&
-                instance.isTerminated == false
-            }
-            .sorted { lhs, rhs in
-                let lhsLaunchDate = lhs.launchDate ?? .distantPast
-                let rhsLaunchDate = rhs.launchDate ?? .distantPast
-                if lhsLaunchDate != rhsLaunchDate {
-                    return lhsLaunchDate < rhsLaunchDate
-                }
-                return lhs.processIdentifier < rhs.processIdentifier
-            }
-            .first
+        guard let ownerPID, ownerPID != currentPID else { return nil }
+        // The kernel lock elects the owner. A launching owner is valid; the
+        // sender retries until its dashboard observer can acknowledge delivery.
+        return runningInstances.first { $0.processIdentifier == ownerPID && !$0.isTerminated }
     }
 }
 
@@ -39,12 +29,50 @@ struct CoreMonitorDashboardHandoffRequest: Equatable {
 
     let bundleIdentifier: String
     let targetProcessIdentifier: pid_t
+    let requestIdentifier: UUID
+    let requesterProcessIdentifier: pid_t
+
+    init(bundleIdentifier: String, targetProcessIdentifier: pid_t,
+         requestIdentifier: UUID = UUID(), requesterProcessIdentifier: pid_t = ProcessInfo.processInfo.processIdentifier) {
+        self.bundleIdentifier = bundleIdentifier
+        self.targetProcessIdentifier = targetProcessIdentifier
+        self.requestIdentifier = requestIdentifier
+        self.requesterProcessIdentifier = requesterProcessIdentifier
+    }
 
     var userInfo: [AnyHashable: Any] {
         [
             Self.bundleIdentifierKey: bundleIdentifier,
-            Self.targetProcessIdentifierKey: NSNumber(value: targetProcessIdentifier)
+            Self.targetProcessIdentifierKey: NSNumber(value: targetProcessIdentifier),
+            "requestIdentifier": requestIdentifier.uuidString,
+            "requesterProcessIdentifier": NSNumber(value: requesterProcessIdentifier)
         ]
+    }
+
+    var notificationObject: String? { Self.notificationObject(for: userInfo) }
+
+    static func notificationObject(for info: [AnyHashable: Any]?) -> String? {
+        guard let info, let data = try? JSONSerialization.data(withJSONObject: info) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    static func notificationInfo(object: Any?, legacyUserInfo: [AnyHashable: Any]?) -> [AnyHashable: Any]? {
+        if let object = object as? String, object.utf8.count <= 4_096,
+           let data = object.data(using: .utf8),
+           let info = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            return info
+        }
+        return legacyUserInfo
+    }
+
+    static func acceptsAcknowledgement(
+        userInfo: [AnyHashable: Any]?, bundleIdentifier: String,
+        requestIdentifier: UUID, requesterPID: pid_t, ownerPID: pid_t
+    ) -> Bool {
+        userInfo?[bundleIdentifierKey] as? String == bundleIdentifier &&
+        userInfo?["requestIdentifier"] as? String == requestIdentifier.uuidString &&
+        (userInfo?["requesterProcessIdentifier"] as? NSNumber)?.int32Value == requesterPID &&
+        (userInfo?[targetProcessIdentifierKey] as? NSNumber)?.int32Value == ownerPID
     }
 
     static func accepts(
@@ -189,6 +217,7 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
 @MainActor
 final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     private static let openDashboardRequestNotification = Notification.Name("CoreMonitorOpenDashboardRequest")
+    private static let dashboardAcknowledgementNotification = Notification.Name("CoreMonitorDashboardAcknowledgement")
     private static let automaticTerminationReason = "Core Monitor keeps menu bar monitoring active."
     private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "CoreTools.Core-Monitor", category: "Startup")
 
@@ -199,6 +228,12 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     private var menuBarController: MenuBarController?
     private var dashboardController: DashboardWindowController?
     private var hasPresentedInitialDashboard = false
+    private var didBootstrapPrimaryInstance = false
+    private var instanceLock: SingleInstanceLock?
+    private var handoffTask: Task<Void, Never>?
+    private var acknowledgedHandoff: UUID?
+    private var handoffTargetPID: pid_t?
+    private var lastDashboardRequestIdentifier: String?
     private var pendingInitialDashboardAttempts: [DispatchWorkItem] = []
     private var quitShortcutMonitor: Any?
     private var touchBarShortcutMonitor: Any?
@@ -215,6 +250,12 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
         NSWindow.allowsAutomaticWindowTabbing = false
         ProcessInfo.processInfo.disableAutomaticTermination(Self.automaticTerminationReason)
         guard handOffToRunningInstanceIfNeeded() == false else { return }
+        bootstrapPrimaryInstance()
+    }
+
+    private func bootstrapPrimaryInstance() {
+        guard !didBootstrapPrimaryInstance else { return }
+        didBootstrapPrimaryInstance = true
         CoreMonitorDefaultsMaintenance.purgeDeprecatedState()
         SettingsWindowManager.shared.configure(
             systemMonitor: coordinator.systemMonitor,
@@ -258,8 +299,9 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
             self.dashboardShortcutObserver = nil
         }
         guard shouldBootstrapInteractiveApp else { return }
+        handoffTask?.cancel()
         cancelInitialDashboardAttempts()
-        coordinator.stop()
+        if didBootstrapPrimaryInstance { coordinator.stop() }
     }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
@@ -312,6 +354,7 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     func openDashboard() {
+        guard didBootstrapPrimaryInstance else { return }
         guard shouldBootstrapInteractiveApp else { return }
         Self.logger.notice("Open dashboard requested activationPolicy=\(String(describing: NSApp.activationPolicy()), privacy: .public)")
         setDashboardActivationPolicy()
@@ -415,18 +458,33 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
 
         distributedDashboardRequestObserver = DistributedNotificationCenter.default().addObserver(
             forName: Self.openDashboardRequestNotification,
-            object: bundleIdentifier,
+            object: nil,
             queue: .main
         ) { [weak self] notification in
+            let info = CoreMonitorDashboardHandoffRequest.notificationInfo(
+                object: notification.object, legacyUserInfo: notification.userInfo
+            )
             guard CoreMonitorDashboardHandoffRequest.accepts(
-                userInfo: notification.userInfo,
+                userInfo: info,
                 expectedBundleIdentifier: bundleIdentifier,
                 currentProcessIdentifier: ProcessInfo.processInfo.processIdentifier
             ) else {
                 return
             }
             Task { @MainActor [weak self] in
-                self?.openDashboard()
+                guard let self else { return }
+                let requestID = info?["requestIdentifier"] as? String
+                if requestID == nil || requestID != lastDashboardRequestIdentifier {
+                    openDashboard()
+                    lastDashboardRequestIdentifier = requestID
+                }
+                if requestID != nil, dashboardController?.isDashboardVisible == true,
+                   let object = CoreMonitorDashboardHandoffRequest.notificationObject(for: info) {
+                    DistributedNotificationCenter.default().postNotificationName(
+                        Self.dashboardAcknowledgementNotification, object: object,
+                        userInfo: nil, deliverImmediately: true
+                    )
+                }
             }
         }
     }
@@ -509,41 +567,92 @@ final class CoreMonitorApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func handOffToRunningInstanceIfNeeded() -> Bool {
-        guard CoreMonitorLaunchEnvironment.shouldHandleDuplicateLaunch() else { return false }
-        guard let bundleIdentifier = Bundle.main.bundleIdentifier else { return false }
-
-        let currentPID = ProcessInfo.processInfo.processIdentifier
-        let runningApplications = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier)
-        let runningInstances = runningApplications.map {
-            CoreMonitorRunningInstance(
-                processIdentifier: $0.processIdentifier,
-                launchDate: $0.launchDate,
-                isFinishedLaunching: $0.isFinishedLaunching,
-                isTerminated: $0.isTerminated
-            )
+        guard CoreMonitorLaunchEnvironment.shouldHandleDuplicateLaunch(),
+              let bundleIdentifier = Bundle.main.bundleIdentifier else { return false }
+        let lock: SingleInstanceLock
+        do {
+            lock = SingleInstanceLock(fileURL: try SingleInstanceLock.fileURL(bundleIdentifier: bundleIdentifier))
+            instanceLock = lock
+            if try lock.acquire() { return false }
+        } catch {
+            NSApp.presentError(error)
+            DispatchQueue.main.async { NSApp.terminate(nil) }
+            return true
         }
 
-        guard let target = CoreMonitorSingleInstancePolicy.handoffTarget(
-            from: runningInstances,
-            currentPID: currentPID
-        ), let targetApplication = runningApplications.first(where: { $0.processIdentifier == target.processIdentifier }) else {
-            return false
-        }
-
-        let request = CoreMonitorDashboardHandoffRequest(
-            bundleIdentifier: bundleIdentifier,
-            targetProcessIdentifier: target.processIdentifier
-        )
-
-        DistributedNotificationCenter.default().postNotificationName(
-            Self.openDashboardRequestNotification,
-            object: bundleIdentifier,
-            userInfo: request.userInfo,
-            deliverImmediately: true
-        )
-        _ = targetApplication.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
         NSApp.setActivationPolicy(.accessory)
-        DispatchQueue.main.async {
+        let currentPID = ProcessInfo.processInfo.processIdentifier
+        let requestID = UUID()
+        handoffTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            let observer = DistributedNotificationCenter.default().addObserver(
+                forName: Self.dashboardAcknowledgementNotification, object: nil, queue: .main
+            ) { [weak self] notification in
+                let info = CoreMonitorDashboardHandoffRequest.notificationInfo(
+                    object: notification.object, legacyUserInfo: notification.userInfo
+                )
+                Task { @MainActor [weak self] in
+                    guard let self, let ownerPID = handoffTargetPID,
+                          CoreMonitorDashboardHandoffRequest.acceptsAcknowledgement(
+                            userInfo: info, bundleIdentifier: bundleIdentifier,
+                            requestIdentifier: requestID, requesterPID: currentPID, ownerPID: ownerPID
+                          ) else { return }
+                    acknowledgedHandoff = requestID
+                }
+            }
+            defer { DistributedNotificationCenter.default().removeObserver(observer) }
+
+            for _ in 0..<50 {
+                guard !Task.isCancelled else { return }
+                do {
+                    // If the owner exits before acknowledging, take over its
+                    // released kernel lock instead of leaving no running app.
+                    if try lock.acquire() {
+                        bootstrapPrimaryInstance()
+                        return
+                    }
+                } catch {
+                    NSApp.presentError(error)
+                    NSApp.terminate(nil)
+                    return
+                }
+                let applications = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier)
+                let instances = applications.map {
+                    CoreMonitorRunningInstance(processIdentifier: $0.processIdentifier, launchDate: $0.launchDate,
+                                               isFinishedLaunching: $0.isFinishedLaunching, isTerminated: $0.isTerminated)
+                }
+                if let target = CoreMonitorSingleInstancePolicy.handoffTarget(
+                    from: instances, currentPID: currentPID, ownerPID: lock.ownerPID
+                ), let application = applications.first(where: { $0.processIdentifier == target.processIdentifier }) {
+                    if handoffTargetPID != target.processIdentifier {
+                        handoffTargetPID = target.processIdentifier
+                        acknowledgedHandoff = nil
+                    }
+                    if acknowledgedHandoff == requestID {
+                        NSApp.terminate(nil)
+                        return
+                    }
+                    let request = CoreMonitorDashboardHandoffRequest(bundleIdentifier: bundleIdentifier,
+                        targetProcessIdentifier: target.processIdentifier, requestIdentifier: requestID,
+                        requesterProcessIdentifier: currentPID)
+                    // App Sandbox requires a nil userInfo dictionary. The
+                    // object is a bounded JSON string with the same routing IDs.
+                    if let object = request.notificationObject {
+                        DistributedNotificationCenter.default().postNotificationName(
+                            Self.openDashboardRequestNotification, object: object,
+                            userInfo: nil, deliverImmediately: true
+                        )
+                    }
+                    if target.isFinishedLaunching {
+                        _ = application.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+                    }
+                }
+                try? await Task.sleep(nanoseconds: 200_000_000)
+            }
+            let alert = NSAlert()
+            alert.messageText = "Core Monitor is already running"
+            alert.informativeText = "The running app has not responded. Switch to it, or quit it before opening Core Monitor again."
+            alert.runModal()
             NSApp.terminate(nil)
         }
         return true

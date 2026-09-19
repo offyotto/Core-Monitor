@@ -69,8 +69,8 @@ enum BatteryDetailFormatter {
     private static func localized(_ key: String, locale: Locale) -> String {
         let language = Bundle.preferredLocalizations(from: Bundle.main.localizations, forPreferences: [locale.identifier]).first ?? "en"
         guard let path = Bundle.main.path(forResource: language, ofType: "lproj"), let bundle = Bundle(path: path) else { return key }
-        let existing = bundle.localizedString(forKey: key, value: key, table: nil)
-        if existing != key { return existing }
-        return bundle.localizedString(forKey: key, value: key, table: "BatteryDetails")
+        let battery = bundle.localizedString(forKey: key, value: key, table: "BatteryDetails")
+        if battery != key { return battery }
+        return bundle.localizedString(forKey: key, value: key, table: nil)
     }
 }

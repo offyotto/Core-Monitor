@@ -16,7 +16,7 @@ final class PrivacySettings: ObservableObject {
 
     private let defaults: UserDefaults
 
-    private init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
 
         if defaults.object(forKey: Key.processInsightsEnabled) == nil {

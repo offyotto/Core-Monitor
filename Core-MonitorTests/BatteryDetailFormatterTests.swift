@@ -56,4 +56,30 @@ final class BatteryDetailFormatterTests: XCTestCase {
         info.timeRemainingMinutes = 0
         XCTAssertEqual(BatteryDetailFormatter.runtimeDescription(for: info, locale: locale), "Snart klart")
     }
+
+    func testBatteryCatalogCoversEveryAdvertisedLocaleAndPreservesPlaceholders() throws {
+        let keys = ["Charging", "AC Power", "Battery Power", "Power Adapter", "Internal Battery",
+                    "Finishing soon", "Less than 1m remaining", "%@ until full", "%@ remaining"]
+        for locale in AppLocaleStore.supportedLocaleIdentifiers {
+            let directory = try XCTUnwrap(Bundle.main.path(forResource: locale, ofType: "lproj"), locale)
+            let url = URL(fileURLWithPath: directory).appendingPathComponent("BatteryDetails.strings")
+            let table = try XCTUnwrap(try PropertyListSerialization.propertyList(from: Data(contentsOf: url), format: nil) as? [String: String], locale)
+            for key in keys {
+                let value = try XCTUnwrap(table[key], "\(locale): \(key)")
+                XCTAssertFalse(value.isEmpty, "\(locale): \(key)")
+                XCTAssertEqual(value.components(separatedBy: "%@").count,
+                               key.components(separatedBy: "%@").count, "\(locale): \(key)")
+            }
+        }
+    }
+
+    func testChargingAndExternalPowerUseBatteryCatalog() {
+        var battery = BatteryInfo()
+        battery.isCharging = true
+        let locale = Locale(identifier: "sv_SE")
+        XCTAssertEqual(BatteryDetailFormatter.powerStateDescription(for: battery, locale: locale), "Laddar")
+        battery.isCharging = false
+        battery.isPluggedIn = true
+        XCTAssertEqual(BatteryDetailFormatter.powerStateDescription(for: battery, locale: locale), "Nätström")
+    }
 }

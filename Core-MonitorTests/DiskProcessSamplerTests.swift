@@ -1,6 +1,7 @@
 import XCTest
 @testable import Core_Monitor
 
+@MainActor
 final class DiskProcessSamplerTests: XCTestCase {
     func testActivitiesAggregateDeltasByProcessName() {
         let previousCounters: [Int32: DiskProcessCounter] = [

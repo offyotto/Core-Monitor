@@ -33,8 +33,651 @@
             "state": "translated",
             "value": "Alimentación por batería"
           }
+        },
+        "af": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batterykrag"
+          }
+        },
+        "am": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "የባትሪ ኃይል"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "طاقة البطارية"
+          }
+        },
+        "as": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "বেটাৰীৰ শক্তি"
+          }
+        },
+        "ay": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batería ch’ama"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batareya enerjisi"
+          }
+        },
+        "be": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Жыўленне ад батарэі"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Захранване от батерията"
+          }
+        },
+        "bm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batiri fanga"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ব্যাটারির শক্তি"
+          }
+        },
+        "bo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "གློག་རྫས་ཀྱི་ནུས་ཤུགས།"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Napajanje iz baterije"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alimentació amb bateria"
+          }
+        },
+        "ceb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kuryente sa baterya"
+          }
+        },
+        "co": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alimentazione à batteria"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Napájení z baterie"
+          }
+        },
+        "cy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pŵer batri"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batteristrøm"
+          }
+        },
+        "dv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ބެޓެރީގެ ބާރު"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Τροφοδοσία από μπαταρία"
+          }
+        },
+        "eo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bateria energio"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Akutoide"
+          }
+        },
+        "eu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bateriaren energia"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "برق باتری"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Akkuvirta"
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kuryente mula sa baterya"
+          }
+        },
+        "fy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batterijstream"
+          }
+        },
+        "ga": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cumhacht ceallraí"
+          }
+        },
+        "gd": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cumhachd a’ bhataraidh"
+          }
+        },
+        "gl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alimentación por batería"
+          }
+        },
+        "gn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batería mbarete"
+          }
+        },
+        "gu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "બેટરી પાવર"
+          }
+        },
+        "ha": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wutar batiri"
+          }
+        },
+        "haw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mana pākahiko"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "מתח סוללה"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "बैटरी पावर"
+          }
+        },
+        "hmn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fais fab roj teeb"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Napajanje iz baterije"
+          }
+        },
+        "ht": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kouran batri"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Akkumulátoros tápellátás"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Մարտկոցի սնուցում"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Daya baterai"
+          }
+        },
+        "ig": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ike batrị"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rafhlöðuafl"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alimentazione a batteria"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "バッテリー電源"
+          }
+        },
+        "jv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Daya baterei"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ბატარეის კვება"
+          }
+        },
+        "kk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Батареядан қуат алу"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ថាមពលថ្ម"
+          }
+        },
+        "kn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ಬ್ಯಾಟರಿ ವಿದ್ಯುತ್"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "배터리 전원"
+          }
+        },
+        "ku": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Hêza bateriyê"
+          }
+        },
+        "ky": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Батареядан кубат алуу"
+          }
+        },
+        "la": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Vis pilae"
+          }
+        },
+        "lb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batteriestroum"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ພະລັງງານແບັດເຕີຣີ"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Maitinimas iš akumuliatoriaus"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Akumulatora barošana"
+          }
+        },
+        "mg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Herin’ny bateria"
+          }
+        },
+        "mi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Hiko pūhiko"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Напојување од батеријата"
+          }
+        },
+        "ml": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ബാറ്ററി വൈദ്യുതി"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Зайны тэжээл"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "बॅटरी पॉवर"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kuasa bateri"
+          }
+        },
+        "mt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enerġija mill-batterija"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ဘက်ထရီပါဝါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batteristrøm"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ब्याट्री पावर"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batterijvoeding"
+          }
+        },
+        "ny": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mphamvu ya batire"
+          }
+        },
+        "or": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ବ୍ୟାଟେରୀ ଶକ୍ତି"
+          }
+        },
+        "pa": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ਬੈਟਰੀ ਪਾਵਰ"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zasilanie z baterii"
+          }
+        },
+        "ps": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "د بیټرۍ برېښنا"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Energia da bateria"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alimentare de la baterie"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Питание от аккумулятора"
+          }
+        },
+        "rw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ingufu za bateri"
+          }
+        },
+        "sd": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "بيٽري جي بجلي"
+          }
+        },
+        "si": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "බැටරි බලය"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Napájanie z batérie"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Baterijsko napajanje"
+          }
+        },
+        "sm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Malosiaga o le maa"
+          }
+        },
+        "sn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Simba rebhatiri"
+          }
+        },
+        "so": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Awoodda baytariga"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Furnizim nga bateria"
+          }
+        },
+        "sr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Напајање из батерије"
+          }
+        },
+        "st": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Matla a betri"
+          }
+        },
+        "su": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Daya batré"
+          }
+        },
+        "sw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nishati ya betri"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "மின்கல ஆற்றல்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "బ్యాటరీ శక్తి"
+          }
+        },
+        "tg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Қувваи батарея"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "พลังงานแบตเตอรี่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pil gücü"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Живлення від акумулятора"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "بیٹری کی طاقت"
+          }
+        },
+        "uz": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batareya quvvati"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nguồn pin"
+          }
+        },
+        "xh": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Amandla ebhetri"
+          }
+        },
+        "yi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "באַטעריע־מאַכט"
+          }
+        },
+        "yo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Agbára bátírì"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "电池供电"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "電池供電"
+          }
+        },
+        "zu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Amandla ebhethri"
+          }
         }
-      }
+      },
+      "comment": "Battery power source or runtime. Preserve %@ when present. Added translations require native-speaker review."
     },
     "Power Adapter": {
       "extractionState": "manual",
@@ -68,8 +711,651 @@
             "state": "translated",
             "value": "Adaptador de corriente"
           }
+        },
+        "af": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kragadapter"
+          }
+        },
+        "am": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "የኃይል አስማሚ"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "محوّل الطاقة"
+          }
+        },
+        "as": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "পাৱাৰ এডাপ্টাৰ"
+          }
+        },
+        "ay": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ch’ama adaptador"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Enerji adapteri"
+          }
+        },
+        "be": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Адаптар сілкавання"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Захранващ адаптер"
+          }
+        },
+        "bm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kuran adaptatɛri"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "পাওয়ার অ্যাডাপ্টার"
+          }
+        },
+        "bo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "གློག་ཁུངས་མཐུན་སྒྲིག་ཆས།"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adapter za napajanje"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptador de corrent"
+          }
+        },
+        "ceb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adapter sa kuryente"
+          }
+        },
+        "co": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adattatore d’alimentazione"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Napájecí adaptér"
+          }
+        },
+        "cy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Addasydd pŵer"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Strømforsyning"
+          }
+        },
+        "dv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ޕަވަރ އެޑެޕްޓަރ"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Τροφοδοτικό"
+          }
+        },
+        "eo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Elektra adaptilo"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Toiteadapter"
+          }
+        },
+        "eu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Elikatze-egokigailua"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "آداپتور برق"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Virtalähde"
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptor ng kuryente"
+          }
+        },
+        "fy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Stroomadapter"
+          }
+        },
+        "ga": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cuibheoir cumhachta"
+          }
+        },
+        "gd": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptar cumhachd"
+          }
+        },
+        "gl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptador de corrente"
+          }
+        },
+        "gn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tendyry adaptador"
+          }
+        },
+        "gu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "પાવર ઍડેપ્ટર"
+          }
+        },
+        "ha": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaftar wuta"
+          }
+        },
+        "haw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mea hoʻopili mana"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ספק כוח"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "पावर अडैप्टर"
+          }
+        },
+        "hmn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lub adapter fais fab"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adapter za napajanje"
+          }
+        },
+        "ht": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptè kouran"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Hálózati adapter"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Սնուցման ադապտեր"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptor daya"
+          }
+        },
+        "ig": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ihe nkwụnye ọkụ"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Straumbreytir"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alimentatore"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "電源アダプタ"
+          }
+        },
+        "jv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptor daya"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "კვების ადაპტერი"
+          }
+        },
+        "kk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Қуат адаптері"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "អាដាប់ទ័រថាមពល"
+          }
+        },
+        "kn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ಪವರ್ ಅಡಾಪ್ಟರ್"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "전원 어댑터"
+          }
+        },
+        "ku": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptera elektrîkê"
+          }
+        },
+        "ky": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Кубат адаптери"
+          }
+        },
+        "la": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptor electricus"
+          }
+        },
+        "lb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Stroumadapter"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ອະແດັບເຕີໄຟ"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Maitinimo adapteris"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Strāvas adapteris"
+          }
+        },
+        "mg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptatera herinaratra"
+          }
+        },
+        "mi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Whāurutau hiko"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Адаптер за напојување"
+          }
+        },
+        "ml": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "പവർ അഡാപ്റ്റർ"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Тэжээлийн адаптер"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "पॉवर अडॅप्टर"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Penyesuai kuasa"
+          }
+        },
+        "mt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adapter tal-enerġija"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ပါဝါအဒက်တာ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Strømadapter"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "पावर एडाप्टर"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Voedingsadapter"
+          }
+        },
+        "ny": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaputala yamagetsi"
+          }
+        },
+        "or": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ପାୱାର ଆଡାପ୍ଟର"
+          }
+        },
+        "pa": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ਪਾਵਰ ਅਡਾਪਟਰ"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zasilacz"
+          }
+        },
+        "ps": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "د برېښنا اډاپټر"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptador de energia"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptor de alimentare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Адаптер питания"
+          }
+        },
+        "rw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaputeri y’amashanyarazi"
+          }
+        },
+        "sd": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "پاور اڊاپٽر"
+          }
+        },
+        "si": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "බල ඇඩැප්ටරය"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Napájací adaptér"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Napajalnik"
+          }
+        },
+        "sm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fetuunaʻi eletise"
+          }
+        },
+        "sn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaputa yemagetsi"
+          }
+        },
+        "so": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adabtarka korontada"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Përshtatës energjie"
+          }
+        },
+        "sr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Адаптер за напајање"
+          }
+        },
+        "st": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptara ea motlakase"
+          }
+        },
+        "su": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptor daya"
+          }
+        },
+        "sw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adapta ya umeme"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "மின் அடாப்டர்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "పవర్ అడాప్టర్"
+          }
+        },
+        "tg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Адаптери барқ"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "อะแดปเตอร์ไฟฟ้า"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Güç adaptörü"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Адаптер живлення"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "پاور اڈاپٹر"
+          }
+        },
+        "uz": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Quvvat adapteri"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bộ tiếp hợp nguồn"
+          }
+        },
+        "xh": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Iadaptha yombane"
+          }
+        },
+        "yi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "שטראָם־אַדאַפּטער"
+          }
+        },
+        "yo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adápútà iná"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "电源适配器"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "電源轉接器"
+          }
+        },
+        "zu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "I-adaptha yamandla"
+          }
         }
-      }
+      },
+      "comment": "Battery power source or runtime. Preserve %@ when present. Added translations require native-speaker review."
     },
     "Internal Battery": {
       "extractionState": "manual",
@@ -103,8 +1389,651 @@
             "state": "translated",
             "value": "Batería interna"
           }
+        },
+        "af": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Interne battery"
+          }
+        },
+        "am": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ውስጣዊ ባትሪ"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "البطارية الداخلية"
+          }
+        },
+        "as": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ভিতৰৰ বেটাৰী"
+          }
+        },
+        "ay": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Manqha batería"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Daxili batareya"
+          }
+        },
+        "be": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Унутраная батарэя"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Вътрешна батерия"
+          }
+        },
+        "bm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kɔnɔna batiri"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "অভ্যন্তরীণ ব্যাটারি"
+          }
+        },
+        "bo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ནང་གི་གློག་རྫས།"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Unutrašnja baterija"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bateria interna"
+          }
+        },
+        "ceb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sulod nga baterya"
+          }
+        },
+        "co": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batteria interna"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Vnitřní baterie"
+          }
+        },
+        "cy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batri mewnol"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Internt batteri"
+          }
+        },
+        "dv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "އެތެރޭގެ ބެޓެރީ"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Εσωτερική μπαταρία"
+          }
+        },
+        "eo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Interna baterio"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sisemine aku"
+          }
+        },
+        "eu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Barneko bateria"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "باتری داخلی"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sisäinen akku"
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Panloob na baterya"
+          }
+        },
+        "fy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ynterne batterij"
+          }
+        },
+        "ga": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ceallra inmheánach"
+          }
+        },
+        "gd": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bataraidh a-staigh"
+          }
+        },
+        "gl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batería interna"
+          }
+        },
+        "gn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batería hyepypegua"
+          }
+        },
+        "gu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "આંતરિક બેટરી"
+          }
+        },
+        "ha": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batirin ciki"
+          }
+        },
+        "haw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pākahiko kūloko"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "סוללה פנימית"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "आंतरिक बैटरी"
+          }
+        },
+        "hmn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Roj teeb sab hauv"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Unutarnja baterija"
+          }
+        },
+        "ht": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batri entèn"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Belső akkumulátor"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ներքին մարտկոց"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Baterai internal"
+          }
+        },
+        "ig": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batrị dị n’ime"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Innri rafhlaða"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batteria interna"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "内蔵バッテリー"
+          }
+        },
+        "jv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Baterei internal"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "შიდა ბატარეა"
+          }
+        },
+        "kk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ішкі батарея"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ថ្មខាងក្នុង"
+          }
+        },
+        "kn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ಆಂತರಿಕ ಬ್ಯಾಟರಿ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "내장 배터리"
+          }
+        },
+        "ku": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bateriya hundirîn"
+          }
+        },
+        "ky": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ички батарея"
+          }
+        },
+        "la": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pila interna"
+          }
+        },
+        "lb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Intern Batterie"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ແບັດເຕີຣີພາຍໃນ"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Vidinis akumuliatorius"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Iekšējais akumulators"
+          }
+        },
+        "mg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bateria anatiny"
+          }
+        },
+        "mi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pūhiko ā-roto"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Внатрешна батерија"
+          }
+        },
+        "ml": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ആന്തരിക ബാറ്ററി"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Дотоод зай"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "अंतर्गत बॅटरी"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bateri dalaman"
+          }
+        },
+        "mt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batterija interna"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "အတွင်းဘက်ထရီ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Internt batteri"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "आन्तरिक ब्याट्री"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Interne batterij"
+          }
+        },
+        "ny": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batire yamkati"
+          }
+        },
+        "or": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ଭିତର ବ୍ୟାଟେରୀ"
+          }
+        },
+        "pa": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ਅੰਦਰੂਨੀ ਬੈਟਰੀ"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bateria wewnętrzna"
+          }
+        },
+        "ps": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "دنننۍ بیټرۍ"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bateria interna"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Baterie internă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Встроенный аккумулятор"
+          }
+        },
+        "rw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bateri y’imbere"
+          }
+        },
+        "sd": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "اندروني بيٽري"
+          }
+        },
+        "si": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "අභ්‍යන්තර බැටරිය"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Vnútorná batéria"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notranja baterija"
+          }
+        },
+        "sm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Maa i totonu"
+          }
+        },
+        "sn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bhatiri remukati"
+          }
+        },
+        "so": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Baytariga gudaha"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bateri e brendshme"
+          }
+        },
+        "sr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Унутрашња батерија"
+          }
+        },
+        "st": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Betri ea ka hare"
+          }
+        },
+        "su": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batré internal"
+          }
+        },
+        "sw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Betri ya ndani"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "உள்ளமைந்த மின்கலம்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "అంతర్గత బ్యాటరీ"
+          }
+        },
+        "tg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Батареяи дохилӣ"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "แบตเตอรี่ภายใน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dahili pil"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Вбудований акумулятор"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "اندرونی بیٹری"
+          }
+        },
+        "uz": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ichki batareya"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pin bên trong"
+          }
+        },
+        "xh": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ibhetri yangaphakathi"
+          }
+        },
+        "yi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "אינערלעכע באַטעריע"
+          }
+        },
+        "yo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bátírì inú"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "内置电池"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "內建電池"
+          }
+        },
+        "zu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ibhethri langaphakathi"
+          }
         }
-      }
+      },
+      "comment": "Battery power source or runtime. Preserve %@ when present. Added translations require native-speaker review."
     },
     "Finishing soon": {
       "extractionState": "manual",
@@ -138,8 +2067,651 @@
             "state": "translated",
             "value": "Finaliza pronto"
           }
+        },
+        "af": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Amper klaar"
+          }
+        },
+        "am": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "በቅርቡ ይጠናቀቃል"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "يكتمل قريبًا"
+          }
+        },
+        "as": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "অতি সোনকালে সম্পূৰ্ণ হ’ব"
+          }
+        },
+        "ay": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Niya tukuyani"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tezliklə tamamlanacaq"
+          }
+        },
+        "be": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Хутка скончыцца"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Скоро ще завърши"
+          }
+        },
+        "bm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A bɛ ban sɔɔni"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "শীঘ্রই সম্পূর্ণ হবে"
+          }
+        },
+        "bo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "མགྱོགས་པོར་འགྲུབ་རྒྱུ།"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Uskoro završava"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Acabarà aviat"
+          }
+        },
+        "ceb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Hapit na mahuman"
+          }
+        },
+        "co": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Finisce prestu"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Brzy bude dokončeno"
+          }
+        },
+        "cy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Yn gorffen yn fuan"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Snart færdig"
+          }
+        },
+        "dv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "އަވަހަށް ނިމޭނެ"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ολοκληρώνεται σύντομα"
+          }
+        },
+        "eo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Baldaŭ finiĝos"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Varsti valmis"
+          }
+        },
+        "eu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Laster amaituko da"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "به‌زودی تمام می‌شود"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Valmis pian"
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Malapit nang matapos"
+          }
+        },
+        "fy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Hast klear"
+          }
+        },
+        "ga": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Beagnach críochnaithe"
+          }
+        },
+        "gd": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Cha mhòr deiseil"
+          }
+        },
+        "gl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rematará axiña"
+          }
+        },
+        "gn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Opáta pya’e"
+          }
+        },
+        "gu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ટૂંક સમયમાં પૂર્ણ થશે"
+          }
+        },
+        "ha": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zai ƙare nan ba da jimawa ba"
+          }
+        },
+        "haw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kokoke e pau"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "מסתיים בקרוב"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "जल्द पूरा होगा"
+          }
+        },
+        "hmn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Yuav tiav sai sai"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Uskoro završava"
+          }
+        },
+        "ht": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Prèske fini"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Hamarosan kész"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Շուտով կավարտվի"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Segera selesai"
+          }
+        },
+        "ig": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ọ ga-agwụ n’oge na-adịghị anya"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lýkur bráðum"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Completamento imminente"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "まもなく完了"
+          }
+        },
+        "jv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sedhela maneh rampung"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "მალე დასრულდება"
+          }
+        },
+        "kk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Жақында аяқталады"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "នឹងបញ្ចប់ក្នុងពេលឆាប់ៗ"
+          }
+        },
+        "kn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ಶೀಘ್ರದಲ್ಲೇ ಪೂರ್ಣಗೊಳ್ಳುತ್ತದೆ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "곧 완료됨"
+          }
+        },
+        "ku": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dê di demeke nêz de biqede"
+          }
+        },
+        "ky": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Жакында аяктайт"
+          }
+        },
+        "la": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mox perficietur"
+          }
+        },
+        "lb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bal fäerdeg"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ຈະສຳເລັດໃນໄວໆນີ້"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Netrukus bus baigta"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Drīzumā būs pabeigts"
+          }
+        },
+        "mg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ho vita tsy ho ela"
+          }
+        },
+        "mi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ka mutu ākuanei"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Наскоро ќе заврши"
+          }
+        },
+        "ml": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ഉടൻ പൂർത്തിയാകും"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Удахгүй дуусна"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "लवकरच पूर्ण होईल"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Hampir selesai"
+          }
+        },
+        "mt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se jintemm dalwaqt"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "မကြာမီ ပြီးဆုံးမည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Snart ferdig"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "चाँडै सकिँदैछ"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bijna klaar"
+          }
+        },
+        "ny": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zitha posachedwa"
+          }
+        },
+        "or": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ଶୀଘ୍ର ସମ୍ପୂର୍ଣ୍ଣ ହେବ"
+          }
+        },
+        "pa": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ਜਲਦੀ ਪੂਰਾ ਹੋਵੇਗਾ"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wkrótce zakończenie"
+          }
+        },
+        "ps": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ژر به بشپړ شي"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "A terminar em breve"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Se termină în curând"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Скоро завершится"
+          }
+        },
+        "rw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Birarangira vuba"
+          }
+        },
+        "sd": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "جلد مڪمل ٿيندو"
+          }
+        },
+        "si": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ඉක්මනින් අවසන් වේ"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Čoskoro sa dokončí"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kmalu bo končano"
+          }
+        },
+        "sm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ua toeitiiti maeʻa"
+          }
+        },
+        "sn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zvichapera munguva pfupi"
+          }
+        },
+        "so": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dhawaan ayuu dhammaanayaa"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Përfundon së shpejti"
+          }
+        },
+        "sr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ускоро ће бити завршено"
+          }
+        },
+        "st": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "E tla fela haufinyane"
+          }
+        },
+        "su": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Geura réngsé"
+          }
+        },
+        "sw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Inakamilika hivi karibuni"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "விரைவில் முடிவடையும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "త్వరలో పూర్తవుతుంది"
+          }
+        },
+        "tg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ба зудӣ анҷом меёбад"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ใกล้เสร็จแล้ว"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Yakında tamamlanacak"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Незабаром завершиться"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "جلد مکمل ہو جائے گا"
+          }
+        },
+        "uz": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tez orada tugaydi"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sắp hoàn tất"
+          }
+        },
+        "xh": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Iza kugqiba kungekudala"
+          }
+        },
+        "yi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "וועט באַלד ענדיקן"
+          }
+        },
+        "yo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ó máa parí láìpẹ́"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "即将完成"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "即將完成"
+          }
+        },
+        "zu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kuzophela maduze"
+          }
         }
-      }
+      },
+      "comment": "Battery power source or runtime. Preserve %@ when present. Added translations require native-speaker review."
     },
     "Less than 1m remaining": {
       "extractionState": "manual",
@@ -173,8 +2745,651 @@
             "state": "translated",
             "value": "Menos de 1 min restante"
           }
+        },
+        "af": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Minder as 1 minuut oor"
+          }
+        },
+        "am": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ከ1 ደቂቃ ያነሰ ቀርቷል"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "أقل من دقيقة متبقية"
+          }
+        },
+        "as": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "১ মিনিটতকৈ কম বাকী"
+          }
+        },
+        "ay": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 minutot juk’aki qhiparaski"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 dəqiqədən az qalıb"
+          }
+        },
+        "be": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Засталося менш за 1 хвіліну"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Остава по-малко от 1 минута"
+          }
+        },
+        "bm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Miniti 1 ka dɔgɔ tora"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "১ মিনিটের কম বাকি"
+          }
+        },
+        "bo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "སྐར་མ་༡་ལས་ཉུང་བ་ལྷག་ཡོད།"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Preostalo je manje od 1 minute"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Queda menys d’1 minut"
+          }
+        },
+        "ceb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ubos sa 1 minuto ang nahibilin"
+          }
+        },
+        "co": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ferma menu d’un minutu"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zbývá méně než 1 minuta"
+          }
+        },
+        "cy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Llai nag 1 munud yn weddill"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Under 1 minut tilbage"
+          }
+        },
+        "dv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 މިނިޓަށްވުރެ މަދު ވަގުތު ބާކީ"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Απομένει λιγότερο από 1 λεπτό"
+          }
+        },
+        "eo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Restas malpli ol 1 minuto"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Jäänud vähem kui 1 minut"
+          }
+        },
+        "eu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Minutu 1 baino gutxiago falta da"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "کمتر از ۱ دقیقه باقی مانده"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alle 1 minuutti jäljellä"
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wala pang 1 minuto ang natitira"
+          }
+        },
+        "fy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Minder as 1 minút oer"
+          }
+        },
+        "ga": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Níos lú ná 1 nóiméad fágtha"
+          }
+        },
+        "gd": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nas lugha na 1 mhionaid air fhàgail"
+          }
+        },
+        "gl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Queda menos de 1 minuto"
+          }
+        },
+        "gn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sa’ive 1 aravo’i hembýva"
+          }
+        },
+        "gu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 મિનિટથી ઓછો સમય બાકી"
+          }
+        },
+        "ha": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ƙasa da minti 1 ya rage"
+          }
+        },
+        "haw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Emi iho ma mua o 1 minuke i koe"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "נותרה פחות מדקה"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 मिनट से कम शेष"
+          }
+        },
+        "hmn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tshuav tsawg dua 1 feeb"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Preostalo je manje od 1 minute"
+          }
+        },
+        "ht": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mwens pase 1 minit rete"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kevesebb mint 1 perc van hátra"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Մնացել է 1 րոպեից պակաս"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tersisa kurang dari 1 menit"
+          }
+        },
+        "ig": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ihe na-erughị otu nkeji fọdụrụ"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Minna en 1 mínúta eftir"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Meno di 1 minuto rimanente"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "残り1分未満"
+          }
+        },
+        "jv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Isih kurang saka 1 menit"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "დარჩენილია 1 წუთზე ნაკლები"
+          }
+        },
+        "kk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 минуттан аз қалды"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "នៅសល់តិចជាង 1 នាទី"
+          }
+        },
+        "kn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 ನಿಮಿಷಕ್ಕಿಂತ ಕಡಿಮೆ ಬಾಕಿ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1분 미만 남음"
+          }
+        },
+        "ku": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ji 1 deqeyê kêmtir maye"
+          }
+        },
+        "ky": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 мүнөттөн аз калды"
+          }
+        },
+        "la": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Minus quam 1 minutum restat"
+          }
+        },
+        "lb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Manner wéi 1 Minutt iwwreg"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ເຫຼືອໜ້ອຍກວ່າ 1 ນາທີ"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Liko mažiau nei 1 minutė"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Atlicis mazāk par 1 minūti"
+          }
+        },
+        "mg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Latsaky ny 1 minitra sisa"
+          }
+        },
+        "mi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "He iti iho i te 1 meneti e toe ana"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Преостанува помалку од 1 минута"
+          }
+        },
+        "ml": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 മിനിറ്റിൽ താഴെ ബാക്കി"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 минутаас бага хугацаа үлдсэн"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 मिनिटापेक्षा कमी वेळ शिल्लक"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kurang daripada 1 minit lagi"
+          }
+        },
+        "mt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fadal inqas minn minuta"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 မိနစ်အောက် ကျန်ရှိသည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Under 1 minutt igjen"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "१ मिनेटभन्दा कम बाँकी"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Minder dan 1 minuut resterend"
+          }
+        },
+        "ny": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kwatsala mphindi yosakwana 1"
+          }
+        },
+        "or": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 ମିନିଟରୁ କମ୍ ବାକି"
+          }
+        },
+        "pa": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 ਮਿੰਟ ਤੋਂ ਘੱਟ ਬਾਕੀ"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pozostała mniej niż 1 minuta"
+          }
+        },
+        "ps": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "له ۱ دقیقې کم وخت پاتې دی"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Menos de 1 minuto restante"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mai puțin de 1 minut rămas"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Осталось меньше 1 минуты"
+          }
+        },
+        "rw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Hasigaye munsi y’umunota 1"
+          }
+        },
+        "sd": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 منٽ کان گهٽ باقي"
+          }
+        },
+        "si": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "මිනිත්තුවකට අඩු කාලයක් ඉතිරිව ඇත"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zostáva menej ako 1 minúta"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Preostala je manj kot 1 minuta"
+          }
+        },
+        "sm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "E itiiti ifo i le 1 minute o totoe"
+          }
+        },
+        "sn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pasara isingasviki miniti 1"
+          }
+        },
+        "so": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wax ka yar 1 daqiiqo ayaa hadhay"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mbetet më pak se 1 minutë"
+          }
+        },
+        "sr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Преостало је мање од 1 минута"
+          }
+        },
+        "st": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ho setse ka tlase ho motsotso o le mong"
+          }
+        },
+        "su": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kurang ti 1 menit deui"
+          }
+        },
+        "sw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Chini ya dakika 1 imesalia"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 நிமிடத்திற்கும் குறைவாக மீதமுள்ளது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 నిమిషం కంటే తక్కువ మిగిలి ఉంది"
+          }
+        },
+        "tg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Камтар аз 1 дақиқа мондааст"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "เหลือไม่ถึง 1 นาที"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 dakikadan az kaldı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Залишилося менше ніж 1 хвилина"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 منٹ سے کم باقی"
+          }
+        },
+        "uz": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1 daqiqadan kam qoldi"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Còn dưới 1 phút"
+          }
+        },
+        "xh": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kushiyeke ngaphantsi komzuzu omnye"
+          }
+        },
+        "yi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ווייניקער ווי 1 מינוט פֿאַרבליבן"
+          }
+        },
+        "yo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ó kù kéré ju ìṣẹ́jú kan lọ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "剩余不足 1 分钟"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "剩餘不到 1 分鐘"
+          }
+        },
+        "zu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kusele ngaphansi komzuzu owodwa"
+          }
         }
-      }
+      },
+      "comment": "Battery power source or runtime. Preserve %@ when present. Added translations require native-speaker review."
     },
     "%@ until full": {
       "extractionState": "manual",
@@ -208,8 +3423,651 @@
             "state": "translated",
             "value": "%@ hasta la carga completa"
           }
+        },
+        "af": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ tot vol"
+          }
+        },
+        "am": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ሙሉ እስኪሞላ %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ حتى اكتمال الشحن"
+          }
+        },
+        "as": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "সম্পূৰ্ণ হ’বলৈ %@"
+          }
+        },
+        "ay": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ phuqañapataki"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tam dolana qədər %@"
+          }
+        },
+        "be": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Да поўнай зарадкі %@"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ до пълно зареждане"
+          }
+        },
+        "bm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ka batiri fa"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "সম্পূর্ণ চার্জ হতে %@"
+          }
+        },
+        "bo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ཆ་ཚང་གསོག་པར་%@"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ do punog kapaciteta"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ fins a la càrrega completa"
+          }
+        },
+        "ceb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ hangtod mapuno"
+          }
+        },
+        "co": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ finu à a carica cumpleta"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ do plného nabití"
+          }
+        },
+        "cy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ nes ei fod yn llawn"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ til fuldt opladet"
+          }
+        },
+        "dv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ފުރުމަށް %@"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ μέχρι την πλήρη φόρτιση"
+          }
+        },
+        "eo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ĝis plena ŝargo"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Täislaadimiseni %@"
+          }
+        },
+        "eu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ guztiz kargatzeko"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ تا شارژ کامل"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ täyteen lataukseen"
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ hanggang mapuno"
+          }
+        },
+        "fy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ oant fol"
+          }
+        },
+        "ga": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ go lánluchtú"
+          }
+        },
+        "gd": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ gus am bi e làn"
+          }
+        },
+        "gl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ata a carga completa"
+          }
+        },
+        "gn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ henyhẽmba peve"
+          }
+        },
+        "gu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "પૂરેપૂરી ચાર્જ થવામાં %@"
+          }
+        },
+        "ha": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ kafin ya cika"
+          }
+        },
+        "haw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ a piha"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ עד לטעינה מלאה"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "पूरा चार्ज होने तक %@"
+          }
+        },
+        "hmn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ kom puv"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ do potpune napunjenosti"
+          }
+        },
+        "ht": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ anvan li plen"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ a teljes feltöltésig"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ մինչև լրիվ լիցքավորումը"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ hingga penuh"
+          }
+        },
+        "ig": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ tupu o ju eju"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ þar til fullhlaðið"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ alla carica completa"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フル充電まで%@"
+          }
+        },
+        "jv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ nganti kebak"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "სრულ დატენვამდე %@"
+          }
+        },
+        "kk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Толық зарядталуға дейін %@"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ រហូតដល់សាកពេញ"
+          }
+        },
+        "kn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ಪೂರ್ಣ ಚಾರ್ಜ್ ಆಗಲು %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "완충까지 %@"
+          }
+        },
+        "ku": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ heta tijî bibe"
+          }
+        },
+        "ky": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Толук кубатталганга чейин %@"
+          }
+        },
+        "la": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ad plenam capacitatem"
+          }
+        },
+        "lb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ bis voll opgelueden"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ຈົນກວ່າຈະເຕັມ"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ iki visiško įkrovimo"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ līdz pilnai uzlādei"
+          }
+        },
+        "mg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ mandra-pahafeno"
+          }
+        },
+        "mi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ kia kī katoa"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ до целосно полнење"
+          }
+        },
+        "ml": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "പൂർണ്ണ ചാർജാകാൻ %@"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Бүрэн цэнэглэгдэхэд %@"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "पूर्ण चार्ज होण्यासाठी %@"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ sehingga penuh"
+          }
+        },
+        "mt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ sakemm timtela"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "အားပြည့်ရန် %@"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ til fulladet"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "पूरा चार्ज हुन %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ tot volledig opgeladen"
+          }
+        },
+        "ny": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ kuti idzaze"
+          }
+        },
+        "or": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ସମ୍ପୂର୍ଣ୍ଣ ଚାର୍ଜ ହେବାକୁ %@"
+          }
+        },
+        "pa": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ਪੂਰਾ ਚਾਰਜ ਹੋਣ ਤੱਕ %@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ do pełnego naładowania"
+          }
+        },
+        "ps": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "تر بشپړ چارج پورې %@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ até à carga completa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ până la încărcarea completă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ до полной зарядки"
+          }
+        },
+        "rw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ kugeza yuzuye"
+          }
+        },
+        "sd": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "مڪمل چارج ٿيڻ تائين %@"
+          }
+        },
+        "si": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "සම්පූර්ණ ආරෝපණයට %@"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ do úplného nabitia"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ do polne napolnjenosti"
+          }
+        },
+        "sm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ seʻia tumu"
+          }
+        },
+        "sn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ kuti rizare"
+          }
+        },
+        "so": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ilaa uu buuxsamo"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ deri në karikimin e plotë"
+          }
+        },
+        "sr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ до потпуног пуњења"
+          }
+        },
+        "st": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ho fihlela e tlala"
+          }
+        },
+        "su": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ nepi ka pinuh"
+          }
+        },
+        "sw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ hadi ijae"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "முழுமையாக மின்னேற %@"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "పూర్తిగా ఛార్జ్ కావడానికి %@"
+          }
+        },
+        "tg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ то пурра пур шудан"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "อีก %@ จนกว่าจะชาร์จเต็ม"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tam doluma %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ до повного заряджання"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "مکمل چارج ہونے تک %@"
+          }
+        },
+        "uz": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Toʻliq quvvatlanishgacha %@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ đến khi sạc đầy"
+          }
+        },
+        "xh": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ de igcwale"
+          }
+        },
+        "yi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ביז פֿול"
+          }
+        },
+        "yo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ kí ó tó kún"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "距离充满还有 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "距離充滿還有 %@"
+          }
+        },
+        "zu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ kuze kugcwale"
+          }
         }
-      }
+      },
+      "comment": "Battery power source or runtime. Preserve %@ when present. Added translations require native-speaker review."
     },
     "%@ remaining": {
       "extractionState": "manual",
@@ -234,14 +4092,2013 @@
         },
         "fr": {
           "stringUnit": {
+            "state": "needs_review",
+            "value": "Temps restant : %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tiempo restante: %@"
+          }
+        },
+        "af": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ oor"
+          }
+        },
+        "am": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ቀርቷል"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "المتبقي: %@"
+          }
+        },
+        "as": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ বাকী"
+          }
+        },
+        "ay": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ qhiparaski"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ qalıb"
+          }
+        },
+        "be": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Засталося %@"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Остава %@"
+          }
+        },
+        "bm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ tora"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ বাকি"
+          }
+        },
+        "bo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ལྷག་ཡོད།"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Preostalo %@"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Temps restant: %@"
+          }
+        },
+        "ceb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ang nahibilin"
+          }
+        },
+        "co": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fermanu %@"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zbývá %@"
+          }
+        },
+        "cy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ yn weddill"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ tilbage"
+          }
+        },
+        "dv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ބާކީ"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Υπόλοιπος χρόνος: %@"
+          }
+        },
+        "eo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Restas %@"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Jäänud %@"
+          }
+        },
+        "eu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ falta da"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ باقی مانده"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ jäljellä"
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ang natitira"
+          }
+        },
+        "fy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ oer"
+          }
+        },
+        "ga": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ fágtha"
+          }
+        },
+        "gd": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ air fhàgail"
+          }
+        },
+        "gl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tempo restante: %@"
+          }
+        },
+        "gn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ hembýva"
+          }
+        },
+        "gu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ બાકી"
+          }
+        },
+        "ha": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ya rage"
+          }
+        },
+        "haw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ i koe"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "יתרת זמן: %@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ शेष"
+          }
+        },
+        "hmn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tshuav %@"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Preostalo %@"
+          }
+        },
+        "ht": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ rete"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ van hátra"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Մնացել է %@"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ tersisa"
+          }
+        },
+        "ig": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ fọdụrụ"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ eftir"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tempo rimanente: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "残り%@"
+          }
+        },
+        "jv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Isih %@"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "დარჩენილია %@"
+          }
+        },
+        "kk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ қалды"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "នៅសល់ %@"
+          }
+        },
+        "kn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ಬಾಕಿ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ 남음"
+          }
+        },
+        "ku": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ maye"
+          }
+        },
+        "ky": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ калды"
+          }
+        },
+        "la": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ restat"
+          }
+        },
+        "lb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ iwwreg"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ເຫຼືອ %@"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Liko %@"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Atlikušais laiks: %@"
+          }
+        },
+        "mg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ sisa"
+          }
+        },
+        "mi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ e toe ana"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Преостанува %@"
+          }
+        },
+        "ml": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ബാക്കി"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ үлдсэн"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ शिल्लक"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ lagi"
+          }
+        },
+        "mt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fadal %@"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ကျန်ရှိသည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ igjen"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ बाँकी"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ resterend"
+          }
+        },
+        "ny": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kwatsala %@"
+          }
+        },
+        "or": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ବାକି"
+          }
+        },
+        "pa": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ਬਾਕੀ"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pozostały czas: %@"
+          }
+        },
+        "ps": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ پاتې دی"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tempo restante: %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Timp rămas: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Осталось %@"
+          }
+        },
+        "rw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Hasigaye %@"
+          }
+        },
+        "sd": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ باقي"
+          }
+        },
+        "si": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ඉතිරිව ඇත"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zostáva %@"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Preostalo %@"
+          }
+        },
+        "sm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ o totoe"
+          }
+        },
+        "sn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Pasara %@"
+          }
+        },
+        "so": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ayaa hadhay"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koha e mbetur: %@"
+          }
+        },
+        "sr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Преостало %@"
+          }
+        },
+        "st": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ho setse %@"
+          }
+        },
+        "su": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sésana %@"
+          }
+        },
+        "sw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ imesalia"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ மீதமுள்ளது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ మిగిలి ఉంది"
+          }
+        },
+        "tg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ мондааст"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "เหลือ %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ kaldı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Залишилося %@"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ باقی"
+          }
+        },
+        "uz": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ qoldi"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Còn %@"
+          }
+        },
+        "xh": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kushiyeke %@"
+          }
+        },
+        "yi": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ פֿאַרבליבן"
+          }
+        },
+        "yo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ ló kù"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "剩余 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "剩餘 %@"
+          }
+        },
+        "zu": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kusele %@"
+          }
+        }
+      },
+      "comment": "Battery power source or runtime. Preserve %@ when present. Added translations require native-speaker review."
+    },
+    "Charging": {
+      "extractionState": "manual",
+      "comment": "Battery power state. New or corrected translations require native-speaker review.",
+      "localizations": {
+        "af": {
+          "stringUnit": {
             "state": "translated",
-            "value": "%@ restantes"
+            "value": "Laai"
+          }
+        },
+        "am": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "በመሙላት ላይ"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الشحن"
+          }
+        },
+        "as": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "চাৰ্জ হৈ আছে"
+          }
+        },
+        "ay": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ch’ama phuqachaski"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doldurulur"
+          }
+        },
+        "be": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зарадка"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зареждане"
+          }
+        },
+        "bm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Batiri bɛ fa"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "চার্জিং"
+          }
+        },
+        "bo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "གློག་གསོག་བཞིན་པ།"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Punjenje"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carregant"
+          }
+        },
+        "ceb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pag-charge"
+          }
+        },
+        "co": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carica"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nabíjení"
+          }
+        },
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codi tâl"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opladning"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wird geladen"
+          }
+        },
+        "dv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ޗާޖުވަމުންދަނީ"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Φόρτιση"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Charging"
+          }
+        },
+        "eo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ŝargado"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ restantes"
+            "value": "Cargando"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laadimine"
+          }
+        },
+        "eu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kargatzen"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شارژ کردن"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lataus"
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nagcha-charge"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "En charge"
+          }
+        },
+        "fy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opladen"
+          }
+        },
+        "ga": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muirearú"
+          }
+        },
+        "gd": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A 'cur cosgais"
+          }
+        },
+        "gl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargando"
+          }
+        },
+        "gn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Omohenyhẽhína"
+          }
+        },
+        "gu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ચાર્જિંગ"
+          }
+        },
+        "ha": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cajin"
+          }
+        },
+        "haw": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoʻopiʻi"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "טעינה"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "चार्जिंग"
+          }
+        },
+        "hmn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kev them nyiaj"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Punjenje"
+          }
+        },
+        "ht": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaje"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Töltés"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Լիցքավորում"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mengisi daya"
+          }
+        },
+        "ig": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nchaji"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hleðsla"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In carica"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "充電中"
+          }
+        },
+        "jv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ngisi daya"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "დამუხტვა"
+          }
+        },
+        "kk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зарядталуда"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "សាកថ្ម"
+          }
+        },
+        "kn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ಚಾರ್ಜ್ ಆಗುತ್ತಿದೆ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "충전 중"
+          }
+        },
+        "ku": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Şarj dibe"
+          }
+        },
+        "ky": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заряддоо"
+          }
+        },
+        "la": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "praecipiens"
+          }
+        },
+        "lb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opluedstatiounen"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ກຳລັງສາກໄຟ"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Įkrovimas"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uzlāde"
+          }
+        },
+        "mg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eo am-pamahanana"
+          }
+        },
+        "mi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te utu"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Полнење"
+          }
+        },
+        "ml": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ചാർജിംഗ്"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цэнэглэж байна"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "चार्ज होत आहे"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mengecas"
+          }
+        },
+        "mt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iċċarġjar"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အားသွင်းခြင်း။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lader"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "चार्ज गर्दै"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opladen"
+          }
+        },
+        "ny": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kulipira"
+          }
+        },
+        "or": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ଚାର୍ଜ ହେଉଛି"
+          }
+        },
+        "pa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ਚਾਰਜ ਹੋ ਰਿਹਾ ਹੈ"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ładowanie"
+          }
+        },
+        "ps": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "چارج کول"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carregando"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Încărcare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зарядка"
+          }
+        },
+        "rw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bateri irimo kuzura"
+          }
+        },
+        "sd": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "چارج ڪرڻ"
+          }
+        },
+        "si": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "අයකිරීම"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nabíjanie"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Polnjenje"
+          }
+        },
+        "sm": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Totogiina"
+          }
+        },
+        "sn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kuchaja"
+          }
+        },
+        "so": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dallacaadda"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ngarkimi"
+          }
+        },
+        "sr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Пуни се"
+          }
+        },
+        "st": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ho tjhaja"
+          }
+        },
+        "su": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ngecas"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laddar"
+          }
+        },
+        "sw": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inachaji"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "சார்ஜ் செய்கிறது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఛార్జింగ్"
+          }
+        },
+        "tg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пур кардан"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กำลังชาร์จ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şarj etme"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зарядка"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "چارج ہو رہا ہے۔"
+          }
+        },
+        "uz": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaryadlanmoqda"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sạc"
+          }
+        },
+        "xh": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ukutshaja"
+          }
+        },
+        "yi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "טשאַרדזשינג"
+          }
+        },
+        "yo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gbigba agbara"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "充电"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "充電"
+          }
+        },
+        "zu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iyashaja"
+          }
+        }
+      }
+    },
+    "AC Power": {
+      "extractionState": "manual",
+      "comment": "Battery power state. New or corrected translations require native-speaker review.",
+      "localizations": {
+        "af": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC krag"
+          }
+        },
+        "am": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "የ AC ኃይል"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "طاقة خارجية"
+          }
+        },
+        "as": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "পাৱাৰ এডাপ্টাৰ"
+          }
+        },
+        "ay": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ch’ama adaptador"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC Gücü"
+          }
+        },
+        "be": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пераменнае сілкаванне"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC захранване"
+          }
+        },
+        "bm": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kuran adaptatɛri"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এসি পাওয়ার"
+          }
+        },
+        "bo": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "གློག་ཁུངས་མཐུན་སྒྲིག་ཆས།"
+          }
+        },
+        "bs": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adapter za napajanje"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentació CA"
+          }
+        },
+        "ceb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gahum sa AC"
+          }
+        },
+        "co": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adattatore d’alimentazione"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Napájení střídavým proudem"
+          }
+        },
+        "cy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pŵer AC"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC strøm"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Netzbetrieb"
+          }
+        },
+        "dv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ޕަވަރ އެޑެޕްޓަރ"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Εναλλασσόμενο ρεύμα"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC Power"
+          }
+        },
+        "eo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC Potenco"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Corriente alterna"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vahelduvvool"
+          }
+        },
+        "eu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC potentzia"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برق AC"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC virta"
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptor ng kuryente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Alimentation secteur"
+          }
+        },
+        "fy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Stroomadapter"
+          }
+        },
+        "ga": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cumhacht AC"
+          }
+        },
+        "gd": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cumhachd AC"
+          }
+        },
+        "gl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentación CA"
+          }
+        },
+        "gn": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tendyry adaptador"
+          }
+        },
+        "gu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "એસી પાવર"
+          }
+        },
+        "ha": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wutar AC"
+          }
+        },
+        "haw": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mana AC"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מתח AC"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "एसी पावर"
+          }
+        },
+        "hmn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC zog"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC napajanje"
+          }
+        },
+        "ht": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC pouvwa"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC táp"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Սնուցման ադապտեր"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daya AC"
+          }
+        },
+        "ig": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ike AC"
+          }
+        },
+        "is": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Straumbreytir"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentazione CA"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "外部電源"
+          }
+        },
+        "jv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daya AC"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC სიმძლავრე"
+          }
+        },
+        "kk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Айнымалы ток қуаты"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ថាមពល AC"
+          }
+        },
+        "kn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ಎಸಿ ಪವರ್"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC 전원"
+          }
+        },
+        "ku": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptera elektrîkê"
+          }
+        },
+        "ky": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Кубат адаптери"
+          }
+        },
+        "la": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptor electricus"
+          }
+        },
+        "lb": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Stroumadapter"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ໄຟຟ້າ AC"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC maitinimas"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maiņstrāva"
+          }
+        },
+        "mg": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaptatera herinaratra"
+          }
+        },
+        "mi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mana AC"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC напојување"
+          }
+        },
+        "ml": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "എസി പവർ"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Хувьсах гүйдлийн хүч"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "एसी पॉवर"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kuasa AC"
+          }
+        },
+        "mt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qawwa AC"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ပါဝါအဒက်တာ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vekselstrøm"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "एसी पावर"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wisselstroom"
+          }
+        },
+        "ny": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mphamvu ya AC"
+          }
+        },
+        "or": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ପାୱାର ଆଡାପ୍ଟର"
+          }
+        },
+        "pa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC ਪਾਵਰ"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zasilanie sieciowe"
+          }
+        },
+        "ps": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "د AC بریښنا"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentação CA"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentare AC"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Питание переменного тока"
+          }
+        },
+        "rw": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adaputeri y’amashanyarazi"
+          }
+        },
+        "sd": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اي سي پاور"
+          }
+        },
+        "si": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC බලය"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Napájanie striedavým prúdom"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC napajanje"
+          }
+        },
+        "sm": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Malosiaga AC"
+          }
+        },
+        "sn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC Simba"
+          }
+        },
+        "so": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Awooda AC"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuqia AC"
+          }
+        },
+        "sr": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Адаптер за напајање"
+          }
+        },
+        "st": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Matla a AC"
+          }
+        },
+        "su": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daya AC"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nätström"
+          }
+        },
+        "sw": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nguvu ya AC"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஏசி பவர்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC పవర్"
+          }
+        },
+        "tg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Қувваи AC"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไฟฟ้ากระแสสลับ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC Gücü"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Живлення змінного струму"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC پاور"
+          }
+        },
+        "uz": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC quvvati"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nguồn điện xoay chiều"
+          }
+        },
+        "xh": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amandla e-AC"
+          }
+        },
+        "yi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "אַק מאַכט"
+          }
+        },
+        "yo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AC Agbara"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "外接电源"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "外接電源"
+          }
+        },
+        "zu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amandla e-AC"
           }
         }
       }

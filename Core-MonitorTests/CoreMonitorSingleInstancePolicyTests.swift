@@ -1,84 +1,32 @@
 import XCTest
 @testable import Core_Monitor
 
+@MainActor
 final class CoreMonitorSingleInstancePolicyTests: XCTestCase {
-    func testHandoffTargetIgnoresCurrentProcessAndUnreadyPeers() {
-        let currentPID = pid_t(900)
-        let launchDate = Date(timeIntervalSince1970: 100)
-
-        let candidates = [
-            CoreMonitorRunningInstance(
-                processIdentifier: currentPID,
-                launchDate: launchDate,
-                isFinishedLaunching: true,
-                isTerminated: false
-            ),
-            CoreMonitorRunningInstance(
-                processIdentifier: 901,
-                launchDate: Date(timeIntervalSince1970: 90),
-                isFinishedLaunching: false,
-                isTerminated: false
-            ),
-            CoreMonitorRunningInstance(
-                processIdentifier: 902,
-                launchDate: Date(timeIntervalSince1970: 80),
-                isFinishedLaunching: true,
-                isTerminated: true
-            )
-        ]
-
-        XCTAssertNil(
-            CoreMonitorSingleInstancePolicy.handoffTarget(
-                from: candidates,
-                currentPID: currentPID
-            )
-        )
+    func testOnlyLockOwnerIsSelectedEvenIfItIsStillLaunching() {
+        let owner = CoreMonitorRunningInstance(processIdentifier: 901, launchDate: Date(), isFinishedLaunching: false, isTerminated: false)
+        let older = CoreMonitorRunningInstance(processIdentifier: 800, launchDate: .distantPast, isFinishedLaunching: true, isTerminated: false)
+        XCTAssertEqual(CoreMonitorSingleInstancePolicy.handoffTarget(from: [older, owner], currentPID: 900, ownerPID: 901), owner)
+        XCTAssertNil(CoreMonitorSingleInstancePolicy.handoffTarget(from: [older, owner], currentPID: 900, ownerPID: nil))
+        XCTAssertNil(CoreMonitorSingleInstancePolicy.handoffTarget(from: [owner], currentPID: 901, ownerPID: 901))
     }
 
-    func testHandoffTargetPrefersOldestFinishedRunningInstance() {
-        let currentPID = pid_t(900)
-        let oldest = CoreMonitorRunningInstance(
-            processIdentifier: 800,
-            launchDate: Date(timeIntervalSince1970: 10),
-            isFinishedLaunching: true,
-            isTerminated: false
-        )
-        let newer = CoreMonitorRunningInstance(
-            processIdentifier: 850,
-            launchDate: Date(timeIntervalSince1970: 20),
-            isFinishedLaunching: true,
-            isTerminated: false
-        )
-
-        let target = CoreMonitorSingleInstancePolicy.handoffTarget(
-            from: [newer, oldest],
-            currentPID: currentPID
-        )
-
-        XCTAssertEqual(target, oldest)
+    func testDeadLockOwnerIsNotUsedForHandoff() {
+        let owner = CoreMonitorRunningInstance(processIdentifier: 901, launchDate: nil, isFinishedLaunching: true, isTerminated: true)
+        XCTAssertNil(CoreMonitorSingleInstancePolicy.handoffTarget(from: [owner], currentPID: 900, ownerPID: 901))
     }
 
-    func testHandoffTargetFallsBackToPIDWhenLaunchDateIsMissing() {
-        let currentPID = pid_t(900)
-        let lowerPID = CoreMonitorRunningInstance(
-            processIdentifier: 700,
-            launchDate: nil,
-            isFinishedLaunching: true,
-            isTerminated: false
-        )
-        let higherPID = CoreMonitorRunningInstance(
-            processIdentifier: 750,
-            launchDate: nil,
-            isFinishedLaunching: true,
-            isTerminated: false
-        )
-
-        let target = CoreMonitorSingleInstancePolicy.handoffTarget(
-            from: [higherPID, lowerPID],
-            currentPID: currentPID
-        )
-
-        XCTAssertEqual(target, lowerPID)
+    func testAcknowledgementMustMatchRequestAndRequestingProcess() {
+        let request = CoreMonitorDashboardHandoffRequest(bundleIdentifier: "CoreTools.Core-Monitor", targetProcessIdentifier: 901,
+                                                        requesterProcessIdentifier: 900)
+        XCTAssertTrue(CoreMonitorDashboardHandoffRequest.acceptsAcknowledgement(userInfo: request.userInfo,
+            bundleIdentifier: request.bundleIdentifier, requestIdentifier: request.requestIdentifier, requesterPID: 900, ownerPID: 901))
+        XCTAssertFalse(CoreMonitorDashboardHandoffRequest.acceptsAcknowledgement(userInfo: request.userInfo,
+            bundleIdentifier: request.bundleIdentifier, requestIdentifier: UUID(), requesterPID: 900, ownerPID: 901))
+        XCTAssertFalse(CoreMonitorDashboardHandoffRequest.acceptsAcknowledgement(userInfo: request.userInfo,
+            bundleIdentifier: request.bundleIdentifier, requestIdentifier: request.requestIdentifier, requesterPID: 902, ownerPID: 901))
+        XCTAssertFalse(CoreMonitorDashboardHandoffRequest.acceptsAcknowledgement(userInfo: request.userInfo,
+            bundleIdentifier: request.bundleIdentifier, requestIdentifier: request.requestIdentifier, requesterPID: 900, ownerPID: 902))
     }
 
     func testDashboardHandoffRequestRequiresExpectedBundleAndTargetPID() {
@@ -118,5 +66,18 @@ final class CoreMonitorSingleInstancePolicyTests: XCTestCase {
                 currentProcessIdentifier: 1234
             )
         )
+    }
+
+    func testHandoffRoundTripsInSandboxCompatibleObjectWithoutUserInfo() throws {
+        let request = CoreMonitorDashboardHandoffRequest(bundleIdentifier: "CoreTools.Core-Monitor",
+                                                        targetProcessIdentifier: 901, requesterProcessIdentifier: 900)
+        let object = try XCTUnwrap(request.notificationObject)
+        let info = CoreMonitorDashboardHandoffRequest.notificationInfo(object: object, legacyUserInfo: nil)
+        XCTAssertTrue(CoreMonitorDashboardHandoffRequest.accepts(userInfo: info,
+            expectedBundleIdentifier: request.bundleIdentifier, currentProcessIdentifier: 901))
+        XCTAssertTrue(CoreMonitorDashboardHandoffRequest.acceptsAcknowledgement(userInfo: info,
+            bundleIdentifier: request.bundleIdentifier, requestIdentifier: request.requestIdentifier, requesterPID: 900, ownerPID: 901))
+        XCTAssertNil(CoreMonitorDashboardHandoffRequest.notificationInfo(object: "invalid", legacyUserInfo: nil))
+        XCTAssertNil(CoreMonitorDashboardHandoffRequest.notificationInfo(object: String(repeating: "x", count: 4_097), legacyUserInfo: nil))
     }
 }

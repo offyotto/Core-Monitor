@@ -236,10 +236,14 @@ final class WeatherLocationAccessController: NSObject, ObservableObject, CLLocat
 @available(macOS 13.0, *)
 @MainActor
 final class LiveWeatherService: WeatherProviding {
+    private nonisolated let locationNames = WeatherLocationNameCache()
+
     nonisolated func currentWeather(for location: CLLocation) async throws -> WeatherSnapshot {
         let weather = try await WeatherService.shared.weather(for: location)
         let current = weather.currentWeather
-        let locationName = await Self.locationName(for: location)
+        let locationName = await locationNames.name(for: location, locale: AppLocaleStore.currentLocale) { location, locale in
+            try await Self.locationName(for: location, locale: locale)
+        }
         let nextRainSummary = Self.nextRainSummary(from: weather)
 
         return WeatherSnapshot(
@@ -295,19 +299,10 @@ final class LiveWeatherService: WeatherProviding {
         return raw.contains("rain") || raw.contains("drizzle") || raw.contains("thunder")
     }
 
-    private nonisolated static func locationName(for location: CLLocation) async -> String {
-        do {
-            let placemarks = try await CLGeocoder().reverseGeocodeLocation(location)
-            if let place = placemarks.first {
-                return place.locality
-                    ?? place.subAdministrativeArea
-                    ?? place.name
-                    ?? "Weather"
-            }
-        } catch {
-            // Keep the WeatherKit fetch path intact and fall back to a generic title.
-        }
-        return "Weather"
+    private nonisolated static func locationName(for location: CLLocation, locale: Locale) async throws -> String? {
+        let placemarks = try await CLGeocoder().reverseGeocodeLocation(location, preferredLocale: locale)
+        guard let place = placemarks.first else { return nil }
+        return place.locality ?? place.subAdministrativeArea ?? place.name
     }
 }
 
