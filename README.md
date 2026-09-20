@@ -94,6 +94,10 @@ no account, no sign in, no ads, and no analytics. monitoring data stays on your 
 - macos 13 or later
 - apple silicon is the only supported architecture
 
+## size
+
+- Core-Monitor is roughly 4mb for the .dmg installer and about 5mb for the app.zip installer.
+
 ## license
 
 gpl-3.0, see [LICENSE](./LICENSE).
