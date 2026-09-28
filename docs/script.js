@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Core-Monitor site behaviour — bench instrument edition
+   Core-Monitor site behaviour
 
    Everything here is progressive enhancement. With this file blocked the
    page stays fully readable: the fan curve renders fully drawn, navigation and copy fall back
@@ -102,5 +102,38 @@
       drawWatch.observe(curve);
     }
   }
+
+  /* ---------- tour video: play muted while on screen ---------- */
+
+  // Without this script, or with reduced motion, the clip waits on its poster
+  // with native controls. Once a visitor pauses it, it stays paused.
+  doc.querySelectorAll("video[data-autoplay]").forEach(function (video) {
+    if (reducedMotion.matches || !("IntersectionObserver" in window)) return;
+
+    var followView = true;
+    var selfPausing = false;
+
+    video.addEventListener("pause", function () {
+      if (!selfPausing) followView = false;
+      selfPausing = false;
+    });
+
+    new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!followView) return;
+          if (entry.isIntersecting) {
+            video.muted = true;
+            var playing = video.play();
+            if (playing && playing.catch) playing.catch(function () {});
+          } else if (!video.paused) {
+            selfPausing = true;
+            video.pause();
+          }
+        });
+      },
+      { threshold: 0.5 }
+    ).observe(video);
+  });
 
 })();

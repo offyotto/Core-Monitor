@@ -14,8 +14,8 @@
   <meta name="apple-mobile-web-app-title" content="Core-Monitor">
   <meta name="author" content="offyotto">
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
-  <meta name="theme-color" content="#e8eaec" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#16191c" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111113" media="(prefers-color-scheme: dark)">
   <link rel="canonical" href="https://xnu.is-a.dev/">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.ico?v=6" sizes="any">
@@ -37,13 +37,10 @@
   <meta name="twitter:description" content="A free, open-source monitor for Apple Silicon Macs. Temperature, power, memory, battery and fans in one native window.">
   <meta name="twitter:image" content="https://xnu.is-a.dev/images/ui/overview-v16.png?v=16">
   <meta name="twitter:image:alt" content="Core-Monitor dashboard showing CPU, memory, thermal, cooling, power, network and storage readings.">
-  <!-- The display face paints the headline and the hero screenshot is the
-       largest element on first paint; both are fetched early. -->
-  <link rel="preload" as="font" type="font/woff2" href="fonts/bricolage-grotesque-latin.woff2" crossorigin>
-  <link rel="preload" as="font" type="font/woff2" href="fonts/spline-sans-mono-latin.woff2" crossorigin>
+  <!-- The hero screenshot is the largest element on first paint. -->
   <link rel="preload" as="image" href="images/ui/overview-v16.png?v=16" fetchpriority="high">
-  <link rel="stylesheet" href="styles.css?v=20">
-  <script src="script.js?v=9" defer></script>
+  <link rel="stylesheet" href="styles.css?v=21">
+  <script src="script.js?v=10" defer></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -93,6 +90,16 @@
           "https://github.com/offyotto/Core-Monitor/releases"
         ],
         "developer": { "@type": "Person", "name": "offyotto", "url": "https://github.com/offyotto" }
+      },
+      {
+        "@type": "VideoObject",
+        "@id": "https://xnu.is-a.dev/#tour",
+        "name": "Core-Monitor in 15 seconds",
+        "description": "A short tour of the Core-Monitor dashboard, the thermal panel in the menu bar, and a custom fan curve. The readings shown are sample data.",
+        "thumbnailUrl": "https://xnu.is-a.dev/images/site/core-monitor-tour-poster.jpg",
+        "contentUrl": "https://xnu.is-a.dev/videos/core-monitor-tour.mp4",
+        "uploadDate": "2026-09-27",
+        "duration": "PT15S"
       },
       {
         "@type": "FAQPage",
@@ -163,6 +170,7 @@
       </a>
       <button class="menu-btn" type="button" data-menu-btn aria-expanded="false" aria-controls="site-menu">Menu</button>
       <nav class="site-menu" id="site-menu" data-menu aria-label="Sections">
+        <a href="#tour">Tour</a>
         <a href="#screens">Screens</a>
         <a href="#cooling">Cooling</a>
         <a href="#touchbar">Touch Bar</a>
@@ -170,7 +178,7 @@
         <a href="#install">Install</a>
         <a href="#faq">FAQ</a>
       </nav>
-      <a class="act act-heat act-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download</a>
+      <a class="act act-primary act-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download</a>
     </div>
   </header>
 
@@ -182,7 +190,7 @@
             <h1 class="rise">The instrument panel your Mac never shipped with.</h1>
             <p class="lede-sub rise rise-2">Core-Monitor reads temperature, CPU and GPU load, power draw, memory, battery and fan speed from the sensors already inside your Apple Silicon Mac, and shows them in one native window and the menu bar. No account, no telemetry, and fan control only when you ask for it.</p>
             <div class="action-row rise rise-3">
-              <a class="act act-heat" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download for macOS</a>
+              <a class="act act-primary" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download for macOS</a>
               <a class="act act-bare" href="https://github.com/offyotto/Core-Monitor">Read the source</a>
             </div>
           </div>
@@ -190,7 +198,20 @@
 
         <figure class="bezel hero-shot">
           <img src="images/ui/overview-v16.png?v=16" alt="Core-Monitor dashboard with CPU, memory, thermal, cooling, power, network and storage readings." width="1192" height="884" fetchpriority="high" decoding="async">
-          <figcaption>The Overview screen on an Apple Silicon MacBook Pro. Every number on it came off the machine itself.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="band" id="tour" aria-labelledby="tour-title">
+      <div class="shell">
+        <div class="band-head is-center">
+          <h2 id="tour-title">Fifteen seconds with Core-Monitor</h2>
+        </div>
+        <figure class="reel">
+          <video data-autoplay controls muted loop playsinline preload="none" poster="images/site/core-monitor-tour-poster.jpg" width="1920" height="1080" title="Core-Monitor tour: dashboard, menu bar panel and fan curve">
+            <source src="videos/core-monitor-tour.mp4?v=1" type="video/mp4">
+            <p>Your browser cannot play this clip. <a href="videos/core-monitor-tour.mp4" download>Download the MP4</a> instead.</p>
+          </video>
         </figure>
       </div>
     </section>
@@ -205,31 +226,30 @@
           <div class="strip">
             <figure class="shot">
               <a href="images/ui/overview-v16.png?v=16"><img src="images/ui/overview-v16.png?v=16" alt="Overview screen summarizing CPU, memory, thermal, cooling, power, network and storage." loading="lazy" decoding="async" width="1192" height="884"></a>
-              <figcaption><b>Overview</b><span>everything at a glance</span></figcaption>
+              <figcaption><b>Overview</b></figcaption>
             </figure>
             <figure class="shot">
               <a href="images/ui/cooling-v16.png?v=16"><img src="images/ui/cooling-v16.png?v=16" alt="Cooling screen with fan speeds, cooling mode and a custom fan curve editor." loading="lazy" decoding="async" width="1192" height="884"></a>
-              <figcaption><b>Cooling</b><span>fans and curves</span></figcaption>
+              <figcaption><b>Cooling</b></figcaption>
             </figure>
             <figure class="shot">
               <a href="images/ui/memory-v16.png?v=16"><img src="images/ui/memory-v16.png?v=16" alt="Memory screen with usage history and a pressure breakdown." loading="lazy" decoding="async" width="1192" height="884"></a>
-              <figcaption><b>Memory</b><span>usage and pressure</span></figcaption>
+              <figcaption><b>Memory</b></figcaption>
             </figure>
             <figure class="shot">
               <a href="images/ui/storage-v16.png?v=16"><img src="images/ui/storage-v16.png?v=16" alt="Storage screen with used, purgeable and free capacity." loading="lazy" decoding="async" width="1192" height="884"></a>
-              <figcaption><b>Storage</b><span>used, purgeable, free</span></figcaption>
+              <figcaption><b>Storage</b></figcaption>
             </figure>
             <figure class="shot is-narrow">
               <a href="images/ui/menu-thermal-v16.png?v=16"><img src="images/ui/menu-thermal-v16.png?v=16" alt="Thermal panel opened from the menu bar." loading="lazy" decoding="async" width="782" height="776"></a>
-              <figcaption><b>Thermal panel</b><span>from the menu bar</span></figcaption>
+              <figcaption><b>Thermal panel</b></figcaption>
             </figure>
             <figure class="shot is-narrow">
               <a href="images/ui/menu-network-v16.png?v=16"><img src="images/ui/menu-network-v16.png?v=16" alt="Network panel opened from the menu bar." loading="lazy" decoding="async" width="782" height="776"></a>
-              <figcaption><b>Network panel</b><span>from the menu bar</span></figcaption>
+              <figcaption><b>Network panel</b></figcaption>
             </figure>
           </div>
         </div>
-        <p class="strip-hint">scroll sideways for more &mdash; each tile opens the full-size capture</p>
       </div>
     </section>
 
@@ -293,41 +313,6 @@
       </div>
     </section>
 
-    <section class="band">
-      <div class="shell">
-        <div class="band-head">
-          <h2>Where people actually reach for it</h2>
-          <p>The moments this was made around: the fans wind up and you want to know exactly why.</p>
-        </div>
-        <ul class="log">
-          <li>
-            <h3>Compiling and exporting</h3>
-            <p>Watch clock speed and heat while a long build or render runs, and see whether a slowdown is thermal or something else entirely.</p>
-          </li>
-          <li>
-            <h3>Away from the charger</h3>
-            <p>Watts in and watts out, so the time-remaining figure reflects what the Mac is actually drawing right now, not a rough guess.</p>
-          </li>
-          <li class="is-cool">
-            <h3>Recording and calls</h3>
-            <p>Pin the fans low before you hit record, check the temperature margin, then hand cooling back to macOS once you are done.</p>
-          </li>
-          <li class="is-cool">
-            <h3>Warnings that stay put</h3>
-            <p>Set a threshold for heat, memory or battery and get a notification straight from the Mac itself, with no server involved.</p>
-          </li>
-          <li>
-            <h3>Nothing hidden</h3>
-            <p>The full source is public, so anyone can check exactly what gets read, what the helper writes, and what never leaves the machine.</p>
-          </li>
-          <li>
-            <h3>No account needed</h3>
-            <p>No sign-in, no subscription, and no analytics library anywhere in the binary. Process names can be hidden in memory views too.</p>
-          </li>
-        </ul>
-      </div>
-    </section>
-
     <section class="band" id="touchbar">
       <div class="shell">
         <div class="band-head">
@@ -374,7 +359,6 @@
         </div>
         <div class="matrix-scroll" tabindex="0" role="region" aria-labelledby="compare-title">
           <table class="matrix">
-            <caption>Written by the Core-Monitor developer. Check each app&rsquo;s own site for its current feature list.</caption>
             <thead>
               <tr>
                 <th scope="col">App</th>
@@ -412,8 +396,8 @@
     <section class="band" id="install">
       <div class="shell">
         <div class="band-head">
-          <h2>Two editions, three ways in</h2>
-          <p>Pick whichever matches how you manage software on your Mac. Every route below is free.</p>
+          <h2>Two ways to install</h2>
+          <p>Pick whichever matches how you manage software on your Mac. Both are free.</p>
         </div>
         <div class="ways">
           <div class="way">
@@ -421,7 +405,7 @@
             <div>
               <p class="way-blurb">Grab it straight from GitHub. The DMG gives you the familiar drag-to-Applications install; the ZIP is the bare app bundle.</p>
               <div class="action-row">
-                <a class="act act-heat act-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">DMG</a>
+                <a class="act act-primary act-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">DMG</a>
                 <a class="act act-line act-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip">ZIP</a>
               </div>
             </div>
@@ -482,7 +466,7 @@ brew install --cask offyotto/core-monitor/core-monitor</pre>
       <div class="shell">
         <h2>Your Mac has been taking its own temperature all along. Start reading it.</h2>
         <div class="action-row">
-          <a class="act act-heat" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download for macOS</a>
+          <a class="act act-primary" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download for macOS</a>
           <a class="act act-line" href="https://github.com/offyotto/Core-Monitor">View on GitHub</a>
         </div>
       </div>
