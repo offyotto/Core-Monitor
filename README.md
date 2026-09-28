@@ -23,6 +23,12 @@
   <a href="https://securityscorecards.dev/viewer/?uri=github.com/offyotto/Core-Monitor"><img src="https://api.securityscorecards.dev/projects/github.com/offyotto/Core-Monitor/badge?run=29832249303-2" alt="openssf scorecard"></a>
 </p>
 
+<p align="center">
+  <a href="https://xnu.is-a.dev/#tour"><img src="./docs/images/site/core-monitor-tour-poster.jpg" alt="core-monitor 15-second tour video" width="860"></a>
+  <br>
+  <a href="https://xnu.is-a.dev/#tour">watch the 15-second tour</a>
+</p>
+
 ---
 
 ## what it is
