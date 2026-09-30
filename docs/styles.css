@@ -229,6 +229,11 @@ h3 { font-size: 1.25rem; line-height: 1.2; letter-spacing: -0.02em; font-weight:
 }
 .act-primary:hover { background: var(--accent-hover); color: var(--accent-ink); }
 
+.act-heat {
+  background: var(--heat);
+  color: #1d1d1f;
+}
+
 .act-line {
   background: var(--accent-wash);
   color: var(--accent-text);
@@ -323,6 +328,53 @@ h3 { font-size: 1.25rem; line-height: 1.2; letter-spacing: -0.02em; font-weight:
 .band-head p { color: var(--dim); font-size: 1.12rem; }
 
 .band-head.is-center { margin-inline: auto; text-align: center; }
+
+/* ---------- Mac App Store pages ------------------------------------------ */
+
+.page-lede {
+  padding: clamp(3rem, 7vh, 5rem) 0 clamp(2rem, 4vh, 3rem);
+}
+
+.meta-line {
+  font-size: 0.95rem;
+  color: var(--dim);
+  margin-top: -0.5rem;
+  margin-bottom: 1.25rem;
+}
+.meta-line a { color: var(--accent-text); }
+
+.duo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.trio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.tally {
+  background: var(--card);
+  border-radius: var(--r-md);
+  padding: clamp(1.5rem, 3vw, 2rem);
+  box-shadow: var(--shadow-card);
+}
+.tally h3 { margin-bottom: 0.75rem; }
+.tally ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--dim);
+}
+.tally li { margin-bottom: 0.5rem; }
+.tally li:last-child { margin-bottom: 0; }
+
+.tally.is-out {
+  background: var(--card-soft);
+  box-shadow: none;
+  border: 1px solid var(--rule);
+}
 
 /* ---------- filmstrip gallery -------------------------------------------- */
 
@@ -699,7 +751,7 @@ h3 { font-size: 1.25rem; line-height: 1.2; letter-spacing: -0.02em; font-weight:
 /* ---------- responsive -------------------------------------------------------- */
 
 @media (max-width: 960px) {
-  .cooling-grid, .reel-grid, .anodized-grid { grid-template-columns: 1fr; }
+  .cooling-grid, .reel-grid, .anodized-grid, .duo, .trio { grid-template-columns: 1fr; }
   .ways { grid-template-columns: 1fr; }
 }
 
