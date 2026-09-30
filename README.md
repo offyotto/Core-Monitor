@@ -7,6 +7,12 @@
 <p align="center">a native system monitor and fan controller for Apple Silicon Macs. live readings in the menu bar, a full dashboard, and touch bar widgets. free.</p>
 
 <p align="center">
+  <a href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">
+    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" width="200">
+  </a>
+</p>
+
+<p align="center">
   <a href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip"><b>direct download</b></a>
   ·
   <a href="https://xnu.is-a.dev/">website</a>
@@ -83,7 +89,8 @@ core-monitor is free and native. istat menus is paid, tg pro and macs fan contro
 
 ## install
 
-- grab the [latest direct download](https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip)
+- get it from the [mac app store](https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12)
+- or grab the [latest direct download](https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip)
 - or build from source with xcode
 
 ## privacy
