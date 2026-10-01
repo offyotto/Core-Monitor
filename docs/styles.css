@@ -611,6 +611,7 @@ h3 { font-size: 1.25rem; line-height: 1.2; letter-spacing: -0.02em; font-weight:
 
 .way h3 { margin-bottom: 0.5rem; }
 .way-blurb { color: var(--dim); margin-bottom: 1.25rem; max-width: 56ch; }
+.way .action-row + .command { margin-top: 1.25rem; }
 
 .command {
   margin: 0 0 1rem;
@@ -752,7 +753,7 @@ h3 { font-size: 1.25rem; line-height: 1.2; letter-spacing: -0.02em; font-weight:
 
 @media (max-width: 960px) {
   .cooling-grid, .reel-grid, .anodized-grid, .duo, .trio { grid-template-columns: 1fr; }
-  .ways { grid-template-columns: 1fr; }
+  .ways { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 760px) {

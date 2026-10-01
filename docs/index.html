@@ -396,29 +396,33 @@
     <section class="band" id="install">
       <div class="shell">
         <div class="band-head">
-          <h2>Two ways to install</h2>
-          <p>Pick whichever matches how you manage software on your Mac. Both are free.</p>
+          <h2>Two editions</h2>
+          <p>Both are free. Only the direct build reads the temperature sensors and controls fans.</p>
         </div>
         <div class="ways">
           <div class="way">
-            <h3>Download the signed build</h3>
+            <h3>Direct build</h3>
             <div>
-              <p class="way-blurb">Grab it straight from GitHub. The DMG gives you the familiar drag-to-Applications install; the ZIP is the bare app bundle.</p>
+              <p class="way-blurb">The full app: SMC temperatures, fan speeds, power draw, Touch Bar widgets, and optional fan control through a helper you install only if you want it. Signed and notarized, from GitHub. macOS 13 or later.</p>
               <div class="action-row">
                 <a class="act act-primary act-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">DMG</a>
                 <a class="act act-line act-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip">ZIP</a>
               </div>
-            </div>
-          </div>
-          <div class="way">
-            <h3>Install through Homebrew</h3>
-            <div>
-              <p class="way-blurb">Add the tap once, then install and upgrade the cask the same way you handle everything else.</p>
               <pre class="command" id="brew-command">brew tap --custom-remote offyotto/core-monitor \
   https://github.com/offyotto/Core-Monitor
 brew install --cask offyotto/core-monitor/core-monitor</pre>
               <div class="action-row">
-                <button class="act act-line act-sm copy-act" type="button" data-copy="brew-command">Copy command</button>
+                <button class="act act-line act-sm copy-act" type="button" data-copy="brew-command">Copy Homebrew command</button>
+              </div>
+            </div>
+          </div>
+          <div class="way">
+            <h3>Mac App Store</h3>
+            <div>
+              <p class="way-blurb">Sandboxed and read-only: CPU, memory, network, storage, battery, and thermal state, with updates through the App Store. No sensor temperatures, fan control, or Touch Bar. macOS 14 or later.</p>
+              <div class="action-row">
+                <a class="act act-line act-sm" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">App Store</a>
+                <a class="act act-bare act-sm" href="Mac-App-Store/">What&rsquo;s included</a>
               </div>
             </div>
           </div>
