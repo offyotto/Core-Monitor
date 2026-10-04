@@ -4,49 +4,61 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>No signal at this address | Core-Monitor</title>
   <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#111113" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#07080a" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="/favicon.ico?v=6" sizes="any">
   <link rel="icon" type="image/png" sizes="512x512" href="/images/site/core-monitor-logo.png?v=6">
-  <link rel="stylesheet" href="/styles.css?v=21">
+  <link rel="stylesheet" href="/styles.css?v=22">
+  <script src="/script.js?v=11" defer></script>
 </head>
 <body>
   <a class="skiplink" href="#main">Skip to content</a>
 
-  <header class="topbar">
-    <div class="shell topbar-inner">
-      <a class="wordmark" href="/">
-        <img src="/images/site/core-monitor-logo.png?v=6" alt="" width="27" height="27">
+  <header class="nav" data-nav>
+    <div class="shell nav-inner">
+      <a class="brand" href="/">
+        <img src="/images/site/core-monitor-logo.png?v=6" alt="" width="28" height="28">
         Core-Monitor
       </a>
-      <a class="act act-primary act-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download</a>
+      <a class="btn btn-primary btn-sm nav-cta" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download</a>
     </div>
   </header>
 
   <main id="main">
-    <section class="shell lost">
-      <svg class="flatline" viewBox="0 0 480 60" preserveAspectRatio="none" aria-hidden="true">
-        <polyline points="0,30 150,30 165,12 180,48 195,30 480,30"></polyline>
-      </svg>
-      <h1>404</h1>
-      <p>This address is not reporting any data. The page may have moved, or the link was typed slightly wrong.</p>
-      <div class="action-row">
-        <a class="act act-primary" href="/">Back to the site</a>
-        <a class="act act-line" href="https://github.com/offyotto/Core-Monitor">Core-Monitor on GitHub</a>
+    <section class="page-hero lost">
+      <div class="hero-bg" aria-hidden="true">
+        <span class="aurora aurora-1"></span>
+        <span class="aurora aurora-2"></span>
+        <span class="gridlines"></span>
+      </div>
+      <div class="shell">
+        <svg class="flatline" viewBox="0 0 560 80" aria-hidden="true">
+          <path pathLength="1" d="M0 40 H190 L204 30 L214 12 L226 66 L238 40 H556"/>
+          <circle cx="556" cy="40" r="4.5"/>
+        </svg>
+        <h1 class="lost-code">404</h1>
+        <p>This address is not reporting any data. The page may have moved, or the link was typed slightly wrong.</p>
+        <div class="cta">
+          <a class="btn btn-primary" href="/">Back to the site</a>
+          <a class="btn btn-ghost" href="https://github.com/offyotto/Core-Monitor">Core-Monitor on GitHub</a>
+        </div>
       </div>
     </section>
   </main>
 
-  <footer class="basefoot">
-    <div class="shell basefoot-row">
-      <p class="basefoot-brand"><img src="/images/site/core-monitor-logo.png?v=6" alt="" width="21" height="21">Core-Monitor</p>
-      <nav class="basefoot-nav" aria-label="Footer">
-        <a href="/">Home</a>
-        <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
-        <a href="https://github.com/offyotto/Core-Monitor/releases/latest">Releases</a>
-      </nav>
+  <footer class="footer">
+    <div class="shell">
+      <div class="footer-top">
+        <a class="brand" href="/"><img src="/images/site/core-monitor-logo.png?v=6" alt="" width="28" height="28">Core-Monitor</a>
+        <nav class="footer-nav" aria-label="Footer">
+          <a href="/">Home</a>
+          <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
+          <a href="https://github.com/offyotto/Core-Monitor/releases/latest">Releases</a>
+        </nav>
+      </div>
     </div>
   </footer>
 </body>

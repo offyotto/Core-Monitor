@@ -4,13 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>Privacy Policy | Core-Monitor Mac App Store Edition</title>
   <meta name="description" content="Privacy policy for the Mac App Store edition of Core-Monitor. No account, no analytics, no advertising code. Location is used only for optional local weather.">
   <meta name="application-name" content="Core-Monitor">
   <meta name="apple-mobile-web-app-title" content="Core-Monitor">
   <meta name="robots" content="index,follow,max-image-preview:large">
-  <meta name="theme-color" content="#e8eaec" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#16191c" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#07080a" media="(prefers-color-scheme: dark)">
   <link rel="canonical" href="https://xnu.is-a.dev/Mac-App-Store/privacy/">
   <link rel="icon" href="../../favicon.ico?v=6" sizes="any">
   <link rel="icon" type="image/png" sizes="512x512" href="../../images/site/core-monitor-logo.png?v=6">
@@ -26,56 +27,76 @@
   <meta name="twitter:title" content="Privacy Policy | Core-Monitor Mac App Store Edition">
   <meta name="twitter:description" content="Privacy policy for Core-Monitor on the Mac App Store.">
   <meta name="twitter:image" content="https://xnu.is-a.dev/images/ui/mac-app-store/app-store-dashboard.png">
-  <link rel="stylesheet" href="../../styles.css?v=20">
+  <link rel="stylesheet" href="../../styles.css?v=22">
+  <script src="../../script.js?v=11" defer></script>
 </head>
 <body>
   <a class="skiplink" href="#main">Skip to content</a>
 
-  <header class="topbar">
-    <div class="shell topbar-inner">
-      <a class="wordmark" href="../">
-        <img src="../../images/site/core-monitor-logo.png?v=6" alt="" width="27" height="27">
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.75 9.75 17.5 19 7.25"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M6.5 12h11"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.25-5.4-6.25-10.75a6.25 6.25 0 0 1 12.5 0C18.25 15.6 12 21 12 21Z"/><circle cx="12" cy="10.25" r="2.25"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7.25 18.75h9.5a4 4 0 0 0 .55-7.96 5.5 5.5 0 0 0-10.6 1.5 3.25 3.25 0 0 0 .55 6.46Z"/></symbol>
+    <symbol id="i-toggle" viewBox="0 0 24 24"><rect x="2.75" y="7.25" width="18.5" height="9.5" rx="4.75"/><circle cx="7.6" cy="12" r="2.6"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3.25" y="5.75" width="17.5" height="12.5" rx="2.25"/><path d="m4 7.25 8 6 8-6"/></symbol>
+  </svg>
+
+  <header class="nav" data-nav>
+    <div class="shell nav-inner">
+      <a class="brand" href="../">
+        <img src="../../images/site/core-monitor-logo.png?v=6" alt="" width="28" height="28">
         Core-Monitor
       </a>
-      <nav class="site-menu" aria-label="Pages">
+      <nav class="nav-links" id="site-menu" data-menu aria-label="Pages">
         <a href="../support/">Support</a>
         <a href="../">Edition page</a>
         <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
       </nav>
+      <button class="menu-btn" type="button" data-menu-btn aria-expanded="false" aria-controls="site-menu">Menu</button>
     </div>
+    <div class="nav-progress" aria-hidden="true"><span data-progress></span></div>
   </header>
 
   <main id="main">
-    <section class="shell page-lede">
-      <h1>Not much to disclose, so this is short</h1>
-      <p class="lede-sub">The Mac App Store edition of Core-Monitor has no account system, no analytics, and no advertising code. It reads system status to draw its own interface, and that reading stays on your Mac.</p>
-      <p class="meta-line">Effective April 20, 2026. Applies to the Mac App Store edition of Core-Monitor.</p>
-      <p class="meta-line">Apple listing: <a href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">apps.apple.com/us/app/core-monitor/id6762558526</a></p>
+    <section class="page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <span class="aurora aurora-1"></span>
+        <span class="aurora aurora-3"></span>
+        <span class="gridlines"></span>
+      </div>
+      <div class="shell">
+        <p class="eyebrow c-power rise"><span class="dot" aria-hidden="true"></span>Privacy policy</p>
+        <h1 class="rise rise-2">Not much to disclose, so this is short</h1>
+        <p class="lede rise rise-3">The Mac App Store edition of Core-Monitor has no account system, no analytics, and no advertising code. It reads system status to draw its own interface, and that reading stays on your Mac.</p>
+        <p class="meta-line rise rise-4">Effective April 20, 2026. Applies to the Mac App Store edition of Core-Monitor.</p>
+        <p class="meta-line rise rise-4">Apple listing: <a href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">apps.apple.com/us/app/core-monitor/id6762558526</a></p>
+      </div>
     </section>
 
     <section class="band">
       <div class="shell duo">
-        <div class="tally">
+        <div class="card reveal">
           <h3>What the app reads, locally</h3>
-          <ul>
-            <li>CPU activity and per-core load</li>
-            <li>Memory usage and pressure</li>
-            <li>Battery and power-source status</li>
-            <li>Thermal state and warning level</li>
-            <li>Network throughput</li>
-            <li>Startup disk usage</li>
-            <li>Uptime and load averages</li>
-            <li>Your location, only if you enable Live Weather</li>
+          <ul class="list">
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>CPU activity and per-core load</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Memory usage and pressure</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Battery and power-source status</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Thermal state and warning level</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Network throughput</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Startup disk usage</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Uptime and load averages</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Your location, only if you enable Live Weather</li>
           </ul>
         </div>
-        <div class="tally is-out">
+        <div class="card is-muted reveal">
           <h3>What never happens</h3>
-          <ul>
-            <li>No account creation or sign-in</li>
-            <li>No analytics or telemetry of any kind</li>
-            <li>No advertising code</li>
-            <li>No profile built about you, locally or remotely</li>
-            <li>No personal data on a Core-Monitor server, because there is no Core-Monitor server</li>
+          <ul class="list is-out">
+            <li><svg class="ico" aria-hidden="true"><use href="#i-minus"/></svg>No account creation or sign-in</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-minus"/></svg>No analytics or telemetry of any kind</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-minus"/></svg>No advertising code</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-minus"/></svg>No profile built about you, locally or remotely</li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-minus"/></svg>No personal data on a Core-Monitor server, because there is no Core-Monitor server</li>
           </ul>
         </div>
       </div>
@@ -83,39 +104,42 @@
 
     <section class="band">
       <div class="shell trio">
-        <article>
+        <article class="card c-heat reveal">
+          <div class="ico-badge" aria-hidden="true"><svg class="ico"><use href="#i-pin"/></svg></div>
           <h3>Location is explicitly opt-in</h3>
           <p>Live Weather is off by default. The app requests location only after you turn on Enable Live Weather in Settings. It never asks for camera, microphone, contacts, photos, accessibility, input monitoring, automation, or full disk access.</p>
         </article>
-        <article>
+        <article class="card c-cpu reveal">
+          <div class="ico-badge" aria-hidden="true"><svg class="ico"><use href="#i-cloud"/></svg></div>
           <h3>WeatherKit, only while enabled</h3>
           <p>While Live Weather is enabled, the app sends the device location to Apple WeatherKit and receives weather data for that location. The Core-Monitor developer does not receive it. Core-Monitor&rsquo;s own source makes no other network requests; macOS and App Store components may independently contact Apple services.</p>
         </article>
-        <article>
+        <article class="card c-power reveal">
+          <div class="ico-badge" aria-hidden="true"><svg class="ico"><use href="#i-toggle"/></svg></div>
           <h3>Revoke any time</h3>
           <p>Turn Live Weather off in the app, or withdraw location access in macOS System Settings. Turning it off stops Core-Monitor&rsquo;s weather requests. Everything else keeps working either way.</p>
         </article>
       </div>
     </section>
 
-    <section class="band">
+    <section class="section" aria-labelledby="contact-title">
       <div class="shell">
-        <div class="band-head">
-          <h2>Contact</h2>
+        <header class="section-head reveal">
+          <h2 id="contact-title">Contact</h2>
           <p>Questions about this policy go straight to the developer.</p>
-        </div>
+        </header>
         <div class="duo">
-          <div class="tally">
+          <div class="card reveal">
             <h3>Reach the developer</h3>
-            <ul>
+            <ul class="list is-dots">
               <li>Legal owner: Nazish Faizan</li>
-              <li>Email: <a href="mailto:coremonitor.app@gmail.com">coremonitor.app@gmail.com</a></li>
-              <li>Public help page: <a href="../support/">Core-Monitor support</a></li>
+              <li><span>Email: <a href="mailto:coremonitor.app@gmail.com">coremonitor.app@gmail.com</a></span></li>
+              <li><span>Public help page: <a href="../support/">Core-Monitor support</a></span></li>
             </ul>
           </div>
-          <div class="tally is-out">
+          <div class="card is-muted reveal">
             <h3>Record</h3>
-            <ul>
+            <ul class="list is-dots">
               <li>Copyright &copy; 2026 Nazish Faizan</li>
               <li>This page is the complete policy for the Mac App Store edition</li>
             </ul>
@@ -124,26 +148,29 @@
       </div>
     </section>
 
-    <section class="coda">
+    <section class="closing">
       <div class="shell">
-        <h2>Questions about privacy?</h2>
-        <div class="action-row">
-          <a class="act act-heat" href="mailto:coremonitor.app@gmail.com">Email the developer</a>
-          <a class="act act-line" href="../">Back to the edition page</a>
+        <h2 class="reveal">Questions about privacy?</h2>
+        <div class="cta reveal">
+          <a class="btn btn-primary" href="mailto:coremonitor.app@gmail.com"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg>Email the developer</a>
+          <a class="btn btn-ghost" href="../">Back to the edition page</a>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="basefoot">
-    <div class="shell basefoot-row">
-      <p class="basefoot-brand"><img src="../../images/site/core-monitor-logo.png?v=6" alt="" width="21" height="21">Core-Monitor</p>
-      <nav class="basefoot-nav" aria-label="Footer">
-        <a href="../../">Home</a>
-        <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
-        <a href="../">Mac App Store</a>
-        <a href="../support/">Support</a>
-      </nav>
+  <footer class="footer">
+    <div class="shell">
+      <div class="footer-top">
+        <a class="brand" href="../../"><img src="../../images/site/core-monitor-logo.png?v=6" alt="" width="28" height="28">Core-Monitor</a>
+        <nav class="footer-nav" aria-label="Footer">
+          <a href="../../">Home</a>
+          <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
+          <a href="../">Mac App Store</a>
+          <a href="../support/">Support</a>
+        </nav>
+      </div>
+      <p class="footer-word" aria-hidden="true">Core-Monitor</p>
     </div>
   </footer>
 </body>

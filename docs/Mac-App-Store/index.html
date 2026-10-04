@@ -4,13 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>Core-Monitor Is Available on the Mac App Store | macOS</title>
   <meta name="description" content="Core-Monitor is available free on the Mac App Store at Apple app ID 6762558526. The sandboxed macOS edition monitors CPU, memory, storage, battery, network, and thermal state.">
   <meta name="application-name" content="Core-Monitor">
   <meta name="apple-mobile-web-app-title" content="Core-Monitor">
   <meta name="robots" content="index,follow,max-image-preview:large">
-  <meta name="theme-color" content="#e8eaec" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#16191c" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#07080a" media="(prefers-color-scheme: dark)">
   <link rel="canonical" href="https://xnu.is-a.dev/Mac-App-Store/">
   <link rel="icon" href="../favicon.ico?v=6" sizes="any">
   <link rel="icon" type="image/png" sizes="512x512" href="../images/site/core-monitor-logo.png?v=6">
@@ -26,8 +27,8 @@
   <meta name="twitter:title" content="Core-Monitor on the Mac App Store">
   <meta name="twitter:description" content="Core-Monitor is available free on the Mac App Store.">
   <meta name="twitter:image" content="https://xnu.is-a.dev/images/ui/mac-app-store/app-store-dashboard.png">
-  <link rel="stylesheet" href="../styles.css?v=20">
-  <script src="../script.js?v=9" defer></script>
+  <link rel="stylesheet" href="../styles.css?v=22">
+  <script src="../script.js?v=11" defer></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -83,70 +84,90 @@
 <body>
   <a class="skiplink" href="#main">Skip to content</a>
 
-  <header class="topbar">
-    <div class="shell topbar-inner">
-      <a class="wordmark" href="../">
-        <img src="../images/site/core-monitor-logo.png?v=6" alt="" width="27" height="27">
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.75 9.75 17.5 19 7.25"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M6.5 12h11"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5.25 8.25h13.5l-1.1 11.6a1.5 1.5 0 0 1-1.5 1.4H7.85a1.5 1.5 0 0 1-1.5-1.4L5.25 8.25Z"/><path d="M8.75 8.25V7a3.25 3.25 0 0 1 6.5 0v1.25"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M3.75 7.5 12 3.25l8.25 4.25v9L12 20.75 3.75 16.5Z"/><path d="M3.75 7.5 12 11.75l8.25-4.25M12 11.75v9"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7.25 18.75h9.5a4 4 0 0 0 .55-7.96 5.5 5.5 0 0 0-10.6 1.5 3.25 3.25 0 0 0 .55 6.46Z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2.75 4.75 5.6v5.9c0 4.4 3 8.4 7.25 9.75 4.25-1.35 7.25-5.35 7.25-9.75V5.6L12 2.75Z"/><path d="m8.75 12.1 2.25 2.25 4.5-4.6"/></symbol>
+  </svg>
+
+  <header class="nav" data-nav>
+    <div class="shell nav-inner">
+      <a class="brand" href="../">
+        <img src="../images/site/core-monitor-logo.png?v=6" alt="" width="28" height="28">
         Core-Monitor
       </a>
-      <nav class="site-menu" aria-label="Pages">
+      <nav class="nav-links" id="site-menu" data-menu aria-label="Pages">
         <a href="support/">Support</a>
         <a href="privacy/">Privacy</a>
         <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
       </nav>
-      <a class="act act-heat act-sm" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">View on App Store</a>
+      <a class="btn btn-primary btn-sm nav-cta" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">App Store</a>
+      <button class="menu-btn" type="button" data-menu-btn aria-expanded="false" aria-controls="site-menu">Menu</button>
     </div>
+    <div class="nav-progress" aria-hidden="true"><span data-progress></span></div>
   </header>
 
   <main id="main">
-    <section class="shell page-lede">
-      <h1>Core-Monitor is on the Mac App Store</h1>
-      <p class="lede-sub">Core-Monitor is listed as a free macOS app at Apple app ID 6762558526. Apple reviews, signs and delivers this sandboxed edition. It reads and displays system data but does not write to hardware. If fan control matters to you, the <a href="../">direct download</a> is the build to use instead.</p>
-      <div class="action-row">
-        <a class="act act-heat" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">Open the Apple listing</a>
-        <a class="act act-line" href="#scope">What is in this edition</a>
+    <section class="page-hero">
+      <div class="hero-bg" aria-hidden="true">
+        <span class="aurora aurora-1"></span>
+        <span class="aurora aurora-2"></span>
+        <span class="gridlines"></span>
+      </div>
+      <div class="shell">
+        <p class="eyebrow c-cpu rise"><span class="dot" aria-hidden="true"></span>Mac App Store edition</p>
+        <h1 class="rise rise-2">Core-Monitor is on the Mac App Store</h1>
+        <p class="lede rise rise-3">Core-Monitor is listed as a free macOS app at Apple app ID 6762558526. Apple reviews, signs and delivers this sandboxed edition. It reads and displays system data but does not write to hardware. If fan control matters to you, the <a href="../">direct download</a> is the build to use instead.</p>
+        <div class="cta rise rise-4">
+          <a class="btn btn-primary" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12"><svg class="ico" aria-hidden="true"><use href="#i-bag"/></svg>Open the Apple listing</a>
+          <a class="btn btn-ghost" href="#scope">What is in this edition</a>
+        </div>
       </div>
     </section>
 
     <section class="band">
       <div class="shell duo">
-        <figure class="bezel">
-          <img src="../images/ui/mac-app-store/app-store-dashboard.png" width="2464" height="1762" alt="App Store edition dashboard with CPU activity, memory, thermal state and weather cards." loading="lazy" decoding="async">
+        <figure class="shot-frame reveal">
+          <img src="../images/ui/mac-app-store/app-store-dashboard.png" width="1232" height="881" alt="App Store edition dashboard with CPU activity, memory, thermal state and weather cards." loading="lazy" decoding="async">
           <figcaption>Dashboard</figcaption>
         </figure>
-        <figure class="bezel">
-          <img src="../images/ui/mac-app-store/app-store-menubar.png" width="2560" height="1600" alt="App Store edition menu bar extra with a live status summary." loading="lazy" decoding="async">
+        <figure class="shot-frame reveal">
+          <img src="../images/ui/mac-app-store/app-store-menubar.png" width="1280" height="800" alt="App Store edition menu bar extra with a live status summary." loading="lazy" decoding="async">
           <figcaption>Menu bar extra</figcaption>
         </figure>
       </div>
     </section>
 
-    <section class="band" id="scope">
+    <section class="section" id="scope" aria-labelledby="scope-title">
       <div class="shell">
-        <div class="band-head">
-          <h2>Exactly what the sandbox allows</h2>
+        <header class="section-head reveal">
+          <p class="eyebrow c-power"><span class="dot" aria-hidden="true"></span>Scope</p>
+          <h2 id="scope-title">Exactly what the sandbox allows</h2>
           <p>App Store rules shape this edition, so the boundaries are written down plainly instead of left implied.</p>
-        </div>
+        </header>
         <div class="duo">
-          <div class="tally">
+          <div class="card reveal">
             <h3>Included</h3>
-            <ul>
-              <li>Overall CPU activity and per-core load</li>
-              <li>Memory usage and pressure</li>
-              <li>Network throughput and startup disk usage</li>
-              <li>Battery status, thermal state, uptime and load averages</li>
-              <li>Live Weather, only after you enable it and grant location access</li>
-              <li>SwiftUI dashboard and a menu bar extra</li>
+            <ul class="list">
+              <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Overall CPU activity and per-core load</li>
+              <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Memory usage and pressure</li>
+              <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Network throughput and startup disk usage</li>
+              <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Battery status, thermal state, uptime and load averages</li>
+              <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Live Weather, only after you enable it and grant location access</li>
+              <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>SwiftUI dashboard and a menu bar extra</li>
             </ul>
           </div>
-          <div class="tally is-out">
+          <div class="card is-muted reveal">
             <h3>Left out, by design</h3>
-            <ul>
-              <li>Privileged helper and background services</li>
-              <li>Fan control and any hardware writes</li>
-              <li>Direct sensor access and private frameworks</li>
-              <li>Touch Bar overlays and custom widgets</li>
-              <li>Shell commands and self-updating</li>
+            <ul class="list is-out">
+              <li><svg class="ico" aria-hidden="true"><use href="#i-minus"/></svg>Privileged helper and background services</li>
+              <li><svg class="ico" aria-hidden="true"><use href="#i-minus"/></svg>Fan control and any hardware writes</li>
+              <li><svg class="ico" aria-hidden="true"><use href="#i-minus"/></svg>Direct sensor access and private frameworks</li>
+              <li><svg class="ico" aria-hidden="true"><use href="#i-minus"/></svg>Touch Bar overlays and custom widgets</li>
+              <li><svg class="ico" aria-hidden="true"><use href="#i-minus"/></svg>Shell commands and self-updating</li>
             </ul>
           </div>
         </div>
@@ -155,42 +176,48 @@
 
     <section class="band">
       <div class="shell trio">
-        <article>
+        <article class="card c-cpu reveal">
+          <div class="ico-badge" aria-hidden="true"><svg class="ico"><use href="#i-box"/></svg></div>
           <h3>Installed by Apple</h3>
           <p>Reviewed, signed and updated through the App Store, inside the standard sandbox that comes with it.</p>
         </article>
-        <article>
+        <article class="card c-heat reveal">
+          <div class="ico-badge" aria-hidden="true"><svg class="ico"><use href="#i-cloud"/></svg></div>
           <h3>WeatherKit, on request</h3>
           <p>Live Weather is off by default. Turn on Enable Live Weather in Settings to request location access; decline, and the rest of the app runs unchanged.</p>
         </article>
-        <article>
+        <article class="card c-power reveal">
+          <div class="ico-badge" aria-hidden="true"><svg class="ico"><use href="#i-shield"/></svg></div>
           <h3>Nothing collected</h3>
           <p>No account, no analytics, no advertising code. The <a href="privacy/">privacy policy</a> is a short read on purpose.</p>
         </article>
       </div>
     </section>
 
-    <section class="coda">
+    <section class="closing">
       <div class="shell">
-        <h2>Get it from the App Store.</h2>
-        <div class="action-row">
-          <a class="act act-heat" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">Open the Apple listing</a>
-          <a class="act act-line" href="support/">Get support</a>
+        <h2 class="reveal">Get it from the App Store.</h2>
+        <div class="cta reveal">
+          <a class="btn btn-primary" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12"><svg class="ico" aria-hidden="true"><use href="#i-bag"/></svg>Open the Apple listing</a>
+          <a class="btn btn-ghost" href="support/">Get support</a>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="basefoot">
-    <div class="shell basefoot-row">
-      <p class="basefoot-brand"><img src="../images/site/core-monitor-logo.png?v=6" alt="" width="21" height="21">Core-Monitor</p>
-      <nav class="basefoot-nav" aria-label="Footer">
-        <a href="../">Home</a>
-        <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
-        <a href="https://github.com/offyotto/Core-Monitor/releases/latest">Releases</a>
-        <a href="privacy/">Privacy</a>
-        <a href="support/">Support</a>
-      </nav>
+  <footer class="footer">
+    <div class="shell">
+      <div class="footer-top">
+        <a class="brand" href="../"><img src="../images/site/core-monitor-logo.png?v=6" alt="" width="28" height="28">Core-Monitor</a>
+        <nav class="footer-nav" aria-label="Footer">
+          <a href="../">Home</a>
+          <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
+          <a href="https://github.com/offyotto/Core-Monitor/releases/latest">Releases</a>
+          <a href="privacy/">Privacy</a>
+          <a href="support/">Support</a>
+        </nav>
+      </div>
+      <p class="footer-word" aria-hidden="true">Core-Monitor</p>
     </div>
   </footer>
 </body>
