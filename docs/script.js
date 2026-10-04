@@ -449,7 +449,13 @@
     barCharts.forEach(function (bars) { if (bars.visible) bars.render(); });
   }
 
+  // Only one loop may exist: stopping cancels the queued frame, so a quick
+  // stop and start (a tab switch, or one region leaving as another enters)
+  // cannot leave a second loop running.
+  var frameId = 0;
+
   function frame(now) {
+    frameId = 0;
     if (!running) return;
     var ms = lastFrame ? Math.min(64, now - lastFrame) : 16;
     lastFrame = now;
@@ -464,7 +470,7 @@
       rotors.forEach(function (rotor) { if (rotor.visible) rotor.turn(ms); });
     }
     frameHooks.forEach(function (hook) { hook(ms); });
-    window.requestAnimationFrame(frame);
+    frameId = window.requestAnimationFrame(frame);
   }
 
   function updateRunning() {
@@ -472,9 +478,11 @@
     if (wanted && !running) {
       running = true;
       lastFrame = 0;
-      window.requestAnimationFrame(frame);
-    } else if (!wanted) {
+      if (!frameId) frameId = window.requestAnimationFrame(frame);
+    } else if (!wanted && running) {
       running = false;
+      if (frameId) window.cancelAnimationFrame(frameId);
+      frameId = 0;
     }
   }
 
