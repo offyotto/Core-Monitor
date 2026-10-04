@@ -9,7 +9,7 @@ cask "core-monitor" do
   homepage "https://xnu.is-a.dev/"
 
   depends_on arch: :arm64
-  depends_on macos: ">= :monterey"
+  depends_on macos: ">= :ventura"
 
   app "Core-Monitor.app"
 

@@ -16,7 +16,7 @@ concurrency:
 jobs:
   macos-tests:
     name: Build and Test
-    runs-on: macos-14
+    runs-on: macos-26
     timeout-minutes: 30
 
     steps:
@@ -26,7 +26,9 @@ jobs:
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
         with:
-          xcode-version: latest-stable
+          # Match release.yml so CI compiles the macOS 26 SDK code paths
+          # (Liquid Glass) that ship in releases.
+          xcode-version: '26.6'
 
       - name: Record toolchain versions
         run: |

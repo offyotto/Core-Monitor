@@ -6,7 +6,8 @@
   <meta name="color-scheme" content="light dark">
   <!-- Everything this page needs is served from this origin, so the policy
        stays strict. Widen the matching directive before adding any external
-       resource or the browser will silently block it. -->
+       resource or the browser will silently block it. Inline styles are
+       blocked too: script.js sets CSS custom properties through the CSSOM. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>Core-Monitor | Apple Silicon System Monitor and Fan Control for macOS</title>
   <meta name="description" content="Core-Monitor is a free, open-source system monitor for Apple Silicon Macs. It reads CPU load, temperature, power draw, memory, battery and fan speed, and can hand you the fans when you want them. Nothing leaves the Mac.">
@@ -14,8 +15,8 @@
   <meta name="apple-mobile-web-app-title" content="Core-Monitor">
   <meta name="author" content="offyotto">
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
-  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#111113" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#07080a" media="(prefers-color-scheme: dark)">
   <link rel="canonical" href="https://xnu.is-a.dev/">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="favicon.ico?v=6" sizes="any">
@@ -29,18 +30,18 @@
   <meta property="og:url" content="https://xnu.is-a.dev/">
   <meta property="og:image" content="https://xnu.is-a.dev/images/ui/overview-v16.png?v=16">
   <meta property="og:image:type" content="image/png">
-  <meta property="og:image:width" content="1192">
-  <meta property="og:image:height" content="884">
+  <meta property="og:image:width" content="2384">
+  <meta property="og:image:height" content="1768">
   <meta property="og:image:alt" content="Core-Monitor dashboard showing CPU, memory, thermal, cooling, power, network and storage readings.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Core-Monitor | Apple Silicon System Monitor and Fan Control for macOS">
   <meta name="twitter:description" content="A free, open-source monitor for Apple Silicon Macs. Temperature, power, memory, battery and fans in one native window.">
   <meta name="twitter:image" content="https://xnu.is-a.dev/images/ui/overview-v16.png?v=16">
   <meta name="twitter:image:alt" content="Core-Monitor dashboard showing CPU, memory, thermal, cooling, power, network and storage readings.">
-  <!-- The hero screenshot is the largest element on first paint. -->
+  <!-- The dashboard capture in the hero is the largest element on first paint. -->
   <link rel="preload" as="image" href="images/ui/overview-v16.png?v=16" fetchpriority="high">
-  <link rel="stylesheet" href="styles.css?v=21">
-  <script src="script.js?v=10" defer></script>
+  <link rel="stylesheet" href="styles.css?v=22">
+  <script src="script.js?v=11" defer></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -162,171 +163,452 @@
 <body>
   <a class="skiplink" href="#main">Skip to content</a>
 
-  <header class="topbar">
-    <div class="shell topbar-inner">
-      <a class="wordmark" href="#top">
-        <img src="images/site/core-monitor-logo.png?v=6" alt="" width="27" height="27">
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="g-cpu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="stop-cpu" stop-opacity="0.3"/><stop offset="1" class="stop-cpu" stop-opacity="0"/></linearGradient>
+      <linearGradient id="g-heat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="stop-heat" stop-opacity="0.3"/><stop offset="1" class="stop-heat" stop-opacity="0"/></linearGradient>
+      <linearGradient id="g-net" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="stop-net" stop-opacity="0.3"/><stop offset="1" class="stop-net" stop-opacity="0"/></linearGradient>
+    </defs>
+    <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9.5 2.75V6M14.5 2.75V6M9.5 18v3.25M14.5 18v3.25M2.75 9.5H6M2.75 14.5H6M18 9.5h3.25M18 14.5h3.25"/></symbol>
+    <symbol id="i-mem" viewBox="0 0 24 24"><rect x="2.75" y="6.5" width="18.5" height="9.5" rx="2"/><rect x="6" y="9.25" width="4.5" height="4" rx="0.8"/><rect x="13.5" y="9.25" width="4.5" height="4" rx="0.8"/><path d="M6.5 16v2.5M10 16v2.5M14 16v2.5M17.5 16v2.5"/></symbol>
+    <symbol id="i-thermo" viewBox="0 0 24 24"><path d="M9.75 14.1V5.5a2.25 2.25 0 0 1 4.5 0v8.6a4.25 4.25 0 1 1-4.5 0Z"/><path d="M12 10v7.7"/><circle cx="12" cy="17.7" r="1.9" fill="currentColor" stroke="none"/><path d="M17 6.5h2M17 9.5h2"/></symbol>
+    <symbol id="i-fan" viewBox="0 0 24 24"><path d="M12.4 10.4C11.3 7.6 11.9 4.5 14.3 3.8c2.3-.7 4 1.8 2.7 4-.9 1.6-2.6 2.5-3.6 3.4Z"/><path d="M12.4 10.4C11.3 7.6 11.9 4.5 14.3 3.8c2.3-.7 4 1.8 2.7 4-.9 1.6-2.6 2.5-3.6 3.4Z" transform="rotate(90 12 12)"/><path d="M12.4 10.4C11.3 7.6 11.9 4.5 14.3 3.8c2.3-.7 4 1.8 2.7 4-.9 1.6-2.6 2.5-3.6 3.4Z" transform="rotate(180 12 12)"/><path d="M12.4 10.4C11.3 7.6 11.9 4.5 14.3 3.8c2.3-.7 4 1.8 2.7 4-.9 1.6-2.6 2.5-3.6 3.4Z" transform="rotate(270 12 12)"/><circle cx="12" cy="12" r="1.5"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.5 2.75 5 13.25h6l-1 8 8.5-10.5h-6l1-8Z"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.25"/><path d="M12 2.75c-2.6 2.6-3.9 5.7-3.9 9.25s1.3 6.65 3.9 9.25M12 2.75c2.6 2.6 3.9 5.7 3.9 9.25s-1.3 6.65-3.9 9.25M3.25 9h17.5M3.25 15h17.5"/></symbol>
+    <symbol id="i-disk" viewBox="0 0 24 24"><path d="M3.75 13.5 6.4 6.6a2.25 2.25 0 0 1 2.1-1.35h7a2.25 2.25 0 0 1 2.1 1.35l2.65 6.9"/><rect x="3.25" y="13.25" width="17.5" height="6" rx="2"/><path d="M7 16.25h4.5"/><circle cx="16.75" cy="16.25" r="0.75" fill="currentColor"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3.75v11.5M7.25 10.5 12 15.25l4.75-4.75M4.75 19.75h14.5"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4.75 12h14.5M13.5 6.25 19.25 12l-5.75 5.75"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.75 9.75 17.5 19 7.25"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.75" y="8.75" width="11.5" height="11.5" rx="2.25"/><path d="M15.25 8.75v-2a2 2 0 0 0-2-2h-6.5a2 2 0 0 0-2 2v6.5a2 2 0 0 0 2 2h2"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2.75 4.75 5.6v5.9c0 4.4 3 8.4 7.25 9.75 4.25-1.35 7.25-5.35 7.25-9.75V5.6L12 2.75Z"/><path d="m8.75 12.1 2.25 2.25 4.5-4.6"/></symbol>
+    <symbol id="i-return" viewBox="0 0 24 24"><path d="M9.5 14.5 4.75 9.75 9.5 5"/><path d="M5.25 9.75h9a5 5 0 0 1 0 10H11"/></symbol>
+    <symbol id="i-curve" viewBox="0 0 24 24"><path d="M3.75 19.25C9 19.25 10.5 13 12.6 10.2s4.15-5.45 7.65-5.45"/><circle cx="12.5" cy="10.4" r="1.6"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.75 12S6.25 5.75 12 5.75 21.25 12 21.25 12 17.75 18.25 12 18.25 2.75 12 2.75 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4.4 17.75a8.75 8.75 0 1 1 15.2 0"/><path d="m12 13.6 3.6-4.1"/><circle cx="12" cy="13.6" r="1.4"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5.25 8.25h13.5l-1.1 11.6a1.5 1.5 0 0 1-1.5 1.4H7.85a1.5 1.5 0 0 1-1.5-1.4L5.25 8.25Z"/><path d="M8.75 8.25V7a3.25 3.25 0 0 1 6.5 0v1.25"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7.25 18.75h9.5a4 4 0 0 0 .55-7.96 5.5 5.5 0 0 0-10.6 1.5 3.25 3.25 0 0 0 .55 6.46Z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.6"/><path d="M12 3.25v2M12 18.75v2M3.25 12h2M18.75 12h2M5.8 5.8l1.4 1.4M16.8 16.8l1.4 1.4M5.8 18.2l1.4-1.4M16.8 7.2l1.4-1.4"/></symbol>
+    <symbol id="i-speaker" viewBox="0 0 24 24"><path d="M4.75 9.5h3.1l4.4-3.75v12.5l-4.4-3.75H4.75Z"/><path d="M15.6 9.2a4 4 0 0 1 0 5.6M18 6.9a7.25 7.25 0 0 1 0 10.2"/></symbol>
+  </svg>
+
+  <header class="nav" data-nav>
+    <div class="shell nav-inner">
+      <a class="brand" href="#top">
+        <img src="images/site/core-monitor-logo.png?v=6" alt="" width="28" height="28">
         Core-Monitor
       </a>
-      <button class="menu-btn" type="button" data-menu-btn aria-expanded="false" aria-controls="site-menu">Menu</button>
-      <nav class="site-menu" id="site-menu" data-menu aria-label="Sections">
+      <nav class="nav-links" id="site-menu" data-menu aria-label="Sections">
+        <a href="#readings">Readings</a>
         <a href="#tour">Tour</a>
         <a href="#screens">Screens</a>
         <a href="#cooling">Cooling</a>
-        <a href="#touchbar">Touch Bar</a>
+        <a href="#privacy">Privacy</a>
         <a href="#compare">Compare</a>
         <a href="#install">Install</a>
         <a href="#faq">FAQ</a>
       </nav>
-      <a class="act act-primary act-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download</a>
+      <a class="btn btn-primary btn-sm nav-cta" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download</a>
+      <button class="menu-btn" type="button" data-menu-btn aria-expanded="false" aria-controls="site-menu">Menu</button>
     </div>
+    <div class="nav-progress" aria-hidden="true"><span data-progress></span></div>
   </header>
 
   <main id="main">
     <section class="hero" id="top">
-      <div class="shell">
-        <div class="hero-grid">
-          <div class="lede">
-            <h1 class="rise">The instrument panel your Mac never shipped with.</h1>
-            <p class="lede-sub rise rise-2">Core-Monitor reads temperature, CPU and GPU load, power draw, memory, battery and fan speed from the sensors already inside your Apple Silicon Mac, and shows them in one native window and the menu bar. No account, no telemetry, and fan control only when you ask for it.</p>
-            <div class="action-row rise rise-3">
-              <a class="act act-primary" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download for macOS</a>
-              <a class="act act-bare" href="https://github.com/offyotto/Core-Monitor">Read the source</a>
+      <div class="hero-bg" aria-hidden="true">
+        <span class="aurora aurora-1"></span>
+        <span class="aurora aurora-2"></span>
+        <span class="aurora aurora-3"></span>
+        <span class="gridlines"></span>
+      </div>
+
+      <div class="shell hero-copy">
+        <p class="status-pill rise"><span class="pulse" aria-hidden="true"></span>Running cool. Everything looks normal.</p>
+        <h1 class="rise rise-2">The <span class="grad">instrument panel</span> your Mac never shipped with.</h1>
+        <p class="lede rise rise-3">Core-Monitor reads temperature, CPU and GPU load, power draw, memory, battery and fan speed from the sensors already inside your Apple Silicon Mac, and shows them in one native window and the menu bar. No account, no telemetry, and fan control only when you ask for it.</p>
+        <div class="cta rise rise-4">
+          <a class="btn btn-primary" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg>Download for macOS</a>
+          <a class="btn btn-ghost" href="https://github.com/offyotto/Core-Monitor">Read the source</a>
+        </div>
+        <ul class="hero-meta rise rise-5">
+          <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Free and open source</li>
+          <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Signed and notarized</li>
+          <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>macOS 13 or later on Apple Silicon</li>
+        </ul>
+      </div>
+
+      <div class="shell stage">
+        <div class="desk" data-desk>
+          <div class="bezel">
+            <div class="screen">
+              <div class="wallpaper" aria-hidden="true">
+                <span class="wp-wave"></span>
+                <span class="wp-glow"></span>
+                <span class="wp-ribbon"></span>
+              </div>
+              <div class="menubar" aria-hidden="true">
+                <span class="mb-app">Core-Monitor</span>
+                <span class="mb-status">
+                  <span class="mb-item"><svg class="ico"><use href="#i-thermo"/></svg><span><span data-live="temp">52</span>&#176;</span></span>
+                  <span class="mb-item is-optional"><svg class="ico"><use href="#i-globe"/></svg><span>&#8595;<span data-live="downShort">1.0K</span></span></span>
+                  <span class="mb-item is-on"><svg class="ico rotor" data-rotor><use href="#i-fan"/></svg><span data-live="rpmShort">2.8k</span></span>
+                  <span class="mb-item is-optional"><svg class="ico"><use href="#i-cpu"/></svg><span><span data-live="cpu">14</span>%</span></span>
+                  <span class="mb-clock" data-clock>Tue 9:41 AM</span>
+                </span>
+              </div>
+              <img class="desk-window" src="images/ui/overview-v16.png?v=16" alt="Core-Monitor dashboard with CPU, memory, thermal, cooling, power, network and storage readings." width="1192" height="884" fetchpriority="high" decoding="async">
+            </div>
+          </div>
+
+          <div class="chips" aria-hidden="true">
+            <div class="chip chip-thermal c-heat">
+              <div class="chip-inner">
+                <div class="chip-head"><svg class="ico"><use href="#i-thermo"/></svg>Thermal</div>
+                <div class="chip-value"><span data-live="temp">52</span><small>&#176;C</small></div>
+                <div class="chip-sub">GPU <span data-live="gpu">48</span>&#176; &#183; nominal</div>
+                <svg class="spark" viewBox="0 0 160 40" preserveAspectRatio="none" data-spark data-points="24" data-min="38" data-max="72">
+                  <g class="spark-move">
+                    <path class="spark-area" fill="url(#g-heat)" data-series="temp" d="M0.0 22.8C1.2 22.8 4.6 22.8 7.0 22.8C9.3 22.9 11.6 23.0 13.9 23.1C16.2 23.2 18.6 23.3 20.9 23.4C23.2 23.6 25.5 23.8 27.8 23.9C30.1 24.0 32.5 24.0 34.8 24.1C37.1 24.2 39.4 24.4 41.7 24.5C44.1 24.6 46.4 24.8 48.7 24.9C51.0 25.1 53.3 25.1 55.7 25.3C58.0 25.4 60.3 25.6 62.6 25.7C64.9 25.8 67.2 26.0 69.6 26.0C71.9 26.0 74.2 25.7 76.5 25.6C78.8 25.5 81.2 25.4 83.5 25.4C85.8 25.3 88.1 25.4 90.4 25.4C92.8 25.4 95.1 25.4 97.4 25.4C99.7 25.3 102.0 25.1 104.3 25.1C106.7 25.2 109.0 25.5 111.3 25.5C113.6 25.6 115.9 25.5 118.3 25.4C120.6 25.3 122.9 25.2 125.2 25.1C127.5 24.9 129.9 24.7 132.2 24.6C134.5 24.5 136.8 24.4 139.1 24.5C141.4 24.5 143.8 24.7 146.1 24.8C148.4 24.9 150.7 24.9 153.0 25.0C155.4 25.1 158.8 25.3 160.0 25.4L160.0 40.0L0 40.0Z"/>
+                    <path class="spark-line" data-series="temp" d="M0.0 22.8C1.2 22.8 4.6 22.8 7.0 22.8C9.3 22.9 11.6 23.0 13.9 23.1C16.2 23.2 18.6 23.3 20.9 23.4C23.2 23.6 25.5 23.8 27.8 23.9C30.1 24.0 32.5 24.0 34.8 24.1C37.1 24.2 39.4 24.4 41.7 24.5C44.1 24.6 46.4 24.8 48.7 24.9C51.0 25.1 53.3 25.1 55.7 25.3C58.0 25.4 60.3 25.6 62.6 25.7C64.9 25.8 67.2 26.0 69.6 26.0C71.9 26.0 74.2 25.7 76.5 25.6C78.8 25.5 81.2 25.4 83.5 25.4C85.8 25.3 88.1 25.4 90.4 25.4C92.8 25.4 95.1 25.4 97.4 25.4C99.7 25.3 102.0 25.1 104.3 25.1C106.7 25.2 109.0 25.5 111.3 25.5C113.6 25.6 115.9 25.5 118.3 25.4C120.6 25.3 122.9 25.2 125.2 25.1C127.5 24.9 129.9 24.7 132.2 24.6C134.5 24.5 136.8 24.4 139.1 24.5C141.4 24.5 143.8 24.7 146.1 24.8C148.4 24.9 150.7 24.9 153.0 25.0C155.4 25.1 158.8 25.3 160.0 25.4"/>
+                  </g>
+                </svg>
+              </div>
+            </div>
+            <div class="chip chip-cooling c-cool">
+              <div class="chip-inner">
+                <div class="chip-head"><svg class="ico rotor" data-rotor><use href="#i-fan"/></svg>Cooling</div>
+                <div class="chip-value"><span data-live="rpm">2,790</span><small>rpm</small></div>
+                <div class="chip-sub">2 fans spinning</div>
+              </div>
+            </div>
+            <div class="chip chip-power c-power">
+              <div class="chip-inner">
+                <div class="chip-head"><svg class="ico"><use href="#i-bolt"/></svg>Power</div>
+                <div class="chip-value"><span data-live="watts">9.6</span><small>W</small></div>
+                <div class="chip-sub">Battery 80% &#183; AC power</div>
+              </div>
             </div>
           </div>
         </div>
-
-        <figure class="bezel hero-shot">
-          <img src="images/ui/overview-v16.png?v=16" alt="Core-Monitor dashboard with CPU, memory, thermal, cooling, power, network and storage readings." width="1192" height="884" fetchpriority="high" decoding="async">
-        </figure>
       </div>
     </section>
 
-    <section class="band" id="tour" aria-labelledby="tour-title">
+    <section class="section" id="readings" aria-labelledby="readings-title">
       <div class="shell">
-        <div class="band-head is-center">
-          <h2 id="tour-title">Fifteen seconds with Core-Monitor</h2>
-        </div>
-        <figure class="reel">
-          <video data-autoplay controls muted loop playsinline preload="none" poster="images/site/core-monitor-tour-poster.jpg" width="1920" height="1080" title="Core-Monitor tour: dashboard, menu bar panel and fan curve">
-            <source src="videos/core-monitor-tour.mp4?v=1" type="video/mp4">
-            <p>Your browser cannot play this clip. <a href="videos/core-monitor-tour.mp4" download>Download the MP4</a> instead.</p>
-          </video>
-        </figure>
-      </div>
-    </section>
+        <header class="section-head reveal">
+          <p class="eyebrow c-cpu"><span class="dot" aria-hidden="true"></span>Readings</p>
+          <h2 id="readings-title">Everything the sensors already know, in one place</h2>
+          <p>CPU, GPU, memory, battery, thermals, power draw, fan speeds, network and disk. Readings come from the Apple SMC and standard macOS system APIs, so the numbers match what the hardware actually reports.</p>
+        </header>
 
-    <section class="band" id="screens">
-      <div class="shell">
-        <div class="band-head">
-          <h2>Every subsystem gets its own screen</h2>
-          <p>History sits behind each number, and the menu bar carries a short version, so the window can stay closed most of the day.</p>
-        </div>
-        <div class="strip-scroller" tabindex="0" role="region" aria-label="Screenshots of Core-Monitor screens">
-          <div class="strip">
-            <figure class="shot">
-              <a href="images/ui/overview-v16.png?v=16"><img src="images/ui/overview-v16.png?v=16" alt="Overview screen summarizing CPU, memory, thermal, cooling, power, network and storage." loading="lazy" decoding="async" width="1192" height="884"></a>
-              <figcaption><b>Overview</b></figcaption>
-            </figure>
-            <figure class="shot">
-              <a href="images/ui/cooling-v16.png?v=16"><img src="images/ui/cooling-v16.png?v=16" alt="Cooling screen with fan speeds, cooling mode and a custom fan curve editor." loading="lazy" decoding="async" width="1192" height="884"></a>
-              <figcaption><b>Cooling</b></figcaption>
-            </figure>
-            <figure class="shot">
-              <a href="images/ui/memory-v16.png?v=16"><img src="images/ui/memory-v16.png?v=16" alt="Memory screen with usage history and a pressure breakdown." loading="lazy" decoding="async" width="1192" height="884"></a>
-              <figcaption><b>Memory</b></figcaption>
-            </figure>
-            <figure class="shot">
-              <a href="images/ui/storage-v16.png?v=16"><img src="images/ui/storage-v16.png?v=16" alt="Storage screen with used, purgeable and free capacity." loading="lazy" decoding="async" width="1192" height="884"></a>
-              <figcaption><b>Storage</b></figcaption>
-            </figure>
-            <figure class="shot is-narrow">
-              <a href="images/ui/menu-thermal-v16.png?v=16"><img src="images/ui/menu-thermal-v16.png?v=16" alt="Thermal panel opened from the menu bar." loading="lazy" decoding="async" width="782" height="776"></a>
-              <figcaption><b>Thermal panel</b></figcaption>
-            </figure>
-            <figure class="shot is-narrow">
-              <a href="images/ui/menu-network-v16.png?v=16"><img src="images/ui/menu-network-v16.png?v=16" alt="Network panel opened from the menu bar." loading="lazy" decoding="async" width="782" height="776"></a>
-              <figcaption><b>Network panel</b></figcaption>
-            </figure>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="band" id="cooling">
-      <div class="shell">
-        <div class="cooling-grid">
-          <div>
-            <h2>Read-only, until you decide otherwise</h2>
-            <p>Out of the box, Core-Monitor only watches the fans. Install the optional helper and you get three ways to drive them: a fixed speed, a boost profile, or a curve you draw yourself, point by point.</p>
-            <dl class="fan-points">
+        <div class="bento" data-live-region>
+          <article class="tile tile-wide c-cpu reveal" data-spotlight>
+            <div class="tile-split">
               <div>
-                <dt>Hand it back anytime</dt>
-                <dd>One button returns full control to macOS, no restart needed.</dd>
+                <div class="tile-head"><svg class="ico" aria-hidden="true"><use href="#i-cpu"/></svg><h3>CPU</h3></div>
+                <p class="tile-value" aria-hidden="true"><span data-live="cpu">14</span><small>%</small></p>
+                <p class="tile-note">Total load, with the performance and efficiency cores read separately.</p>
               </div>
-              <div>
-                <dt>Draw your own curve</dt>
-                <dd>Map CPU or GPU temperature to fan speed across as many points as you want.</dd>
+              <div aria-hidden="true">
+                <div class="cores">
+                  <span class="core" data-core></span><span class="core" data-core></span><span class="core" data-core></span>
+                  <span class="core" data-core></span><span class="core" data-core></span><span class="core" data-core></span>
+                  <span class="core e" data-core></span><span class="core e" data-core></span><span class="core e" data-core></span>
+                  <span class="core e" data-core></span>
+                </div>
+                <div class="cores-legend"><span>P <span data-live="pcore">18</span>%</span><span>E <span data-live="ecore">4</span>%</span></div>
               </div>
-              <div>
-                <dt>Skip the helper entirely</dt>
-                <dd>Monitoring works identically whether or not it is installed.</dd>
-              </div>
-              <div>
-                <dt>Calibrate first</dt>
-                <dd>Measure each fan&rsquo;s real minimum and maximum before trusting a profile to it.</dd>
-              </div>
-            </dl>
-          </div>
-          <div class="curvebox" data-curve>
-            <svg viewBox="0 0 520 300" role="img" aria-label="A custom fan curve mapping CPU temperature to fan speed, with the current operating point marked at 72 degrees.">
-              <g class="curve-grid">
-                <line x1="50" y1="20" x2="50" y2="262"></line>
-                <line x1="213" y1="20" x2="213" y2="262"></line>
-                <line x1="377" y1="20" x2="377" y2="262"></line>
-                <line x1="500" y1="20" x2="500" y2="262"></line>
-                <line x1="50" y1="262" x2="500" y2="262"></line>
-                <line x1="50" y1="169" x2="500" y2="169"></line>
-                <line x1="50" y1="76" x2="500" y2="76"></line>
+            </div>
+            <svg class="spark" viewBox="0 0 600 100" preserveAspectRatio="none" aria-hidden="true" data-spark data-points="40" data-min="0" data-floor="40">
+              <g class="spark-move">
+                <path class="spark-area" fill="url(#g-cpu)" data-series="cpu" d="M0.0 78.8C2.6 78.7 10.3 79.0 15.4 78.2C20.5 77.3 25.6 80.3 30.8 73.9C35.9 67.4 41.0 42.8 46.2 39.6C51.3 36.3 56.4 57.4 61.5 54.3C66.7 51.1 71.8 22.1 76.9 20.7C82.1 19.3 87.2 41.2 92.3 45.9C97.4 50.6 102.6 46.7 107.7 49.0C112.8 51.4 117.9 57.1 123.1 60.0C128.2 62.9 133.3 65.5 138.5 66.4C143.6 67.4 148.7 65.3 153.8 65.7C159.0 66.0 164.1 68.9 169.2 68.3C174.4 67.7 179.5 62.6 184.6 62.1C189.7 61.5 194.9 64.1 200.0 65.0C205.1 65.9 210.3 66.6 215.4 67.7C220.5 68.7 225.6 76.3 230.8 71.4C235.9 66.4 241.0 40.7 246.2 37.9C251.3 35.1 256.4 50.9 261.5 54.8C266.7 58.7 271.8 59.8 276.9 61.0C282.1 62.2 287.2 60.6 292.3 62.1C297.4 63.6 302.6 69.1 307.7 70.3C312.8 71.4 317.9 69.5 323.1 69.1C328.2 68.8 333.3 68.6 338.5 68.2C343.6 67.7 348.7 65.6 353.8 66.3C359.0 67.0 364.1 70.8 369.2 72.2C374.4 73.7 379.5 74.4 384.6 75.0C389.7 75.7 394.9 77.1 400.0 76.1C405.1 75.0 410.3 70.1 415.4 68.6C420.5 67.1 425.6 67.2 430.8 67.1C435.9 67.1 441.0 68.1 446.2 68.4C451.3 68.7 456.4 69.4 461.5 68.9C466.7 68.5 471.8 65.7 476.9 65.7C482.1 65.6 487.2 67.5 492.3 68.6C497.4 69.6 502.6 72.4 507.7 71.9C512.8 71.4 517.9 66.8 523.1 65.3C528.2 63.9 533.3 62.7 538.5 62.9C543.6 63.1 548.7 65.5 553.8 66.7C559.0 67.8 564.1 69.6 569.2 69.8C574.4 70.0 579.5 68.1 584.6 68.0C589.7 67.8 597.4 68.7 600.0 68.9L600.0 100.0L0 100.0Z"/>
+                <path class="spark-line" data-series="cpu" d="M0.0 78.8C2.6 78.7 10.3 79.0 15.4 78.2C20.5 77.3 25.6 80.3 30.8 73.9C35.9 67.4 41.0 42.8 46.2 39.6C51.3 36.3 56.4 57.4 61.5 54.3C66.7 51.1 71.8 22.1 76.9 20.7C82.1 19.3 87.2 41.2 92.3 45.9C97.4 50.6 102.6 46.7 107.7 49.0C112.8 51.4 117.9 57.1 123.1 60.0C128.2 62.9 133.3 65.5 138.5 66.4C143.6 67.4 148.7 65.3 153.8 65.7C159.0 66.0 164.1 68.9 169.2 68.3C174.4 67.7 179.5 62.6 184.6 62.1C189.7 61.5 194.9 64.1 200.0 65.0C205.1 65.9 210.3 66.6 215.4 67.7C220.5 68.7 225.6 76.3 230.8 71.4C235.9 66.4 241.0 40.7 246.2 37.9C251.3 35.1 256.4 50.9 261.5 54.8C266.7 58.7 271.8 59.8 276.9 61.0C282.1 62.2 287.2 60.6 292.3 62.1C297.4 63.6 302.6 69.1 307.7 70.3C312.8 71.4 317.9 69.5 323.1 69.1C328.2 68.8 333.3 68.6 338.5 68.2C343.6 67.7 348.7 65.6 353.8 66.3C359.0 67.0 364.1 70.8 369.2 72.2C374.4 73.7 379.5 74.4 384.6 75.0C389.7 75.7 394.9 77.1 400.0 76.1C405.1 75.0 410.3 70.1 415.4 68.6C420.5 67.1 425.6 67.2 430.8 67.1C435.9 67.1 441.0 68.1 446.2 68.4C451.3 68.7 456.4 69.4 461.5 68.9C466.7 68.5 471.8 65.7 476.9 65.7C482.1 65.6 487.2 67.5 492.3 68.6C497.4 69.6 502.6 72.4 507.7 71.9C512.8 71.4 517.9 66.8 523.1 65.3C528.2 63.9 533.3 62.7 538.5 62.9C543.6 63.1 548.7 65.5 553.8 66.7C559.0 67.8 564.1 69.6 569.2 69.8C574.4 70.0 579.5 68.1 584.6 68.0C589.7 67.8 597.4 68.7 600.0 68.9"/>
               </g>
-              <g class="curve-axis">
-                <text x="50" y="280">40&#176;</text>
-                <text x="203" y="280">60&#176;</text>
-                <text x="367" y="280">80&#176;</text>
-                <text x="486" y="280">95&#176;</text>
-                <text x="8" y="266">1.2k</text>
-                <text x="8" y="173">3.6k</text>
-                <text x="8" y="80">6k rpm</text>
-              </g>
-              <path class="curve-line" d="M50 250 L200 226 L320 150 L420 78 L500 44"></path>
-              <circle class="curve-node" cx="50" cy="250" r="5"></circle>
-              <circle class="curve-node" cx="200" cy="226" r="5"></circle>
-              <circle class="curve-node" cx="320" cy="150" r="5"></circle>
-              <circle class="curve-node" cx="420" cy="78" r="5"></circle>
-              <circle class="curve-node" cx="500" cy="44" r="5"></circle>
-              <circle class="curve-op-ring" cx="336" cy="140" r="7"></circle>
-              <circle class="curve-op" cx="336" cy="140" r="5.5"></circle>
             </svg>
-            <p class="curve-caption">a custom curve &middot; current operating point at 72&#176;, about 2,900 rpm</p>
+          </article>
+
+          <article class="tile c-heat reveal" data-spotlight>
+            <div class="tile-head"><svg class="ico" aria-hidden="true"><use href="#i-thermo"/></svg><h3>Thermal</h3><span class="tile-sub" aria-hidden="true">GPU <span data-live="gpu">48</span>&#176;</span></div>
+            <p class="tile-value" aria-hidden="true"><span data-live="temp">52</span><small>&#176;C</small></p>
+            <p class="tile-note">CPU and GPU temperatures from the SMC, next to macOS thermal pressure.</p>
+            <svg class="spark" viewBox="0 0 300 100" preserveAspectRatio="none" aria-hidden="true" data-spark data-points="40" data-min="30" data-max="80">
+              <g class="spark-move">
+                <path class="spark-area" fill="url(#g-heat)" data-series="temp" d="M0.0 59.3C1.3 59.5 5.1 60.2 7.7 60.5C10.3 60.7 12.8 61.3 15.4 61.0C17.9 60.7 20.5 59.3 23.1 58.7C25.6 58.0 28.2 57.9 30.8 57.2C33.3 56.5 35.9 55.1 38.5 54.5C41.0 53.9 43.6 53.9 46.2 53.6C48.7 53.4 51.3 53.1 53.8 53.0C56.4 52.9 59.0 52.8 61.5 52.9C64.1 52.9 66.7 53.2 69.2 53.3C71.8 53.5 74.4 53.4 76.9 53.6C79.5 53.9 82.1 54.5 84.6 54.8C87.2 55.0 89.7 54.9 92.3 55.1C94.9 55.2 97.4 55.6 100.0 55.7C102.6 55.8 105.1 55.7 107.7 55.7C110.3 55.7 112.8 56.1 115.4 55.9C117.9 55.7 120.5 54.8 123.1 54.6C125.6 54.4 128.2 54.6 130.8 54.7C133.3 54.8 135.9 55.0 138.5 55.2C141.0 55.3 143.6 55.5 146.2 55.7C148.7 55.9 151.3 56.2 153.8 56.4C156.4 56.6 159.0 56.6 161.5 56.8C164.1 56.9 166.7 57.2 169.2 57.4C171.8 57.7 174.4 57.9 176.9 58.2C179.5 58.4 182.1 58.5 184.6 58.7C187.2 58.9 189.7 59.2 192.3 59.4C194.9 59.6 197.4 59.9 200.0 59.9C202.6 59.8 205.1 59.4 207.7 59.2C210.3 59.1 212.8 58.9 215.4 58.9C217.9 58.8 220.5 58.9 223.1 58.9C225.6 58.9 228.2 58.9 230.8 58.8C233.3 58.8 235.9 58.4 238.5 58.5C241.0 58.5 243.6 59.1 246.2 59.1C248.7 59.2 251.3 59.0 253.8 58.9C256.4 58.8 259.0 58.6 261.5 58.4C264.1 58.2 266.7 57.8 269.2 57.6C271.8 57.5 274.4 57.3 276.9 57.4C279.5 57.4 282.1 57.8 284.6 57.9C287.2 58.0 289.7 58.0 292.3 58.2C294.9 58.3 298.7 58.8 300.0 58.9L300.0 100.0L0 100.0Z"/>
+                <path class="spark-line" data-series="temp" d="M0.0 59.3C1.3 59.5 5.1 60.2 7.7 60.5C10.3 60.7 12.8 61.3 15.4 61.0C17.9 60.7 20.5 59.3 23.1 58.7C25.6 58.0 28.2 57.9 30.8 57.2C33.3 56.5 35.9 55.1 38.5 54.5C41.0 53.9 43.6 53.9 46.2 53.6C48.7 53.4 51.3 53.1 53.8 53.0C56.4 52.9 59.0 52.8 61.5 52.9C64.1 52.9 66.7 53.2 69.2 53.3C71.8 53.5 74.4 53.4 76.9 53.6C79.5 53.9 82.1 54.5 84.6 54.8C87.2 55.0 89.7 54.9 92.3 55.1C94.9 55.2 97.4 55.6 100.0 55.7C102.6 55.8 105.1 55.7 107.7 55.7C110.3 55.7 112.8 56.1 115.4 55.9C117.9 55.7 120.5 54.8 123.1 54.6C125.6 54.4 128.2 54.6 130.8 54.7C133.3 54.8 135.9 55.0 138.5 55.2C141.0 55.3 143.6 55.5 146.2 55.7C148.7 55.9 151.3 56.2 153.8 56.4C156.4 56.6 159.0 56.6 161.5 56.8C164.1 56.9 166.7 57.2 169.2 57.4C171.8 57.7 174.4 57.9 176.9 58.2C179.5 58.4 182.1 58.5 184.6 58.7C187.2 58.9 189.7 59.2 192.3 59.4C194.9 59.6 197.4 59.9 200.0 59.9C202.6 59.8 205.1 59.4 207.7 59.2C210.3 59.1 212.8 58.9 215.4 58.9C217.9 58.8 220.5 58.9 223.1 58.9C225.6 58.9 228.2 58.9 230.8 58.8C233.3 58.8 235.9 58.4 238.5 58.5C241.0 58.5 243.6 59.1 246.2 59.1C248.7 59.2 251.3 59.0 253.8 58.9C256.4 58.8 259.0 58.6 261.5 58.4C264.1 58.2 266.7 57.8 269.2 57.6C271.8 57.5 274.4 57.3 276.9 57.4C279.5 57.4 282.1 57.8 284.6 57.9C287.2 58.0 289.7 58.0 292.3 58.2C294.9 58.3 298.7 58.8 300.0 58.9"/>
+              </g>
+            </svg>
+          </article>
+
+          <article class="tile c-mem reveal" data-spotlight>
+            <div class="tile-head"><svg class="ico" aria-hidden="true"><use href="#i-mem"/></svg><h3>Memory</h3><span class="tile-sub" aria-hidden="true"><span data-live="memGB">10.4</span> of 16 GB</span></div>
+            <p class="tile-value" aria-hidden="true"><span data-live="mem">65</span><small>%</small></p>
+            <p class="tile-note">Memory pressure, with app, wired and compressed memory broken out.</p>
+            <div class="stack" aria-hidden="true"><span class="mem-app" data-mem="app"></span><span class="mem-wired" data-mem="wired"></span><span class="mem-comp" data-mem="comp"></span></div>
+            <ul class="legend" aria-hidden="true">
+              <li><i class="mem-app"></i>App</li>
+              <li><i class="mem-wired"></i>Wired</li>
+              <li><i class="mem-comp"></i>Compressed</li>
+            </ul>
+          </article>
+
+          <article class="tile c-cool reveal" data-spotlight>
+            <div class="tile-head"><svg class="ico rotor" data-rotor aria-hidden="true"><use href="#i-fan"/></svg><h3>Cooling</h3><span class="tile-sub" aria-hidden="true">Custom curve</span></div>
+            <p class="tile-value" aria-hidden="true"><span data-live="rpm">2,790</span><small>rpm</small></p>
+            <p class="tile-note">Each fan&rsquo;s live speed, and which mode is driving it.</p>
+            <div class="fans" aria-hidden="true">
+              <div class="fan">
+                <div class="fan-ring" data-ring="rpm"><svg viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="27"/><circle class="ring-fill" cx="32" cy="32" r="27" pathLength="100"/></svg><b data-live="rpmShort">2.8k</b></div>
+                <span>Fan 1</span>
+              </div>
+              <div class="fan">
+                <div class="fan-ring" data-ring="rpm2"><svg viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="27"/><circle class="ring-fill" cx="32" cy="32" r="27" pathLength="100"/></svg><b data-live="rpm2Short">2.8k</b></div>
+                <span>Fan 2</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="tile c-power reveal" data-spotlight>
+            <div class="tile-head"><svg class="ico" aria-hidden="true"><use href="#i-bolt"/></svg><h3>Power</h3><span class="tile-sub" aria-hidden="true">Battery 80%</span></div>
+            <p class="tile-value" aria-hidden="true"><span data-live="watts">9.6</span><small>W</small></p>
+            <p class="tile-note">System draw, battery charge, health and cycle count.</p>
+            <svg class="bars" viewBox="0 0 240 70" preserveAspectRatio="none" aria-hidden="true" data-bars="watts" data-points="24" data-floor="20"></svg>
+          </article>
+
+          <article class="tile tile-wide c-net reveal" data-spotlight>
+            <div class="tile-head"><svg class="ico" aria-hidden="true"><use href="#i-globe"/></svg><h3>Network</h3><span class="tile-sub" aria-hidden="true">All interfaces</span></div>
+            <div class="net-values" aria-hidden="true">
+              <p class="tile-value"><span class="arrow">&#8595;</span><span data-live="downNum">1.2</span><small data-live="downUnit">KB/s</small></p>
+              <p class="tile-value is-up"><span class="arrow">&#8593;</span><span data-live="upNum">0.4</span><small data-live="upUnit">KB/s</small></p>
+            </div>
+            <p class="tile-note">Download and upload throughput across all interfaces.</p>
+            <svg class="spark" viewBox="0 0 600 100" preserveAspectRatio="none" aria-hidden="true" data-spark data-points="40" data-scale="sqrt">
+              <g class="spark-move">
+                <path class="spark-area" fill="url(#g-net)" data-series="down" d="M0.0 91.6C2.6 91.4 10.3 95.6 15.4 90.6C20.5 85.6 25.6 63.9 30.8 61.4C35.9 58.9 41.0 72.0 46.2 75.7C51.3 79.3 56.4 81.5 61.5 83.4C66.7 85.3 71.8 93.9 76.9 87.1C82.1 80.3 87.2 46.2 92.3 42.7C97.4 39.1 102.6 67.8 107.7 65.9C112.8 64.0 117.9 32.3 123.1 31.2C128.2 30.1 133.3 52.0 138.5 59.2C143.6 66.5 148.7 70.9 153.8 74.8C159.0 78.8 164.1 81.2 169.2 83.1C174.4 84.9 179.5 85.2 184.6 86.2C189.7 87.2 194.9 91.7 200.0 89.0C205.1 86.3 210.3 71.4 215.4 69.9C220.5 68.3 225.6 77.3 230.8 79.8C235.9 82.2 241.0 83.2 246.2 84.6C251.3 86.0 256.4 87.7 261.5 88.3C266.7 88.9 271.8 87.8 276.9 88.1C282.1 88.5 287.2 90.3 292.3 90.4C297.4 90.6 302.6 89.0 307.7 88.9C312.8 88.8 317.9 89.7 323.1 89.8C328.2 90.0 333.3 89.7 338.5 89.9C343.6 90.1 348.7 90.8 353.8 91.0C359.0 91.3 364.1 91.5 369.2 91.4C374.4 91.3 379.5 100.0 384.6 90.5C389.7 77.2 394.9 18.9 400.0 11.9C405.1 5.0 410.3 39.4 415.4 48.9C420.5 58.4 425.6 64.0 430.8 69.2C435.9 74.4 441.0 77.4 446.2 80.1C451.3 82.9 456.4 84.4 461.5 85.7C466.7 87.1 471.8 87.7 476.9 88.3C482.1 88.8 487.2 88.5 492.3 89.0C497.4 89.5 502.6 91.2 507.7 91.2C512.8 91.3 517.9 89.5 523.1 89.1C528.2 88.8 533.3 89.0 538.5 89.2C543.6 89.3 548.7 90.2 553.8 90.2C559.0 90.3 564.1 89.6 569.2 89.4C574.4 89.3 579.5 89.1 584.6 89.1C589.7 89.1 597.4 89.4 600.0 89.5L600.0 100.0L0 100.0Z"/>
+                <path class="spark-line" data-series="down" d="M0.0 91.6C2.6 91.4 10.3 95.6 15.4 90.6C20.5 85.6 25.6 63.9 30.8 61.4C35.9 58.9 41.0 72.0 46.2 75.7C51.3 79.3 56.4 81.5 61.5 83.4C66.7 85.3 71.8 93.9 76.9 87.1C82.1 80.3 87.2 46.2 92.3 42.7C97.4 39.1 102.6 67.8 107.7 65.9C112.8 64.0 117.9 32.3 123.1 31.2C128.2 30.1 133.3 52.0 138.5 59.2C143.6 66.5 148.7 70.9 153.8 74.8C159.0 78.8 164.1 81.2 169.2 83.1C174.4 84.9 179.5 85.2 184.6 86.2C189.7 87.2 194.9 91.7 200.0 89.0C205.1 86.3 210.3 71.4 215.4 69.9C220.5 68.3 225.6 77.3 230.8 79.8C235.9 82.2 241.0 83.2 246.2 84.6C251.3 86.0 256.4 87.7 261.5 88.3C266.7 88.9 271.8 87.8 276.9 88.1C282.1 88.5 287.2 90.3 292.3 90.4C297.4 90.6 302.6 89.0 307.7 88.9C312.8 88.8 317.9 89.7 323.1 89.8C328.2 90.0 333.3 89.7 338.5 89.9C343.6 90.1 348.7 90.8 353.8 91.0C359.0 91.3 364.1 91.5 369.2 91.4C374.4 91.3 379.5 100.0 384.6 90.5C389.7 77.2 394.9 18.9 400.0 11.9C405.1 5.0 410.3 39.4 415.4 48.9C420.5 58.4 425.6 64.0 430.8 69.2C435.9 74.4 441.0 77.4 446.2 80.1C451.3 82.9 456.4 84.4 461.5 85.7C466.7 87.1 471.8 87.7 476.9 88.3C482.1 88.8 487.2 88.5 492.3 89.0C497.4 89.5 502.6 91.2 507.7 91.2C512.8 91.3 517.9 89.5 523.1 89.1C528.2 88.8 533.3 89.0 538.5 89.2C543.6 89.3 548.7 90.2 553.8 90.2C559.0 90.3 564.1 89.6 569.2 89.4C574.4 89.3 579.5 89.1 584.6 89.1C589.7 89.1 597.4 89.4 600.0 89.5"/>
+                <path class="spark-line is-faint" data-series="up" d="M0.0 70.5C2.6 72.5 10.3 79.6 15.4 82.4C20.5 85.3 25.6 86.4 30.8 87.6C35.9 88.9 41.0 89.6 46.2 90.0C51.3 90.3 56.4 89.5 61.5 89.7C66.7 89.9 71.8 91.3 76.9 91.4C82.1 91.4 87.2 90.3 92.3 90.1C97.4 89.9 102.6 95.5 107.7 90.4C112.8 85.3 117.9 62.1 123.1 59.5C128.2 57.0 133.3 71.1 138.5 75.0C143.6 79.0 148.7 81.2 153.8 83.2C159.0 85.2 164.1 86.1 169.2 87.1C174.4 88.0 179.5 88.2 184.6 88.8C189.7 89.3 194.9 89.9 200.0 90.3C205.1 90.7 210.3 91.2 215.4 91.1C220.5 91.0 225.6 89.8 230.8 89.8C235.9 89.8 241.0 90.9 246.2 91.0C251.3 91.1 256.4 90.6 261.5 90.5C266.7 90.3 271.8 90.4 276.9 90.2C282.1 90.1 287.2 89.5 292.3 89.7C297.4 89.8 302.6 91.1 307.7 91.1C312.8 91.1 317.9 90.0 323.1 89.7C328.2 89.5 333.3 89.9 338.5 89.9C343.6 89.8 348.7 89.7 353.8 89.6C359.0 89.5 364.1 89.1 369.2 89.4C374.4 89.6 379.5 90.9 384.6 91.1C389.7 91.3 394.9 90.9 400.0 90.7C405.1 90.5 410.3 89.9 415.4 89.9C420.5 90.0 425.6 90.7 430.8 91.0C435.9 91.3 441.0 91.9 446.2 91.8C451.3 91.8 456.4 90.9 461.5 90.7C466.7 90.5 471.8 95.4 476.9 90.6C482.1 85.9 487.2 64.5 492.3 62.2C497.4 59.8 502.6 72.8 507.7 76.5C512.8 80.2 517.9 82.2 523.1 84.1C528.2 86.1 533.3 87.6 538.5 88.4C543.6 89.3 548.7 89.2 553.8 89.4C559.0 89.5 564.1 89.3 569.2 89.4C574.4 89.6 579.5 90.0 584.6 90.2C589.7 90.4 597.4 90.5 600.0 90.5"/>
+              </g>
+            </svg>
+          </article>
+
+          <article class="tile tile-storage c-disk reveal" data-spotlight>
+            <div class="tile-head"><svg class="ico" aria-hidden="true"><use href="#i-disk"/></svg><h3>Storage</h3><span class="tile-sub" aria-hidden="true">94.7 GB free</span></div>
+            <p class="tile-value" aria-hidden="true">73<small>%</small></p>
+            <p class="tile-note">Used, purgeable and free capacity on the startup disk.</p>
+            <div class="stack" aria-hidden="true"><span class="disk-used"></span><span class="disk-purge"></span></div>
+            <ul class="legend" aria-hidden="true">
+              <li><i class="disk-used"></i>Used</li>
+              <li><i class="disk-purge"></i>Purgeable</li>
+              <li><i class="disk-free"></i>Free</li>
+            </ul>
+          </article>
+        </div>
+        <p class="fine">Readings on this page are simulated to show how the app behaves. Nothing here reads your device.</p>
+      </div>
+    </section>
+
+    <section class="section" id="tour" aria-labelledby="tour-title">
+      <div class="shell">
+        <header class="section-head is-center reveal">
+          <p class="eyebrow c-mem"><span class="dot" aria-hidden="true"></span>Tour</p>
+          <h2 id="tour-title">Fifteen seconds with Core-Monitor</h2>
+          <p>The dashboard, the thermal panel in the menu bar, and a custom fan curve.</p>
+        </header>
+        <figure class="reel reveal">
+          <div class="reel-frame">
+            <video data-autoplay controls muted loop playsinline preload="none" poster="images/site/core-monitor-tour-poster.jpg" width="1920" height="1080" title="Core-Monitor tour: dashboard, menu bar panel and fan curve">
+              <source src="videos/core-monitor-tour.mp4?v=1" type="video/mp4">
+              <p>Your browser cannot play this clip. <a href="videos/core-monitor-tour.mp4" download>Download the MP4</a> instead.</p>
+            </video>
           </div>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" id="screens" aria-labelledby="screens-title">
+      <div class="shell">
+        <header class="section-head reveal">
+          <p class="eyebrow c-disk"><span class="dot" aria-hidden="true"></span>Screens</p>
+          <h2 id="screens-title">Every subsystem gets its own screen</h2>
+          <p>History sits behind each number, and the menu bar carries a short version, so the window can stay closed most of the day.</p>
+        </header>
+
+        <fieldset class="showcase reveal" data-showcase>
+          <legend class="sr">Choose a screen to preview</legend>
+          <input class="sc-input" type="radio" name="screen" id="sc-overview" checked>
+          <input class="sc-input" type="radio" name="screen" id="sc-cooling">
+          <input class="sc-input" type="radio" name="screen" id="sc-memory">
+          <input class="sc-input" type="radio" name="screen" id="sc-storage">
+          <input class="sc-input" type="radio" name="screen" id="sc-thermal">
+          <input class="sc-input" type="radio" name="screen" id="sc-network">
+
+          <div class="sc-tabs">
+            <span class="sc-indicator" aria-hidden="true"></span>
+            <label class="sc-tab c-cpu" for="sc-overview"><span class="dot" aria-hidden="true"></span>Overview<span class="sc-progress" aria-hidden="true"></span></label>
+            <label class="sc-tab c-cool" for="sc-cooling"><span class="dot" aria-hidden="true"></span>Cooling<span class="sc-progress" aria-hidden="true"></span></label>
+            <label class="sc-tab c-mem" for="sc-memory"><span class="dot" aria-hidden="true"></span>Memory<span class="sc-progress" aria-hidden="true"></span></label>
+            <label class="sc-tab c-disk" for="sc-storage"><span class="dot" aria-hidden="true"></span>Storage<span class="sc-progress" aria-hidden="true"></span></label>
+            <label class="sc-tab c-heat" for="sc-thermal"><span class="dot" aria-hidden="true"></span>Thermal<span class="sc-progress" aria-hidden="true"></span></label>
+            <label class="sc-tab c-net" for="sc-network"><span class="dot" aria-hidden="true"></span>Network<span class="sc-progress" aria-hidden="true"></span></label>
+          </div>
+
+          <div class="sc-stage">
+            <figure class="sc-panel sc-overview">
+              <img src="images/ui/overview-v16.png?v=16" alt="Overview screen summarizing CPU, memory, thermal, cooling, power, network and storage." width="1192" height="884" loading="lazy" decoding="async">
+              <figcaption>Overview: every subsystem at a glance</figcaption>
+            </figure>
+            <figure class="sc-panel is-desk sc-cooling">
+              <img src="images/ui/cooling-v16.png?v=16" alt="Cooling screen with fan speeds, cooling mode and a custom fan curve editor, next to the fan panel in the menu bar." width="1383" height="889" loading="lazy" decoding="async">
+              <figcaption>Cooling: fan speeds, cooling mode and the curve editor</figcaption>
+            </figure>
+            <figure class="sc-panel sc-memory">
+              <img src="images/ui/memory-v16.png?v=16" alt="Memory screen with usage history and a pressure breakdown." width="1192" height="884" loading="lazy" decoding="async">
+              <figcaption>Memory: usage history and a pressure breakdown</figcaption>
+            </figure>
+            <figure class="sc-panel sc-storage">
+              <img src="images/ui/storage-v16.png?v=16" alt="Storage screen with used, purgeable and free capacity." width="1192" height="884" loading="lazy" decoding="async">
+              <figcaption>Storage: used, purgeable and free capacity</figcaption>
+            </figure>
+            <figure class="sc-panel is-panel sc-thermal">
+              <img src="images/ui/menu-thermal-v16.png?v=16" alt="Thermal panel opened from the menu bar, with CPU, GPU and SSD readings and the cooling mode." width="391" height="388" loading="lazy" decoding="async">
+              <figcaption>Thermal panel, opened from the menu bar</figcaption>
+            </figure>
+            <figure class="sc-panel is-panel sc-network">
+              <img src="images/ui/menu-network-v16.png?v=16" alt="Network panel opened from the menu bar, with download and upload rates." width="336" height="305" loading="lazy" decoding="async">
+              <figcaption>Network panel, opened from the menu bar</figcaption>
+            </figure>
+          </div>
+        </fieldset>
+      </div>
+    </section>
+
+    <section class="section" id="cooling" aria-labelledby="cooling-title">
+      <div class="shell split">
+        <div class="reveal">
+          <header class="section-head">
+            <p class="eyebrow c-cool"><span class="dot" aria-hidden="true"></span>Fan control</p>
+            <h2 id="cooling-title">Read-only, until you decide otherwise</h2>
+            <p>Out of the box, Core-Monitor only watches the fans. Install the optional helper and you get three ways to drive them: a fixed speed, a boost profile, or a curve you draw yourself, point by point.</p>
+          </header>
+          <dl class="points">
+            <div>
+              <svg class="ico" aria-hidden="true"><use href="#i-return"/></svg>
+              <dt>Hand it back anytime</dt>
+              <dd>One button returns full control to macOS, no restart needed.</dd>
+            </div>
+            <div>
+              <svg class="ico" aria-hidden="true"><use href="#i-curve"/></svg>
+              <dt>Draw your own curve</dt>
+              <dd>Map CPU or GPU temperature to fan speed across as many points as you want.</dd>
+            </div>
+            <div>
+              <svg class="ico" aria-hidden="true"><use href="#i-eye"/></svg>
+              <dt>Skip the helper entirely</dt>
+              <dd>Monitoring works identically whether or not it is installed.</dd>
+            </div>
+            <div>
+              <svg class="ico" aria-hidden="true"><use href="#i-gauge"/></svg>
+              <dt>Calibrate first</dt>
+              <dd>Measure each fan&rsquo;s real minimum and maximum before trusting a profile to it.</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="curve-card reveal" data-curve>
+          <div class="curve-top">
+            <div class="fan-badge" aria-hidden="true"><svg class="ico rotor" data-curve-rotor><use href="#i-fan"/></svg></div>
+            <p class="curve-readout">
+              <span class="ro-temp"><span data-curve-temp>72</span><span class="ro-unit">&#176;C</span></span>
+              <span class="ro-arrow" aria-hidden="true">&#8594;</span>
+              <span class="ro-rpm"><span data-curve-rpm>3,910</span><span class="ro-unit"> rpm</span></span>
+            </p>
+            <span class="mode-pill">Custom curve</span>
+          </div>
+          <svg class="curve-svg" viewBox="0 0 520 290" role="img" aria-label="A custom fan curve mapping CPU temperature to fan speed. At 72 degrees the fans run at about 3,910 rpm.">
+            <defs>
+              <linearGradient id="g-curve-line" x1="50" y1="0" x2="500" y2="0" gradientUnits="userSpaceOnUse">
+                <stop offset="0" class="stop-curve-a"/>
+                <stop offset="1" class="stop-curve-b"/>
+              </linearGradient>
+              <linearGradient id="g-curve-area" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" class="stop-curve-a" stop-opacity="0.22"/>
+                <stop offset="1" class="stop-curve-a" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <g class="curve-grid">
+              <line x1="50" y1="20" x2="50" y2="262"/>
+              <line x1="213.6" y1="20" x2="213.6" y2="262"/>
+              <line x1="377.3" y1="20" x2="377.3" y2="262"/>
+              <line x1="500" y1="20" x2="500" y2="262"/>
+              <line x1="50" y1="262" x2="500" y2="262"/>
+              <line x1="50" y1="219.5" x2="500" y2="219.5"/>
+              <line x1="50" y1="134.4" x2="500" y2="134.4"/>
+              <line x1="50" y1="49.3" x2="500" y2="49.3"/>
+            </g>
+            <g class="curve-axis">
+              <text x="50" y="282" text-anchor="middle">40&#176;</text>
+              <text x="213.6" y="282" text-anchor="middle">60&#176;</text>
+              <text x="377.3" y="282" text-anchor="middle">80&#176;</text>
+              <text x="500" y="282" text-anchor="middle">95&#176;</text>
+              <text x="40" y="223.5" text-anchor="end">2k</text>
+              <text x="40" y="138.4" text-anchor="end">4k</text>
+              <text x="40" y="53.3" text-anchor="end">6k</text>
+              <text x="40" y="24" text-anchor="end">rpm</text>
+            </g>
+            <path class="curve-area" d="M50 228 L148.2 189.7 L262.7 159.9 L377.3 108.8 L500 49.3 L500 262 L50 262 Z"/>
+            <path class="curve-line" pathLength="1" d="M50 228 L148.2 189.7 L262.7 159.9 L377.3 108.8 L500 49.3"/>
+            <line class="curve-guide" data-guide-v x1="311.8" y1="138" x2="311.8" y2="262"/>
+            <line class="curve-guide" data-guide-h x1="50" y1="138" x2="311.8" y2="138"/>
+            <circle class="curve-node" cx="50" cy="228" r="5.5"/>
+            <circle class="curve-node" cx="148.2" cy="189.7" r="5.5"/>
+            <circle class="curve-node" cx="262.7" cy="159.9" r="5.5"/>
+            <circle class="curve-node" cx="377.3" cy="108.8" r="5.5"/>
+            <circle class="curve-node" cx="500" cy="49.3" r="5.5"/>
+            <circle class="curve-op-ring" data-op-ring cx="311.8" cy="138" r="7"/>
+            <circle class="curve-op" data-op cx="311.8" cy="138" r="7"/>
+          </svg>
+          <label class="curve-slider" data-curve-slider hidden>
+            <span>CPU temperature</span>
+            <input type="range" min="40" max="95" step="1" value="72">
+          </label>
+          <p class="curve-caption">An example curve. Drag the temperature to move the operating point.</p>
         </div>
       </div>
     </section>
 
-    <section class="band" id="touchbar">
+    <section class="section" id="touchbar" aria-labelledby="touchbar-title">
       <div class="shell">
-        <div class="band-head">
-          <h2>The Touch Bar, put back to work</h2>
+        <header class="section-head is-center reveal">
+          <p class="eyebrow c-net"><span class="dot" aria-hidden="true"></span>Touch Bar</p>
+          <h2 id="touchbar-title">The Touch Bar, put back to work</h2>
           <p>On Macs that still have one, Core-Monitor turns the Touch Bar into a strip of live instruments that sits above whatever app has focus.</p>
+        </header>
+
+        <div class="deck reveal" aria-hidden="true">
+          <div class="touchbar">
+            <span class="tb-track">
+            <span class="tb-key">esc</span>
+            <span class="tb-w"><span class="tb-batt"></span><b>80%</b></span>
+            <span class="tb-w"><b data-clock="short">9:41</b></span>
+            <span class="tb-w"><svg class="ico"><use href="#i-cloud"/></svg><span><b>21&#176;</b><small>Clear</small></span></span>
+            <span class="tb-w"><svg class="ico"><use href="#i-sun"/></svg></span>
+            <span class="tb-w"><svg class="ico"><use href="#i-speaker"/></svg></span>
+            <span class="tb-w tb-cpu"><span><small>CPU</small><b class="tb-heat"><span data-live="temp">52</span>&#176;</b></span><svg class="bars" viewBox="0 0 56 26" preserveAspectRatio="none" data-bars="cpu" data-points="9" data-floor="60"></svg><span><b><span data-live="cpu">14</span>%</b><small>load</small></span></span>
+            <span class="tb-w tb-mem"><span><small>Memory</small><span class="stack"><span class="mem-app" data-mem="pressure"></span></span></span></span>
+            <span class="tb-w"><svg class="ico rotor tb-cool" data-rotor><use href="#i-fan"/></svg><b data-live="rpm">2,790</b></span>
+            <span class="tb-w"><svg class="ico"><use href="#i-globe"/></svg><span><b>&#8595;<span data-live="downShort">1.0K</span></b><small>network</small></span></span>
+            <span class="tb-w"><svg class="ico tb-power"><use href="#i-bolt"/></svg><b><span data-live="watts">9.6</span> W</b></span>
+            </span>
+          </div>
         </div>
-        <div class="reel-grid">
-          <div class="bezel">
-            <video controls playsinline preload="metadata" width="1280" height="720" title="Core-Monitor Touch Bar widgets in use">
+
+        <div class="tb-grid">
+          <div class="tb-video reveal">
+            <video controls playsinline preload="metadata" poster="images/site/touchbar-poster.jpg" width="1280" height="720" title="Core-Monitor Touch Bar widgets in use">
               <source src="videos/touchbar-showcase.mp4" type="video/mp4">
               <p>Your browser cannot play this clip. <a href="videos/touchbar-showcase.mp4" download>Download the MP4</a> instead.</p>
             </video>
           </div>
-          <div class="reel-note">
+          <div class="tb-note reveal">
             <h3>Widgets, overlays and shortcuts</h3>
             <p>Stats, optional live weather, shortcuts and memory pressure, arranged with a live width preview so a layout never runs off the edge of the strip. The strip holds its place across apps, so you can check a reading or launch something without switching windows. Live weather stays off until you enable it.</p>
           </div>
@@ -334,31 +616,42 @@
       </div>
     </section>
 
-    <section class="anodized" id="privacy" aria-labelledby="privacy-title">
-      <div class="shell anodized-grid">
-        <div class="anodized-copy">
-          <h2 id="privacy-title">Readings stay on the machine that made them.</h2>
-          <p>Core-Monitor reads your system, then keeps that data on your Mac. There is no account to create and no telemetry to switch off.</p>
-          <p class="anodized-foot">Live Weather is off by default. If you enable it, Apple WeatherKit receives your location after you grant permission. <a href="https://github.com/offyotto/Core-Monitor">Read the source code</a> and check for yourself.</p>
+    <section class="privacy" id="privacy" aria-labelledby="privacy-title">
+      <div class="shell">
+        <div class="vault reveal">
+          <div>
+            <p class="eyebrow"><span class="dot" aria-hidden="true"></span>Privacy</p>
+            <h2 id="privacy-title">Readings stay on the machine that made them.</h2>
+            <p>Core-Monitor reads your system, then keeps that data on your Mac. There is no account to create and no telemetry to switch off.</p>
+            <p class="vault-foot">Live Weather is off by default. If you enable it, Apple WeatherKit receives your location after you grant permission. <a href="https://github.com/offyotto/Core-Monitor">Read the source code</a> and check for yourself.</p>
+          </div>
+          <div class="scan" data-scan>
+            <div class="scan-head">
+              <span class="scan-title"><svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg>Privacy check</span>
+              <span class="scan-status" data-scan-status>All clear</span>
+            </div>
+            <dl class="readouts">
+              <div><dt>monitoring data sent</dt><dd class="ok"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>none</dd></div>
+              <div><dt>accounts required</dt><dd class="ok"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>none</dd></div>
+              <div><dt>analytics libraries</dt><dd class="ok"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>none</dd></div>
+              <div><dt>source code</dt><dd>public, GPL-licensed</dd></div>
+              <div><dt>weather requests</dt><dd>only after opt-in</dd></div>
+            </dl>
+            <span class="scan-beam" aria-hidden="true"></span>
+          </div>
         </div>
-        <dl class="readouts">
-          <div><dt>monitoring data sent</dt><dd class="ok">none</dd></div>
-          <div><dt>accounts required</dt><dd class="ok">none</dd></div>
-          <div><dt>analytics libraries</dt><dd class="ok">none</dd></div>
-          <div><dt>source code</dt><dd>public, GPL-licensed</dd></div>
-          <div><dt>weather requests</dt><dd>only after opt-in</dd></div>
-        </dl>
       </div>
     </section>
 
-    <section class="band" id="compare">
+    <section class="section" id="compare" aria-labelledby="compare-title">
       <div class="shell">
-        <div class="band-head">
+        <header class="section-head reveal">
+          <p class="eyebrow c-heat"><span class="dot" aria-hidden="true"></span>Compare</p>
           <h2 id="compare-title">How it stacks up</h2>
           <p>A handful of good Mac monitors already exist. This is where Core-Monitor sits next to them, stated plainly.</p>
-        </div>
-        <div class="matrix-scroll" tabindex="0" role="region" aria-labelledby="compare-title">
-          <table class="matrix">
+        </header>
+        <div class="compare reveal">
+          <table>
             <thead>
               <tr>
                 <th scope="col">App</th>
@@ -369,23 +662,23 @@
             <tbody>
               <tr>
                 <th scope="row">iStat Menus</th>
-                <td>Covers dozens of metrics across many menu bar modules.</td>
-                <td>Narrower on purpose. Heat, power and fans, open source, with no license to buy.</td>
+                <td data-label="Strong at">Covers dozens of metrics across many menu bar modules.</td>
+                <td data-label="Where Core-Monitor differs">Narrower on purpose. Heat, power and fans, open source, with no license to buy.</td>
               </tr>
               <tr>
                 <th scope="row">TG Pro</th>
-                <td>Deep per-sensor diagnostics.</td>
-                <td>Monitoring comes first here; writing fan speed is an optional layer, not the whole app.</td>
+                <td data-label="Strong at">Deep per-sensor diagnostics.</td>
+                <td data-label="Where Core-Monitor differs">Monitoring comes first here; writing fan speed is an optional layer, not the whole app.</td>
               </tr>
               <tr>
                 <th scope="row">Macs Fan Control</th>
-                <td>Direct control over fan speed.</td>
-                <td>Wraps that control in a full dashboard, with history, alerts and menu bar readouts.</td>
+                <td data-label="Strong at">Direct control over fan speed.</td>
+                <td data-label="Where Core-Monitor differs">Wraps that control in a full dashboard, with history, alerts and menu bar readouts.</td>
               </tr>
               <tr>
                 <th scope="row">Stats</th>
-                <td>Free, modular menu bar widgets.</td>
-                <td>One dedicated window with history, built specifically around thermals.</td>
+                <td data-label="Strong at">Free, modular menu bar widgets.</td>
+                <td data-label="Where Core-Monitor differs">One dedicated window with history, built specifically around thermals.</td>
               </tr>
             </tbody>
           </table>
@@ -393,100 +686,117 @@
       </div>
     </section>
 
-    <section class="band" id="install">
+    <section class="section" id="install" aria-labelledby="install-title">
       <div class="shell">
-        <div class="band-head">
-          <h2>Two editions</h2>
+        <header class="section-head is-center reveal">
+          <p class="eyebrow c-power"><span class="dot" aria-hidden="true"></span>Install</p>
+          <h2 id="install-title">Two editions</h2>
           <p>Both are free. Only the direct build reads the temperature sensors and controls fans.</p>
-        </div>
-        <div class="ways">
-          <div class="way">
-            <h3>Direct build</h3>
-            <div>
-              <p class="way-blurb">The full app: SMC temperatures, fan speeds, power draw, Touch Bar widgets, and optional fan control through a helper you install only if you want it. Signed and notarized, from GitHub. macOS 13 or later.</p>
-              <div class="action-row">
-                <a class="act act-primary act-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">DMG</a>
-                <a class="act act-line act-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip">ZIP</a>
+        </header>
+        <div class="editions">
+          <article class="edition edition-direct reveal">
+            <span class="edition-ring" aria-hidden="true"></span>
+            <div class="edition-body">
+              <div class="edition-head"><h3>Direct build</h3><span class="tag">Full app</span></div>
+              <p class="edition-blurb">The full app: SMC temperatures, fan speeds, power draw, Touch Bar widgets, and optional fan control through a helper you install only if you want it. Signed and notarized, from GitHub. macOS 13 or later.</p>
+              <div class="cta">
+                <a class="btn btn-primary" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg>Download DMG</a>
+                <a class="btn btn-soft" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip">ZIP</a>
               </div>
-              <pre class="command" id="brew-command">brew tap --custom-remote offyotto/core-monitor \
-  https://github.com/offyotto/Core-Monitor
-brew install --cask offyotto/core-monitor/core-monitor</pre>
-              <div class="action-row">
-                <button class="act act-line act-sm copy-act" type="button" data-copy="brew-command">Copy Homebrew command</button>
-              </div>
-            </div>
-          </div>
-          <div class="way">
-            <h3>Mac App Store</h3>
-            <div>
-              <p class="way-blurb">Sandboxed and read-only: CPU, memory, network, storage, battery, and thermal state, with updates through the App Store. No sensor temperatures, fan control, or Touch Bar. macOS 14 or later.</p>
-              <div class="action-row">
-                <a class="act act-line act-sm" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">App Store</a>
-                <a class="act act-bare act-sm" href="Mac-App-Store/">What&rsquo;s included</a>
+              <div class="terminal">
+                <div class="terminal-bar">
+                  <i></i><i></i><i></i>
+                  <em>Homebrew</em>
+                  <button class="copy-btn" type="button" data-copy="brew-command" aria-label="Copy Homebrew command"><svg class="ico" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
+                </div>
+                <pre id="brew-command"><code>brew tap --custom-remote offyotto/core-monitor \
+  https://github.com/offyotto/Core-Monitor</code>
+<code>brew install --cask offyotto/core-monitor/core-monitor</code></pre>
               </div>
             </div>
-          </div>
+          </article>
+          <article class="edition reveal">
+            <div class="edition-body">
+              <div class="edition-head"><h3>Mac App Store</h3><span class="tag is-muted">Sandboxed</span></div>
+              <p class="edition-blurb">Sandboxed and read-only: CPU, memory, network, storage, battery, and thermal state, with updates through the App Store. No sensor temperatures, fan control, or Touch Bar. macOS 14 or later.</p>
+              <div class="cta">
+                <a class="btn btn-soft" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12"><svg class="ico" aria-hidden="true"><use href="#i-bag"/></svg>App Store</a>
+                <a class="btn btn-link" href="Mac-App-Store/">What&rsquo;s included<svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+              </div>
+              <figure class="edition-shot"><img src="images/ui/mac-app-store/app-store-dashboard.png" alt="The Mac App Store edition dashboard with CPU activity, memory and thermal state cards." width="1232" height="881" loading="lazy" decoding="async"></figure>
+            </div>
+          </article>
         </div>
         <p class="sr" id="copy-status" role="status" aria-live="polite"></p>
       </div>
     </section>
 
-    <section class="band" id="faq">
-      <div class="shell">
-        <div class="band-head">
-          <h2>Questions before you install</h2>
+    <section class="section" id="faq" aria-labelledby="faq-title">
+      <div class="shell faq-grid">
+        <header class="section-head reveal">
+          <p class="eyebrow c-cool"><span class="dot" aria-hidden="true"></span>FAQ</p>
+          <h2 id="faq-title">Questions before you install</h2>
           <p>Short, direct answers to what people usually check first.</p>
-        </div>
+        </header>
         <div class="qa">
-          <details class="qa-item" open>
-            <summary>Which Macs can run it?<span class="qa-mark" aria-hidden="true">+</span></summary>
+          <details class="qa-item reveal" open>
+            <summary>Which Macs can run it?<span class="qa-mark" aria-hidden="true"></span></summary>
             <p>Apple Silicon Macs on macOS 13 or later. The sensors and fan interfaces it reads are specific to Apple&rsquo;s own chips, so Intel Macs are not supported.</p>
           </details>
-          <details class="qa-item">
-            <summary>Do I need the helper installed?<span class="qa-mark" aria-hidden="true">+</span></summary>
+          <details class="qa-item reveal">
+            <summary>Do I need the helper installed?<span class="qa-mark" aria-hidden="true"></span></summary>
             <p>No. Every reading works without it. It exists only so the app can write fan speeds, and you can hand control back to macOS whenever you like.</p>
           </details>
-          <details class="qa-item">
-            <summary>Does it phone home?<span class="qa-mark" aria-hidden="true">+</span></summary>
+          <details class="qa-item reveal">
+            <summary>Does it phone home?<span class="qa-mark" aria-hidden="true"></span></summary>
             <p>Core-Monitor has no account, advertising, or analytics, and it does not send monitoring data to the developer. Live Weather is off by default. If you explicitly enable it, the app asks macOS for location access and requests weather from Apple WeatherKit. Turning it off stops Core-Monitor&rsquo;s weather requests; macOS and App Store components may still make their own connections to Apple services.</p>
           </details>
-          <details class="qa-item">
-            <summary>Can fan control damage my Mac?<span class="qa-mark" aria-hidden="true">+</span></summary>
+          <details class="qa-item reveal">
+            <summary>Can fan control damage my Mac?<span class="qa-mark" aria-hidden="true"></span></summary>
             <p>macOS keeps its own thermal limits regardless of what any app requests. Core-Monitor also keeps an obvious way out: one click gives full control back to the system.</p>
           </details>
-          <details class="qa-item">
-            <summary>What is deliberately left out?<span class="qa-mark" aria-hidden="true">+</span></summary>
+          <details class="qa-item reveal">
+            <summary>What is deliberately left out?<span class="qa-mark" aria-hidden="true"></span></summary>
             <p>Cloud dashboards, fleet management, and a metric for every corner of the OS. The scope stays heat, power, memory, battery and fans, done properly.</p>
           </details>
-          <details class="qa-item">
-            <summary>Where do bug reports go?<span class="qa-mark" aria-hidden="true">+</span></summary>
+          <details class="qa-item reveal">
+            <summary>Where do bug reports go?<span class="qa-mark" aria-hidden="true"></span></summary>
             <p>Open an issue on the <a href="https://github.com/offyotto/Core-Monitor/issues">GitHub tracker</a>. Release notes and older builds live on the <a href="https://github.com/offyotto/Core-Monitor/releases">releases page</a>.</p>
           </details>
         </div>
       </div>
     </section>
 
-    <section class="coda">
+    <section class="coda" aria-labelledby="coda-title">
       <div class="shell">
-        <h2>Your Mac has been taking its own temperature all along. Start reading it.</h2>
-        <div class="action-row">
-          <a class="act act-primary" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download for macOS</a>
-          <a class="act act-line" href="https://github.com/offyotto/Core-Monitor">View on GitHub</a>
+        <h2 id="coda-title" class="reveal">Your Mac has been taking its own temperature all along. Start reading it.</h2>
+        <div class="cta reveal">
+          <a class="btn btn-primary" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg>Download for macOS</a>
+          <a class="btn btn-ghost" href="https://github.com/offyotto/Core-Monitor">View on GitHub</a>
         </div>
+      </div>
+      <div class="trace" aria-hidden="true">
+        <svg viewBox="0 0 2400 200" preserveAspectRatio="none">
+          <line class="trace-base" x1="0" y1="100" x2="2400" y2="100"/>
+          <path class="trace-glow" d="M0 100.0 L22 100.1 L44 99.6 L66 100.3 L88 100.4 L110 98.6 L132 98.4 L154 101.1 L156 100.0 L166 95.0 L176 92.0 L186 95.0 L194 100.0 L210 100.0 L214 106.0 L222 36.0 L230 124.0 L238 100.0 L272 100.0 L286 88.0 L300 83.0 L314 91.0 L326 100.0 L348 99.2 L370 99.1 L392 101.6 L414 99.9 L436 101.1 L458 99.9 L480 100.4 L502 98.9 L524 100.4 L546 101.2 L556 100.0 L566 95.0 L576 92.0 L586 95.0 L594 100.0 L610 100.0 L614 106.0 L622 36.0 L630 124.0 L638 100.0 L672 100.0 L686 88.0 L700 83.0 L714 91.0 L726 100.0 L748 100.1 L770 100.8 L792 100.5 L814 98.6 L836 100.8 L858 100.3 L880 99.4 L902 98.5 L924 101.2 L946 99.9 L956 100.0 L966 95.0 L976 92.0 L986 95.0 L994 100.0 L1010 100.0 L1014 106.0 L1022 36.0 L1030 124.0 L1038 100.0 L1072 100.0 L1086 88.0 L1100 83.0 L1114 91.0 L1126 100.0 L1148 100.7 L1170 101.2 L1192 100.7 L1200 100.0 L1222 100.1 L1244 99.6 L1266 100.3 L1288 100.4 L1310 98.6 L1332 98.4 L1354 101.1 L1356 100.0 L1366 95.0 L1376 92.0 L1386 95.0 L1394 100.0 L1410 100.0 L1414 106.0 L1422 36.0 L1430 124.0 L1438 100.0 L1472 100.0 L1486 88.0 L1500 83.0 L1514 91.0 L1526 100.0 L1548 99.2 L1570 99.1 L1592 101.6 L1614 99.9 L1636 101.1 L1658 99.9 L1680 100.4 L1702 98.9 L1724 100.4 L1746 101.2 L1756 100.0 L1766 95.0 L1776 92.0 L1786 95.0 L1794 100.0 L1810 100.0 L1814 106.0 L1822 36.0 L1830 124.0 L1838 100.0 L1872 100.0 L1886 88.0 L1900 83.0 L1914 91.0 L1926 100.0 L1948 100.1 L1970 100.8 L1992 100.5 L2014 98.6 L2036 100.8 L2058 100.3 L2080 99.4 L2102 98.5 L2124 101.2 L2146 99.9 L2156 100.0 L2166 95.0 L2176 92.0 L2186 95.0 L2194 100.0 L2210 100.0 L2214 106.0 L2222 36.0 L2230 124.0 L2238 100.0 L2272 100.0 L2286 88.0 L2300 83.0 L2314 91.0 L2326 100.0 L2348 100.7 L2370 101.2 L2392 100.7 L2400 100.0"/>
+          <path class="trace-line" d="M0 100.0 L22 100.1 L44 99.6 L66 100.3 L88 100.4 L110 98.6 L132 98.4 L154 101.1 L156 100.0 L166 95.0 L176 92.0 L186 95.0 L194 100.0 L210 100.0 L214 106.0 L222 36.0 L230 124.0 L238 100.0 L272 100.0 L286 88.0 L300 83.0 L314 91.0 L326 100.0 L348 99.2 L370 99.1 L392 101.6 L414 99.9 L436 101.1 L458 99.9 L480 100.4 L502 98.9 L524 100.4 L546 101.2 L556 100.0 L566 95.0 L576 92.0 L586 95.0 L594 100.0 L610 100.0 L614 106.0 L622 36.0 L630 124.0 L638 100.0 L672 100.0 L686 88.0 L700 83.0 L714 91.0 L726 100.0 L748 100.1 L770 100.8 L792 100.5 L814 98.6 L836 100.8 L858 100.3 L880 99.4 L902 98.5 L924 101.2 L946 99.9 L956 100.0 L966 95.0 L976 92.0 L986 95.0 L994 100.0 L1010 100.0 L1014 106.0 L1022 36.0 L1030 124.0 L1038 100.0 L1072 100.0 L1086 88.0 L1100 83.0 L1114 91.0 L1126 100.0 L1148 100.7 L1170 101.2 L1192 100.7 L1200 100.0 L1222 100.1 L1244 99.6 L1266 100.3 L1288 100.4 L1310 98.6 L1332 98.4 L1354 101.1 L1356 100.0 L1366 95.0 L1376 92.0 L1386 95.0 L1394 100.0 L1410 100.0 L1414 106.0 L1422 36.0 L1430 124.0 L1438 100.0 L1472 100.0 L1486 88.0 L1500 83.0 L1514 91.0 L1526 100.0 L1548 99.2 L1570 99.1 L1592 101.6 L1614 99.9 L1636 101.1 L1658 99.9 L1680 100.4 L1702 98.9 L1724 100.4 L1746 101.2 L1756 100.0 L1766 95.0 L1776 92.0 L1786 95.0 L1794 100.0 L1810 100.0 L1814 106.0 L1822 36.0 L1830 124.0 L1838 100.0 L1872 100.0 L1886 88.0 L1900 83.0 L1914 91.0 L1926 100.0 L1948 100.1 L1970 100.8 L1992 100.5 L2014 98.6 L2036 100.8 L2058 100.3 L2080 99.4 L2102 98.5 L2124 101.2 L2146 99.9 L2156 100.0 L2166 95.0 L2176 92.0 L2186 95.0 L2194 100.0 L2210 100.0 L2214 106.0 L2222 36.0 L2230 124.0 L2238 100.0 L2272 100.0 L2286 88.0 L2300 83.0 L2314 91.0 L2326 100.0 L2348 100.7 L2370 101.2 L2392 100.7 L2400 100.0"/>
+        </svg>
       </div>
     </section>
   </main>
 
-  <footer class="basefoot">
+  <footer class="footer">
     <div class="shell">
-      <div class="basefoot-row">
-        <p class="basefoot-brand"><img src="images/site/core-monitor-logo.png?v=6" alt="" width="21" height="21">Core-Monitor</p>
-        <nav class="basefoot-nav" aria-label="Footer">
+      <div class="footer-top">
+        <a class="brand" href="#top"><img src="images/site/core-monitor-logo.png?v=6" alt="" width="28" height="28">Core-Monitor</a>
+        <nav class="footer-nav" aria-label="Footer">
           <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
           <a href="https://github.com/offyotto/Core-Monitor/releases/latest">Releases</a>
+          <a href="Mac-App-Store/">Mac App Store</a>
+          <a href="https://github.com/offyotto/Core-Monitor/blob/main/LICENSE">License</a>
         </nav>
       </div>
-      <p class="basefoot-legal"><a href="https://github.com/offyotto/Core-Monitor/blob/main/LICENSE">License</a></p>
+      <p class="footer-word" aria-hidden="true">Core-Monitor</p>
     </div>
   </footer>
 </body>
