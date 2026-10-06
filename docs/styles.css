@@ -371,7 +371,6 @@ html:not(.no-live) .trace .trace-static { display: none; }
 /* ---------- tour ------------------------------------------------------------ */
 
 .tour video { width: 100%; height: auto; background: var(--paper-2); }
-.tour figcaption { margin-top: 1rem; font-size: 0.9375rem; color: var(--ink-2); }
 .tour figure { margin-top: clamp(2.5rem, 5vw, 4rem); }
 
 /* ---------- cooling lab ----------------------------------------------------- */
@@ -426,10 +425,6 @@ html:not(.no-live) .trace .trace-static { display: none; }
   font-weight: 500;
 }
 .textbtn:hover { color: var(--heat); }
-
-.points { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 4rem; margin-top: clamp(3rem, 6vw, 5rem); max-width: 64rem; }
-.points p { color: var(--ink-2); }
-.points p b { color: var(--ink); }
 
 /* ---------- touch bar ------------------------------------------------------- */
 
@@ -634,7 +629,6 @@ html:not(.no-live) .trace .trace-static { display: none; }
   .collage .shot-main { grid-column: 1 / 11; }
   .collage .shot-a { grid-column: 8 / 13; }
   .collage .shot-b { grid-column: 6 / 11; margin-top: 60%; }
-  .points { grid-template-columns: minmax(0, 1fr); }
   .trio { grid-template-columns: minmax(0, 1fr); }
 }
 
