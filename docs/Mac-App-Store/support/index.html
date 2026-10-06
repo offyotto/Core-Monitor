@@ -1,16 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-live">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>Support | Core-Monitor Mac App Store Edition</title>
   <meta name="description" content="Support for the Mac App Store edition of Core-Monitor. Email the developer directly or open an issue on GitHub for bugs, questions and feature requests.">
   <meta name="application-name" content="Core-Monitor">
   <meta name="apple-mobile-web-app-title" content="Core-Monitor">
   <meta name="robots" content="index,follow,max-image-preview:large">
-  <meta name="theme-color" content="#e8eaec" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#16191c" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f2ec">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#151513">
   <link rel="canonical" href="https://xnu.is-a.dev/Mac-App-Store/support/">
   <link rel="icon" href="../../favicon.ico?v=6" sizes="any">
   <link rel="icon" type="image/png" sizes="512x512" href="../../images/site/core-monitor-logo.png?v=6">
@@ -20,104 +21,131 @@
   <meta property="og:title" content="Support | Core-Monitor Mac App Store Edition">
   <meta property="og:description" content="Email the developer directly or open a GitHub issue for the Mac App Store edition of Core-Monitor.">
   <meta property="og:url" content="https://xnu.is-a.dev/Mac-App-Store/support/">
-  <meta property="og:image" content="https://xnu.is-a.dev/images/ui/mac-app-store/app-store-dashboard.png">
-  <meta property="og:image:alt" content="Core-Monitor Mac App Store edition dashboard screenshot.">
-  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Support | Core-Monitor Mac App Store Edition">
   <meta name="twitter:description" content="Support for Core-Monitor on the Mac App Store.">
-  <meta name="twitter:image" content="https://xnu.is-a.dev/images/ui/mac-app-store/app-store-dashboard.png">
-  <link rel="stylesheet" href="../../styles.css?v=20">
+  <link rel="preload" as="font" type="font/woff2" href="../../fonts/cabinet-grotesk-variable.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="../../fonts/geist-mono-variable.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="../../fonts/satoshi-variable.woff2" crossorigin>
+  <link rel="stylesheet" href="../../styles.css?v=31">
+  <script src="../../script.js?v=31" defer></script>
 </head>
 <body>
+  <svg width="0" height="0" class="sr" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-mark" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round">
+        <rect x="3" y="3" width="26" height="26" rx="6"></rect>
+        <rect x="9" y="9" width="6" height="8" fill="currentColor" stroke="none"></rect>
+        <rect x="9" y="19" width="6" height="4" fill="currentColor" stroke="none"></rect>
+        <rect x="17" y="9" width="6" height="4" fill="currentColor" stroke="none"></rect>
+        <rect x="17" y="15" width="6" height="8" fill="currentColor" stroke="none"></rect>
+      </symbol>
+    </defs>
+  </svg>
   <a class="skiplink" href="#main">Skip to content</a>
 
-  <header class="topbar">
-    <div class="shell topbar-inner">
-      <a class="wordmark" href="../">
-        <img src="../../images/site/core-monitor-logo.png?v=6" alt="" width="27" height="27">
-        Core-Monitor
-      </a>
-      <nav class="site-menu" aria-label="Pages">
-        <a href="../privacy/">Privacy</a>
-        <a href="../">Edition page</a>
-        <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
-      </nav>
-      <a class="act act-heat act-sm" href="mailto:coremonitor.app@gmail.com">Email support</a>
-    </div>
+  <header class="mast wrap">
+    <a class="wordmark" href="../../" aria-label="Core-Monitor home">
+      <svg aria-hidden="true"><use href="#i-mark"></use></svg>Core-Monitor
+    </a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-menu-toggle>Menu</button>
+    <nav id="site-nav" aria-label="Pages" data-menu>
+      <a href="../">Mac App Store edition</a>
+      <a href="../support/">Support</a>
+      <a href="../privacy/">Privacy</a>
+      <a href="../../">Direct build</a>
+      <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
+    </nav>
+    <a class="download" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">View on App Store</a>
   </header>
 
   <main id="main">
-    <section class="shell page-lede">
-      <h1>One developer, one inbox</h1>
-      <p class="lede-sub">Core-Monitor is built and supported by a single developer, Nazish Faizan. Bug reports, setup questions and feature ideas for the Mac App Store edition all land in the same place.</p>
-      <p class="meta-line">Apple listing: <a href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">apps.apple.com/us/app/core-monitor/id6762558526</a></p>
-      <div class="action-row">
-        <a class="act act-heat" href="mailto:coremonitor.app@gmail.com">Email coremonitor.app@gmail.com</a>
-        <a class="act act-line" href="https://github.com/offyotto/core-monitor-app-store/issues">Open a GitHub issue</a>
-      </div>
-    </section>
-
-    <section class="band">
-      <div class="shell duo">
-        <div class="tally">
-          <h3>Good reasons to write in</h3>
-          <ul>
-            <li>Something in the App Store edition looks wrong or crashes</li>
-            <li>Weather or location permission is not behaving</li>
-            <li>A reading seems off for your machine</li>
-            <li>You want a feature this edition does not have yet</li>
-            <li>General feedback on the interface</li>
-          </ul>
-        </div>
-        <div class="tally is-out">
-          <h3>Covered elsewhere</h3>
-          <ul>
-            <li>Fan control and the privileged helper belong to the <a href="../../">direct download build</a></li>
-            <li>Privacy questions are answered in the <a href="../privacy/">privacy policy</a></li>
-            <li>Screenshots and edition scope live on the <a href="../">edition page</a></li>
-          </ul>
+    <section class="page-lede">
+      <div class="wrap">
+        <h1>One developer, one inbox</h1>
+        <p class="lede">Core-Monitor is built and supported by a single developer, Nazish Faizan. Bug reports, setup questions and feature ideas for the Mac App Store edition all land in the same place.</p>
+        <p class="meta-line">Apple listing: <a href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">apps.apple.com/us/app/core-monitor/id6762558526</a></p>
+        <div class="actions">
+          <a class="btn" href="mailto:coremonitor.app@gmail.com">Email coremonitor.app@gmail.com</a>
+          <a class="tl" href="https://github.com/offyotto/core-monitor-app-store/issues">Open a GitHub issue</a>
         </div>
       </div>
     </section>
 
-    <section class="band">
-      <div class="shell trio">
-        <article>
-          <h3>Direct line</h3>
-          <p><a href="mailto:coremonitor.app@gmail.com">coremonitor.app@gmail.com</a> reaches the developer, not a ticket queue. Include your macOS version and Mac model if you are reporting a bug.</p>
-        </article>
-        <article>
-          <h3>Public tracker</h3>
-          <p>Prefer working in the open? File it on the <a href="https://github.com/offyotto/core-monitor-app-store/issues">issue tracker</a> so others can find the answer later.</p>
-        </article>
-        <article>
-          <h3>Ownership</h3>
-          <p>Legal owner and support contact: Nazish Faizan. Copyright &copy; 2026 Nazish Faizan.</p>
-        </article>
+    <section class="sect" id="reasons" aria-labelledby="reasons-title">
+      <div class="wrap">
+        <div class="sect-head">
+          <h2 id="reasons-title">What belongs here, and what does not.</h2>
+        </div>
+        <div class="pair">
+          <div>
+            <h3>Good reasons to write in</h3>
+            <ul>
+              <li>Something in the App Store edition looks wrong or crashes</li>
+              <li>Weather or location permission is not behaving</li>
+              <li>A reading seems off for your machine</li>
+              <li>You want a feature this edition does not have yet</li>
+              <li>General feedback on the interface</li>
+            </ul>
+          </div>
+          <div class="out">
+            <h3>Covered elsewhere</h3>
+            <ul>
+              <li>Fan control and the privileged helper belong to the <a href="../../">direct download build</a></li>
+              <li>Privacy questions are answered in the <a href="../privacy/">privacy policy</a></li>
+              <li>Screenshots and edition scope live on the <a href="../">edition page</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sect" id="channels" aria-labelledby="channels-title">
+      <div class="wrap">
+        <div class="sect-head">
+          <h2 id="channels-title">Two ways in. Both reach a person.</h2>
+        </div>
+        <div class="trio">
+          <article class="reveal">
+            <span class="k">a</span>
+            <h3>Direct line</h3>
+            <p><a href="mailto:coremonitor.app@gmail.com">coremonitor.app@gmail.com</a> reaches the developer, not a ticket queue. Include your macOS version and Mac model if you are reporting a bug.</p>
+          </article>
+          <article class="reveal">
+            <span class="k">b</span>
+            <h3>Public tracker</h3>
+            <p>Prefer working in the open? File it on the <a href="https://github.com/offyotto/core-monitor-app-store/issues">issue tracker</a> so others can find the answer later.</p>
+          </article>
+          <article class="reveal">
+            <span class="k">c</span>
+            <h3>Ownership</h3>
+            <p>Legal owner and support contact: Nazish Faizan. Copyright &copy; 2026 Nazish Faizan.</p>
+          </article>
+        </div>
       </div>
     </section>
 
     <section class="coda">
-      <div class="shell">
+      <div class="wrap">
         <h2>Stuck on something? Say so.</h2>
-        <div class="action-row">
-          <a class="act act-heat" href="mailto:coremonitor.app@gmail.com">Email support</a>
-          <a class="act act-line" href="../">Back to the edition page</a>
+        <div class="actions">
+          <a class="btn" href="mailto:coremonitor.app@gmail.com">Email support</a>
+          <a class="tl" href="../">Back to the edition page</a>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="basefoot">
-    <div class="shell basefoot-row">
-      <p class="basefoot-brand"><img src="../../images/site/core-monitor-logo.png?v=6" alt="" width="21" height="21">Core-Monitor</p>
-      <nav class="basefoot-nav" aria-label="Footer">
-        <a href="../../">Home</a>
-        <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
-        <a href="../">Mac App Store</a>
-        <a href="../privacy/">Privacy</a>
-      </nav>
-    </div>
+  <footer class="foot wrap">
+    <p>Core-Monitor</p>
+    <nav aria-label="Footer">
+      <a href="../../">Home</a>
+      <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
+      <a href="https://github.com/offyotto/Core-Monitor/releases/latest">Releases</a>
+      <a href="../privacy/">Privacy</a>
+      <a href="../support/">Support</a>
+    </nav>
+    <p class="foot-legal">Free software, released under the <a href="https://github.com/offyotto/Core-Monitor/blob/main/LICENSE">GPL-3.0</a>. Apple, Mac and App Store are trademarks of Apple Inc.</p>
   </footer>
 </body>
 </html>

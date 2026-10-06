@@ -1,16 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-live">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>Privacy Policy | Core-Monitor Mac App Store Edition</title>
   <meta name="description" content="Privacy policy for the Mac App Store edition of Core-Monitor. No account, no analytics, no advertising code. Location is used only for optional local weather.">
   <meta name="application-name" content="Core-Monitor">
   <meta name="apple-mobile-web-app-title" content="Core-Monitor">
   <meta name="robots" content="index,follow,max-image-preview:large">
-  <meta name="theme-color" content="#e8eaec" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#16191c" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f2ec">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#151513">
   <link rel="canonical" href="https://xnu.is-a.dev/Mac-App-Store/privacy/">
   <link rel="icon" href="../../favicon.ico?v=6" sizes="any">
   <link rel="icon" type="image/png" sizes="512x512" href="../../images/site/core-monitor-logo.png?v=6">
@@ -20,92 +21,120 @@
   <meta property="og:title" content="Privacy Policy | Core-Monitor Mac App Store Edition">
   <meta property="og:description" content="No account, no analytics, no advertising code. Location is used only for optional local weather.">
   <meta property="og:url" content="https://xnu.is-a.dev/Mac-App-Store/privacy/">
-  <meta property="og:image" content="https://xnu.is-a.dev/images/ui/mac-app-store/app-store-dashboard.png">
-  <meta property="og:image:alt" content="Core-Monitor Mac App Store edition dashboard screenshot.">
-  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Privacy Policy | Core-Monitor Mac App Store Edition">
   <meta name="twitter:description" content="Privacy policy for Core-Monitor on the Mac App Store.">
-  <meta name="twitter:image" content="https://xnu.is-a.dev/images/ui/mac-app-store/app-store-dashboard.png">
-  <link rel="stylesheet" href="../../styles.css?v=20">
+  <link rel="preload" as="font" type="font/woff2" href="../../fonts/cabinet-grotesk-variable.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="../../fonts/geist-mono-variable.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="../../fonts/satoshi-variable.woff2" crossorigin>
+  <link rel="stylesheet" href="../../styles.css?v=31">
+  <script src="../../script.js?v=31" defer></script>
 </head>
 <body>
+  <svg width="0" height="0" class="sr" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-mark" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round">
+        <rect x="3" y="3" width="26" height="26" rx="6"></rect>
+        <rect x="9" y="9" width="6" height="8" fill="currentColor" stroke="none"></rect>
+        <rect x="9" y="19" width="6" height="4" fill="currentColor" stroke="none"></rect>
+        <rect x="17" y="9" width="6" height="4" fill="currentColor" stroke="none"></rect>
+        <rect x="17" y="15" width="6" height="8" fill="currentColor" stroke="none"></rect>
+      </symbol>
+    </defs>
+  </svg>
   <a class="skiplink" href="#main">Skip to content</a>
 
-  <header class="topbar">
-    <div class="shell topbar-inner">
-      <a class="wordmark" href="../">
-        <img src="../../images/site/core-monitor-logo.png?v=6" alt="" width="27" height="27">
-        Core-Monitor
-      </a>
-      <nav class="site-menu" aria-label="Pages">
-        <a href="../support/">Support</a>
-        <a href="../">Edition page</a>
-        <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
-      </nav>
-    </div>
+  <header class="mast wrap">
+    <a class="wordmark" href="../../" aria-label="Core-Monitor home">
+      <svg aria-hidden="true"><use href="#i-mark"></use></svg>Core-Monitor
+    </a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-menu-toggle>Menu</button>
+    <nav id="site-nav" aria-label="Pages" data-menu>
+      <a href="../">Mac App Store edition</a>
+      <a href="../support/">Support</a>
+      <a href="../privacy/">Privacy</a>
+      <a href="../../">Direct build</a>
+      <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
+    </nav>
+    <a class="download" href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">View on App Store</a>
   </header>
 
   <main id="main">
-    <section class="shell page-lede">
-      <h1>Not much to disclose, so this is short</h1>
-      <p class="lede-sub">The Mac App Store edition of Core-Monitor has no account system, no analytics, and no advertising code. It reads system status to draw its own interface, and that reading stays on your Mac.</p>
-      <p class="meta-line">Effective April 20, 2026. Applies to the Mac App Store edition of Core-Monitor.</p>
-      <p class="meta-line">Apple listing: <a href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">apps.apple.com/us/app/core-monitor/id6762558526</a></p>
+    <section class="page-lede">
+      <div class="wrap">
+        <h1>Not much to disclose, so this is short</h1>
+        <p class="lede">The Mac App Store edition of Core-Monitor has no account system, no analytics, and no advertising code. It reads system status to draw its own interface, and that reading stays on your Mac.</p>
+        <p class="meta-line">Effective April 20, 2026. Applies to the Mac App Store edition of Core-Monitor.</p>
+        <p class="meta-line">Apple listing: <a href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">apps.apple.com/us/app/core-monitor/id6762558526</a></p>
+      </div>
     </section>
 
-    <section class="band">
-      <div class="shell duo">
-        <div class="tally">
-          <h3>What the app reads, locally</h3>
-          <ul>
-            <li>CPU activity and per-core load</li>
-            <li>Memory usage and pressure</li>
-            <li>Battery and power-source status</li>
-            <li>Thermal state and warning level</li>
-            <li>Network throughput</li>
-            <li>Startup disk usage</li>
-            <li>Uptime and load averages</li>
-            <li>Your location, only if you enable Live Weather</li>
-          </ul>
+    <section class="sect" id="reads" aria-labelledby="reads-title">
+      <div class="wrap">
+        <div class="sect-head">
+          <h2 id="reads-title">Read locally. Kept locally.</h2>
         </div>
-        <div class="tally is-out">
-          <h3>What never happens</h3>
-          <ul>
-            <li>No account creation or sign-in</li>
-            <li>No analytics or telemetry of any kind</li>
-            <li>No advertising code</li>
-            <li>No profile built about you, locally or remotely</li>
-            <li>No personal data on a Core-Monitor server, because there is no Core-Monitor server</li>
-          </ul>
+        <div class="pair">
+          <div>
+            <h3>What the app reads, locally</h3>
+            <ul>
+              <li>CPU activity and per-core load</li>
+              <li>Memory usage and pressure</li>
+              <li>Battery and power-source status</li>
+              <li>Thermal state and warning level</li>
+              <li>Network throughput</li>
+              <li>Startup disk usage</li>
+              <li>Uptime and load averages</li>
+              <li>Your location, only if you enable Live Weather</li>
+            </ul>
+          </div>
+          <div class="out">
+            <h3>What never happens</h3>
+            <ul>
+              <li>No account creation or sign-in</li>
+              <li>No analytics or telemetry of any kind</li>
+              <li>No advertising code</li>
+              <li>No profile built about you, locally or remotely</li>
+              <li>No personal data on a Core-Monitor server, because there is no Core-Monitor server</li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="band">
-      <div class="shell trio">
-        <article>
-          <h3>Location is explicitly opt-in</h3>
-          <p>Live Weather is off by default. The app requests location only after you turn on Enable Live Weather in Settings. It never asks for camera, microphone, contacts, photos, accessibility, input monitoring, automation, or full disk access.</p>
-        </article>
-        <article>
-          <h3>WeatherKit, only while enabled</h3>
-          <p>While Live Weather is enabled, the app sends the device location to Apple WeatherKit and receives weather data for that location. The Core-Monitor developer does not receive it. Core-Monitor&rsquo;s own source makes no other network requests; macOS and App Store components may independently contact Apple services.</p>
-        </article>
-        <article>
-          <h3>Revoke any time</h3>
-          <p>Turn Live Weather off in the app, or withdraw location access in macOS System Settings. Turning it off stops Core-Monitor&rsquo;s weather requests. Everything else keeps working either way.</p>
-        </article>
+    <section class="sect" id="location" aria-labelledby="location-title">
+      <div class="wrap">
+        <div class="sect-head">
+          <h2 id="location-title">The one permission, and when it is used.</h2>
+        </div>
+        <div class="trio">
+          <article class="reveal">
+            <span class="k">a</span>
+            <h3>Location is explicitly opt-in</h3>
+            <p>Live Weather is off by default. The app requests location only after you turn on Enable Live Weather in Settings. It never asks for camera, microphone, contacts, photos, accessibility, input monitoring, automation, or full disk access.</p>
+          </article>
+          <article class="reveal">
+            <span class="k">b</span>
+            <h3>WeatherKit, only while enabled</h3>
+            <p>While Live Weather is enabled, the app sends the device location to Apple WeatherKit and receives weather data for that location. The Core-Monitor developer does not receive it. Core-Monitor&rsquo;s own source makes no other network requests; macOS and App Store components may independently contact Apple services.</p>
+          </article>
+          <article class="reveal">
+            <span class="k">c</span>
+            <h3>Revoke any time</h3>
+            <p>Turn Live Weather off in the app, or withdraw location access in macOS System Settings. Turning it off stops Core-Monitor&rsquo;s weather requests. Everything else keeps working either way.</p>
+          </article>
+        </div>
       </div>
     </section>
 
-    <section class="band">
-      <div class="shell">
-        <div class="band-head">
-          <h2>Contact</h2>
-          <p>Questions about this policy go straight to the developer.</p>
+    <section class="sect" id="contact" aria-labelledby="contact-title">
+      <div class="wrap">
+        <div class="sect-head">
+          <h2 id="contact-title">Contact</h2>
+            <p>Questions about this policy go straight to the developer.</p>
         </div>
-        <div class="duo">
-          <div class="tally">
+        <div class="pair">
+          <div>
             <h3>Reach the developer</h3>
             <ul>
               <li>Legal owner: Nazish Faizan</li>
@@ -113,7 +142,7 @@
               <li>Public help page: <a href="../support/">Core-Monitor support</a></li>
             </ul>
           </div>
-          <div class="tally is-out">
+          <div class="out">
             <h3>Record</h3>
             <ul>
               <li>Copyright &copy; 2026 Nazish Faizan</li>
@@ -125,26 +154,26 @@
     </section>
 
     <section class="coda">
-      <div class="shell">
+      <div class="wrap">
         <h2>Questions about privacy?</h2>
-        <div class="action-row">
-          <a class="act act-heat" href="mailto:coremonitor.app@gmail.com">Email the developer</a>
-          <a class="act act-line" href="../">Back to the edition page</a>
+        <div class="actions">
+          <a class="btn" href="mailto:coremonitor.app@gmail.com">Email the developer</a>
+          <a class="tl" href="../">Back to the edition page</a>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="basefoot">
-    <div class="shell basefoot-row">
-      <p class="basefoot-brand"><img src="../../images/site/core-monitor-logo.png?v=6" alt="" width="21" height="21">Core-Monitor</p>
-      <nav class="basefoot-nav" aria-label="Footer">
-        <a href="../../">Home</a>
-        <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
-        <a href="../">Mac App Store</a>
-        <a href="../support/">Support</a>
-      </nav>
-    </div>
+  <footer class="foot wrap">
+    <p>Core-Monitor</p>
+    <nav aria-label="Footer">
+      <a href="../../">Home</a>
+      <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
+      <a href="https://github.com/offyotto/Core-Monitor/releases/latest">Releases</a>
+      <a href="../privacy/">Privacy</a>
+      <a href="../support/">Support</a>
+    </nav>
+    <p class="foot-legal">Free software, released under the <a href="https://github.com/offyotto/Core-Monitor/blob/main/LICENSE">GPL-3.0</a>. Apple, Mac and App Store are trademarks of Apple Inc.</p>
   </footer>
 </body>
 </html>

@@ -1,53 +1,72 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-live">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>No signal at this address | Core-Monitor</title>
   <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#111113" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f2ec">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#151513">
   <link rel="icon" href="/favicon.ico?v=6" sizes="any">
   <link rel="icon" type="image/png" sizes="512x512" href="/images/site/core-monitor-logo.png?v=6">
-  <link rel="stylesheet" href="/styles.css?v=21">
+  <link rel="stylesheet" href="/styles.css?v=31">
+  <script src="/script.js?v=31" defer></script>
 </head>
 <body>
+  <svg width="0" height="0" class="sr" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-mark" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round">
+        <rect x="3" y="3" width="26" height="26" rx="6"></rect>
+        <rect x="9" y="9" width="6" height="8" fill="currentColor" stroke="none"></rect>
+        <rect x="9" y="19" width="6" height="4" fill="currentColor" stroke="none"></rect>
+        <rect x="17" y="9" width="6" height="4" fill="currentColor" stroke="none"></rect>
+        <rect x="17" y="15" width="6" height="8" fill="currentColor" stroke="none"></rect>
+      </symbol>
+    </defs>
+  </svg>
   <a class="skiplink" href="#main">Skip to content</a>
 
-  <header class="topbar">
-    <div class="shell topbar-inner">
-      <a class="wordmark" href="/">
-        <img src="/images/site/core-monitor-logo.png?v=6" alt="" width="27" height="27">
-        Core-Monitor
-      </a>
-      <a class="act act-primary act-sm" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download</a>
-    </div>
+  <header class="mast wrap">
+    <a class="wordmark" href="/" aria-label="Core-Monitor home">
+      <svg aria-hidden="true"><use href="#i-mark"></use></svg>Core-Monitor
+    </a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-menu-toggle>Menu</button>
+    <nav id="site-nav" aria-label="Pages" data-menu>
+      <a href="/#readings">Readings</a>
+      <a href="/#screens">Screens</a>
+      <a href="/#cooling">Cooling</a>
+      <a href="/#install">Install</a>
+      <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
+    </nav>
+    <a class="download" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download</a>
   </header>
 
   <main id="main">
-    <section class="shell lost">
+    <section class="wrap lost">
       <svg class="flatline" viewBox="0 0 480 60" preserveAspectRatio="none" aria-hidden="true">
         <polyline points="0,30 150,30 165,12 180,48 195,30 480,30"></polyline>
       </svg>
       <h1>404</h1>
       <p>This address is not reporting any data. The page may have moved, or the link was typed slightly wrong.</p>
-      <div class="action-row">
-        <a class="act act-primary" href="/">Back to the site</a>
-        <a class="act act-line" href="https://github.com/offyotto/Core-Monitor">Core-Monitor on GitHub</a>
+      <div class="actions">
+        <a class="btn" href="/">Back to the site</a>
+        <a class="tl" href="https://github.com/offyotto/Core-Monitor">Core-Monitor on GitHub</a>
       </div>
     </section>
   </main>
 
-  <footer class="basefoot">
-    <div class="shell basefoot-row">
-      <p class="basefoot-brand"><img src="/images/site/core-monitor-logo.png?v=6" alt="" width="21" height="21">Core-Monitor</p>
-      <nav class="basefoot-nav" aria-label="Footer">
-        <a href="/">Home</a>
-        <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
-        <a href="https://github.com/offyotto/Core-Monitor/releases/latest">Releases</a>
-      </nav>
-    </div>
+  <footer class="foot wrap">
+    <p>Core-Monitor</p>
+    <nav aria-label="Footer">
+      <a href="/">Home</a>
+      <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
+      <a href="https://github.com/offyotto/Core-Monitor/releases">Releases</a>
+      <a href="/Mac-App-Store/privacy/">Privacy</a>
+      <a href="/Mac-App-Store/support/">Support</a>
+    </nav>
+    <p class="foot-legal">Free software, released under the <a href="https://github.com/offyotto/Core-Monitor/blob/main/LICENSE">GPL-3.0</a>. Apple, Mac and App Store are trademarks of Apple Inc.</p>
   </footer>
 </body>
 </html>
