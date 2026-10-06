@@ -1,0 +1,23 @@
+Fonts bundled with the Core-Monitor website
+===========================================
+
+cabinet-grotesk-variable.woff2
+  Cabinet Grotesk, by Indian Type Foundry.
+  Distributed under the Fontshare Free Font License (FFFL).
+  https://www.fontshare.com/fonts/cabinet-grotesk
+  https://www.fontshare.com/licenses/ffl
+
+satoshi-variable.woff2
+  Satoshi, by Indian Type Foundry.
+  Distributed under the Fontshare Free Font License (FFFL).
+  https://www.fontshare.com/fonts/satoshi
+  https://www.fontshare.com/licenses/ffl
+
+geist-mono-variable.woff2
+  Geist Mono, by Vercel.
+  Licensed under the SIL Open Font License, Version 1.1.
+  https://vercel.com/font
+  https://openfontlicense.org
+
+Files are served from this origin only so the site can keep its
+Content Security Policy at font-src 'self'.
