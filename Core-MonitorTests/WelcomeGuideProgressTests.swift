@@ -125,7 +125,7 @@ final class DashboardNavigationRouterTests: XCTestCase {
 }
 
 @MainActor
-final class TouchBarCustomizationSettingsTests: XCTestCase {
+final class TouchBarPresentationMigrationTests: XCTestCase {
     func testFreshSettingsDefaultToSystemPresentationMode() {
         let defaults = makeDefaults()
 

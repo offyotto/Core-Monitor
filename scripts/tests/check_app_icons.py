@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Validate the complete macOS AppIcon representation set without extra dependencies."""
+import argparse
 import json
+import plistlib
 from pathlib import Path
 import struct
 import sys
@@ -48,9 +50,30 @@ def validate(root: Path) -> list[str]:
     return errors
 
 
+def validate_bundle(bundle: Path) -> list[str]:
+    info = plistlib.loads((bundle / "Contents/Info.plist").read_bytes())
+    icon = info.get("CFBundleIconFile", "")
+    if not icon or Path(icon).name != icon:
+        return ["App bundle has no valid CFBundleIconFile"]
+    icon_path = bundle / "Contents/Resources" / (icon if icon.endswith(".icns") else icon + ".icns")
+    if not icon_path.is_file():
+        return [f"Compiled icon missing: {icon_path}"]
+    data = icon_path.read_bytes()
+    if len(data) < 8 or data[:4] != b"icns" or struct.unpack(">I", data[4:8])[0] != len(data):
+        return ["Compiled app icon has an invalid ICNS container"]
+    if info.get("CFBundleIconName") != "AppIcon":
+        return ["Compiled app does not reference the AppIcon catalog"]
+    return []
+
+
 if __name__ == "__main__":
-    root = Path(__file__).resolve().parents[2]
-    errors = validate(root)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument("--bundle", type=Path)
+    args = parser.parse_args()
+    errors = validate(args.root)
+    if args.bundle:
+        errors += validate_bundle(args.bundle)
     if errors:
         print("\n".join(errors), file=sys.stderr)
         sys.exit(1)
