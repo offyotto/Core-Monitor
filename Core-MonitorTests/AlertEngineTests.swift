@@ -16,18 +16,104 @@ final class AlertEngineTests: XCTestCase {
         let warningInput = makeInput { snapshot in
             snapshot.cpuTemperature = 84
         }
-        let warningOutcome = AlertEvaluator.evaluate(config: config, runtime: .initial(for: .cpuTemperature), input: warningInput)
+        let delivery = AlertNotificationDelivery(policy: .criticalOnly)
+        let warningOutcome = AlertEvaluator.evaluate(config: config, runtime: .initial(for: .cpuTemperature), input: warningInput, delivery: delivery)
 
         XCTAssertEqual(warningOutcome.activeState?.severity, .warning)
         XCTAssertEqual(warningOutcome.event?.severity, .warning)
+        XCTAssertFalse(warningOutcome.shouldNotify)
+        XCTAssertNil(warningOutcome.runtime.lastNotificationDate)
 
         let criticalInput = makeInput(now: warningInput.now.addingTimeInterval(5)) { snapshot in
             snapshot.cpuTemperature = 95
         }
-        let criticalOutcome = AlertEvaluator.evaluate(config: config, runtime: warningOutcome.runtime, input: criticalInput)
+        let criticalOutcome = AlertEvaluator.evaluate(config: config, runtime: warningOutcome.runtime, input: criticalInput, delivery: delivery)
 
         XCTAssertEqual(criticalOutcome.activeState?.severity, .critical)
         XCTAssertEqual(criticalOutcome.event?.severity, .critical)
+        XCTAssertTrue(criticalOutcome.shouldNotify)
+        XCTAssertEqual(criticalOutcome.runtime.lastNotificationDate, criticalInput.now)
+    }
+
+    func testDeliveryFiltersKeepInAppEventsWithoutMovingNotificationCooldown() {
+        let config = AlertRuleConfig(kind: .cpuTemperature, isEnabled: true,
+            threshold: .init(warning: 80, critical: 90, hysteresis: 3),
+            cooldownMinutes: 10, debounceSamples: 1, desktopNotificationsEnabled: true)
+        let input = makeInput { $0.cpuTemperature = 84 }
+        let previous = input.now.addingTimeInterval(-1_200)
+        var runtime = AlertRuleRuntime.initial(for: .cpuTemperature)
+        runtime.lastNotificationDate = previous
+        let blocked: [AlertNotificationDelivery] = [
+            .init(isEnabled: false),
+            .init(isAuthorized: false),
+            .init(policy: .inAppOnly),
+            .init(policy: .criticalOnly),
+            .init(mutedUntil: input.now.addingTimeInterval(60))
+        ]
+        for delivery in blocked {
+            let outcome = AlertEvaluator.evaluate(config: config, runtime: runtime, input: input, delivery: delivery)
+            XCTAssertEqual(outcome.event?.severity, .warning)
+            XCTAssertEqual(outcome.activeState?.severity, .warning)
+            XCTAssertFalse(outcome.shouldNotify)
+            XCTAssertEqual(outcome.runtime.lastNotificationDate, previous)
+        }
+    }
+
+    func testActiveCriticalAlertNotifiesOnceWhenDeliveryBecomesAvailable() {
+        let config = AlertRuleConfig(kind: .cpuTemperature, isEnabled: true,
+            threshold: .init(warning: 80, critical: 90, hysteresis: 3),
+            cooldownMinutes: 10, debounceSamples: 1, desktopNotificationsEnabled: true)
+        let input = makeInput { $0.cpuTemperature = 95 }
+        let blocked: [AlertNotificationDelivery] = [
+            .init(isEnabled: false), .init(isAuthorized: false), .init(policy: .inAppOnly),
+            .init(mutedUntil: input.now.addingTimeInterval(5))
+        ]
+        for delivery in blocked {
+            let first = AlertEvaluator.evaluate(config: config, runtime: .initial(for: .cpuTemperature), input: input, delivery: delivery)
+            XCTAssertFalse(first.shouldNotify)
+            XCTAssertNil(first.runtime.lastNotificationDate)
+            let enabledInput = makeInput(now: input.now.addingTimeInterval(6)) { $0.cpuTemperature = 95 }
+            let enabled = AlertEvaluator.evaluate(config: config, runtime: first.runtime, input: enabledInput,
+                delivery: .init(policy: .criticalOnly))
+            XCTAssertTrue(enabled.shouldNotify)
+            XCTAssertEqual(enabled.runtime.lastNotificationDate, enabledInput.now)
+            let repeated = AlertEvaluator.evaluate(config: config, runtime: enabled.runtime,
+                input: makeInput(now: input.now.addingTimeInterval(7)) { $0.cpuTemperature = 95 },
+                delivery: .init(policy: .criticalOnly))
+            XCTAssertFalse(repeated.shouldNotify)
+            XCTAssertNil(repeated.event)
+        }
+    }
+
+    func testMutedRepeatDoesNotReserveTheNextDeliveryWindow() {
+        let config = AlertRuleConfig(kind: .cpuTemperature, isEnabled: true,
+            threshold: .init(warning: 80, critical: 90, hysteresis: 3),
+            cooldownMinutes: 10, debounceSamples: 1, desktopNotificationsEnabled: true)
+        let input = makeInput { $0.cpuTemperature = 95 }
+        let first = AlertEvaluator.evaluate(config: config, runtime: .initial(for: .cpuTemperature), input: input)
+        let repeatInput = makeInput(now: input.now.addingTimeInterval(601)) { $0.cpuTemperature = 95 }
+        let delivery = AlertNotificationDelivery(mutedUntil: repeatInput.now.addingTimeInterval(10))
+        let muted = AlertEvaluator.evaluate(config: config, runtime: first.runtime, input: repeatInput, delivery: delivery)
+        XCTAssertNotNil(muted.event)
+        XCTAssertFalse(muted.shouldNotify)
+        XCTAssertEqual(muted.runtime.lastNotificationDate, input.now)
+        let unmuted = AlertEvaluator.evaluate(config: config, runtime: muted.runtime,
+            input: makeInput(now: repeatInput.now.addingTimeInterval(10)) { $0.cpuTemperature = 95 }, delivery: delivery)
+        XCTAssertTrue(unmuted.shouldNotify)
+    }
+
+    func testDeliveredWarningStillAppliesCooldownToEscalation() {
+        let config = AlertRuleConfig(kind: .cpuTemperature, isEnabled: true,
+            threshold: .init(warning: 80, critical: 90, hysteresis: 3),
+            cooldownMinutes: 10, debounceSamples: 1, desktopNotificationsEnabled: true)
+        let input = makeInput { $0.cpuTemperature = 84 }
+        let first = AlertEvaluator.evaluate(config: config, runtime: .initial(for: .cpuTemperature), input: input)
+        XCTAssertTrue(first.shouldNotify)
+        let escalation = AlertEvaluator.evaluate(config: config, runtime: first.runtime,
+            input: makeInput(now: input.now.addingTimeInterval(5)) { $0.cpuTemperature = 95 })
+        XCTAssertEqual(escalation.event?.severity, .critical)
+        XCTAssertFalse(escalation.shouldNotify)
+        XCTAssertEqual(escalation.runtime.lastNotificationDate, input.now)
     }
 
     func testPeakTemperatureDrivesSafetyWithoutReplacingAverage() {

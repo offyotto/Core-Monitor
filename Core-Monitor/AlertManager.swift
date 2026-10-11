@@ -196,9 +196,15 @@ final class AlertManager: NSObject, ObservableObject {
             now: Date()
         )
 
+        let delivery = AlertNotificationDelivery(
+            isEnabled: desktopNotificationsEnabled,
+            isAuthorized: authorizationStatus == .authorized || authorizationStatus == .provisional,
+            policy: notificationPolicy,
+            mutedUntil: notificationsMutedUntil
+        )
         for config in store.ruleConfigs {
             let runtime = runtimesByKind[config.kind] ?? .initial(for: config.kind)
-            let outcome = AlertEvaluator.evaluate(config: config, runtime: runtime, input: input)
+            let outcome = AlertEvaluator.evaluate(config: config, runtime: runtime, input: input, delivery: delivery)
             runtimesByKind[config.kind] = outcome.runtime
             nextAvailabilityReasons[config.kind] = outcome.availabilityReason
 
@@ -223,7 +229,7 @@ final class AlertManager: NSObject, ObservableObject {
             var updatedHistory = store.history
             for (event, shouldNotify) in generatedEvents {
                 updatedHistory.insert(event, at: 0)
-                if shouldNotify, shouldDeliverDesktopNotification(for: event) {
+                if shouldNotify {
                     deliverDesktopNotification(for: event)
                 }
             }
@@ -287,22 +293,6 @@ final class AlertManager: NSObject, ObservableObject {
                 self.evaluateAlerts()
             }
             .store(in: &cancellables)
-    }
-
-    private func shouldDeliverDesktopNotification(for event: AlertEvent) -> Bool {
-        guard desktopNotificationsEnabled else { return false }
-        if let mutedUntil = notificationsMutedUntil, mutedUntil > Date() {
-            return false
-        }
-
-        switch notificationPolicy {
-        case .inAppOnly:
-            return false
-        case .criticalOnly:
-            return event.severity == .critical
-        case .warningsAndCritical:
-            return event.severity >= .warning
-        }
     }
 
     static func notificationIdentifier(for kind: AlertRuleKind) -> String {
