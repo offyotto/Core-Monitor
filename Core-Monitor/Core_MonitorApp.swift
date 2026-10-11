@@ -187,7 +187,7 @@ private final class DashboardWindowController: NSWindowController, NSWindowDeleg
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         window.titleVisibility = .visible
         window.titlebarAppearsTransparent = false
-        window.minSize = DashboardWindowLayout.minimumContentSize
+        window.contentMinSize = DashboardWindowLayout.minimumContentSize(for: window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame)
         window.titlebarSeparatorStyle = .automatic
         window.toolbarStyle = .automatic
 

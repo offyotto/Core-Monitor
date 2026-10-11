@@ -1,6 +1,7 @@
 import XCTest
 @testable import Core_Monitor
 
+@MainActor
 final class HelperDiagnosticsReportTests: XCTestCase {
     func testMakeReportExplainsMonitoringOnlyModeWhenHelperIsMissing() {
         let context = HelperDiagnosticsContext(

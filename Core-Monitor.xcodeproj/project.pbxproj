@@ -125,26 +125,7 @@
 
 /* Begin PBXGroup section */
 		1A2F97F19E4BA4C0B1070411 /* Core-MonitorTests */ = {
-			isa = PBXGroup;
-			children = (
-				A19700032026091900000001 /* DiskProcessSamplerTests.swift */,
-				A19700022026091900000001 /* CoreMonitorSingleInstancePolicyTests.swift */,
-				A19700012026091900000001 /* FollowupRegressionTests.swift */,
-				A19600032026091900000001 /* BatteryDetailFormatterTests.swift */,
-				A19600022026091900000001 /* HelperXPCClientTests.swift */,
-				A19600012026091900000001 /* RuntimeSafetyTests.swift */,
-				A19400012026091900000001 /* FanReadingTests.swift */,
-				A19400022026091900000001 /* DiskStatsRefreshPolicyTests.swift */,
-				A19400032026091900000001 /* SettingsWindowTests.swift */,
-				8D6F3C76B69FEDB140682676 /* AlertEngineTests.swift */,
-				7381A6E72B87236C00C0DE01 /* CustomFanPresetTests.swift */,
-				DABD10012F96000100000001 /* CoreMonitorShareKitTests.swift */,
-				DABD00012F95000100000001 /* DashboardProcessSamplingPolicyTests.swift */,
-				DABD00022F95000100000002 /* HardwareRescueDiagnosticsTests.swift */,
-				DABD20012F97000100000001 /* SMCTemperatureSensorCatalogTests.swift */,
-				DABD30012F98000100000001 /* WeatherViewModelTests.swift */,
-				DABD30032F98000100000003 /* TouchBarCustomizationSettingsTests.swift */,
-			);
+			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Core-MonitorTests";
 			sourceTree = "<group>";
 		};
@@ -245,6 +226,9 @@
 			);
 			dependencies = (
 				94B00F5AB80819527FCA09E5 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				1A2F97F19E4BA4C0B1070411 /* Core-MonitorTests */,
 			);
 			name = "Core-MonitorTests";
 			productName = "Core-MonitorTests";
@@ -349,23 +333,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A19700032026091900000002 /* DiskProcessSamplerTests.swift in Sources */,
-				A19700022026091900000002 /* CoreMonitorSingleInstancePolicyTests.swift in Sources */,
-				A19700012026091900000002 /* FollowupRegressionTests.swift in Sources */,
-				A19600032026091900000002 /* BatteryDetailFormatterTests.swift in Sources */,
-				A19600022026091900000002 /* HelperXPCClientTests.swift in Sources */,
-				A19600012026091900000002 /* RuntimeSafetyTests.swift in Sources */,
-				A19400012026091900000002 /* FanReadingTests.swift in Sources */,
-				A19400022026091900000002 /* DiskStatsRefreshPolicyTests.swift in Sources */,
-				A19400032026091900000002 /* SettingsWindowTests.swift in Sources */,
-				23F2064CB38FDB73EE4AB471 /* AlertEngineTests.swift in Sources */,
-				7381A6E82B87236C00C0DE01 /* CustomFanPresetTests.swift in Sources */,
-				DABD10022F96000100000002 /* CoreMonitorShareKitTests.swift in Sources */,
-				DABD00032F95000100000003 /* DashboardProcessSamplingPolicyTests.swift in Sources */,
-				DABD00042F95000100000004 /* HardwareRescueDiagnosticsTests.swift in Sources */,
-				DABD20022F97000100000002 /* SMCTemperatureSensorCatalogTests.swift in Sources */,
-				DABD30022F98000100000002 /* WeatherViewModelTests.swift in Sources */,
-				DABD30042F98000100000004 /* TouchBarCustomizationSettingsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

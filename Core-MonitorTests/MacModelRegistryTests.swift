@@ -45,50 +45,12 @@ final class MacModelRegistryTests: XCTestCase {
         XCTAssertEqual(Set(MacModelRegistry.entries.map(\.hwModel)).count, MacModelRegistry.entries.count)
     }
 
-    func testAppleSiliconDelayedResponseCaveatOnlyAppearsForManagedMacBookProsWithFans() {
-        let notebookNote = FanModeGuidanceCopy.appleSiliconDelayedResponseNote(
-            for: .manual,
-            hasFans: true,
-            hostModelIdentifier: "Mac16,7",
-            isAppleSilicon: true
-        )
-
-        XCTAssertEqual(
-            notebookNote,
-            "On MacBook Pro (16-inch, 2024, M4 Pro/Max), macOS may hold fan RPM near its baseline until extra airflow is needed, so a manual target can take a moment to react on a cool machine."
-        )
-
-        XCTAssertNil(
-            FanModeGuidanceCopy.appleSiliconDelayedResponseNote(
-                for: .automatic,
-                hasFans: true,
-                hostModelIdentifier: "Mac16,7",
-                isAppleSilicon: true
-            )
-        )
-        XCTAssertNil(
-            FanModeGuidanceCopy.appleSiliconDelayedResponseNote(
-                for: .manual,
-                hasFans: false,
-                hostModelIdentifier: "Mac16,7",
-                isAppleSilicon: true
-            )
-        )
-        XCTAssertNil(
-            FanModeGuidanceCopy.appleSiliconDelayedResponseNote(
-                for: .manual,
-                hasFans: true,
-                hostModelIdentifier: "Mac16,9",
-                isAppleSilicon: true
-            )
-        )
-        XCTAssertNil(
-            FanModeGuidanceCopy.appleSiliconDelayedResponseNote(
-                for: .manual,
-                hasFans: true,
-                hostModelIdentifier: "Mac16,7",
-                isAppleSilicon: false
-            )
-        )
+    func testFamiliesDistinguishAppleSiliconPortablesFromDesktopsAndIntel() {
+        XCTAssertEqual(MacModelRegistry.entry(for: "Mac16,7")?.family, .macBookProMSeries)
+        XCTAssertEqual(MacModelRegistry.entry(for: "Mac16,7")?.family.isAppleSiliconPortable, true)
+        XCTAssertEqual(MacModelRegistry.entry(for: "Mac16,12")?.family.isAppleSiliconPortable, true)
+        XCTAssertEqual(MacModelRegistry.entry(for: "Mac16,9")?.family.isAppleSiliconPortable, false)
+        XCTAssertEqual(MacModelRegistry.entry(for: "MacBookPro16,1")?.family.isAppleSiliconPortable, false)
+        XCTAssertNil(MacModelRegistry.entry(for: "MysteryMac1,1"))
     }
 }

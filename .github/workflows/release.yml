@@ -47,6 +47,18 @@ jobs:
           git show-ref --verify --quiet "refs/tags/${RELEASE_TAG}"
           git rev-parse --verify "${RELEASE_TAG}^{commit}"
 
+      - name: Check out release validator
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: .release-validation
+          sparse-checkout: scripts/tests/check_app_icons.py
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Validate app icon representations
+        run: python3 .release-validation/scripts/tests/check_app_icons.py --root .
+
       - name: Run test suite before archiving
         run: |
           xcodebuild test \
@@ -130,6 +142,9 @@ jobs:
           ARCHIVE_PROVISIONING_PROFILE_SPECIFIER: ${{ env.ARCHIVE_PROVISIONING_PROFILE_SPECIFIER }}
           RELEASE_PROVISIONING_PROFILE_SPECIFIER: ${{ env.RELEASE_PROVISIONING_PROFILE_SPECIFIER }}
         run: ./scripts/release/build_release.sh
+
+      - name: Verify exported app icon
+        run: python3 .release-validation/scripts/tests/check_app_icons.py --root . --bundle build/release/export/Core-Monitor.app
 
       - name: Check exported helper lifetime
         run: ./scripts/tests/check_helper_lifetime.sh build/release/export/Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper

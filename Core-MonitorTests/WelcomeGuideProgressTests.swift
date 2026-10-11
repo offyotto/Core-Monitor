@@ -125,15 +125,24 @@ final class DashboardNavigationRouterTests: XCTestCase {
 }
 
 @MainActor
-final class TouchBarCustomizationSettingsTests: XCTestCase {
-    func testFreshSettingsDefaultToSystemPresentationMode() {
+final class TouchBarPresentationMigrationTests: XCTestCase {
+    func testFreshSettingsMatchRestoredDefaults() {
         let defaults = makeDefaults()
-
         let settings = TouchBarCustomizationSettings(defaults: defaults)
+        let initialMode = settings.presentationMode
 
-        XCTAssertEqual(settings.presentationMode, .system)
+        XCTAssertEqual(initialMode, .app)
         XCTAssertEqual(settings.items, TouchBarPreset.classic.items)
         XCTAssertEqual(settings.theme, TouchBarPreset.classic.theme)
+        settings.restoreDefaults()
+        XCTAssertEqual(settings.presentationMode, initialMode)
+    }
+
+    func testLegacySystemPresentationChoiceIsPreserved() {
+        let defaults = makeDefaults()
+        defaults.set(TouchBarPresentationMode.system.rawValue, forKey: "coremonitor.touchBarMode")
+        let settings = TouchBarCustomizationSettings(defaults: defaults)
+        XCTAssertEqual(settings.presentationMode, .system)
     }
 
     func testLegacyPresentationModeStillMigratesForwardWhenStored() {
