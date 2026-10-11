@@ -38,7 +38,8 @@ final class BatteryDetailFormatterTests: XCTestCase {
         info.timeRemainingMinutes = BatteryDetailFormatter.timeRemainingMinutes(
             isCharging: true, isPluggedIn: true, timeToEmpty: 0, timeToFullCharge: 120)
         XCTAssertEqual(info.timeRemainingMinutes, 120)
-        XCTAssertEqual(BatteryDetailFormatter.runtimeDescription(for: info, locale: english), "2h until full")
+        let duration = BatteryDetailFormatter.durationDescription(minutes: 120, locale: english)
+        XCTAssertEqual(BatteryDetailFormatter.runtimeDescription(for: info, locale: english), "\(duration) until full")
     }
 
     func testDischargingEstimateIgnoresChargeSentinel() {

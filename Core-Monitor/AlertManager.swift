@@ -125,12 +125,14 @@ final class AlertManager: NSObject, ObservableObject {
         store.notificationPolicy = policy
         persistStore()
         notificationPolicy = policy
+        evaluateAlerts()
     }
 
     func setDesktopNotificationsEnabled(_ enabled: Bool) {
         store.desktopNotificationsEnabled = enabled
         persistStore()
         desktopNotificationsEnabled = enabled
+        evaluateAlerts()
     }
 
     func muteNotifications(for interval: TimeInterval) {
@@ -138,12 +140,14 @@ final class AlertManager: NSObject, ObservableObject {
         store.notificationsMutedUntil = until
         persistStore()
         notificationsMutedUntil = until
+        evaluateAlerts()
     }
 
     func clearNotificationMute() {
         store.notificationsMutedUntil = nil
         persistStore()
         notificationsMutedUntil = nil
+        evaluateAlerts()
     }
 
     func setProcessInsightsEnabled(_ enabled: Bool) {
@@ -327,6 +331,7 @@ final class AlertManager: NSObject, ObservableObject {
         notificationCenter.getNotificationSettings { [weak self] settings in
             DispatchQueue.main.async {
                 self?.authorizationStatus = settings.authorizationStatus
+                self?.evaluateAlerts()
             }
         }
     }
