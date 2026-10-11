@@ -11,13 +11,20 @@ enum DashboardWindowLayout {
             return defaultContentSize
         }
 
-        let safeWidth = max(visibleFrame.width - 80, minimumContentSize.width)
-        let safeHeight = max(visibleFrame.height - 90, minimumContentSize.height)
+        let availableWidth = max(1, visibleFrame.width - 80)
+        let availableHeight = max(1, visibleFrame.height - 30)
+        let preferredHeight = max(minimumContentSize.height, visibleFrame.height * 0.87)
 
         return NSSize(
-            width: min(defaultContentSize.width, max(minimumContentSize.width, min(safeWidth, visibleFrame.width * 0.78))),
-            height: min(defaultContentSize.height, max(minimumContentSize.height, min(safeHeight, visibleFrame.height * 0.87)))
+            width: min(defaultContentSize.width, availableWidth),
+            height: min(defaultContentSize.height, preferredHeight, availableHeight)
         )
+    }
+
+    static func minimumContentSize(for visibleFrame: CGRect?) -> NSSize {
+        let available = targetContentSize(for: visibleFrame)
+        return NSSize(width: min(minimumContentSize.width, available.width),
+                      height: min(minimumContentSize.height, available.height))
     }
 
     static func shouldResetFrame(windowFrame: CGRect, visibleFrame: CGRect?) -> Bool {
@@ -27,11 +34,13 @@ enum DashboardWindowLayout {
             return windowFrame.width < minimumContentSize.width || windowFrame.height < minimumContentSize.height
         }
 
-        let widthLimit = max(visibleFrame.width - 30, minimumContentSize.width)
-        let heightLimit = max(visibleFrame.height - 30, minimumContentSize.height)
+        let minimum = minimumContentSize(for: visibleFrame)
+        let widthLimit = max(1, visibleFrame.width - 30)
+        let heightLimit = max(1, visibleFrame.height)
 
-        return windowFrame.width < minimumContentSize.width ||
-            windowFrame.height < minimumContentSize.height ||
+        return !visibleFrame.intersects(windowFrame) ||
+            windowFrame.width < minimum.width ||
+            windowFrame.height < minimum.height ||
             windowFrame.width > widthLimit ||
             windowFrame.height > heightLimit
     }

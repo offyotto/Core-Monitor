@@ -35,6 +35,9 @@ jobs:
           sw_vers
           xcodebuild -version
 
+      - name: Validate app icon representations
+        run: python3 scripts/tests/check_app_icons.py
+
       - name: Run macOS test suite
         run: |
           xcodebuild test \

@@ -47,6 +47,9 @@ jobs:
           git show-ref --verify --quiet "refs/tags/${RELEASE_TAG}"
           git rev-parse --verify "${RELEASE_TAG}^{commit}"
 
+      - name: Validate app icon representations
+        run: python3 scripts/tests/check_app_icons.py
+
       - name: Run test suite before archiving
         run: |
           xcodebuild test \
