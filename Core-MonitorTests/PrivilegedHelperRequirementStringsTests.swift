@@ -49,17 +49,16 @@ final class PrivilegedHelperRequirementStringsTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: helperURL.path))
 
         let helperData = try Data(contentsOf: helperURL)
-        for placeholder in [
-            "$(EXECUTABLE_NAME)",
-            "$(PRODUCT_BUNDLE_IDENTIFIER)",
-            "$(PRODUCT_NAME)",
-            "$(CURRENT_PROJECT_VERSION)"
-        ] {
-            XCTAssertNil(
-                helperData.range(of: Data(placeholder.utf8)),
-                "Bundled helper still contains unexpanded placeholder \(placeholder)"
-            )
+        let start = try XCTUnwrap(helperData.range(of: Data("<?xml".utf8)))
+        let end = try XCTUnwrap(helperData.range(of: Data("</plist>".utf8), in: start.lowerBound..<helperData.endIndex))
+        let xml = helperData.subdata(in: start.lowerBound..<end.upperBound)
+        let plist = try XCTUnwrap(PropertyListSerialization.propertyList(from: xml, options: [], format: nil) as? [String: Any])
+        for key in ["CFBundleExecutable", "CFBundleIdentifier", "CFBundleName"] {
+            XCTAssertEqual(plist[key] as? String, helperLabel)
         }
+        let version = try XCTUnwrap(plist["CFBundleVersion"] as? String)
+        XCTAssertFalse(version.isEmpty)
+        XCTAssertFalse(version.contains("$("), "Embedded version must be expanded")
     }
 
     private func loadPlist(at relativePath: String) throws -> [String: Any] {
