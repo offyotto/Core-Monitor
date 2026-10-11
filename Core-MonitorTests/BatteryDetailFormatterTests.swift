@@ -30,6 +30,48 @@ final class BatteryDetailFormatterTests: XCTestCase {
         XCTAssertEqual(BatteryDetailFormatter.runtimeDescription(for: info, locale: english), "42m remaining")
     }
 
+    func testChargingEstimateIgnoresDischargeSentinel() {
+        var info = BatteryInfo()
+        info.hasBattery = true
+        info.isCharging = true
+        info.isPluggedIn = true
+        info.timeRemainingMinutes = BatteryDetailFormatter.timeRemainingMinutes(
+            isCharging: true, isPluggedIn: true, timeToEmpty: 0, timeToFullCharge: 120)
+        XCTAssertEqual(info.timeRemainingMinutes, 120)
+        let duration = BatteryDetailFormatter.durationDescription(minutes: 120, locale: english)
+        XCTAssertEqual(BatteryDetailFormatter.runtimeDescription(for: info, locale: english), "\(duration) until full")
+    }
+
+    func testDischargingEstimateIgnoresChargeSentinel() {
+        XCTAssertEqual(BatteryDetailFormatter.timeRemainingMinutes(
+            isCharging: false, isPluggedIn: false, timeToEmpty: 42, timeToFullCharge: 0), 42)
+    }
+
+    func testMissingOrUnknownSelectedEstimateDoesNotFallBackToOtherState() {
+        for missing in [nil, -1] as [Int?] {
+            XCTAssertNil(BatteryDetailFormatter.timeRemainingMinutes(
+                isCharging: true, isPluggedIn: true, timeToEmpty: 90, timeToFullCharge: missing))
+            XCTAssertNil(BatteryDetailFormatter.timeRemainingMinutes(
+                isCharging: false, isPluggedIn: false, timeToEmpty: missing, timeToFullCharge: 0))
+        }
+    }
+
+    func testConnectedNonchargingBatteryHasNoCountdown() {
+        XCTAssertNil(BatteryDetailFormatter.timeRemainingMinutes(
+            isCharging: false, isPluggedIn: true, timeToEmpty: 90, timeToFullCharge: 0))
+        var info = BatteryInfo()
+        info.isPluggedIn = true
+        info.timeRemainingMinutes = 90
+        XCTAssertNil(BatteryDetailFormatter.runtimeDescription(for: info, locale: english))
+    }
+
+    func testZeroEstimateRemainsValidForTheSelectedState() {
+        XCTAssertEqual(BatteryDetailFormatter.timeRemainingMinutes(
+            isCharging: true, isPluggedIn: true, timeToEmpty: -1, timeToFullCharge: 0), 0)
+        XCTAssertEqual(BatteryDetailFormatter.timeRemainingMinutes(
+            isCharging: false, isPluggedIn: false, timeToEmpty: 0, timeToFullCharge: -1), 0)
+    }
+
     func testFormatterUsesStablePrecisionForElectricalValues() {
         XCTAssertEqual(BatteryDetailFormatter.temperatureDescription(31.26, locale: english), "31.3 °C")
         // Check precision without assuming a rounding rule at an exact midpoint.

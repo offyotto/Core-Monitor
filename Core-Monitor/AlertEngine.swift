@@ -28,11 +28,29 @@ struct AlertEvaluationOutcome {
     let availabilityReason: String?
 }
 
+struct AlertNotificationDelivery {
+    var isEnabled = true
+    var isAuthorized = true
+    var policy: AlertNotificationPolicy = .warningsAndCritical
+    var mutedUntil: Date?
+
+    func allows(_ severity: AlertSeverity, at now: Date) -> Bool {
+        guard isEnabled, isAuthorized else { return false }
+        if let mutedUntil, mutedUntil > now { return false }
+        switch policy {
+        case .inAppOnly: return false
+        case .criticalOnly: return severity == .critical
+        case .warningsAndCritical: return severity >= .warning
+        }
+    }
+}
+
 enum AlertEvaluator {
     static func evaluate(
         config: AlertRuleConfig,
         runtime: AlertRuleRuntime,
-        input: AlertEvaluationInput
+        input: AlertEvaluationInput,
+        delivery: AlertNotificationDelivery = .init()
     ) -> AlertEvaluationOutcome {
         guard config.isEnabled else {
             return AlertEvaluationOutcome(
@@ -114,7 +132,9 @@ enum AlertEvaluator {
                 updatedAt: input.now
             )
 
-            if shouldRepeatEvent(config: config, runtime: runtime, input: input) {
+            let shouldNotify = delivery.allows(measurement.severity, at: input.now)
+                && shouldNotify(config: config, runtime: runtime, severity: measurement.severity, input: input)
+            if shouldRepeatEvent(config: config, runtime: runtime, input: input) || shouldNotify {
                 let event = AlertEvent(
                     id: UUID(),
                     kind: config.kind,
@@ -125,7 +145,6 @@ enum AlertEvaluator {
                     timestamp: input.now,
                     isRecovery: false
                 )
-                let shouldNotify = shouldNotify(config: config, runtime: runtime, severity: measurement.severity, input: input)
                 if shouldNotify {
                     nextRuntime.lastNotificationDate = input.now
                 }
@@ -190,7 +209,8 @@ enum AlertEvaluator {
             timestamp: input.now,
             isRecovery: false
         )
-        let shouldNotify = shouldNotify(config: config, runtime: runtime, severity: measurement.severity, input: input)
+        let shouldNotify = delivery.allows(measurement.severity, at: input.now)
+            && shouldNotify(config: config, runtime: runtime, severity: measurement.severity, input: input)
         if shouldNotify {
             nextRuntime.lastNotificationDate = input.now
         }

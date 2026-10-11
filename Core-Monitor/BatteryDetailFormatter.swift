@@ -1,6 +1,17 @@
 import Foundation
 
 enum BatteryDetailFormatter {
+    nonisolated static func timeRemainingMinutes(
+        isCharging: Bool,
+        isPluggedIn: Bool,
+        timeToEmpty: Int?,
+        timeToFullCharge: Int?
+    ) -> Int? {
+        guard isCharging || !isPluggedIn else { return nil }
+        guard let minutes = isCharging ? timeToFullCharge : timeToEmpty, minutes >= 0 else { return nil }
+        return minutes
+    }
+
     static func powerStateDescription(for info: BatteryInfo, locale: Locale = AppLocaleStore.currentLocale) -> String {
         if info.isCharging {
             return localized("Charging", locale: locale)
@@ -28,7 +39,8 @@ enum BatteryDetailFormatter {
     }
 
     static func runtimeDescription(for info: BatteryInfo, locale: Locale = AppLocaleStore.currentLocale) -> String? {
-        guard let minutes = info.timeRemainingMinutes, minutes >= 0 else { return nil }
+        guard info.isCharging || !info.isPluggedIn,
+              let minutes = info.timeRemainingMinutes, minutes >= 0 else { return nil }
         if minutes == 0 {
             return localized(info.isCharging ? "Finishing soon" : "Less than 1m remaining", locale: locale)
         }

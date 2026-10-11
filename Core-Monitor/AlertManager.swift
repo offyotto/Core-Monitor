@@ -125,12 +125,14 @@ final class AlertManager: NSObject, ObservableObject {
         store.notificationPolicy = policy
         persistStore()
         notificationPolicy = policy
+        evaluateAlerts()
     }
 
     func setDesktopNotificationsEnabled(_ enabled: Bool) {
         store.desktopNotificationsEnabled = enabled
         persistStore()
         desktopNotificationsEnabled = enabled
+        evaluateAlerts()
     }
 
     func muteNotifications(for interval: TimeInterval) {
@@ -138,12 +140,14 @@ final class AlertManager: NSObject, ObservableObject {
         store.notificationsMutedUntil = until
         persistStore()
         notificationsMutedUntil = until
+        evaluateAlerts()
     }
 
     func clearNotificationMute() {
         store.notificationsMutedUntil = nil
         persistStore()
         notificationsMutedUntil = nil
+        evaluateAlerts()
     }
 
     func setProcessInsightsEnabled(_ enabled: Bool) {
@@ -196,9 +200,15 @@ final class AlertManager: NSObject, ObservableObject {
             now: Date()
         )
 
+        let delivery = AlertNotificationDelivery(
+            isEnabled: desktopNotificationsEnabled,
+            isAuthorized: authorizationStatus == .authorized || authorizationStatus == .provisional,
+            policy: notificationPolicy,
+            mutedUntil: notificationsMutedUntil
+        )
         for config in store.ruleConfigs {
             let runtime = runtimesByKind[config.kind] ?? .initial(for: config.kind)
-            let outcome = AlertEvaluator.evaluate(config: config, runtime: runtime, input: input)
+            let outcome = AlertEvaluator.evaluate(config: config, runtime: runtime, input: input, delivery: delivery)
             runtimesByKind[config.kind] = outcome.runtime
             nextAvailabilityReasons[config.kind] = outcome.availabilityReason
 
@@ -223,7 +233,7 @@ final class AlertManager: NSObject, ObservableObject {
             var updatedHistory = store.history
             for (event, shouldNotify) in generatedEvents {
                 updatedHistory.insert(event, at: 0)
-                if shouldNotify, shouldDeliverDesktopNotification(for: event) {
+                if shouldNotify {
                     deliverDesktopNotification(for: event)
                 }
             }
@@ -289,22 +299,6 @@ final class AlertManager: NSObject, ObservableObject {
             .store(in: &cancellables)
     }
 
-    private func shouldDeliverDesktopNotification(for event: AlertEvent) -> Bool {
-        guard desktopNotificationsEnabled else { return false }
-        if let mutedUntil = notificationsMutedUntil, mutedUntil > Date() {
-            return false
-        }
-
-        switch notificationPolicy {
-        case .inAppOnly:
-            return false
-        case .criticalOnly:
-            return event.severity == .critical
-        case .warningsAndCritical:
-            return event.severity >= .warning
-        }
-    }
-
     static func notificationIdentifier(for kind: AlertRuleKind) -> String {
         "coremonitor.alert.\(kind.rawValue)"
     }
@@ -337,6 +331,7 @@ final class AlertManager: NSObject, ObservableObject {
         notificationCenter.getNotificationSettings { [weak self] settings in
             DispatchQueue.main.async {
                 self?.authorizationStatus = settings.authorizationStatus
+                self?.evaluateAlerts()
             }
         }
     }

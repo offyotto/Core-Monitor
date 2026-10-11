@@ -976,11 +976,12 @@ final class SystemMonitor: ObservableObject {
             info.isPluggedIn = sourceState == (kIOPSACPowerValue as String)
             info.source = sourceState
 
-            if let tte = description[kIOPSTimeToEmptyKey as String] as? Int, tte >= 0 {
-                info.timeRemainingMinutes = tte
-            } else if let ttf = description[kIOPSTimeToFullChargeKey as String] as? Int, ttf >= 0 {
-                info.timeRemainingMinutes = ttf
-            }
+            info.timeRemainingMinutes = BatteryDetailFormatter.timeRemainingMinutes(
+                isCharging: info.isCharging,
+                isPluggedIn: info.isPluggedIn,
+                timeToEmpty: description[kIOPSTimeToEmptyKey as String] as? Int,
+                timeToFullCharge: description[kIOPSTimeToFullChargeKey as String] as? Int
+            )
 
             if info.isCharging {
                 info.status = "Charging"
