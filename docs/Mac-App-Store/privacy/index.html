@@ -64,7 +64,7 @@
       <div class="wrap">
         <h1>Not much to disclose, so this is short</h1>
         <p class="lede">The Mac App Store edition of Core-Monitor has no account system, no analytics, and no advertising code. It reads system status to draw its own interface, and that reading stays on your Mac.</p>
-        <p class="meta-line">Effective April 20, 2026. Applies to the Mac App Store edition of Core-Monitor.</p>
+        <p class="meta-line">Effective October 11, 2026. Applies to the Mac App Store edition of Core-Monitor.</p>
         <p class="meta-line">Apple listing: <a href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">apps.apple.com/us/app/core-monitor/id6762558526</a></p>
       </div>
     </section>
@@ -80,12 +80,12 @@
             <ul>
               <li>CPU activity and per-core load</li>
               <li>Memory usage and pressure</li>
-              <li>Battery and power-source status</li>
+              <li>Battery charge, health, and power status</li>
               <li>Thermal state and warning level</li>
               <li>Network throughput</li>
               <li>Startup disk usage</li>
               <li>Uptime and load averages</li>
-              <li>Your location, only if you enable Live Weather</li>
+              <li>Your location, only if you turn on weather</li>
             </ul>
           </div>
           <div class="out">
@@ -111,17 +111,17 @@
           <article class="reveal">
             <span class="k">a</span>
             <h3>Location is explicitly opt-in</h3>
-            <p>Live Weather is off by default. The app requests location only after you turn on Enable Live Weather in Settings. It never asks for camera, microphone, contacts, photos, accessibility, input monitoring, automation, or full disk access.</p>
+            <p>Weather is off by default. The app requests location only after you turn on Show local weather in Settings. It never asks for camera, microphone, contacts, photos, accessibility, input monitoring, automation, or full disk access.</p>
           </article>
           <article class="reveal">
             <span class="k">b</span>
-            <h3>WeatherKit, only while enabled</h3>
-            <p>While Live Weather is enabled, the app sends the device location to Apple WeatherKit and receives weather data for that location. The Core-Monitor developer does not receive it. Core-Monitor&rsquo;s own source makes no other network requests; macOS and App Store components may independently contact Apple services.</p>
+            <h3>Apple services, only while weather is on</h3>
+            <p>While weather is on, the app sends the device location to Apple WeatherKit for the forecast and to Apple&rsquo;s geocoding service for the city name, and loads the Apple Weather logo from Apple. The Core-Monitor developer does not receive your location. Core-Monitor makes no other network requests; macOS and App Store components may independently contact Apple services.</p>
           </article>
           <article class="reveal">
             <span class="k">c</span>
             <h3>Revoke any time</h3>
-            <p>Turn Live Weather off in the app, or withdraw location access in macOS System Settings. Turning it off stops Core-Monitor&rsquo;s weather requests. Everything else keeps working either way.</p>
+            <p>Turn off Show local weather in Settings, or withdraw location access in macOS System Settings. Turning it off stops Core-Monitor&rsquo;s weather requests. Everything else keeps working either way.</p>
           </article>
         </div>
       </div>
@@ -173,7 +173,7 @@
       <a href="../privacy/">Privacy</a>
       <a href="../support/">Support</a>
     </nav>
-    <p class="foot-legal">Free software, released under the <a href="https://github.com/offyotto/Core-Monitor/blob/main/LICENSE">GPL-3.0</a>. Apple, Mac and App Store are trademarks of Apple Inc.</p>
+    <p class="foot-legal">Free software, released under the <a href="https://github.com/offyotto/core-monitor-app-store/blob/main/LICENSE">MIT License</a>. Apple, Mac and App Store are trademarks of Apple Inc.</p>
   </footer>
 </body>
 </html>
