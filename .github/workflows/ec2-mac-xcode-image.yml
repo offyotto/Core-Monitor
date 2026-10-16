@@ -142,6 +142,7 @@ jobs:
             '{commands: [
               "set -e",
               "export HOME=/var/root",
+              "export PATH=/usr/local/bin:/opt/homebrew/bin:$PATH",
               "rm -rf /tmp/core-monitor",
               "git clone --quiet --depth 1 https://github.com/offyotto/Core-Monitor.git /tmp/core-monitor",
               ("bash /tmp/core-monitor/scripts/ci/ec2_mac_install_xcode.sh " + $uri)
