@@ -20,23 +20,35 @@ run() {
   fi
 }
 
-# Reads keys through the helper's SMC client (IOServiceOpen + IOConnectCallStructMethod),
-# the same path the app uses. Passes when the fan count and at least one temperature read.
+# Reads keys through the helper's read-only SMC client (IOServiceOpen +
+# IOConnectCallStructMethod), the same path the app uses. The temperature keys
+# come from the app's own catalog for this chip. Passes when the fan count and
+# at least one CPU temperature read.
 smc_reads() {
-  local key value temps=0
-  "${HELPER}" read FNum || return 1
-  for key in F0Ac F0Mn F0Mx; do
-    value=$("${HELPER}" read "${key}" 2>&1) || true
-    echo "${key} ${value}"
+  local chip fans fan group key value cpu_read=0
+  chip="$(sysctl -n machdep.cpu.brand_string)"
+  echo "chip ${chip}"
+
+  fans=$("${HELPER}" read FNum) || return 1
+  echo "fans ${fans}"
+  for (( fan = 0; fan < ${fans%.*}; fan++ )); do
+    for key in "F${fan}Ac" "F${fan}Mn" "F${fan}Mx"; do
+      value=$("${HELPER}" read "${key}" 2>&1) || value="missing (${value})"
+      echo "fan ${key} ${value}"
+    done
   done
-  for key in Tp01 Tp05 Tp09 Tp0D Tp1h Tp1t Te05 Te0S Tf04 Tf09 Tg05 Tg0D TC0P TG0P; do
+
+  while read -r group key; do
     if value=$("${HELPER}" read "${key}" 2>&1); then
-      temps=$((temps + 1))
+      [[ "${group}" == cpu ]] && cpu_read=$((cpu_read + 1))
+    else
+      value="missing (${value})"
     fi
-    echo "${key} ${value}"
-  done
-  echo "temperature keys read: ${temps}"
-  (( temps > 0 ))
+    echo "${group} ${key} ${value}"
+  done < <("${KEY_PROBE}" "${chip}")
+
+  echo "summary $(grep -c '' <("${KEY_PROBE}" "${chip}")) catalog keys, ${cpu_read} CPU temperatures read"
+  (( cpu_read > 0 ))
 }
 
 # The app's USB-C diagnostics parse PortControllerInfo from AppleSmartBattery.
@@ -47,12 +59,18 @@ usb_c_controllers() {
 }
 
 HELPER="${OUT_DIR}/ventaphobia.smc-helper"
+KEY_PROBE="${OUT_DIR}/smc-key-probe"
 
 run system sh -c 'sw_vers; sysctl -n hw.model machdep.cpu.brand_string hw.memsize; uptime'
 run thermal pmset -g therm
 run helper-build "${ROOT_DIR}/scripts/tests/build_smc_helper.sh" "${HELPER}"
 run helper-lifetime "${ROOT_DIR}/scripts/tests/check_helper_lifetime.sh" "${HELPER}"
+run key-probe-build xcrun swiftc -swift-version 5 -O \
+  "${ROOT_DIR}/Core-Monitor/SMCTemperatureSensors.swift" \
+  "${ROOT_DIR}/scripts/ci/smc-key-probe/main.swift" \
+  -o "${KEY_PROBE}"
 run smc-reads smc_reads
+grep -E '^(chip|fans|summary) ' "${OUT_DIR}/smc-reads.txt"
 run usb-c-controllers usb_c_controllers
 
 # EC2 macOS images ship Command Line Tools only. The full test suite needs Xcode,
