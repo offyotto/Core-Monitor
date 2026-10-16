@@ -1,7 +1,8 @@
 name: EC2 Mac Hardware Check
 
-# Runs read-only checks on a real Apple silicon Mac mini (EC2 mac-m4.metal).
-# GitHub-hosted macOS runners are virtual machines without SMC sensors.
+# Runs read-only checks on a real Apple silicon Mac rented from EC2, such as an
+# M1 or M2 Mac mini or an M3 Ultra Mac Studio. GitHub-hosted macOS runners are
+# virtual machines without SMC sensors. It never writes to the SMC.
 # A Dedicated Host bills for at least 24 hours, so this job reuses an allocated
 # host when one exists, and "EC2 Mac Host Cleanup" releases idle hosts later.
 
@@ -12,6 +13,20 @@ on:
         description: Branch or tag to check
         required: true
         default: main
+      instance_type:
+        description: Mac to rent (each type needs its own Dedicated Host quota)
+        required: true
+        type: choice
+        default: mac-m4.metal
+        options:
+          - mac2.metal
+          - mac2-m1ultra.metal
+          - mac2-m2.metal
+          - mac2-m2pro.metal
+          - mac-m3ultra.metal
+          - mac-m4.metal
+          - mac-m4pro.metal
+          - mac-m4max.metal
 
 permissions:
   contents: read
@@ -22,7 +37,7 @@ concurrency:
 
 jobs:
   hardware-check:
-    name: Hardware check on mac-m4.metal
+    name: Hardware check on ${{ github.event.inputs.instance_type }}
     runs-on: ubuntu-latest
     environment: ec2-mac
     timeout-minutes: 250
@@ -31,7 +46,7 @@ jobs:
       id-token: write
     env:
       AWS_REGION: us-east-1
-      INSTANCE_TYPE: mac-m4.metal
+      INSTANCE_TYPE: ${{ github.event.inputs.instance_type }}
       CHECK_REF: ${{ github.event.inputs.ref }}
       BUCKET: ${{ vars.EC2_MAC_BUCKET }}
       SECURITY_GROUP: ${{ vars.EC2_MAC_SECURITY_GROUP }}
@@ -116,7 +131,11 @@ jobs:
           CUSTOM_AMI_ID: ${{ vars.EC2_MAC_AMI_ID }}
         run: |
           # Prefer the image from "EC2 Mac Xcode Image", which can run the full test suite.
-          AMI_ID="${CUSTOM_AMI_ID}"
+          # That image is built on an M4 Mac, so other chips start from AWS's base image.
+          AMI_ID=""
+          if [[ "${INSTANCE_TYPE}" == "mac-m4.metal" ]]; then
+            AMI_ID="${CUSTOM_AMI_ID}"
+          fi
           if [[ -z "${AMI_ID}" ]]; then
             AMI_ID=$(aws ssm get-parameter --name /aws/service/ec2-macos/tahoe/arm64_mac/latest/image_id --query Parameter.Value --output text)
           fi
@@ -212,7 +231,7 @@ jobs:
         if: always() && steps.instance.outputs.id != ''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: ec2-mac-hardware-results
+          name: ec2-mac-hardware-results-${{ github.event.inputs.instance_type }}
           path: ec2-mac-results
           if-no-files-found: warn
           retention-days: 14
