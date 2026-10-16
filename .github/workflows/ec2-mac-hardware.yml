@@ -89,8 +89,13 @@ jobs:
         env:
           HOST_ID: ${{ steps.host.outputs.id }}
           HOST_AZ: ${{ steps.host.outputs.az }}
+          CUSTOM_AMI_ID: ${{ vars.EC2_MAC_AMI_ID }}
         run: |
-          AMI_ID=$(aws ssm get-parameter --name /aws/service/ec2-macos/tahoe/arm64_mac/latest/image_id --query Parameter.Value --output text)
+          # Prefer the image from "EC2 Mac Xcode Image", which can run the full test suite.
+          AMI_ID="${CUSTOM_AMI_ID}"
+          if [[ -z "${AMI_ID}" ]]; then
+            AMI_ID=$(aws ssm get-parameter --name /aws/service/ec2-macos/tahoe/arm64_mac/latest/image_id --query Parameter.Value --output text)
+          fi
           SUBNET_ID=$(aws ec2 describe-subnets \
             --filters "Name=availability-zone,Values=${HOST_AZ}" "Name=default-for-az,Values=true" \
             --query 'Subnets[0].SubnetId' --output text)
