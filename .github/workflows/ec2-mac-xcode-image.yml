@@ -77,8 +77,9 @@ jobs:
             if [[ "${WIPING_ID}" != "None" && -n "${WIPING_ID}" ]]; then
               echo "Waiting up to 90 minutes for ${WIPING_ID} to finish its wipe."
               for _ in $(seq 1 180); do
+                # A failed lookup just means "not ready yet"; keep polling.
                 READY=$(aws ec2 describe-hosts --host-ids "${WIPING_ID}" \
-                  --query "Hosts[?State=='available' && !Instances] | [0].HostId" --output text)
+                  --query "Hosts[?State=='available' && !Instances] | [0].HostId" --output text) || READY=""
                 if [[ "${READY}" == "${WIPING_ID}" ]]; then
                   HOST_ID="${WIPING_ID}"
                   break
