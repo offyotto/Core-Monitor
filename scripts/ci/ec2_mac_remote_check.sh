@@ -40,6 +40,10 @@ else
   echo "Xcode not installed on this image; skipped xcodebuild test." | tee "${OUT_DIR}/xcodebuild-test.txt"
 fi
 
-aws s3 cp --recursive --only-show-errors "${OUT_DIR}" "${RUN_URI}/"
-echo "Uploaded results to ${RUN_URI}"
+if aws s3 cp --recursive --only-show-errors "${OUT_DIR}" "${RUN_URI}/"; then
+  echo "Uploaded results to ${RUN_URI}"
+else
+  echo "Failed to upload results to ${RUN_URI}" >&2
+  STATUS=1
+fi
 exit "${STATUS}"
