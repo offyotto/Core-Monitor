@@ -25,7 +25,7 @@ jobs:
     name: Hardware check on mac-m4.metal
     runs-on: ubuntu-latest
     environment: ec2-mac
-    timeout-minutes: 150
+    timeout-minutes: 220
     permissions:
       contents: read
       id-token: write
@@ -50,8 +50,9 @@ jobs:
         with:
           role-to-assume: ${{ vars.EC2_MAC_ROLE_ARN }}
           aws-region: us-east-1
-          # Outlasts the 150-minute job timeout so cleanup never runs with expired credentials.
-          role-duration-seconds: 10800
+          # Waits: host wipe 45 + boot 45 + checks 100 = 190 minutes, plus setup.
+          # The login outlasts the 220-minute job timeout so cleanup never runs with expired credentials.
+          role-duration-seconds: 14400
 
       - name: Find or allocate a Dedicated Host
         id: host
@@ -59,6 +60,24 @@ jobs:
           HOST_ID=$(aws ec2 describe-hosts \
             --filter "Name=tag:Project,Values=core-monitor-ci" "Name=instance-type,Values=${INSTANCE_TYPE}" "Name=state,Values=available" \
             --query 'Hosts[?!Instances] | [0].HostId' --output text)
+
+          # After each run AWS wipes the host, which shows as "pending". Waiting for
+          # it is cheaper than renting a second host for another 24 hours.
+          if [[ "${HOST_ID}" == "None" || -z "${HOST_ID}" ]]; then
+            WIPING_ID=$(aws ec2 describe-hosts \
+              --filter "Name=tag:Project,Values=core-monitor-ci" "Name=instance-type,Values=${INSTANCE_TYPE}" "Name=state,Values=pending" \
+              --query 'Hosts[?!Instances] | [0].HostId' --output text)
+            if [[ "${WIPING_ID}" != "None" && -n "${WIPING_ID}" ]]; then
+              echo "Waiting up to 45 minutes for ${WIPING_ID} to finish its wipe."
+              for _ in $(seq 1 90); do
+                if [[ "$(aws ec2 describe-hosts --host-ids "${WIPING_ID}" --query 'Hosts[0].State' --output text)" == "available" ]]; then
+                  HOST_ID="${WIPING_ID}"
+                  break
+                fi
+                sleep 30
+              done
+            fi
+          fi
 
           if [[ "${HOST_ID}" == "None" || -z "${HOST_ID}" ]]; then
             for AZ in us-east-1a us-east-1b us-east-1c us-east-1d; do
@@ -89,8 +108,13 @@ jobs:
         env:
           HOST_ID: ${{ steps.host.outputs.id }}
           HOST_AZ: ${{ steps.host.outputs.az }}
+          CUSTOM_AMI_ID: ${{ vars.EC2_MAC_AMI_ID }}
         run: |
-          AMI_ID=$(aws ssm get-parameter --name /aws/service/ec2-macos/tahoe/arm64_mac/latest/image_id --query Parameter.Value --output text)
+          # Prefer the image from "EC2 Mac Xcode Image", which can run the full test suite.
+          AMI_ID="${CUSTOM_AMI_ID}"
+          if [[ -z "${AMI_ID}" ]]; then
+            AMI_ID=$(aws ssm get-parameter --name /aws/service/ec2-macos/tahoe/arm64_mac/latest/image_id --query Parameter.Value --output text)
+          fi
           SUBNET_ID=$(aws ec2 describe-subnets \
             --filters "Name=availability-zone,Values=${HOST_AZ}" "Name=default-for-az,Values=true" \
             --query 'Subnets[0].SubnetId' --output text)
@@ -140,6 +164,7 @@ jobs:
             '{commands: [
               "set -e",
               "export HOME=/var/root",
+              "export PATH=/usr/local/bin:/opt/homebrew/bin:$PATH",
               "rm -rf /tmp/core-monitor",
               ("git clone --quiet --depth 1 --branch " + $ref + " https://github.com/offyotto/Core-Monitor.git /tmp/core-monitor"),
               ("bash /tmp/core-monitor/scripts/ci/ec2_mac_remote_check.sh " + $uri)
