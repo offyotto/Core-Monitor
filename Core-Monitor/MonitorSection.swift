@@ -11,7 +11,6 @@ enum MonitorSection: String, CaseIterable, Identifiable, Hashable {
     case power
     case network
     case storage
-    case rescue
 
     var id: String { rawValue }
 
@@ -25,7 +24,6 @@ enum MonitorSection: String, CaseIterable, Identifiable, Hashable {
         case .power: return "Power"
         case .network: return "Network"
         case .storage: return "Storage"
-        case .rescue: return "Rescue"
         }
     }
 
@@ -39,7 +37,6 @@ enum MonitorSection: String, CaseIterable, Identifiable, Hashable {
         case .power: return "bolt"
         case .network: return "network"
         case .storage: return "internaldrive"
-        case .rescue: return "cross.case"
         }
     }
 
@@ -53,7 +50,6 @@ enum MonitorSection: String, CaseIterable, Identifiable, Hashable {
         case .power: return MetricTint.power
         case .network: return MetricTint.network
         case .storage: return MetricTint.storage
-        case .rescue: return MetricTint.rescue
         }
     }
 }

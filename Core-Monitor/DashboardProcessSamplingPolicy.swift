@@ -10,7 +10,7 @@ enum DashboardProcessSamplingPolicy {
         switch selection {
         case .cpu, .memory:
             return true
-        case .overview, .thermal, .cooling, .power, .network, .storage, .rescue:
+        case .overview, .thermal, .cooling, .power, .network, .storage:
             return false
         }
     }
