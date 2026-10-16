@@ -267,11 +267,7 @@ struct StoragePage: View {
                     note: "Space macOS can reclaim automatically when needed."
                 )
                 ReadingRow("Free", value: ReadingFormat.gigabytes(disk.freeGB))
-                ReadingRow(
-                    "Capacity",
-                    value: ReadingFormat.gigabytes(disk.totalGB),
-                    note: "SMART health for the internal drive lives in Rescue, next to the other hardware diagnostics."
-                )
+                ReadingRow("Capacity", value: ReadingFormat.gigabytes(disk.totalGB))
             }
         }
     }

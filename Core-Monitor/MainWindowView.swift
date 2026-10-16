@@ -78,9 +78,6 @@ struct MainWindowView: View {
                 sidebarRow(.network)
                 sidebarRow(.storage)
             }
-            Section("Toolkit") {
-                sidebarRow(.rescue)
-            }
         }
         .listStyle(.sidebar)
         // Drop the translucent sidebar material so the sidebar matches the
@@ -123,7 +120,7 @@ struct MainWindowView: View {
         guard snapshot.sampledAt != .distantPast else { return nil }
 
         switch section {
-        case .overview, .rescue:
+        case .overview:
             return nil
         case .cpu:
             return ReadingFormat.percent(snapshot.cpuUsagePercent)
@@ -209,8 +206,6 @@ private struct SectionPageView: View {
             NetworkPage(systemMonitor: systemMonitor)
         case .storage:
             StoragePage(systemMonitor: systemMonitor)
-        case .rescue:
-            RescuePage()
         }
     }
 }

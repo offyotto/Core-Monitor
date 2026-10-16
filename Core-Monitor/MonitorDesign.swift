@@ -13,7 +13,6 @@ enum MetricTint {
     static let power = Color.green
     static let network = Color.indigo
     static let storage = Color.cyan
-    static let rescue = Color.pink
 }
 
 /// Severity shared by every reading that has thresholds.

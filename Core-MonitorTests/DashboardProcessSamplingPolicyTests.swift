@@ -28,7 +28,7 @@ final class DashboardProcessSamplingPolicyTests: XCTestCase {
 
     func testNonProcessDashboardViewsStayOnBackgroundSampling() {
         let lowDetailSelections: [MonitorSection] = [
-            .overview, .thermal, .cooling, .power, .network, .storage, .rescue
+            .overview, .thermal, .cooling, .power, .network, .storage
         ]
 
         for selection in lowDetailSelections {
