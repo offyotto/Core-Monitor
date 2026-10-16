@@ -1,0 +1,48 @@
+name: EC2 Mac Host Cleanup
+
+# AWS refuses to release a Mac Dedicated Host during its first 24 hours, so the
+# hardware check cannot release it itself. This job releases idle hosts after that.
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-idle-hosts:
+    name: Release idle Mac hosts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.EC2_MAC_CLEANUP_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Release hosts idle for 24 hours or more
+        run: |
+          HOST_IDS=$(aws ec2 describe-hosts \
+            --filter "Name=tag:Project,Values=core-monitor-ci" "Name=state,Values=available" \
+            --output json | jq -r '
+              .Hosts[]
+              | select((.Instances // []) | length == 0)
+              | select((.AllocationTime | sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | fromdateiso8601) <= (now - 86400))
+              | .HostId')
+
+          if [[ -z "${HOST_IDS}" ]]; then
+            echo "No idle hosts older than 24 hours."
+            exit 0
+          fi
+
+          for HOST_ID in ${HOST_IDS}; do
+            aws ec2 release-hosts --host-ids "${HOST_ID}" \
+              --query '{released: Successful, failed: Unsuccessful[].Error.Message}' --output json
+          done
