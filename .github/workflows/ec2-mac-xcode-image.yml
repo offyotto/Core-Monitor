@@ -25,7 +25,7 @@ jobs:
     name: Build Xcode image on mac-m4.metal
     runs-on: ubuntu-latest
     environment: ec2-mac
-    timeout-minutes: 330
+    timeout-minutes: 340
     permissions:
       contents: read
       id-token: write
@@ -49,8 +49,8 @@ jobs:
         with:
           role-to-assume: ${{ vars.EC2_MAC_ROLE_ARN }}
           aws-region: us-east-1
-          # Waits: host wipe 45 + boot 45 + install 100 + image 90 = 280 minutes, plus setup.
-          # The login outlasts the 330-minute job timeout so cleanup never runs with expired credentials.
+          # Waits: host wipe 90 + boot 45 + install 100 + image 90 = 325 minutes, plus setup.
+          # The login outlasts the 340-minute job timeout so cleanup never runs with expired credentials.
           role-duration-seconds: 21600
 
       - name: Check the archive exists
@@ -65,16 +65,21 @@ jobs:
             --filter "Name=tag:Project,Values=core-monitor-ci" "Name=instance-type,Values=${INSTANCE_TYPE}" "Name=state,Values=available" \
             --query 'Hosts[?!Instances] | [0].HostId' --output text)
 
-          # After each run AWS wipes the host, which shows as "pending". Waiting for
-          # it is cheaper than renting a second host for another 24 hours.
+          # After each run AWS wipes the host, which shows as "pending". The old
+          # instance stays listed on it while it shuts down, so match pending hosts
+          # even with an instance. Only CI uses these hosts, and the concurrency
+          # group stops two runs at once. Waiting is cheaper than renting a second
+          # host for another 24 hours.
           if [[ "${HOST_ID}" == "None" || -z "${HOST_ID}" ]]; then
             WIPING_ID=$(aws ec2 describe-hosts \
               --filter "Name=tag:Project,Values=core-monitor-ci" "Name=instance-type,Values=${INSTANCE_TYPE}" "Name=state,Values=pending" \
-              --query 'Hosts[?!Instances] | [0].HostId' --output text)
+              --query 'Hosts[0].HostId' --output text)
             if [[ "${WIPING_ID}" != "None" && -n "${WIPING_ID}" ]]; then
-              echo "Waiting up to 45 minutes for ${WIPING_ID} to finish its wipe."
-              for _ in $(seq 1 90); do
-                if [[ "$(aws ec2 describe-hosts --host-ids "${WIPING_ID}" --query 'Hosts[0].State' --output text)" == "available" ]]; then
+              echo "Waiting up to 90 minutes for ${WIPING_ID} to finish its wipe."
+              for _ in $(seq 1 180); do
+                READY=$(aws ec2 describe-hosts --host-ids "${WIPING_ID}" \
+                  --query "Hosts[?State=='available' && !Instances] | [0].HostId" --output text)
+                if [[ "${READY}" == "${WIPING_ID}" ]]; then
                   HOST_ID="${WIPING_ID}"
                   break
                 fi
