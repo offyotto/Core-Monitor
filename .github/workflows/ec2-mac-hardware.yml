@@ -1,0 +1,203 @@
+name: EC2 Mac Hardware Check
+
+# Runs read-only checks on a real Apple silicon Mac mini (EC2 mac-m4.metal).
+# GitHub-hosted macOS runners are virtual machines without SMC sensors.
+# A Dedicated Host bills for at least 24 hours, so this job reuses an allocated
+# host when one exists, and "EC2 Mac Host Cleanup" releases idle hosts later.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch or tag to check
+        required: true
+        default: main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ec2-mac-hardware
+  cancel-in-progress: false
+
+jobs:
+  hardware-check:
+    name: Hardware check on mac-m4.metal
+    runs-on: ubuntu-latest
+    environment: ec2-mac
+    timeout-minutes: 150
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: us-east-1
+      INSTANCE_TYPE: mac-m4.metal
+      CHECK_REF: ${{ github.event.inputs.ref }}
+      BUCKET: ${{ vars.EC2_MAC_BUCKET }}
+      SECURITY_GROUP: ${{ vars.EC2_MAC_SECURITY_GROUP }}
+      RUN_PREFIX: runs/${{ github.run_id }}-${{ github.run_attempt }}
+
+    steps:
+      - name: Validate ref
+        run: |
+          if [[ ! "${CHECK_REF}" =~ ^[A-Za-z0-9._/-]+$ ]]; then
+            echo "Ref contains unsupported characters: ${CHECK_REF}" >&2
+            exit 1
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.EC2_MAC_ROLE_ARN }}
+          aws-region: us-east-1
+          # Outlasts the 150-minute job timeout so cleanup never runs with expired credentials.
+          role-duration-seconds: 10800
+
+      - name: Find or allocate a Dedicated Host
+        id: host
+        run: |
+          HOST_ID=$(aws ec2 describe-hosts \
+            --filter "Name=tag:Project,Values=core-monitor-ci" "Name=instance-type,Values=${INSTANCE_TYPE}" "Name=state,Values=available" \
+            --query 'Hosts[?!Instances] | [0].HostId' --output text)
+
+          if [[ "${HOST_ID}" == "None" || -z "${HOST_ID}" ]]; then
+            for AZ in us-east-1a us-east-1b us-east-1c us-east-1d; do
+              if HOST_ID=$(aws ec2 allocate-hosts \
+                  --instance-type "${INSTANCE_TYPE}" --availability-zone "${AZ}" --quantity 1 \
+                  --tag-specifications 'ResourceType=dedicated-host,Tags=[{Key=Project,Value=core-monitor-ci}]' \
+                  --query 'HostIds[0]' --output text); then
+                echo "Allocated ${HOST_ID} in ${AZ}"
+                break
+              fi
+              HOST_ID=""
+            done
+          else
+            echo "Reusing ${HOST_ID}"
+          fi
+
+          if [[ -z "${HOST_ID}" ]]; then
+            echo "No ${INSTANCE_TYPE} host capacity in us-east-1a to 1d." >&2
+            exit 1
+          fi
+
+          AZ=$(aws ec2 describe-hosts --host-ids "${HOST_ID}" --query 'Hosts[0].AvailabilityZone' --output text)
+          echo "id=${HOST_ID}" >> "${GITHUB_OUTPUT}"
+          echo "az=${AZ}" >> "${GITHUB_OUTPUT}"
+
+      - name: Launch macOS instance
+        id: instance
+        env:
+          HOST_ID: ${{ steps.host.outputs.id }}
+          HOST_AZ: ${{ steps.host.outputs.az }}
+        run: |
+          AMI_ID=$(aws ssm get-parameter --name /aws/service/ec2-macos/tahoe/arm64_mac/latest/image_id --query Parameter.Value --output text)
+          SUBNET_ID=$(aws ec2 describe-subnets \
+            --filters "Name=availability-zone,Values=${HOST_AZ}" "Name=default-for-az,Values=true" \
+            --query 'Subnets[0].SubnetId' --output text)
+
+          INSTANCE_ID=$(aws ec2 run-instances \
+            --instance-type "${INSTANCE_TYPE}" \
+            --placement "Tenancy=host,HostId=${HOST_ID}" \
+            --image-id "${AMI_ID}" \
+            --subnet-id "${SUBNET_ID}" \
+            --security-group-ids "${SECURITY_GROUP}" \
+            --iam-instance-profile Name=core-monitor-ec2-mac-instance \
+            --metadata-options HttpTokens=required \
+            --block-device-mappings 'DeviceName=/dev/sda1,Ebs={VolumeSize=200,VolumeType=gp3,DeleteOnTermination=true}' \
+            --tag-specifications \
+              'ResourceType=instance,Tags=[{Key=Project,Value=core-monitor-ci},{Key=Name,Value=core-monitor-hardware-check}]' \
+              'ResourceType=volume,Tags=[{Key=Project,Value=core-monitor-ci}]' \
+            --query 'Instances[0].InstanceId' --output text)
+
+          echo "Launched ${INSTANCE_ID} from ${AMI_ID}"
+          echo "id=${INSTANCE_ID}" >> "${GITHUB_OUTPUT}"
+
+      - name: Wait for Systems Manager
+        env:
+          INSTANCE_ID: ${{ steps.instance.outputs.id }}
+        run: |
+          # Mac instances take about 6 to 20 minutes to boot.
+          for _ in $(seq 1 90); do
+            PING=$(aws ssm describe-instance-information \
+              --filters "Key=InstanceIds,Values=${INSTANCE_ID}" \
+              --query 'InstanceInformationList[0].PingStatus' --output text)
+            if [[ "${PING}" == "Online" ]]; then
+              echo "Instance is online in Systems Manager."
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "Instance did not come online in Systems Manager within 45 minutes." >&2
+          exit 1
+
+      - name: Run hardware checks
+        env:
+          INSTANCE_ID: ${{ steps.instance.outputs.id }}
+        run: |
+          PARAMS=$(jq -n \
+            --arg ref "${CHECK_REF}" \
+            --arg uri "s3://${BUCKET}/${RUN_PREFIX}" \
+            '{commands: [
+              "set -e",
+              "export HOME=/var/root",
+              "rm -rf /tmp/core-monitor",
+              ("git clone --quiet --depth 1 --branch " + $ref + " https://github.com/offyotto/Core-Monitor.git /tmp/core-monitor"),
+              ("bash /tmp/core-monitor/scripts/ci/ec2_mac_remote_check.sh " + $uri)
+            ], executionTimeout: ["5400"]}')
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${INSTANCE_ID}" \
+            --document-name AWS-RunShellScript \
+            --parameters "${PARAMS}" \
+            --query Command.CommandId --output text)
+
+          # 300 polls of 20 seconds covers the 90-minute command timeout.
+          STATUS=Pending
+          API_ERRORS=0
+          for _ in $(seq 1 300); do
+            [[ "${STATUS}" =~ ^(Pending|InProgress|Delayed)$ ]] || break
+            sleep 20
+            if NEXT=$(aws ssm get-command-invocation --command-id "${COMMAND_ID}" --instance-id "${INSTANCE_ID}" \
+                --query Status --output text); then
+              STATUS="${NEXT}"
+              API_ERRORS=0
+            elif (( ++API_ERRORS >= 5 )); then
+              echo "Systems Manager API failed 5 times in a row." >&2
+              exit 1
+            fi
+          done
+
+          aws ssm get-command-invocation --command-id "${COMMAND_ID}" --instance-id "${INSTANCE_ID}" \
+            --query '[StandardOutputContent, StandardErrorContent]' --output text
+          echo "Command status: ${STATUS}"
+          [[ "${STATUS}" == "Success" ]]
+
+      - name: Download results
+        if: always() && steps.instance.outputs.id != ''
+        run: |
+          mkdir -p ec2-mac-results
+          aws s3 cp --recursive --only-show-errors "s3://${BUCKET}/${RUN_PREFIX}/" ec2-mac-results/ || true
+
+      - name: Upload results
+        if: always() && steps.instance.outputs.id != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ec2-mac-hardware-results
+          path: ec2-mac-results
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Refresh AWS credentials for cleanup
+        if: always() && steps.instance.outputs.id != ''
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.EC2_MAC_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Terminate instance
+        if: always() && steps.instance.outputs.id != ''
+        env:
+          INSTANCE_ID: ${{ steps.instance.outputs.id }}
+        run: |
+          aws ec2 terminate-instances --instance-ids "${INSTANCE_ID}" --query 'TerminatingInstances[0].CurrentState.Name' --output text
+          echo "The host stays allocated for reuse. EC2 Mac Host Cleanup releases it after 24 hours."
