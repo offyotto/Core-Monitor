@@ -25,7 +25,7 @@ jobs:
     name: Build Xcode image on mac-m4.metal
     runs-on: ubuntu-latest
     environment: ec2-mac
-    timeout-minutes: 230
+    timeout-minutes: 300
     permissions:
       contents: read
       id-token: write
@@ -49,8 +49,8 @@ jobs:
         with:
           role-to-assume: ${{ vars.EC2_MAC_ROLE_ARN }}
           aws-region: us-east-1
-          # Outlasts the 230-minute job timeout so cleanup never runs with expired credentials.
-          role-duration-seconds: 14400
+          # Outlasts the 300-minute job timeout so cleanup never runs with expired credentials.
+          role-duration-seconds: 21600
 
       - name: Check the archive exists
         run: |
@@ -63,6 +63,24 @@ jobs:
           HOST_ID=$(aws ec2 describe-hosts \
             --filter "Name=tag:Project,Values=core-monitor-ci" "Name=instance-type,Values=${INSTANCE_TYPE}" "Name=state,Values=available" \
             --query 'Hosts[?!Instances] | [0].HostId' --output text)
+
+          # After each run AWS wipes the host, which shows as "pending". Waiting for
+          # it is cheaper than renting a second host for another 24 hours.
+          if [[ "${HOST_ID}" == "None" || -z "${HOST_ID}" ]]; then
+            WIPING_ID=$(aws ec2 describe-hosts \
+              --filter "Name=tag:Project,Values=core-monitor-ci" "Name=instance-type,Values=${INSTANCE_TYPE}" "Name=state,Values=pending" \
+              --query 'Hosts[?!Instances] | [0].HostId' --output text)
+            if [[ "${WIPING_ID}" != "None" && -n "${WIPING_ID}" ]]; then
+              echo "Waiting up to 45 minutes for ${WIPING_ID} to finish its wipe."
+              for _ in $(seq 1 90); do
+                if [[ "$(aws ec2 describe-hosts --host-ids "${WIPING_ID}" --query 'Hosts[0].State' --output text)" == "available" ]]; then
+                  HOST_ID="${WIPING_ID}"
+                  break
+                fi
+                sleep 30
+              done
+            fi
+          fi
 
           if [[ "${HOST_ID}" == "None" || -z "${HOST_ID}" ]]; then
             for AZ in us-east-1a us-east-1b us-east-1c us-east-1d; do
