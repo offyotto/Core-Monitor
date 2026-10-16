@@ -14,18 +14,7 @@ if [[ $# -gt 1 ]]; then
 elif [[ $# -eq 1 ]]; then
   cp "$1" "${HELPER_PATH}"
 else
-  xcrun swiftc \
-    -swift-version 5 -O -whole-module-optimization \
-    -module-name ventaphobia_smc_helper \
-    "${ROOT_DIR}/smc-helper/main.swift" \
-    "${ROOT_DIR}/smc-helper/SMCHelperXPC.swift" \
-    "${ROOT_DIR}/Shared/SMCFanDetection.swift" \
-    "${ROOT_DIR}/Shared/FanControlLease.swift" \
-    -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist \
-    -Xlinker "${ROOT_DIR}/smc-helper/Info.plist" \
-    -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __launchd_plist \
-    -Xlinker "${ROOT_DIR}/smc-helper/Launchd.plist" \
-    -o "${HELPER_PATH}"
+  "${ROOT_DIR}/scripts/tests/build_smc_helper.sh" "${HELPER_PATH}"
 fi
 
 xcrun clang -dynamiclib -fobjc-arc -framework Foundation \

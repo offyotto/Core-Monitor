@@ -97,7 +97,7 @@ jobs:
 
           INSTANCE_ID=$(aws ec2 run-instances \
             --instance-type "${INSTANCE_TYPE}" \
-            --placement "HostId=${HOST_ID}" \
+            --placement "Tenancy=host,HostId=${HOST_ID}" \
             --image-id "${AMI_ID}" \
             --subnet-id "${SUBNET_ID}" \
             --security-group-ids "${SECURITY_GROUP}" \
