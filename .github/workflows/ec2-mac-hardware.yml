@@ -17,7 +17,7 @@ on:
         description: Mac to rent (each type needs its own Dedicated Host quota)
         required: true
         type: choice
-        default: mac-m4.metal
+        default: mac2.metal
         options:
           - mac2.metal
           - mac2-m1ultra.metal
