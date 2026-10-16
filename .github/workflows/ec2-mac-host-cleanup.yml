@@ -29,17 +29,17 @@ jobs:
 
       # A hardware check never runs this long, so an instance this old was left
       # behind by a failed run. Its host can be released once it is gone.
-      - name: Terminate CI instances running for 4 hours or more
+      - name: Terminate CI instances running for 6 hours or more
         run: |
           INSTANCE_IDS=$(aws ec2 describe-instances \
             --filters "Name=tag:Project,Values=core-monitor-ci" "Name=instance-state-name,Values=pending,running,stopping,stopped" \
             --output json | jq -r '
               .Reservations[].Instances[]
-              | select((.LaunchTime | sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | fromdateiso8601) <= (now - 14400))
+              | select((.LaunchTime | sub("\\.[0-9]+"; "") | sub("\\+00:00$"; "Z") | fromdateiso8601) <= (now - 21600))
               | .InstanceId')
 
           if [[ -z "${INSTANCE_IDS}" ]]; then
-            echo "No CI instances older than 4 hours."
+            echo "No CI instances older than 6 hours."
             exit 0
           fi
 

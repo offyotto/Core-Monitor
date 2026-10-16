@@ -25,7 +25,7 @@ jobs:
     name: Build Xcode image on mac-m4.metal
     runs-on: ubuntu-latest
     environment: ec2-mac
-    timeout-minutes: 300
+    timeout-minutes: 330
     permissions:
       contents: read
       id-token: write
@@ -49,7 +49,8 @@ jobs:
         with:
           role-to-assume: ${{ vars.EC2_MAC_ROLE_ARN }}
           aws-region: us-east-1
-          # Outlasts the 300-minute job timeout so cleanup never runs with expired credentials.
+          # Waits: host wipe 45 + boot 45 + install 100 + image 90 = 280 minutes, plus setup.
+          # The login outlasts the 330-minute job timeout so cleanup never runs with expired credentials.
           role-duration-seconds: 21600
 
       - name: Check the archive exists
@@ -208,7 +209,7 @@ jobs:
             --query ImageId --output text)
           echo "Creating ${IMAGE_ID} (${NAME})"
 
-          for _ in $(seq 1 240); do
+          for _ in $(seq 1 180); do
             STATE=$(aws ec2 describe-images --image-ids "${IMAGE_ID}" --query 'Images[0].State' --output text)
             case "${STATE}" in
               available)
@@ -225,7 +226,7 @@ jobs:
             esac
             sleep 30
           done
-          echo "Image ${IMAGE_ID} was not ready after 2 hours." >&2
+          echo "Image ${IMAGE_ID} was not ready after 90 minutes." >&2
           exit 1
 
       - name: Refresh AWS credentials for cleanup
