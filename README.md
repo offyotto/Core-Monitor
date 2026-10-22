@@ -1,111 +1,128 @@
 <p align="center">
-  <img src="./Core-Monitor/Assets.xcassets/AppIcon.appiconset/icon-512.png?v=3" alt="core-monitor icon" width="140">
+  <img src="./Core-Monitor/Assets.xcassets/AppIcon.appiconset/icon-512.png?v=3" alt="Core-Monitor icon" width="128">
 </p>
 
 <h1 align="center">Core-Monitor</h1>
 
-<p align="center">a native system monitor and fan controller for Apple Silicon Macs. live readings in the menu bar, a full dashboard, and touch bar widgets. free.</p>
-
 <p align="center">
-  <a href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">
-    <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" width="200">
-  </a>
+  A native system monitor and fan controller for Apple Silicon Macs.<br>
+  Free, open source, and local. No account.
 </p>
 
 <p align="center">
-  <a href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip"><b>direct download</b></a>
+  <a href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip"><b>Download</b></a>
   ·
-  <a href="https://xnu.is-a.dev/">website</a>
+  <a href="https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12">Mac App Store</a>
   ·
-  <a href="./LICENSE">license</a>
+  <a href="https://xnu.is-a.dev/">Website</a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/macos-13%2B-black?style=flat&logo=apple" alt="macos 13+">
-  <img src="https://img.shields.io/badge/apple%20silicon-native-black?style=flat&logo=apple" alt="apple silicon native">
-  <img src="https://img.shields.io/badge/price-free-2ea44f?style=flat" alt="free">
-  <img src="https://img.shields.io/badge/license-gpl--3.0-blue?style=flat" alt="gpl-3.0 license">
-  <a href="https://github.com/offyotto/Core-Monitor/actions/workflows/ci.yml"><img src="https://github.com/offyotto/Core-Monitor/actions/workflows/ci.yml/badge.svg" alt="build and test"></a>
-  <a href="https://securityscorecards.dev/viewer/?uri=github.com/offyotto/Core-Monitor"><img src="https://api.securityscorecards.dev/projects/github.com/offyotto/Core-Monitor/badge?run=29832249303-2" alt="openssf scorecard"></a>
+  <img src="https://img.shields.io/badge/macOS-13%2B-black?style=flat&logo=apple" alt="macOS 13+">
+  <img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat" alt="GPL-3.0 license">
+  <a href="https://github.com/offyotto/Core-Monitor/actions/workflows/ci.yml"><img src="https://github.com/offyotto/Core-Monitor/actions/workflows/ci.yml/badge.svg" alt="Build and test"></a>
+  <a href="https://securityscorecards.dev/viewer/?uri=github.com/offyotto/Core-Monitor"><img src="https://api.securityscorecards.dev/projects/github.com/offyotto/Core-Monitor/badge?run=29832249303-2" alt="OpenSSF Scorecard"></a>
 </p>
 
 <p align="center">
-  <a href="https://xnu.is-a.dev/#tour"><img src="./docs/images/site/core-monitor-tour-poster.jpg" alt="core-monitor 15-second tour video" width="860"></a>
-  <br>
-  <a href="https://xnu.is-a.dev/#tour">watch the 15-second tour</a>
+  <a href="https://xnu.is-a.dev/#tour"><img src="./docs/images/ui/overview-v16.png" alt="Core-Monitor overview with CPU, memory, temperature, cooling, power, network, and storage cards" width="860"></a>
 </p>
+
+<p align="center"><a href="https://xnu.is-a.dev/#tour">Watch the 15-second tour</a></p>
 
 ---
 
-## what it is
+## Contents
 
-core-monitor reads sensor data straight from the apple smc and standard macos system apis, then shows it where you actually look: the menu bar, a full dashboard, and, on machines that have one, the touch bar. it also controls your fans when you want it to, and stays out of the way when you don't.
+- [Install](#install)
+- [Monitoring](#monitoring)
+- [Fan control](#fan-control)
+- [Menu bar and Touch Bar](#menu-bar-and-touch-bar)
+- [Privacy](#privacy)
+- [How it compares](#how-it-compares)
+- [Build from source](#build-from-source)
 
-it runs locally, needs no account, and is built native for apple silicon rather than wrapped from a web app.
+## Install
+
+There are two editions. Both are free.
+
+| | Direct download | Mac App Store |
+| --- | --- | --- |
+| Monitoring | Full, including Apple SMC sensors | Sandboxed, public APIs only |
+| Fan control | Yes, through an optional helper | No |
+| Touch Bar widgets | Yes | No |
+| Updates | GitHub releases | App Store |
+
+**Direct download:** get [Core-Monitor.app.zip](https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip) from the [latest release](https://github.com/offyotto/Core-Monitor/releases/latest). A `.dmg` is also attached. Each download is about 3 MB.
+
+**Homebrew:**
+
+```bash
+brew tap --custom-remote offyotto/core-monitor https://github.com/offyotto/Core-Monitor
+brew install --cask offyotto/core-monitor/core-monitor
+```
+
+**Mac App Store:** [Core-Monitor on the App Store](https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12). This edition is read-only. See the [App Store edition page](https://xnu.is-a.dev/Mac-App-Store/) for its scope.
+
+Requires macOS 13 or later on an Apple Silicon Mac.
+
+## Monitoring
+
+Core-Monitor shows CPU, GPU, memory, battery, thermals, power draw, fan speeds, network, and disk. Readings come from the Apple SMC and standard macOS system APIs, so the values match what the hardware reports.
+
+If a disk capacity refresh fails, Core-Monitor keeps the last good reading and tries again on the next sample.
 
 <p align="center">
-  <img src="./docs/images/ui/overview-v16.png" alt="core-monitor overview screen with cpu, memory, temperature, cooling, power, network, and storage cards" width="860">
+  <img src="./docs/images/ui/memory-v16.png" alt="Memory screen with usage history and memory breakdown" width="420">
+  <img src="./docs/images/ui/storage-v16.png" alt="Storage screen with used, purgeable, free, and total capacity" width="420">
 </p>
 
-## what it monitors
+## Fan control
 
-cpu, gpu, memory, battery, thermals, power draw, fan speeds, network, and disk. readings come from the apple smc and system apis, so the numbers match what the hardware actually reports.
+The direct download can control fan speeds through a small privileged helper. You can set a fixed speed or make a custom curve. When you turn it off, macOS gets control of the fans again.
 
-if a disk capacity refresh fails, core-monitor keeps the last successful reading and retries on the next sample.
+- The helper supervises manual targets while the app stays connected and sends a heartbeat.
+- If the connection stops or the lease expires, the helper tries to return the fans to automatic control.
+- If the SMC fan count is not available, fan detection checks all possible fan slots.
+- A failed RPM reading does not cause a low-speed alert. A real 0 RPM reading on a hot Mac can cause a stall alert.
+
+Reinstall the bundled helper when you update. For compatibility and hardware-test limits, see [runtime behavior and validation](docs/development/runtime-safety.md).
 
 <p align="center">
-  <img src="./docs/images/ui/memory-v16.png" alt="core-monitor memory screen with usage history and memory breakdown" width="860">
-  <img src="./docs/images/ui/storage-v16.png" alt="core-monitor storage screen with used, purgeable, free, and total capacity" width="860">
+  <img src="./docs/images/ui/cooling-v16.png" alt="Cooling screen with fan speeds, cooling mode, and custom fan curve" width="860">
 </p>
 
-## fan control
+## Menu bar and Touch Bar
 
-core-monitor can take over fan speeds through a small privileged helper, then hand control back to macos when you turn it off. you can set fixed speeds or build custom curves. the controls are explicit on purpose, since this touches cooling on a machine you care about.
+- Choose which readings show in the menu bar.
+- Open a compact popover for a larger summary.
+- Put live widgets on the Touch Bar, if your Mac has one.
 
-if the smc fan-count reading is unavailable, fan detection checks all candidate fan slots. failed RPM readings do not trigger low-speed alerts; a real 0 RPM reading can still trigger a stall alert when the mac is hot.
-
-manual targets are supervised by the privileged helper while the app stays connected and sends a heartbeat. a lost connection or expired lease triggers an attempt to return the fans to automatic control. reinstall the bundled helper when updating to this version. see [runtime behavior and validation](docs/development/runtime-safety.md) for compatibility and hardware-testing limits.
+The fan value in the menu bar shows `0` when the highest reading is 0 RPM. It shows `—` when no fan reading is available.
 
 <p align="center">
-  <img src="./docs/images/ui/cooling-v16.png" alt="core-monitor cooling screen with fan speeds, cooling mode, and custom fan curve" width="860">
+  <img src="./docs/images/ui/menu-network-v16.png" alt="Network menu bar panel" width="400">
+  <img src="./docs/images/ui/menu-thermal-v16.png" alt="Thermal menu bar panel" width="400">
 </p>
 
-## menu bar and touch bar
+## Privacy
 
-- pick which readings sit in the menu bar and read them at a glance
-- open a compact popover for a fuller summary without leaving what you are doing
-- put live widgets on the touch bar if your mac has one
+No account, no sign-in, no ads, and no analytics. Monitoring data stays on your Mac.
 
-the fan menu bar value shows `0` when the highest available reading is 0 RPM, and `—` when no fan reading is available. settings shortcuts select their requested tab even when the settings window is already open.
+Live weather is off by default. If you turn it on, Core-Monitor asks macOS for location access and gets weather from Apple WeatherKit. The developer never receives that data.
 
-<p align="center">
-  <img src="./docs/images/ui/menu-network-v16.png" alt="core-monitor network menu bar panel" width="400">
-  <img src="./docs/images/ui/menu-thermal-v16.png" alt="core-monitor thermal menu bar panel" width="400">
-</p>
+## How it compares
 
-## how it compares
+iStat Menus is paid. TG Pro and Macs Fan Control focus mainly on fans. Stats is free but has no fan control. Core-Monitor does monitoring and fan control in one free app, made for Apple Silicon.
 
-core-monitor is free and native. istat menus is paid, tg pro and macs fan control focus mainly on fans, and stats is free but has no fan control. core-monitor covers monitoring and fan control in one app, tuned for apple silicon, at no cost.
+## Build from source
 
-## install
+1. Clone the repository.
+2. Open `Core-Monitor.xcodeproj` in Xcode.
+3. Build and run the `Core-Monitor` scheme.
 
-- get it from the [mac app store](https://apps.apple.com/us/app/core-monitor/id6762558526?mt=12)
-- or grab the [latest direct download](https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip)
-- or build from source with xcode
+See [CONTRIBUTING.md](CONTRIBUTING.md) before you send a change. Report security problems as described in [SECURITY.md](SECURITY.md).
 
-## privacy
+## License
 
-no account, no sign in, no ads, and no analytics. monitoring data stays on your mac. live weather is off by default; if you explicitly enable it, core-monitor asks macos for location access and requests weather from apple weatherkit. the developer never receives that data.
-
-## compatibility
-
-- macos 13 or later
-- apple silicon is the only supported architecture
-
-## size
-
-- Core-Monitor is roughly 4mb for the .dmg installer and about 5mb for the app.zip installer.
-
-## license
-
-gpl-3.0, see [LICENSE](./LICENSE).
+GPL-3.0. See [LICENSE](./LICENSE).
