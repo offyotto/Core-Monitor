@@ -22,13 +22,50 @@
     var setMenu = function (open) {
       menu.classList.toggle("is-open", open);
       menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
-      menuBtn.textContent = open ? "Close" : "Menu";
+      menuBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
     };
     menuBtn.addEventListener("click", function () { setMenu(!menu.classList.contains("is-open")); });
     menu.addEventListener("click", function (event) { if (event.target.closest("a")) setMenu(false); });
+    doc.addEventListener("pointerdown", function (event) {
+      if (menu.classList.contains("is-open") && !menu.contains(event.target) && !menuBtn.contains(event.target)) setMenu(false);
+    });
     doc.addEventListener("keydown", function (event) {
       if (event.key === "Escape" && menu.classList.contains("is-open")) { setMenu(false); menuBtn.focus(); }
     });
+  }
+
+  /* ---------- scrollspy: the tab bar follows the section in view ---------- */
+
+  var spyBar = $("[data-spy]");
+  if (spyBar && spyBar.glisse) {
+    var spyTabs = $$(".lg-tab", spyBar);
+    var spySections = spyTabs.map(function (tab) { return doc.getElementById(tab.getAttribute("href").slice(1)); });
+    var spyHold = 0;
+    var spyTimer = 0;
+
+    var spyUpdate = function () {
+      if (performance.now() < spyHold) return;
+      var line = window.innerHeight * 0.4;
+      var index = -1;
+      spySections.forEach(function (section, i) {
+        if (section && section.getBoundingClientRect().top <= line) index = i;
+      });
+      spyBar.glisse.setActive(index);
+    };
+
+    // A tapped tab stays lit while the smooth scroll travels past other
+    // sections, then the spy takes over once scrolling stops.
+    spyBar.addEventListener("glisse:select", function () { spyHold = performance.now() + 900; });
+    window.addEventListener("scroll", function () {
+      if (performance.now() < spyHold) {
+        window.clearTimeout(spyTimer);
+        spyTimer = window.setTimeout(function () { spyHold = 0; spyUpdate(); }, 160);
+        return;
+      }
+      spyUpdate();
+    }, { passive: true });
+    window.addEventListener("resize", spyUpdate);
+    spyUpdate();
   }
 
   /* ---------- copy-to-clipboard ---------- */
