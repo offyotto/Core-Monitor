@@ -11,8 +11,10 @@
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#151513">
   <link rel="icon" href="/favicon.ico?v=6" sizes="any">
   <link rel="icon" type="image/png" sizes="512x512" href="/images/site/core-monitor-logo.png?v=6">
-  <link rel="stylesheet" href="/styles.css?v=31">
-  <script src="/script.js?v=31" defer></script>
+  <link rel="stylesheet" href="/glisse/glisse.css?v=1">
+  <link rel="stylesheet" href="/styles.css?v=32">
+  <script src="/glisse/glisse.js?v=1" defer></script>
+  <script src="/script.js?v=32" defer></script>
 </head>
 <body>
   <svg width="0" height="0" class="sr" aria-hidden="true" focusable="false">
@@ -24,23 +26,40 @@
         <rect x="17" y="9" width="6" height="4" fill="currentColor" stroke="none"></rect>
         <rect x="17" y="15" width="6" height="8" fill="currentColor" stroke="none"></rect>
       </symbol>
+      <symbol id="i-github" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+      </symbol>
+      <symbol id="i-menu" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M4 7h12M4 13h12"></path>
+      </symbol>
     </defs>
   </svg>
   <a class="skiplink" href="#main">Skip to content</a>
 
   <header class="mast wrap">
-    <a class="wordmark" href="/" aria-label="Core-Monitor home">
+    <a class="lg-glass lg-button wordmark" href="/" aria-label="Core-Monitor home">
       <svg aria-hidden="true"><use href="#i-mark"></use></svg>Core-Monitor
     </a>
-    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-menu-toggle>Menu</button>
-    <nav id="site-nav" aria-label="Pages" data-menu>
-      <a href="/#readings">Readings</a>
-      <a href="/#screens">Screens</a>
-      <a href="/#cooling">Cooling</a>
-      <a href="/#install">Install</a>
-      <a href="https://github.com/offyotto/Core-Monitor">GitHub</a>
+    <nav class="lg-tab-bar site-tabs" aria-label="Pages">
+      <span class="lg-glass lg-tab-bar-glass" aria-hidden="true"></span>
+      <a class="lg-tab" href="/#readings" draggable="false">Readings</a>
+      <a class="lg-tab" href="/#screens" draggable="false">Screens</a>
+      <a class="lg-tab" href="/#cooling" draggable="false">Cooling</a>
+      <a class="lg-tab" href="/#install" draggable="false">Install</a>
     </nav>
-    <a class="download" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download</a>
+    <div class="mast-end">
+      <a class="lg-glass lg-button gh" data-icon="only" href="https://github.com/offyotto/Core-Monitor" aria-label="Core-Monitor on GitHub"><svg aria-hidden="true"><use href="#i-github"></use></svg></a>
+      <a class="lg-glass lg-button" data-variant="filled" href="https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.dmg">Download</a>
+      <button class="lg-glass lg-button menu-toggle" data-icon="only" type="button" aria-expanded="false" aria-controls="site-menu" aria-label="Open menu" data-menu-toggle><svg aria-hidden="true"><use href="#i-menu"></use></svg></button>
+      <nav class="menu-card" id="site-menu" aria-label="Pages" data-menu>
+        <a class="lg-menu-item" href="/#readings">Readings</a>
+        <a class="lg-menu-item" href="/#screens">Screens</a>
+        <a class="lg-menu-item" href="/#cooling">Cooling</a>
+        <a class="lg-menu-item" href="/#install">Install</a>
+        <hr class="lg-menu-separator">
+        <a class="lg-menu-item" href="https://github.com/offyotto/Core-Monitor">GitHub</a>
+      </nav>
+    </div>
   </header>
 
   <main id="main">

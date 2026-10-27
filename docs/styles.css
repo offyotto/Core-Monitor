@@ -88,8 +88,9 @@ html {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   scroll-behavior: smooth;
+  scroll-padding-top: 76px;
 }
-body { margin: 0; font-size: 1.0625rem; }
+body { margin: 0; font-size: 1.0625rem; overflow-x: clip; }
 
 h1, h2, h3, h4 {
   font-family: var(--f-display);
@@ -190,33 +191,92 @@ b, strong { font-weight: 600; }
 
 .actions { display: flex; flex-wrap: wrap; gap: 1.25rem 1.75rem; align-items: center; }
 
-/* ---------- masthead -------------------------------------------------------- */
+/* ---------- masthead: a floating Liquid Glass bar (Glisse) ------------------ */
 
 .mast {
-  display: flex;
+  --lg-blur: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-  padding: 1.6rem 0 1.4rem;
-  border-bottom: 1px solid var(--rule);
+  gap: 0.75rem;
+  padding: 12px 0;
 }
+/* The scroll edge: content passing under the bar blurs and fades out, as under
+   an iOS 26 toolbar, so the glass controls stay legible. */
+.mast::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: -18px;
+  left: 50%;
+  z-index: -1;
+  width: 100vw;
+  transform: translateX(-50%);
+  background: linear-gradient(color-mix(in srgb, var(--paper) 60%, transparent), transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  -webkit-mask-image: linear-gradient(#000 55%, transparent);
+  mask-image: linear-gradient(#000 55%, transparent);
+  pointer-events: none;
+}
+.mast .lg-button { color: var(--ink); font-weight: 500; text-decoration: none; white-space: nowrap; }
+.mast .lg-button:hover { color: var(--ink); }
+.mast .lg-button[data-variant="filled"] { --lg-tint: var(--ink); color: var(--paper); }
 .wordmark {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
+  justify-self: start;
+  gap: 0.5rem;
+  padding: 0 16px 0 12px;
   font-family: var(--f-display);
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   letter-spacing: -0.02em;
-  text-decoration: none;
 }
-.wordmark:hover { color: var(--ink); }
-.wordmark svg { width: 22px; height: 22px; }
-.mast nav { display: flex; gap: 1.75rem; }
-.mast nav a { text-decoration: none; font-size: 0.9375rem; color: var(--ink-2); }
-.mast nav a:hover { color: var(--ink); }
-.mast .download { font-size: 0.9375rem; font-weight: 500; }
-.menu-toggle { display: none; font-size: 0.9375rem; text-decoration: underline; text-underline-offset: 0.2em; }
+.wordmark svg { width: 20px; height: 20px; }
+.site-tabs { --lg-tab-width: 86px; }
+.site-tabs .lg-tab:hover { color: var(--lg-foreground); }
+.mast-end { position: relative; justify-self: end; display: flex; align-items: center; gap: 8px; }
+.menu-toggle { display: none; }
+
+.menu-card {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 10;
+  display: none;
+  flex-direction: column;
+  width: min(250px, calc(100vw - 2 * var(--gutter)));
+  padding: 6px;
+  border-radius: 20px;
+  color: var(--lg-foreground);
+  background: var(--lg-surface);
+  -webkit-backdrop-filter: blur(22px) saturate(1.9);
+  backdrop-filter: blur(22px) saturate(1.9);
+  box-shadow:
+    inset 0 0 0 0.5px var(--lg-surface-edge),
+    0 12px 40px var(--lg-shadow);
+  transform-origin: calc(100% - 20px) 0;
+}
+.menu-card.is-open { display: flex; }
+.menu-card .lg-menu-item { min-height: 40px; font-size: 1rem; text-decoration: none; }
+.menu-card .lg-menu-item:hover { color: inherit; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .menu-card.is-open { animation: menu-in 260ms cubic-bezier(0.2, 0.9, 0.25, 1.15); }
+  @keyframes menu-in { from { opacity: 0; transform: scale(0.6); } }
+}
+
+@media (max-width: 960px) {
+  .mast { grid-template-columns: minmax(0, 1fr) auto; }
+  .site-tabs { display: none; }
+  .menu-toggle { display: inline-flex; }
+}
+
+@media (max-width: 480px) {
+  .mast .gh { display: none; }
+}
 
 /* ---------- hero ------------------------------------------------------------ */
 
@@ -633,11 +693,6 @@ html:not(.no-live) .trace .trace-static { display: none; }
 }
 
 @media (max-width: 720px) {
-  .mast nav { display: none; }
-  .mast nav.is-open { display: flex; flex-direction: column; gap: 0; position: absolute; left: 0; right: 0; top: 100%; padding: 0.5rem var(--gutter) 1rem; background: var(--paper); border-bottom: 1px solid var(--rule); z-index: 5; }
-  .mast nav.is-open a { padding: 0.8rem 0; border-top: 1px solid var(--rule); font-size: 1.0625rem; color: var(--ink); }
-  .mast { position: relative; }
-  .menu-toggle { display: inline; }
   .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .strip > div { padding: 1.1rem 1rem 1.2rem 0; }
   .strip > div:nth-child(3) { border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); }
