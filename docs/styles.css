@@ -289,6 +289,17 @@ b, strong { font-weight: 600; }
   align-items: end;
   margin-top: clamp(2rem, 4vw, 3.5rem);
 }
+.hero-act .hero-download {
+  --lg-tint: var(--ink);
+  height: 52px;
+  padding: 0 26px;
+  border-radius: 26px;
+  color: var(--paper);
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
 .hero-act .facts { margin-top: 1rem; font-size: 0.9375rem; color: var(--ink-2); max-width: 32em; }
 .hero-act .facts a { color: var(--ink); }
 
