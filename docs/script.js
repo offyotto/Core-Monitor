@@ -493,7 +493,6 @@
     var modeEl = $("[data-lab-mode]", labEl);
     var subEl = $("[data-lab-sub]", labEl);
     var rpmEl = $("[data-lab-rpm]", labEl);
-    var fanEl = $("[data-fan]", labEl);
 
     var X0 = 48, X1 = 540, Y0 = 256, Y1 = 20, T0 = 30, T1 = 100, R1 = 6500;
     var tx = function (t) { return X0 + (t - T0) / (T1 - T0) * (X1 - X0); };
@@ -502,10 +501,7 @@
     var fromY = function (y) { return (Y0 - y) / (Y0 - Y1) * R1; };
 
     var manualTemp = null;     // null: follow the simulation
-    var angle = 0;
     var rpm = 2900;
-
-    labEl.classList.add("is-js");
 
     function render() {
       var pts = sim.auto ? CURVE_MACOS : sim.curve;
@@ -616,14 +612,7 @@
 
     render();
 
-    return {
-      render: render,
-      spin: function (dt) {
-        if (!fanEl || reducedMotion.matches) return;
-        angle = (angle + rpm / 2800 * 360 * dt) % 360;
-        fanEl.style.transform = "rotate(" + angle.toFixed(1) + "deg)";
-      }
-    };
+    return { render: render };
   })() : null;
 
   /* ---------- videos: play muted while on screen ---------- */
@@ -673,7 +662,7 @@
   }
 
   if (reducedMotion.matches) {
-    // Still alive, just calm: advance once a second, no interpolation, no spinning.
+    // Still alive, just calm: advance once a second, no interpolation.
     window.setInterval(function () {
       if (doc.hidden) return;
       for (var i = 0; i < HZ; i++) { sim.step(DT); }
@@ -691,7 +680,6 @@
       acc += dt;
       while (acc >= DT) { sim.step(DT); acc -= DT; afterStep(); }
       drawAll(acc / DT, false);
-      if (lab) lab.spin(dt);
       if (doc.hidden) { running = false; return; }
       requestAnimationFrame(frame);
     };
