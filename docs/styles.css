@@ -483,7 +483,7 @@ html:not(.no-live) .trace .trace-static { display: none; }
 .lab-rpm small { font-size: 0.4em; letter-spacing: 0; color: var(--ink-2); margin-left: 0.15em; }
 .lab-mode { color: var(--ink-2); max-width: 24ch; }
 .lab-mode b { color: var(--ink); }
-.fan { width: 84px; height: 84px; color: var(--tint-cooling); transform-origin: 50% 50%; }
+.fan { width: 84px; height: 84px; color: var(--tint-cooling); }
 .lab.is-auto .fan { color: var(--ink-3); }
 .lab-slider { display: grid; gap: 0.5rem; font-size: 0.9375rem; color: var(--ink-2); margin-top: 0.5rem; }
 .lab-slider output { font-family: var(--f-mono); font-weight: 500; color: var(--heat); }
@@ -670,11 +670,6 @@ html:not(.no-live) .trace .trace-static { display: none; }
 
 /* ---------- motion ---------------------------------------------------------- */
 
-@media (prefers-reduced-motion: no-preference) {
-  .fan { animation: spin 2.6s linear infinite; }
-  .lab.is-js .fan { animation: none; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-}
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .cores i, .btn { transition: none; }
