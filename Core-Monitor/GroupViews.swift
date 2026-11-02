@@ -11,7 +11,6 @@ struct TouchBarSystemSnapshot {
     let netUpKBs: Double
     let netDownMBs: Double
     let fps: Int
-    let wifiName: String
     let detailedClockTitle: String
     let detailedClockSubtitle: String
     let memoryPressure: MemoryPressureLevel
