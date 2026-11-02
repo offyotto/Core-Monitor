@@ -353,14 +353,20 @@ struct Sparkline: View {
     var tint: Color
     var height: CGFloat = 34
 
+    /// A sparkline is at most a few hundred points wide, so plotting the full
+    /// 15-minute history (900 samples at 1 s) only adds Chart marks to lay out
+    /// on every tick without changing what is drawn.
+    static let maxPlottedPoints = 120
+
     var body: some View {
+        let plotted = MonitoringTrendSeries.decimated(points, maxPoints: Self.maxPlottedPoints)
         Group {
-            if points.count < 2 {
+            if plotted.count < 2 {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(Color(nsColor: .quaternaryLabelColor).opacity(0.5))
                     .frame(height: height)
             } else {
-                Chart(points, id: \.timestamp) { point in
+                Chart(plotted, id: \.timestamp) { point in
                     AreaMark(
                         x: .value("Time", point.timestamp),
                         y: .value("Value", point.value)
