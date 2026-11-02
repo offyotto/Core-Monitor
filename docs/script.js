@@ -14,6 +14,32 @@
 
   root.classList.remove("no-live");
 
+  var onMediaChange = function (query, handler) {
+    if (query.addEventListener) query.addEventListener("change", handler);
+    else if (query.addListener) query.addListener(handler);
+  };
+
+  /* ---------- smooth scrolling (Lenis) ---------- */
+
+  // Mouse wheel and trackpad scrolling glide instead of stepping, and links to
+  // a section on this page travel there. Touch keeps the platform's own
+  // scrolling. With reduced motion the page scrolls natively.
+  var lenis = null;
+  var easeOutQuart = function (t) { return 1 - Math.pow(1 - t, 4); };
+  var startLenis = function () {
+    if (lenis || reducedMotion.matches || typeof window.Lenis !== "function") return;
+    lenis = new window.Lenis({
+      autoRaf: true,
+      lerp: 0.1,
+      anchors: { duration: 1.1, easing: easeOutQuart }
+    });
+  };
+  startLenis();
+  onMediaChange(reducedMotion, function () {
+    if (reducedMotion.matches && lenis) { lenis.destroy(); lenis = null; }
+    else startLenis();
+  });
+
   /* ---------- menu (small screens) ---------- */
 
   var menuBtn = $("[data-menu-toggle]");
@@ -42,16 +68,27 @@
     var spySections = spyTabs.map(function (tab) { return doc.getElementById(tab.getAttribute("href").slice(1)); });
     var spyHold = 0;
     var spyTimer = 0;
+    var spyTops = [];
+    var spyLine = 0;
+
+    // Section positions only move when the layout does, so measure them then
+    // and keep scroll handling free of layout reads.
+    var spyMeasure = function () {
+      var y = window.scrollY;
+      spyTops = spySections.map(function (section) {
+        return section ? section.getBoundingClientRect().top + y : Infinity;
+      });
+      spyLine = window.innerHeight * 0.4;
+    };
 
     var spyUpdate = function () {
       if (performance.now() < spyHold) return;
-      var line = window.innerHeight * 0.4;
+      var at = window.scrollY + spyLine;
       var index = -1;
-      spySections.forEach(function (section, i) {
-        if (section && section.getBoundingClientRect().top <= line) index = i;
-      });
+      for (var i = 0; i < spyTops.length; i++) if (spyTops[i] <= at) index = i;
       spyBar.glisse.setActive(index);
     };
+    var spyRemeasure = function () { spyMeasure(); spyUpdate(); };
 
     // A tapped tab stays lit while the smooth scroll travels past other
     // sections, then the spy takes over once scrolling stops.
@@ -64,8 +101,11 @@
       }
       spyUpdate();
     }, { passive: true });
-    window.addEventListener("resize", spyUpdate);
-    spyUpdate();
+    window.addEventListener("resize", spyRemeasure);
+    window.addEventListener("load", spyRemeasure);
+    // Fonts, images and opened FAQ answers change the page height.
+    if ("ResizeObserver" in window) new ResizeObserver(spyRemeasure).observe(doc.body);
+    spyRemeasure();
   }
 
   /* ---------- copy-to-clipboard ---------- */
@@ -300,13 +340,12 @@
 
   function tint(name) {
     if (!tintCache[name]) {
-      tintCache[name] = getComputedStyle(root).getPropertyValue("--tint-" + name).trim() || "#999";
+      var prop = name === "rule" ? "--rule" : "--tint-" + name;
+      tintCache[name] = getComputedStyle(root).getPropertyValue(prop).trim() || (name === "rule" ? "rgba(0,0,0,.15)" : "#999");
     }
     return tintCache[name];
   }
-  var onScheme = function () { tintCache = {}; drawAll(0, true); };
-  if (colorScheme.addEventListener) colorScheme.addEventListener("change", onScheme);
-  else if (colorScheme.addListener) colorScheme.addListener(onScheme);
+  onMediaChange(colorScheme, function () { tintCache = {}; drawAll(0, true); });
 
   function hexToRgba(hex, a) {
     var h = hex.replace("#", "");
@@ -322,11 +361,29 @@
       }, { rootMargin: "80px" })
     : null;
 
+  // Canvas sizes come from a ResizeObserver, so drawing a frame never has to
+  // ask the browser for layout.
+  var cssSize = new WeakMap();
+  var sizeWatch = "ResizeObserver" in window
+    ? new ResizeObserver(function (entries) {
+        entries.forEach(function (e) { cssSize.set(e.target, { w: e.contentRect.width, h: e.contentRect.height }); });
+      })
+    : null;
+  function watchCanvas(canvas) {
+    if (viewWatch) viewWatch.observe(canvas);
+    if (sizeWatch) sizeWatch.observe(canvas);
+  }
+
   function fitCanvas(canvas) {
-    var rect = canvas.getBoundingClientRect();
+    var css = cssSize.get(canvas);
+    if (!css) {
+      var rect = canvas.getBoundingClientRect();
+      css = { w: rect.width, h: rect.height };
+      if (sizeWatch) cssSize.set(canvas, css);
+    }
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var w = Math.max(1, Math.round(rect.width * dpr));
-    var h = Math.max(1, Math.round(rect.height * dpr));
+    var w = Math.max(1, Math.round(css.w * dpr));
+    var h = Math.max(1, Math.round(css.h * dpr));
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
     return { w: w, h: h, dpr: dpr };
   }
@@ -337,7 +394,7 @@
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.key = canvas.getAttribute("data-spark");
-    if (viewWatch) viewWatch.observe(canvas);
+    watchCanvas(canvas);
   }
   Spark.prototype.draw = function (phase, force) {
     if (!force && viewWatch && inViewport.get(this.canvas) === false) return;
@@ -390,7 +447,7 @@
   var trace = traceBox ? (function () {
     var canvas = $("canvas", traceBox);
     var ctx = canvas.getContext("2d");
-    if (viewWatch) viewWatch.observe(canvas);
+    watchCanvas(canvas);
     var series = [
       { key: "temp", tint: "thermal", lo: 30, hi: 100, fill: true },
       { key: "cpu", tint: "cpu", lo: 0, hi: 100, fill: false },
@@ -417,9 +474,12 @@
       want.forEach(function (p) {
         var el = labels[p.key];
         if (!el) return;
-        var y = clamp(p.y, 14, h - 14);
-        el.style.setProperty("--y", y.toFixed(1) + "px");
-        el.style.setProperty("--c", tint(TINT_BY_KEY[p.key]));
+        // Labels move with a transform and are only touched when they shift,
+        // so the trace never triggers layout.
+        var y = (Math.round(clamp(p.y, 14, h - 14) * 2) / 2).toFixed(1) + "px";
+        var c = tint(TINT_BY_KEY[p.key]);
+        if (el._y !== y) { el._y = y; el.style.setProperty("--y", y); }
+        if (el._c !== c) { el._c = c; el.style.setProperty("--c", c); }
       });
     }
 
@@ -432,7 +492,7 @@
         ctx.clearRect(0, 0, w, h);
 
         // faint horizontal rules, like a chart on paper
-        ctx.strokeStyle = getComputedStyle(root).getPropertyValue("--rule").trim() || "rgba(0,0,0,.15)";
+        ctx.strokeStyle = tint("rule");
         ctx.lineWidth = 1;
         for (var g = 0; g <= 4; g++) {
           var gy = Math.round(pad + (h - pad * 2) * g / 4) + 0.5;
@@ -650,6 +710,9 @@
   updateText();
   drawAll(0, true);
 
+  // Interior pages share this script but have nothing live to drive.
+  var live = sparks.length > 0 || !!trace || !!lab || coreBars.length > 0 || Object.keys(bound).length > 0;
+
   var textEvery = HZ / 2; // numbers settle at 2 Hz so they stay readable
   var stepCount = 0;
 
@@ -661,7 +724,9 @@
     }
   }
 
-  if (reducedMotion.matches) {
+  if (!live) {
+    // nothing to animate
+  } else if (reducedMotion.matches) {
     // Still alive, just calm: advance once a second, no interpolation.
     window.setInterval(function () {
       if (doc.hidden) return;
@@ -671,15 +736,20 @@
     }, 1000);
   } else {
     var last = performance.now();
+    var lastDraw = 0;
     var acc = 0;
     var running = false;
+
+    // The charts move under a pixel per frame, so 60 redraws a second look the
+    // same as 120 on a ProMotion display and leave those frames to scrolling.
+    var DRAW_GAP = 15;
 
     var frame = function (now) {
       var dt = Math.min((now - last) / 1000, 0.25);
       last = now;
       acc += dt;
       while (acc >= DT) { sim.step(DT); acc -= DT; afterStep(); }
-      drawAll(acc / DT, false);
+      if (now - lastDraw >= DRAW_GAP) { lastDraw = now; drawAll(acc / DT, false); }
       if (doc.hidden) { running = false; return; }
       requestAnimationFrame(frame);
     };
