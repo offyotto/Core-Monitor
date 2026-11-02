@@ -164,6 +164,45 @@ struct MonitoringTrendSeries {
     }
 }
 
+extension MonitoringTrendSeries {
+    /// Thins a series for small charts. The points are split into
+    /// `maxPoints / 2` buckets and each bucket keeps its lowest and highest
+    /// point in time order, so short spikes survive. The first and last points
+    /// are always kept so the line still spans the whole window.
+    static func decimated(_ points: [MonitoringTrendPoint], maxPoints: Int) -> [MonitoringTrendPoint] {
+        guard maxPoints >= 4, points.count > maxPoints else { return points }
+
+        let count = points.count
+        let bucketCount = maxPoints / 2
+        var result: [MonitoringTrendPoint] = []
+        result.reserveCapacity(maxPoints + 2)
+        result.append(points[0])
+
+        for bucket in 0..<bucketCount {
+            let start = bucket * count / bucketCount
+            let end = (bucket + 1) * count / bucketCount
+            guard start < end else { continue }
+
+            var lowIndex = start
+            var highIndex = start
+            for index in (start + 1)..<end {
+                if points[index].value < points[lowIndex].value { lowIndex = index }
+                if points[index].value > points[highIndex].value { highIndex = index }
+            }
+
+            for index in [min(lowIndex, highIndex), max(lowIndex, highIndex)]
+            where index > 0 && points[index].timestamp != result[result.count - 1].timestamp {
+                result.append(points[index])
+            }
+        }
+
+        if let last = points.last, last.timestamp != result[result.count - 1].timestamp {
+            result.append(last)
+        }
+        return result
+    }
+}
+
 struct ProcessActivity: Codable, Equatable, Identifiable {
     let pid: Int32
     let name: String
