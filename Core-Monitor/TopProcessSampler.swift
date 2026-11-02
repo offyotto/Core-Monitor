@@ -101,6 +101,7 @@ final class TopProcessSampler {
         let elapsed = max(now.timeIntervalSince(previousSampleDate), 1)
         let previousCPUTimeByPID = self.previousCPUTimeByPID
         let processorCount = max(1, SystemMonitor.totalLogicalCoreCount())
+        let appNames = Self.runningApplicationNames()
 
         samplingQueue.async { [weak self] in
             guard let self else { return }
@@ -108,7 +109,8 @@ final class TopProcessSampler {
             let sampled = self.collectProcesses(
                 elapsed: elapsed,
                 processorCount: processorCount,
-                previousCPUTimeByPID: previousCPUTimeByPID
+                previousCPUTimeByPID: previousCPUTimeByPID,
+                appNames: appNames
             )
 
             let grouped = self.aggregateProcesses(sampled)
@@ -138,7 +140,8 @@ final class TopProcessSampler {
     private func collectProcesses(
         elapsed: TimeInterval,
         processorCount: Int,
-        previousCPUTimeByPID: [pid_t: UInt64]
+        previousCPUTimeByPID: [pid_t: UInt64],
+        appNames: [pid_t: String]
     ) -> [SampledProcess] {
         let bytesNeeded = Int(proc_listpids(UInt32(PROC_ALL_PIDS), 0, nil, 0))
         guard bytesNeeded > 0 else { return [] }
@@ -171,7 +174,7 @@ final class TopProcessSampler {
 
                 return SampledProcess(
                     pid: pid,
-                    name: displayName(for: pid),
+                    name: appNames[pid] ?? processName(for: pid),
                     cpuPercent: cpuPercent,
                     memoryBytes: memoryBytes,
                     cpuTime: cpuTime
@@ -236,14 +239,20 @@ final class TopProcessSampler {
         return usage.ri_user_time + usage.ri_system_time
     }
 
-    private func displayName(for pid: pid_t) -> String {
-        if let runningApp = NSRunningApplication(processIdentifier: pid) {
-            let localizedName = runningApp.localizedName ?? ""
-            if !localizedName.isEmpty {
-                return localizedName
-            }
+    /// Localized names of the apps Launch Services knows about, read once per
+    /// sample. Asking `NSRunningApplication(processIdentifier:)` for every PID
+    /// cost a Launch Services lookup per process, and most processes are not
+    /// apps at all.
+    private static func runningApplicationNames() -> [pid_t: String] {
+        var names: [pid_t: String] = [:]
+        for app in NSWorkspace.shared.runningApplications {
+            guard let name = app.localizedName, !name.isEmpty else { continue }
+            names[app.processIdentifier] = name
         }
+        return names
+    }
 
+    private func processName(for pid: pid_t) -> String {
         var nameBuffer = [CChar](repeating: 0, count: Int(MAXCOMLEN) + 1)
         let procNameLength = proc_name(pid, &nameBuffer, UInt32(nameBuffer.count))
         if procNameLength > 0 {
