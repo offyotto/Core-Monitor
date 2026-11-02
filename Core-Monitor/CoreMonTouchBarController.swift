@@ -1,6 +1,5 @@
 import AppKit
 import Combine
-import CoreWLAN
 import Foundation
 
 @MainActor
@@ -213,7 +212,7 @@ final class CoreMonTouchBarController: NSObject {
 
         return TouchBarSystemSnapshot(
             memPct: clamp(systemMonitor.memoryUsagePercent),
-            ssdPct: clamp(storageUsagePercent()),
+            ssdPct: clamp(systemMonitor.diskStats.usagePercent),
             cpuPct: clamp(systemMonitor.cpuUsagePercent),
             cpuTempC: systemMonitor.cpuTemperature ?? systemMonitor.cpuUsagePercent,
             brightness: systemMonitor.currentBrightness,
@@ -222,7 +221,6 @@ final class CoreMonTouchBarController: NSObject {
             netUpKBs: network.uploadBytesPerSec / 1_000,
             netDownMBs: network.downloadBytesPerSec / 1_000_000,
             fps: currentFPS(),
-            wifiName: currentWiFiName(),
             detailedClockTitle: parisTime.title,
             detailedClockSubtitle: parisTime.subtitle,
             memoryPressure: systemMonitor.memoryPressure
@@ -260,22 +258,6 @@ final class CoreMonTouchBarController: NSObject {
 
     private func currentFPS() -> Int {
         NSScreen.main?.maximumFramesPerSecond ?? 60
-    }
-
-    private func currentWiFiName() -> String {
-        CWWiFiClient.shared().interface()?.ssid() ?? "--"
-    }
-
-    private func storageUsagePercent() -> Double {
-        let homeURL = URL(fileURLWithPath: NSHomeDirectory())
-        let keys: Set<URLResourceKey> = [.volumeTotalCapacityKey, .volumeAvailableCapacityForImportantUsageKey]
-        guard let values = try? homeURL.resourceValues(forKeys: keys),
-              let total = values.volumeTotalCapacity,
-              let available = values.volumeAvailableCapacityForImportantUsage else {
-            return 0
-        }
-        let used = max(Int64(total) - available, 0)
-        return (Double(used) / Double(total)) * 100
     }
 
     private func currentTheme() -> TouchBarTheme {
