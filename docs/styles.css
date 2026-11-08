@@ -90,6 +90,8 @@ html {
   scroll-behavior: smooth;
   scroll-padding-top: 76px;
 }
+/* Lenis animates scrolling itself; native smooth scrolling would fight it. */
+html.lenis { scroll-behavior: auto; }
 body { margin: 0; font-size: 1.0625rem; overflow-x: clip; }
 
 h1, h2, h3, h4 {
@@ -343,13 +345,15 @@ html:not(.no-live) .trace .trace-static { display: none; }
 .trace-labels span {
   position: absolute;
   left: calc(100% - 7rem);
-  top: var(--y, 50%);
+  top: 50%;
   transform: translateY(-50%);
   font-size: 0.875rem;
   line-height: 1.2;
   color: var(--c, var(--ink));
   white-space: nowrap;
 }
+/* Live labels ride a transform, which moves without a layout pass. */
+html:not(.no-live) .trace-labels span { top: 0; transform: translateY(calc(var(--y, 0px) - 50%)); }
 .trace-labels span b { display: block; font-family: var(--f-mono); font-weight: 500; font-size: 0.8125rem; color: var(--ink-2); }
 .trace-foot {
   display: flex;
@@ -409,7 +413,16 @@ html:not(.no-live) .trace .trace-static { display: none; }
 .bar i:nth-child(2) { opacity: 0.4; }
 .bar i:nth-child(3) { background: var(--rule); flex: 1; width: auto; }
 .cores { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; height: 56px; align-items: end; }
-.cores i { display: block; height: calc(var(--h, 0.1) * 100%); min-height: 2px; background: var(--tint-cpu); transition: height 220ms ease-out; }
+/* Bars scale rather than change height, so the 2 Hz updates animate on the
+   compositor. 0.036 of the 56px row keeps the 2px floor. */
+.cores i {
+  display: block;
+  height: 100%;
+  background: var(--tint-cpu);
+  transform-origin: 50% 100%;
+  transform: scaleY(max(var(--h, 0.1), 0.036));
+  transition: transform 220ms ease-out;
+}
 
 /* ---------- screens --------------------------------------------------------- */
 
