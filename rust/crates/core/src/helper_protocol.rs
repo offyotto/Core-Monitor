@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 pub const SOCKET_PATH: &str = "/var/run/core-monitor.smc-helper.sock";
-pub const DEFAULT_LABEL: &str = "ventaphobia.smc-helper";
+pub const DEFAULT_LABEL: &str = "ventaphobia.smc-helper-rs";
 pub const CONSERVATIVE_MIN_RPM: i64 = 1_000;
 pub const CONSERVATIVE_MAX_RPM: i64 = 6_500;
 pub const RENEW_INTERVAL_SECONDS: f64 = 5.0;

@@ -7,7 +7,7 @@ set -euo pipefail
 HELPER="${1:?usage: install-helper.sh <helper-binary> [client-requirement]}"
 REQUIREMENT="${2:-anchor apple generic and identifier \"CoreTools.Core-Monitor\" and certificate leaf[subject.OU] = \"6VDP675K4L\"}"
 RUST_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-LABEL="ventaphobia.smc-helper"
+LABEL="ventaphobia.smc-helper-rs"
 DEST="/Library/PrivilegedHelperTools/${LABEL}"
 PLIST="/Library/LaunchDaemons/${LABEL}.plist"
 

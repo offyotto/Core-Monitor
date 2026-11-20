@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>ventaphobia.smc-helper</string>
+	<string>ventaphobia.smc-helper-rs</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/Library/PrivilegedHelperTools/ventaphobia.smc-helper</string>
+		<string>/Library/PrivilegedHelperTools/ventaphobia.smc-helper-rs</string>
 		<string>serve</string>
 		<string>--client-requirement</string>
 		<string>@CLIENT_REQUIREMENT@</string>
@@ -16,6 +16,6 @@
 	<key>KeepAlive</key>
 	<true/>
 	<key>StandardErrorPath</key>
-	<string>/var/log/ventaphobia.smc-helper.log</string>
+	<string>/var/log/ventaphobia.smc-helper-rs.log</string>
 </dict>
 </plist>

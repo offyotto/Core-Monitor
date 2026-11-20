@@ -30,10 +30,10 @@ The Swift helper used XPC through `SMJobBless`. The Rust helper serves newline-d
 To install the helper:
 
 ```bash
-sudo ./scripts/install-helper.sh build/rust/Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper
+sudo ./scripts/install-helper.sh ../build/rust/Core-Monitor.app/Contents/Library/LaunchServices/ventaphobia.smc-helper-rs
 ```
 
-The default client requirement only admits the signed release app (`CoreTools.Core-Monitor`, team `6VDP675K4L`). For a local build, pass your own requirement as the second argument.
+It uses its own launchd label (`ventaphobia.smc-helper-rs`) and socket, so it does not replace the Swift app's `ventaphobia.smc-helper`. The default client requirement only admits the signed release app (`CoreTools.Core-Monitor`, team `6VDP675K4L`). For a local build, pass your own requirement as the second argument.
 
 ## Settings
 
