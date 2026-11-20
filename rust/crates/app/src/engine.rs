@@ -325,7 +325,11 @@ impl FanController {
         };
         // Per-fan offsets can change (a saved preset) while the base target holds steady.
         let offsets: Vec<i64> = requested.iter().map(|r| r - target).collect();
-        if fan::should_apply(target, self.last_applied) || offsets != self.last_offsets {
+        // A smoothing step below the write threshold would otherwise never move the fans.
+        let small_step = mode == FanControlMode::Custom
+            && target != self.last_applied
+            && preset.is_some_and(|p| p.resolved_smoothing_step_rpm() < fan::APPLY_THRESHOLD_RPM);
+        if fan::should_apply(target, self.last_applied) || offsets != self.last_offsets || small_step {
             if let Err(e) = self.apply(&requested, snapshot) {
                 return e;
             }
