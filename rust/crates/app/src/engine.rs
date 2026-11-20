@@ -197,6 +197,7 @@ fn notify(title: &str, message: &str) {
 pub struct FanController {
     pub helper: HelperClient,
     last_applied: i64,
+    last_offsets: Vec<i64>,
     last_control: Option<f64>,
     last_renew: f64,
     holds_fans: bool,
@@ -242,6 +243,7 @@ impl FanController {
         }
         self.holds_fans = false;
         self.last_applied = 0;
+        self.last_offsets.clear();
         self.helper.disconnect();
     }
 
@@ -318,11 +320,14 @@ impl FanController {
             }
             _ => unreachable!(),
         };
-        if fan::should_apply(target, self.last_applied) {
+        // Per-fan offsets can change (a saved preset) while the base target holds steady.
+        let offsets: Vec<i64> = requested.iter().map(|r| r - target).collect();
+        if fan::should_apply(target, self.last_applied) || offsets != self.last_offsets {
             if let Err(e) = self.apply(&requested, snapshot) {
                 return e;
             }
             self.last_applied = target;
+            self.last_offsets = offsets;
             self.last_renew = t;
         }
         format!("{label} → {target} RPM")
