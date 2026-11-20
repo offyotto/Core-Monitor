@@ -130,7 +130,7 @@ pub struct CustomFanPreset {
     pub sensor: PresetSensor,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub update_interval_seconds: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "smoothingStepRPM", skip_serializing_if = "Option::is_none")]
     pub smoothing_step_rpm: Option<i64>,
     #[serde(rename = "minimumRPM", skip_serializing_if = "Option::is_none")]
     pub minimum_rpm: Option<i64>,
@@ -462,11 +462,15 @@ mod tests {
         assert!(p.validation_errors(MIN_SPEED, MAX_SPEED).is_empty());
         let json = p.to_pretty_json();
         assert!(json.contains("\"minimumRPM\": 1400") && json.contains("\"temperatureC\""));
+        assert!(json.contains("\"smoothingStepRPM\": 100"));
         assert_eq!(CustomFanPreset::from_json(&json).unwrap(), p);
     }
 
     #[test]
     fn decodes_swift_preset_with_ids_and_missing_optionals() {
+        let swift = r#"{"name":"x","version":1,"sensor":"cpu","smoothingStepRPM":250,"points":[
+            {"temperatureC":40,"speedPercent":10},{"temperatureC":80,"speedPercent":90}]}"#;
+        assert_eq!(CustomFanPreset::from_json(swift).unwrap().resolved_smoothing_step_rpm(), 250);
         let src = r#"{"name":"x","version":1,"sensor":"cpu","points":[
             {"id":"9A1F0D52-1E0B-4C7F-A9E7-6D9C9C0B1F11","temperatureC":40,"speedPercent":10},
             {"temperatureC":80,"speedPercent":90}]}"#;
