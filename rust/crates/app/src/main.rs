@@ -12,13 +12,15 @@ struct App {
     dashboard: ui::Dashboard,
     #[cfg(target_os = "macos")]
     tray: Option<tray::Tray>,
+    #[cfg(target_os = "macos")]
+    quitting: bool,
 }
 
 impl App {
     fn handle_close(&mut self, ctx: &egui::Context) {
         // Closing the window keeps the menu bar item running, as the Swift app did.
         #[cfg(target_os = "macos")]
-        if self.tray.is_some() && ctx.input(|i| i.viewport().close_requested()) {
+        if self.tray.is_some() && !self.quitting && ctx.input(|i| i.viewport().close_requested()) {
             ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
             ctx.send_viewport_cmd(egui::ViewportCommand::Visible(false));
         }
@@ -33,6 +35,7 @@ impl eframe::App for App {
         #[cfg(target_os = "macos")]
         if let Some(tray) = &mut self.tray {
             if tray.update(ctx, &self.dashboard.shared) {
+                self.quitting = true;
                 ctx.send_viewport_cmd(egui::ViewportCommand::Close);
             }
         }
@@ -71,6 +74,8 @@ fn main() -> eframe::Result {
             Ok(Box::new(App {
                 #[cfg(target_os = "macos")]
                 tray: tray::Tray::new(&shared).ok(),
+                #[cfg(target_os = "macos")]
+                quitting: false,
                 dashboard: ui::Dashboard::new(shared),
             }))
         }),
