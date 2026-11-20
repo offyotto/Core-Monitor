@@ -16,3 +16,6 @@ DerivedData/
 *.zip
 Archive*/
 Core-Monitor 20*/
+
+# Rust build output
+rust/target/
