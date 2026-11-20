@@ -56,16 +56,13 @@ fn load<T: DeserializeOwned>(name: &str) -> Option<T> {
     serde_json::from_str(&std::fs::read_to_string(support_dir().join(name)).ok()?).ok()
 }
 
-fn save<T: Serialize>(name: &str, value: &T) {
+fn save<T: Serialize>(name: &str, value: &T) -> std::io::Result<()> {
     let dir = support_dir();
-    if std::fs::create_dir_all(&dir).is_ok() {
-        if let Ok(json) = serde_json::to_string_pretty(value) {
-            let tmp = dir.join(format!("{name}.tmp"));
-            if std::fs::write(&tmp, json).is_ok() {
-                let _ = std::fs::rename(tmp, dir.join(name));
-            }
-        }
-    }
+    std::fs::create_dir_all(&dir)?;
+    let json = serde_json::to_string_pretty(value).map_err(std::io::Error::other)?;
+    let tmp = dir.join(format!("{name}.tmp"));
+    std::fs::write(&tmp, json)?;
+    std::fs::rename(tmp, dir.join(name))
 }
 
 pub fn load_settings() -> Settings {
@@ -75,7 +72,7 @@ pub fn load_settings() -> Settings {
 }
 
 pub fn save_settings(settings: &Settings) {
-    save("settings.json", settings);
+    let _ = save("settings.json", settings);
 }
 
 pub fn load_alerts() -> AlertStore {
@@ -83,7 +80,7 @@ pub fn load_alerts() -> AlertStore {
 }
 
 pub fn save_alerts(store: &AlertStore) {
-    save("alerts.json", store);
+    let _ = save("alerts.json", store);
 }
 
 /// Returns the saved preset, or the validation error that kept it from loading.
@@ -106,7 +103,8 @@ pub fn save_preset_source(source: &str) -> Result<CustomFanPreset, Vec<String>> 
     if !errors.is_empty() {
         return Err(errors);
     }
-    save("custom-fan-preset.json", &preset);
+    save("custom-fan-preset.json", &preset)
+        .map_err(|e| vec![format!("Could not write {}: {e}", preset_path().display())])?;
     Ok(preset)
 }
 
