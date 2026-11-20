@@ -150,6 +150,25 @@ pub fn memory_stats(active_pages: u64, wired_pages: u64, compressed_pages: u64, 
     })
 }
 
+/// Health from AppleSmartBattery capacities; some firmware reports design
+/// capacity in µAh while max capacity is in mAh.
+pub fn battery_health_percent(max_capacity: i64, design_capacity: i64) -> Option<i64> {
+    let mut design = design_capacity;
+    if design <= 0 {
+        return None;
+    }
+    if design > 100_000 && max_capacity < 20_000 {
+        design /= 1000;
+    }
+    let health = (max_capacity as f64 / design as f64 * 100.0).round() as i64;
+    (20..=120).contains(&health).then_some(health)
+}
+
+/// AppleSmartBattery reports decikelvin or centikelvin depending on model.
+pub fn battery_temperature_c(raw: i64) -> Option<f64> {
+    [raw as f64 / 10.0 - 273.15, raw as f64 / 100.0 - 273.15].into_iter().find(|c| *c > -40.0 && *c < 120.0)
+}
+
 /// Wrapping-safe CPU usage from two `host_cpu_load_info` tick samples
 /// (`[user, system, idle, nice]`).
 pub fn cpu_usage_percent(previous: [u32; 4], current: [u32; 4]) -> Option<f64> {
@@ -236,6 +255,15 @@ mod tests {
         let red = memory_stats(pages(0.6), pages(0.2), pages(0.2), page, total).unwrap();
         assert_eq!((red.pressure, red.usage_percent.round()), (MemoryPressure::Red, 100.0));
         assert!(memory_stats(1, 1, 1, page, 0).is_none());
+    }
+
+    #[test]
+    fn battery_conversions() {
+        assert_eq!(battery_health_percent(4500, 5000), Some(90));
+        assert_eq!(battery_health_percent(4500, 5_000_000), Some(90));
+        assert_eq!(battery_health_percent(100, 5000), None);
+        assert!((battery_temperature_c(3031).unwrap() - 29.95).abs() < 1e-9);
+        assert!((battery_temperature_c(30315).unwrap() - 29.999_999).abs() < 1e-3);
     }
 
     #[test]

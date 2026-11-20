@@ -1,0 +1,15 @@
+[package]
+name = "core-monitor-sys"
+description = "macOS hardware access for Core-Monitor: AppleSMC, Mach, sysctl, IOKit power sources and libproc."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+core-monitor-core.workspace = true
+libc = "0.2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.10"
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSProcessInfo"] }
