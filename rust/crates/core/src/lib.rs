@@ -7,6 +7,7 @@ pub mod disk;
 pub mod fan;
 pub mod fan_detection;
 pub mod format;
+pub mod helper_protocol;
 pub mod lease;
 pub mod network;
 pub mod sensors;
