@@ -191,10 +191,18 @@ pub fn serve(path: &str, requirement: &str) -> Result<(), String> {
     });
 
     let next_owner = AtomicU64::new(1);
+    // Rejections are logged at most once a minute so a local caller cannot grow the log.
+    let mut rejected = 0u64;
+    let mut last_rejection_log: Option<Instant> = None;
     for stream in listener.incoming() {
         let Ok(stream) = stream else { continue };
         if !requirement.accepts(&stream) {
-            eprintln!("smc-helper: rejected client that failed the code signing requirement");
+            rejected += 1;
+            if last_rejection_log.is_none_or(|t| t.elapsed() >= Duration::from_secs(60)) {
+                eprintln!("smc-helper: rejected {rejected} client(s) that failed the code signing requirement");
+                rejected = 0;
+                last_rejection_log = Some(Instant::now());
+            }
             continue;
         }
         let owner = next_owner.fetch_add(1, Ordering::Relaxed);
