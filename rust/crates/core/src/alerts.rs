@@ -17,11 +17,19 @@ pub enum AlertCategory {
 
 impl AlertCategory {
     pub fn title(self) -> &'static str {
-        ["Thermal", "Performance", "Fan Safety", "Battery", "Services"][self as usize]
+        [
+            "Thermal",
+            "Performance",
+            "Fan Safety",
+            "Battery",
+            "Services",
+        ][self as usize]
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
+)]
 pub enum AlertSeverity {
     #[default]
     None = 0,
@@ -128,7 +136,13 @@ impl AlertRuleKind {
         use AlertRuleKind::*;
         matches!(
             self,
-            CpuTemperature | GpuTemperature | CpuUsage | SwapUsage | BatteryTemperature | BatteryHealth | LowBatteryDischarging
+            CpuTemperature
+                | GpuTemperature
+                | CpuUsage
+                | SwapUsage
+                | BatteryTemperature
+                | BatteryHealth
+                | LowBatteryDischarging
         )
     }
 
@@ -166,10 +180,20 @@ pub enum AlertPreset {
 }
 
 impl AlertPreset {
-    pub const ALL: [AlertPreset; 4] = [Self::Default, Self::Quiet, Self::Performance, Self::AggressiveThermalSafety];
+    pub const ALL: [AlertPreset; 4] = [
+        Self::Default,
+        Self::Quiet,
+        Self::Performance,
+        Self::AggressiveThermalSafety,
+    ];
 
     pub fn title(self) -> &'static str {
-        ["Default", "Quiet", "Performance", "Aggressive Thermal Safety"][self as usize]
+        [
+            "Default",
+            "Quiet",
+            "Performance",
+            "Aggressive Thermal Safety",
+        ][self as usize]
     }
 
     pub fn subtitle(self) -> &'static str {
@@ -182,11 +206,17 @@ impl AlertPreset {
     }
 
     pub fn configurations(self) -> Vec<AlertRuleConfig> {
-        AlertRuleKind::ALL.iter().map(|k| self.configuration(*k)).collect()
+        AlertRuleKind::ALL
+            .iter()
+            .map(|k| self.configuration(*k))
+            .collect()
     }
 
     pub fn configuration(self, kind: AlertRuleKind) -> AlertRuleConfig {
-        if matches!(kind, AlertRuleKind::SmcUnavailable | AlertRuleKind::HelperUnavailable) {
+        if matches!(
+            kind,
+            AlertRuleKind::SmcUnavailable | AlertRuleKind::HelperUnavailable
+        ) {
             let cooldown = match self {
                 AlertPreset::Quiet => 40,
                 AlertPreset::AggressiveThermalSafety => 10,
@@ -202,52 +232,110 @@ impl AlertPreset {
             };
         }
         let (w, c, h, cooldown, debounce, notify) = match (self, kind) {
-        (AlertPreset::Default, AlertRuleKind::CpuTemperature) => (85.0, 95.0, 3.0, 20, 2, true),
-        (AlertPreset::Default, AlertRuleKind::GpuTemperature) => (82.0, 92.0, 3.0, 20, 2, true),
-        (AlertPreset::Default, AlertRuleKind::OverallThermalState) => (2.0, 3.0, 0.0, 15, 1, true),
-        (AlertPreset::Default, AlertRuleKind::CpuUsage) => (88.0, 98.0, 8.0, 20, 3, true),
-        (AlertPreset::Default, AlertRuleKind::MemoryPressure) => (1.0, 2.0, 0.0, 15, 2, true),
-        (AlertPreset::Default, AlertRuleKind::SwapUsage) => (4.0, 10.0, 1.0, 20, 2, true),
-        (AlertPreset::Default, AlertRuleKind::FanTooLowUnderHeat) => (85.0, 95.0, 3.0, 10, 2, true),
-        (AlertPreset::Default, AlertRuleKind::BatteryTemperature) => (38.0, 45.0, 2.0, 20, 2, true),
-        (AlertPreset::Default, AlertRuleKind::BatteryHealth) => (82.0, 70.0, 0.0, 1440, 1, false),
-        (AlertPreset::Default, AlertRuleKind::LowBatteryDischarging) => (18.0, 10.0, 3.0, 30, 1, true),
-        (AlertPreset::Quiet, AlertRuleKind::CpuTemperature) => (90.0, 100.0, 3.0, 35, 3, true),
-        (AlertPreset::Quiet, AlertRuleKind::GpuTemperature) => (88.0, 98.0, 3.0, 35, 3, true),
-        (AlertPreset::Quiet, AlertRuleKind::OverallThermalState) => (2.0, 3.0, 0.0, 30, 2, true),
-        (AlertPreset::Quiet, AlertRuleKind::CpuUsage) => (93.0, 99.0, 8.0, 35, 4, false),
-        (AlertPreset::Quiet, AlertRuleKind::MemoryPressure) => (2.0, 2.0, 0.0, 25, 2, false),
-        (AlertPreset::Quiet, AlertRuleKind::SwapUsage) => (8.0, 14.0, 1.0, 35, 3, false),
-        (AlertPreset::Quiet, AlertRuleKind::FanTooLowUnderHeat) => (90.0, 98.0, 3.0, 15, 3, true),
-        (AlertPreset::Quiet, AlertRuleKind::BatteryTemperature) => (40.0, 46.0, 2.0, 35, 2, false),
-        (AlertPreset::Quiet, AlertRuleKind::BatteryHealth) => (80.0, 68.0, 0.0, 1440, 1, false),
-        (AlertPreset::Quiet, AlertRuleKind::LowBatteryDischarging) => (12.0, 7.0, 3.0, 40, 1, true),
-        (AlertPreset::Performance, AlertRuleKind::CpuTemperature) => (82.0, 92.0, 3.0, 15, 2, true),
-        (AlertPreset::Performance, AlertRuleKind::GpuTemperature) => (80.0, 90.0, 3.0, 15, 2, true),
-        (AlertPreset::Performance, AlertRuleKind::OverallThermalState) => (1.0, 2.0, 0.0, 12, 1, true),
-        (AlertPreset::Performance, AlertRuleKind::CpuUsage) => (80.0, 94.0, 7.0, 12, 2, true),
-        (AlertPreset::Performance, AlertRuleKind::MemoryPressure) => (1.0, 2.0, 0.0, 12, 1, true),
-        (AlertPreset::Performance, AlertRuleKind::SwapUsage) => (2.0, 6.0, 1.0, 15, 2, true),
-        (AlertPreset::Performance, AlertRuleKind::FanTooLowUnderHeat) => (82.0, 92.0, 3.0, 8, 2, true),
-        (AlertPreset::Performance, AlertRuleKind::BatteryTemperature) => (37.0, 43.0, 2.0, 18, 2, true),
-        (AlertPreset::Performance, AlertRuleKind::BatteryHealth) => (82.0, 70.0, 0.0, 1440, 1, false),
-        (AlertPreset::Performance, AlertRuleKind::LowBatteryDischarging) => (20.0, 12.0, 3.0, 30, 1, true),
-        (AlertPreset::AggressiveThermalSafety, AlertRuleKind::CpuTemperature) => (78.0, 88.0, 3.0, 8, 1, true),
-        (AlertPreset::AggressiveThermalSafety, AlertRuleKind::GpuTemperature) => (76.0, 86.0, 3.0, 8, 1, true),
-        (AlertPreset::AggressiveThermalSafety, AlertRuleKind::OverallThermalState) => (1.0, 2.0, 0.0, 8, 1, true),
-        (AlertPreset::AggressiveThermalSafety, AlertRuleKind::CpuUsage) => (82.0, 95.0, 6.0, 10, 2, true),
-        (AlertPreset::AggressiveThermalSafety, AlertRuleKind::MemoryPressure) => (1.0, 2.0, 0.0, 10, 1, true),
-        (AlertPreset::AggressiveThermalSafety, AlertRuleKind::SwapUsage) => (3.0, 7.0, 1.0, 10, 1, true),
-        (AlertPreset::AggressiveThermalSafety, AlertRuleKind::FanTooLowUnderHeat) => (78.0, 88.0, 3.0, 5, 1, true),
-        (AlertPreset::AggressiveThermalSafety, AlertRuleKind::BatteryTemperature) => (36.0, 42.0, 2.0, 10, 1, true),
-        (AlertPreset::AggressiveThermalSafety, AlertRuleKind::BatteryHealth) => (84.0, 72.0, 0.0, 1440, 1, false),
-        (AlertPreset::AggressiveThermalSafety, AlertRuleKind::LowBatteryDischarging) => (18.0, 10.0, 3.0, 20, 1, true),
+            (AlertPreset::Default, AlertRuleKind::CpuTemperature) => (85.0, 95.0, 3.0, 20, 2, true),
+            (AlertPreset::Default, AlertRuleKind::GpuTemperature) => (82.0, 92.0, 3.0, 20, 2, true),
+            (AlertPreset::Default, AlertRuleKind::OverallThermalState) => {
+                (2.0, 3.0, 0.0, 15, 1, true)
+            }
+            (AlertPreset::Default, AlertRuleKind::CpuUsage) => (88.0, 98.0, 8.0, 20, 3, true),
+            (AlertPreset::Default, AlertRuleKind::MemoryPressure) => (1.0, 2.0, 0.0, 15, 2, true),
+            (AlertPreset::Default, AlertRuleKind::SwapUsage) => (4.0, 10.0, 1.0, 20, 2, true),
+            (AlertPreset::Default, AlertRuleKind::FanTooLowUnderHeat) => {
+                (85.0, 95.0, 3.0, 10, 2, true)
+            }
+            (AlertPreset::Default, AlertRuleKind::BatteryTemperature) => {
+                (38.0, 45.0, 2.0, 20, 2, true)
+            }
+            (AlertPreset::Default, AlertRuleKind::BatteryHealth) => {
+                (82.0, 70.0, 0.0, 1440, 1, false)
+            }
+            (AlertPreset::Default, AlertRuleKind::LowBatteryDischarging) => {
+                (18.0, 10.0, 3.0, 30, 1, true)
+            }
+            (AlertPreset::Quiet, AlertRuleKind::CpuTemperature) => (90.0, 100.0, 3.0, 35, 3, true),
+            (AlertPreset::Quiet, AlertRuleKind::GpuTemperature) => (88.0, 98.0, 3.0, 35, 3, true),
+            (AlertPreset::Quiet, AlertRuleKind::OverallThermalState) => {
+                (2.0, 3.0, 0.0, 30, 2, true)
+            }
+            (AlertPreset::Quiet, AlertRuleKind::CpuUsage) => (93.0, 99.0, 8.0, 35, 4, false),
+            (AlertPreset::Quiet, AlertRuleKind::MemoryPressure) => (2.0, 2.0, 0.0, 25, 2, false),
+            (AlertPreset::Quiet, AlertRuleKind::SwapUsage) => (8.0, 14.0, 1.0, 35, 3, false),
+            (AlertPreset::Quiet, AlertRuleKind::FanTooLowUnderHeat) => {
+                (90.0, 98.0, 3.0, 15, 3, true)
+            }
+            (AlertPreset::Quiet, AlertRuleKind::BatteryTemperature) => {
+                (40.0, 46.0, 2.0, 35, 2, false)
+            }
+            (AlertPreset::Quiet, AlertRuleKind::BatteryHealth) => (80.0, 68.0, 0.0, 1440, 1, false),
+            (AlertPreset::Quiet, AlertRuleKind::LowBatteryDischarging) => {
+                (12.0, 7.0, 3.0, 40, 1, true)
+            }
+            (AlertPreset::Performance, AlertRuleKind::CpuTemperature) => {
+                (82.0, 92.0, 3.0, 15, 2, true)
+            }
+            (AlertPreset::Performance, AlertRuleKind::GpuTemperature) => {
+                (80.0, 90.0, 3.0, 15, 2, true)
+            }
+            (AlertPreset::Performance, AlertRuleKind::OverallThermalState) => {
+                (1.0, 2.0, 0.0, 12, 1, true)
+            }
+            (AlertPreset::Performance, AlertRuleKind::CpuUsage) => (80.0, 94.0, 7.0, 12, 2, true),
+            (AlertPreset::Performance, AlertRuleKind::MemoryPressure) => {
+                (1.0, 2.0, 0.0, 12, 1, true)
+            }
+            (AlertPreset::Performance, AlertRuleKind::SwapUsage) => (2.0, 6.0, 1.0, 15, 2, true),
+            (AlertPreset::Performance, AlertRuleKind::FanTooLowUnderHeat) => {
+                (82.0, 92.0, 3.0, 8, 2, true)
+            }
+            (AlertPreset::Performance, AlertRuleKind::BatteryTemperature) => {
+                (37.0, 43.0, 2.0, 18, 2, true)
+            }
+            (AlertPreset::Performance, AlertRuleKind::BatteryHealth) => {
+                (82.0, 70.0, 0.0, 1440, 1, false)
+            }
+            (AlertPreset::Performance, AlertRuleKind::LowBatteryDischarging) => {
+                (20.0, 12.0, 3.0, 30, 1, true)
+            }
+            (AlertPreset::AggressiveThermalSafety, AlertRuleKind::CpuTemperature) => {
+                (78.0, 88.0, 3.0, 8, 1, true)
+            }
+            (AlertPreset::AggressiveThermalSafety, AlertRuleKind::GpuTemperature) => {
+                (76.0, 86.0, 3.0, 8, 1, true)
+            }
+            (AlertPreset::AggressiveThermalSafety, AlertRuleKind::OverallThermalState) => {
+                (1.0, 2.0, 0.0, 8, 1, true)
+            }
+            (AlertPreset::AggressiveThermalSafety, AlertRuleKind::CpuUsage) => {
+                (82.0, 95.0, 6.0, 10, 2, true)
+            }
+            (AlertPreset::AggressiveThermalSafety, AlertRuleKind::MemoryPressure) => {
+                (1.0, 2.0, 0.0, 10, 1, true)
+            }
+            (AlertPreset::AggressiveThermalSafety, AlertRuleKind::SwapUsage) => {
+                (3.0, 7.0, 1.0, 10, 1, true)
+            }
+            (AlertPreset::AggressiveThermalSafety, AlertRuleKind::FanTooLowUnderHeat) => {
+                (78.0, 88.0, 3.0, 5, 1, true)
+            }
+            (AlertPreset::AggressiveThermalSafety, AlertRuleKind::BatteryTemperature) => {
+                (36.0, 42.0, 2.0, 10, 1, true)
+            }
+            (AlertPreset::AggressiveThermalSafety, AlertRuleKind::BatteryHealth) => {
+                (84.0, 72.0, 0.0, 1440, 1, false)
+            }
+            (AlertPreset::AggressiveThermalSafety, AlertRuleKind::LowBatteryDischarging) => {
+                (18.0, 10.0, 3.0, 20, 1, true)
+            }
             _ => unreachable!("service rules handled above"),
         };
         AlertRuleConfig {
             kind,
             is_enabled: true,
-            threshold: AlertThreshold { warning: Some(w), critical: Some(c), hysteresis: h },
+            threshold: AlertThreshold {
+                warning: Some(w),
+                critical: Some(c),
+                hysteresis: h,
+            },
             cooldown_minutes: cooldown,
             debounce_samples: debounce,
             desktop_notifications_enabled: notify,
@@ -356,7 +444,10 @@ impl Default for AlertStore {
             desktop_notifications_enabled: true,
             notifications_muted_until: None,
             rule_configs: AlertPreset::Default.configurations(),
-            runtimes: AlertRuleKind::ALL.iter().map(|k| AlertRuleRuntime::initial(*k)).collect(),
+            runtimes: AlertRuleKind::ALL
+                .iter()
+                .map(|k| AlertRuleRuntime::initial(*k))
+                .collect(),
             history: Vec::new(),
         }
     }
@@ -409,8 +500,21 @@ pub struct Measurement {
 }
 
 impl Measurement {
-    fn new(severity: AlertSeverity, metric: Option<f64>, title: &str, message: String, context: Option<String>) -> Self {
-        Self { severity, metric_value: metric, title: title.into(), message, context, unavailable_reason: None }
+    fn new(
+        severity: AlertSeverity,
+        metric: Option<f64>,
+        title: &str,
+        message: String,
+        context: Option<String>,
+    ) -> Self {
+        Self {
+            severity,
+            metric_value: metric,
+            title: title.into(),
+            message,
+            context,
+            unavailable_reason: None,
+        }
     }
 
     fn unavailable(kind: AlertRuleKind, reason: &str) -> Self {
@@ -448,7 +552,12 @@ pub struct NotificationDelivery {
 
 impl Default for NotificationDelivery {
     fn default() -> Self {
-        Self { is_enabled: true, is_authorized: true, policy: NotificationPolicy::WarningsAndCritical, muted_until: None }
+        Self {
+            is_enabled: true,
+            is_authorized: true,
+            policy: NotificationPolicy::WarningsAndCritical,
+            muted_until: None,
+        }
     }
 }
 
@@ -465,11 +574,28 @@ impl NotificationDelivery {
     }
 }
 
-fn outcome(runtime: AlertRuleRuntime, active: Option<AlertActiveState>, event: Option<AlertEvent>, notify: bool) -> EvaluationOutcome {
-    EvaluationOutcome { runtime, active_state: active, event, should_notify: notify, availability_reason: None }
+fn outcome(
+    runtime: AlertRuleRuntime,
+    active: Option<AlertActiveState>,
+    event: Option<AlertEvent>,
+    notify: bool,
+) -> EvaluationOutcome {
+    EvaluationOutcome {
+        runtime,
+        active_state: active,
+        event,
+        should_notify: notify,
+        availability_reason: None,
+    }
 }
 
-fn active_state(kind: AlertRuleKind, severity: AlertSeverity, m: &Measurement, started: Timestamp, updated: Timestamp) -> AlertActiveState {
+fn active_state(
+    kind: AlertRuleKind,
+    severity: AlertSeverity,
+    m: &Measurement,
+    started: Timestamp,
+    updated: Timestamp,
+) -> AlertActiveState {
     AlertActiveState {
         kind,
         severity,
@@ -499,22 +625,36 @@ fn cooldown_seconds(config: &AlertRuleConfig) -> f64 {
     (config.cooldown_minutes * 60) as f64
 }
 
-fn rule_allows_notification(config: &AlertRuleConfig, runtime: &AlertRuleRuntime, severity: AlertSeverity, now: Timestamp) -> bool {
+fn rule_allows_notification(
+    config: &AlertRuleConfig,
+    runtime: &AlertRuleRuntime,
+    severity: AlertSeverity,
+    now: Timestamp,
+) -> bool {
     if !config.desktop_notifications_enabled || !config.kind.supports_desktop_notifications() {
         return false;
     }
     if runtime.snoozed_until.is_some_and(|s| s > now) || runtime.dismiss_until_recovery {
         return false;
     }
-    if runtime.last_notification_date.is_some_and(|l| now - l < cooldown_seconds(config)) {
+    if runtime
+        .last_notification_date
+        .is_some_and(|l| now - l < cooldown_seconds(config))
+    {
         return false;
     }
     severity >= AlertSeverity::Warning
 }
 
-fn should_repeat_event(config: &AlertRuleConfig, runtime: &AlertRuleRuntime, now: Timestamp) -> bool {
+fn should_repeat_event(
+    config: &AlertRuleConfig,
+    runtime: &AlertRuleRuntime,
+    now: Timestamp,
+) -> bool {
     runtime.active_severity != AlertSeverity::None
-        && runtime.last_event_date.is_some_and(|l| now - l >= cooldown_seconds(config))
+        && runtime
+            .last_event_date
+            .is_some_and(|l| now - l >= cooldown_seconds(config))
 }
 
 pub fn evaluate(
@@ -557,14 +697,26 @@ pub fn evaluate(
     if runtime.active_severity == m.severity {
         next.pending_severity = m.severity;
         next.pending_sample_count = 0;
-        let active = active_state(config.kind, m.severity, &m, runtime.last_event_date.unwrap_or(now), now);
-        let notify = delivery.allows(m.severity, now) && rule_allows_notification(config, runtime, m.severity, now);
+        let active = active_state(
+            config.kind,
+            m.severity,
+            &m,
+            runtime.last_event_date.unwrap_or(now),
+            now,
+        );
+        let notify = delivery.allows(m.severity, now)
+            && rule_allows_notification(config, runtime, m.severity, now);
         if should_repeat_event(config, runtime, now) || notify {
             if notify {
                 next.last_notification_date = Some(now);
             }
             next.last_event_date = Some(now);
-            return outcome(next, Some(active), Some(event(config.kind, &m, now)), notify);
+            return outcome(
+                next,
+                Some(active),
+                Some(event(config.kind, &m, now)),
+                notify,
+            );
         }
         return outcome(next, Some(active), None, false);
     }
@@ -577,7 +729,13 @@ pub fn evaluate(
     }
     if next.pending_sample_count < config.debounce_samples.max(1) {
         let active = (runtime.active_severity != AlertSeverity::None).then(|| {
-            active_state(config.kind, runtime.active_severity, &m, runtime.last_event_date.unwrap_or(now), now)
+            active_state(
+                config.kind,
+                runtime.active_severity,
+                &m,
+                runtime.last_event_date.unwrap_or(now),
+                now,
+            )
         });
         return outcome(next, active, None, false);
     }
@@ -586,12 +744,18 @@ pub fn evaluate(
     next.pending_sample_count = 0;
     next.pending_severity = m.severity;
     next.last_event_date = Some(now);
-    let notify = delivery.allows(m.severity, now) && rule_allows_notification(config, runtime, m.severity, now);
+    let notify = delivery.allows(m.severity, now)
+        && rule_allows_notification(config, runtime, m.severity, now);
     if notify {
         next.last_notification_date = Some(now);
     }
     let active = active_state(config.kind, m.severity, &m, now, now);
-    outcome(next, Some(active), Some(event(config.kind, &m, now)), notify)
+    outcome(
+        next,
+        Some(active),
+        Some(event(config.kind, &m, now)),
+        notify,
+    )
 }
 
 pub fn availability_reason(kind: AlertRuleKind, snapshot: &SystemSnapshot) -> Option<String> {
@@ -604,15 +768,24 @@ pub fn availability_reason(kind: AlertRuleKind, snapshot: &SystemSnapshot) -> Op
         process_insights_enabled: true,
         now: 0.0,
     };
-    measurement(kind, &AlertPreset::Default.configuration(kind), &input, &AlertRuleRuntime::initial(kind)).unavailable_reason
+    measurement(
+        kind,
+        &AlertPreset::Default.configuration(kind),
+        &input,
+        &AlertRuleRuntime::initial(kind),
+    )
+    .unavailable_reason
 }
 
 fn severity_high(value: f64, t: &AlertThreshold, active: AlertSeverity) -> AlertSeverity {
     let critical = t.critical.unwrap_or(f64::MAX);
     let warning = t.warning.unwrap_or(f64::MAX);
-    if value >= critical || (active == AlertSeverity::Critical && value >= critical - t.hysteresis) {
+    if value >= critical || (active == AlertSeverity::Critical && value >= critical - t.hysteresis)
+    {
         AlertSeverity::Critical
-    } else if value >= warning || (active == AlertSeverity::Warning && value >= warning - t.hysteresis) {
+    } else if value >= warning
+        || (active == AlertSeverity::Warning && value >= warning - t.hysteresis)
+    {
         AlertSeverity::Warning
     } else {
         AlertSeverity::None
@@ -622,9 +795,12 @@ fn severity_high(value: f64, t: &AlertThreshold, active: AlertSeverity) -> Alert
 fn severity_low(value: f64, t: &AlertThreshold, active: AlertSeverity) -> AlertSeverity {
     let critical = t.critical.unwrap_or(-f64::MAX);
     let warning = t.warning.unwrap_or(-f64::MAX);
-    if value <= critical || (active == AlertSeverity::Critical && value <= critical + t.hysteresis) {
+    if value <= critical || (active == AlertSeverity::Critical && value <= critical + t.hysteresis)
+    {
         AlertSeverity::Critical
-    } else if value <= warning || (active == AlertSeverity::Warning && value <= warning + t.hysteresis) {
+    } else if value <= warning
+        || (active == AlertSeverity::Warning && value <= warning + t.hysteresis)
+    {
         AlertSeverity::Warning
     } else {
         AlertSeverity::None
@@ -632,20 +808,35 @@ fn severity_low(value: f64, t: &AlertThreshold, active: AlertSeverity) -> AlertS
 }
 
 fn top_cpu_context(top: &TopProcessSnapshot, enabled: bool) -> Option<String> {
-    let p = top.top_cpu.first().filter(|p| enabled && p.cpu_percent > 0.0)?;
+    let p = top
+        .top_cpu
+        .first()
+        .filter(|p| enabled && p.cpu_percent > 0.0)?;
     Some(format!("Top CPU: {} ({:.0}%)", p.name, p.cpu_percent))
 }
 
 fn top_memory_context(top: &TopProcessSnapshot, enabled: bool) -> Option<String> {
-    let p = top.top_memory.first().filter(|p| enabled && p.memory_bytes > 0)?;
+    let p = top
+        .top_memory
+        .first()
+        .filter(|p| enabled && p.memory_bytes > 0)?;
     Some(format!("Top Memory: {} ({:.1} GB)", p.name, p.memory_gb()))
 }
 
 fn pick(severity: AlertSeverity, critical: &'static str, other: &'static str) -> &'static str {
-    if severity == AlertSeverity::Critical { critical } else { other }
+    if severity == AlertSeverity::Critical {
+        critical
+    } else {
+        other
+    }
 }
 
-pub fn measurement(kind: AlertRuleKind, config: &AlertRuleConfig, input: &EvaluationInput, runtime: &AlertRuleRuntime) -> Measurement {
+pub fn measurement(
+    kind: AlertRuleKind,
+    config: &AlertRuleConfig,
+    input: &EvaluationInput,
+    runtime: &AlertRuleRuntime,
+) -> Measurement {
     use AlertRuleKind::*;
     use AlertSeverity as S;
     let s = input.snapshot;
@@ -661,11 +852,27 @@ pub fn measurement(kind: AlertRuleKind, config: &AlertRuleConfig, input: &Evalua
                 (s.gpu_safety_temperature(), "GPU")
             };
             let Some(v) = value else {
-                return Measurement::unavailable(kind, &format!("{name} temperature is unavailable on this Mac."));
+                return Measurement::unavailable(
+                    kind,
+                    &format!("{name} temperature is unavailable on this Mac."),
+                );
             };
             let sev = severity_high(v, t, active);
-            let title = format!("{name} temperature is {}", if sev == S::Critical { "critical" } else { "elevated" });
-            let mut m = Measurement::new(sev, Some(v), "", format!("{name} peak temperature reached {v:.0}°C."), cpu_ctx());
+            let title = format!(
+                "{name} temperature is {}",
+                if sev == S::Critical {
+                    "critical"
+                } else {
+                    "elevated"
+                }
+            );
+            let mut m = Measurement::new(
+                sev,
+                Some(v),
+                "",
+                format!("{name} peak temperature reached {v:.0}°C."),
+                cpu_ctx(),
+            );
             m.title = title;
             m
         }
@@ -675,7 +882,11 @@ pub fn measurement(kind: AlertRuleKind, config: &AlertRuleConfig, input: &Evalua
             Measurement::new(
                 sev,
                 Some(v),
-                pick(sev, "macOS reports critical thermal pressure", "macOS reports elevated thermal pressure"),
+                pick(
+                    sev,
+                    "macOS reports critical thermal pressure",
+                    "macOS reports elevated thermal pressure",
+                ),
                 format!("Overall thermal state is {}.", s.thermal_state.label()),
                 cpu_ctx(),
             )
@@ -683,7 +894,13 @@ pub fn measurement(kind: AlertRuleKind, config: &AlertRuleConfig, input: &Evalua
         CpuUsage => {
             let v = s.cpu_usage_percent;
             let sev = severity_high(v, t, active);
-            Measurement::new(sev, Some(v), pick(sev, "CPU usage is pinned", "CPU usage is elevated"), format!("CPU usage is {v:.0}%."), cpu_ctx())
+            Measurement::new(
+                sev,
+                Some(v),
+                pick(sev, "CPU usage is pinned", "CPU usage is elevated"),
+                format!("CPU usage is {v:.0}%."),
+                cpu_ctx(),
+            )
         }
         MemoryPressure => {
             let v = s.memory_pressure.level() as f64;
@@ -691,7 +908,11 @@ pub fn measurement(kind: AlertRuleKind, config: &AlertRuleConfig, input: &Evalua
             Measurement::new(
                 sev,
                 Some(v),
-                pick(sev, "Memory pressure is critical", "Memory pressure is elevated"),
+                pick(
+                    sev,
+                    "Memory pressure is critical",
+                    "Memory pressure is elevated",
+                ),
                 format!("Memory pressure is {}.", s.memory_pressure.label()),
                 mem_ctx(),
             )
@@ -699,13 +920,22 @@ pub fn measurement(kind: AlertRuleKind, config: &AlertRuleConfig, input: &Evalua
         SwapUsage => {
             let v = s.swap_used_bytes as f64 / 1_073_741_824.0;
             let sev = severity_high(v, t, active);
-            Measurement::new(sev, Some(v), pick(sev, "Swap usage is heavy", "Swap usage is growing"), format!("Swap usage reached {v:.1} GB."), mem_ctx())
+            Measurement::new(
+                sev,
+                Some(v),
+                pick(sev, "Swap usage is heavy", "Swap usage is growing"),
+                format!("Swap usage reached {v:.1} GB."),
+                mem_ctx(),
+            )
         }
         FanTooLowUnderHeat => {
             if s.number_of_fans == 0 {
                 return Measurement::unavailable(kind, "No fan sensors were detected on this Mac.");
             }
-            let hottest = s.cpu_safety_temperature().unwrap_or(0.0).max(s.gpu_safety_temperature().unwrap_or(0.0));
+            let hottest = s
+                .cpu_safety_temperature()
+                .unwrap_or(0.0)
+                .max(s.gpu_safety_temperature().unwrap_or(0.0));
             if hottest <= 0.0 {
                 return Measurement::new(
                     S::None,
@@ -722,7 +952,11 @@ pub fn measurement(kind: AlertRuleKind, config: &AlertRuleConfig, input: &Evalua
                         S::Critical,
                         Some(hottest),
                         "A fan appears stalled while the Mac is hot",
-                        format!("Fan {} reported 0 RPM while the hottest sensor is {}°C.", i + 1, hottest.round() as i64),
+                        format!(
+                            "Fan {} reported 0 RPM while the hottest sensor is {}°C.",
+                            i + 1,
+                            hottest.round() as i64
+                        ),
                         None,
                     );
                 }
@@ -739,22 +973,43 @@ pub fn measurement(kind: AlertRuleKind, config: &AlertRuleConfig, input: &Evalua
             };
             let message = match low {
                 None => "Fan speed is tracking heat normally.".to_string(),
-                Some(i) => format!("Fan {} is under target while the hottest sensor is {}°C.", i + 1, hottest.round() as i64),
+                Some(i) => format!(
+                    "Fan {} is under target while the hottest sensor is {}°C.",
+                    i + 1,
+                    hottest.round() as i64
+                ),
             };
-            Measurement::new(sev, Some(hottest), pick(sev, "Fan speed is too low for current heat", "Fan safety margin is shrinking"), message, None)
+            Measurement::new(
+                sev,
+                Some(hottest),
+                pick(
+                    sev,
+                    "Fan speed is too low for current heat",
+                    "Fan safety margin is shrinking",
+                ),
+                message,
+                None,
+            )
         }
         BatteryTemperature => {
             if !s.battery.has_battery {
                 return Measurement::unavailable(kind, "This Mac does not report a battery.");
             }
             let Some(v) = s.battery.temperature_c else {
-                return Measurement::unavailable(kind, "Battery temperature is unavailable on this Mac.");
+                return Measurement::unavailable(
+                    kind,
+                    "Battery temperature is unavailable on this Mac.",
+                );
             };
             let sev = severity_high(v, t, active);
             Measurement::new(
                 sev,
                 Some(v),
-                pick(sev, "Battery temperature is critical", "Battery temperature is elevated"),
+                pick(
+                    sev,
+                    "Battery temperature is critical",
+                    "Battery temperature is elevated",
+                ),
                 format!("Battery temperature reached {v:.0}°C."),
                 None,
             )
@@ -764,13 +1019,20 @@ pub fn measurement(kind: AlertRuleKind, config: &AlertRuleConfig, input: &Evalua
                 return Measurement::unavailable(kind, "This Mac does not report a battery.");
             }
             let Some(v) = s.battery.health_percent.map(|h| h as f64) else {
-                return Measurement::unavailable(kind, "Battery health is unavailable on this Mac.");
+                return Measurement::unavailable(
+                    kind,
+                    "Battery health is unavailable on this Mac.",
+                );
             };
             let sev = severity_low(v, t, active);
             Measurement::new(
                 sev,
                 Some(v),
-                pick(sev, "Battery health is below the critical threshold", "Battery health is below target"),
+                pick(
+                    sev,
+                    "Battery health is below the critical threshold",
+                    "Battery health is below target",
+                ),
                 format!("Battery health is {v:.0}%."),
                 s.battery.cycle_count.map(|c| format!("{c} cycles")),
             )
@@ -795,7 +1057,9 @@ pub fn measurement(kind: AlertRuleKind, config: &AlertRuleConfig, input: &Evalua
                 Some(v),
                 pick(sev, "Battery is critically low", "Battery is running low"),
                 format!("Battery charge is {v:.0}% while discharging."),
-                s.battery.time_remaining_minutes.map(|m| format!("{m} min remaining")),
+                s.battery
+                    .time_remaining_minutes
+                    .map(|m| format!("{m} min remaining")),
             )
         }
         SmcUnavailable => {
@@ -804,7 +1068,9 @@ pub fn measurement(kind: AlertRuleKind, config: &AlertRuleConfig, input: &Evalua
                 if unavailable { S::Critical } else { S::None },
                 Some(if unavailable { 1.0 } else { 0.0 }),
                 "AppleSMC access is unavailable",
-                s.last_error.clone().unwrap_or_else(|| "Core-Monitor could not open AppleSMC.".into()),
+                s.last_error
+                    .clone()
+                    .unwrap_or_else(|| "Core-Monitor could not open AppleSMC.".into()),
                 None,
             )
         }
@@ -822,7 +1088,8 @@ pub fn measurement(kind: AlertRuleKind, config: &AlertRuleConfig, input: &Evalua
                 S::None
             };
             let message = if missing_like {
-                "Install the privileged helper before using manual or managed fan modes.".to_string()
+                "Install the privileged helper before using manual or managed fan modes."
+                    .to_string()
             } else {
                 input
                     .helper_status_message
@@ -832,7 +1099,11 @@ pub fn measurement(kind: AlertRuleKind, config: &AlertRuleConfig, input: &Evalua
             Measurement::new(
                 sev,
                 Some(if sev == S::None { 0.0 } else { 1.0 }),
-                pick(sev, "Fan helper connection failed", "Fan helper is unavailable"),
+                pick(
+                    sev,
+                    "Fan helper connection failed",
+                    "Fan helper is unavailable",
+                ),
                 message,
                 Some(format!("Current mode: {}", input.fan_mode.title())),
             )
@@ -857,20 +1128,41 @@ mod tests {
     }
 
     fn hot(cpu: f64) -> SystemSnapshot {
-        SystemSnapshot { cpu_peak_temperature: Some(cpu), has_smc_access: true, ..Default::default() }
+        SystemSnapshot {
+            cpu_peak_temperature: Some(cpu),
+            has_smc_access: true,
+            ..Default::default()
+        }
     }
 
-    fn run(config: &AlertRuleConfig, rt: &AlertRuleRuntime, s: &SystemSnapshot, now: f64) -> EvaluationOutcome {
+    fn run(
+        config: &AlertRuleConfig,
+        rt: &AlertRuleRuntime,
+        s: &SystemSnapshot,
+        now: f64,
+    ) -> EvaluationOutcome {
         evaluate(config, rt, &input(s, now), &NotificationDelivery::default())
     }
 
     #[test]
     fn presets_match_swift_defaults() {
         let d = AlertPreset::Default.configuration(AlertRuleKind::CpuTemperature);
-        assert_eq!((d.threshold.warning, d.threshold.critical, d.cooldown_minutes, d.debounce_samples), (Some(85.0), Some(95.0), 20, 2));
+        assert_eq!(
+            (
+                d.threshold.warning,
+                d.threshold.critical,
+                d.cooldown_minutes,
+                d.debounce_samples
+            ),
+            (Some(85.0), Some(95.0), 20, 2)
+        );
         let q = AlertPreset::Quiet.configuration(AlertRuleKind::HelperUnavailable);
         assert_eq!((q.cooldown_minutes, q.threshold.warning), (40, None));
-        assert!(!AlertPreset::Quiet.configuration(AlertRuleKind::CpuUsage).desktop_notifications_enabled);
+        assert!(
+            !AlertPreset::Quiet
+                .configuration(AlertRuleKind::CpuUsage)
+                .desktop_notifications_enabled
+        );
         for p in AlertPreset::ALL {
             assert_eq!(p.configurations().len(), 12);
         }
@@ -885,7 +1177,10 @@ mod tests {
         let first = run(&config, &rt, &hot(90.0), 0.0);
         assert!(first.event.is_none() && first.active_state.is_none());
         let second = run(&config, &first.runtime, &hot(90.0), 1.0);
-        assert_eq!(second.event.as_ref().unwrap().severity, AlertSeverity::Warning);
+        assert_eq!(
+            second.event.as_ref().unwrap().severity,
+            AlertSeverity::Warning
+        );
         assert!(second.should_notify);
         assert_eq!(second.runtime.last_notification_date, Some(1.0));
         // Same severity within cooldown: active but silent.
@@ -933,9 +1228,15 @@ mod tests {
         let m = measurement(config.kind, &config, &input(&s, 0.0), &rt);
         assert_eq!(m.severity, AlertSeverity::Critical);
         s.fan_speeds = vec![-1];
-        assert_eq!(measurement(config.kind, &config, &input(&s, 0.0), &rt).severity, AlertSeverity::None);
+        assert_eq!(
+            measurement(config.kind, &config, &input(&s, 0.0), &rt).severity,
+            AlertSeverity::None
+        );
         s.fan_speeds = vec![1300];
-        assert_eq!(measurement(config.kind, &config, &input(&s, 0.0), &rt).severity, AlertSeverity::Warning);
+        assert_eq!(
+            measurement(config.kind, &config, &input(&s, 0.0), &rt).severity,
+            AlertSeverity::Warning
+        );
         s.number_of_fans = 0;
         assert!(availability_reason(config.kind, &s).is_some());
     }
@@ -947,9 +1248,15 @@ mod tests {
         let mut s = hot(40.0);
         s.battery.has_battery = true;
         s.battery.charge_percent = Some(9);
-        assert_eq!(measurement(config.kind, &config, &input(&s, 0.0), &rt).severity, AlertSeverity::Critical);
+        assert_eq!(
+            measurement(config.kind, &config, &input(&s, 0.0), &rt).severity,
+            AlertSeverity::Critical
+        );
         s.battery.is_plugged_in = true;
-        assert_eq!(measurement(config.kind, &config, &input(&s, 0.0), &rt).severity, AlertSeverity::None);
+        assert_eq!(
+            measurement(config.kind, &config, &input(&s, 0.0), &rt).severity,
+            AlertSeverity::None
+        );
     }
 
     #[test]
@@ -959,17 +1266,29 @@ mod tests {
         let s = hot(40.0);
         let mut i = input(&s, 0.0);
         i.helper_connection_state = HelperConnectionState::Unreachable;
-        assert_eq!(measurement(config.kind, &config, &i, &rt).severity, AlertSeverity::None);
+        assert_eq!(
+            measurement(config.kind, &config, &i, &rt).severity,
+            AlertSeverity::None
+        );
         i.fan_mode = FanControlMode::Manual;
-        assert_eq!(measurement(config.kind, &config, &i, &rt).severity, AlertSeverity::Critical);
+        assert_eq!(
+            measurement(config.kind, &config, &i, &rt).severity,
+            AlertSeverity::Critical
+        );
         i.helper_connection_state = HelperConnectionState::Unknown;
         i.helper_installed = false;
-        assert_eq!(measurement(config.kind, &config, &i, &rt).severity, AlertSeverity::Warning);
+        assert_eq!(
+            measurement(config.kind, &config, &i, &rt).severity,
+            AlertSeverity::Warning
+        );
     }
 
     #[test]
     fn delivery_policy_and_mute() {
-        let mut d = NotificationDelivery { policy: NotificationPolicy::CriticalOnly, ..Default::default() };
+        let mut d = NotificationDelivery {
+            policy: NotificationPolicy::CriticalOnly,
+            ..Default::default()
+        };
         assert!(!d.allows(AlertSeverity::Warning, 0.0) && d.allows(AlertSeverity::Critical, 0.0));
         d.muted_until = Some(10.0);
         assert!(!d.allows(AlertSeverity::Critical, 5.0) && d.allows(AlertSeverity::Critical, 11.0));

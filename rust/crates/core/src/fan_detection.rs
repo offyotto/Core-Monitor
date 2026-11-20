@@ -7,7 +7,8 @@ pub fn supports(fan_id: i64) -> bool {
 
 pub fn validated_count(value: Option<f64>) -> Option<usize> {
     let v = value?;
-    (v.is_finite() && v > 0.0 && v <= MAXIMUM_FAN_COUNT as f64 && v.trunc() == v).then_some(v as usize)
+    (v.is_finite() && v > 0.0 && v <= MAXIMUM_FAN_COUNT as f64 && v.trunc() == v)
+        .then_some(v as usize)
 }
 
 /// Span of discovered fan IDs, so later fans are visited even when an earlier
@@ -15,7 +16,10 @@ pub fn validated_count(value: Option<f64>) -> Option<usize> {
 pub fn fallback_count(mut key_exists: impl FnMut(&str) -> bool) -> usize {
     let mut count = 0;
     for id in 0..MAXIMUM_FAN_COUNT {
-        if ["Ac", "Mn", "Mx"].iter().any(|s| key_exists(&format!("F{id}{s}"))) {
+        if ["Ac", "Mn", "Mx"]
+            .iter()
+            .any(|s| key_exists(&format!("F{id}{s}")))
+        {
             count = id + 1;
         }
     }

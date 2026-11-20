@@ -34,13 +34,24 @@ pub struct Response {
 
 impl Response {
     pub fn ok() -> Self {
-        Self { ok: true, ..Default::default() }
+        Self {
+            ok: true,
+            ..Default::default()
+        }
     }
     pub fn value(value: f64) -> Self {
-        Self { ok: true, value: Some(value), ..Default::default() }
+        Self {
+            ok: true,
+            value: Some(value),
+            ..Default::default()
+        }
     }
     pub fn error(message: impl Into<String>) -> Self {
-        Self { ok: false, error: Some(message.into()), ..Default::default() }
+        Self {
+            ok: false,
+            error: Some(message.into()),
+            ..Default::default()
+        }
     }
 }
 
@@ -62,11 +73,22 @@ pub fn validate_requested_rpm(rpm: i64) -> Result<i64, String> {
 
 /// Requested RPM must sit inside the fan's reported range intersected with
 /// the conservative bounds; it is rejected, not clamped, when it does not.
-pub fn validated_hardware_rpm(fan: usize, requested: i64, reported_min: Option<i64>, reported_max: Option<i64>) -> Result<i64, String> {
-    let (Some(rmin), Some(rmax)) = (reported_min.filter(|v| *v > 0), reported_max.filter(|v| *v > 0)) else {
+pub fn validated_hardware_rpm(
+    fan: usize,
+    requested: i64,
+    reported_min: Option<i64>,
+    reported_max: Option<i64>,
+) -> Result<i64, String> {
+    let (Some(rmin), Some(rmax)) = (
+        reported_min.filter(|v| *v > 0),
+        reported_max.filter(|v| *v > 0),
+    ) else {
         return Err(format!("Fan {fan} did not report safe RPM limits"));
     };
-    let (min, max) = (rmin.max(CONSERVATIVE_MIN_RPM), rmax.min(CONSERVATIVE_MAX_RPM));
+    let (min, max) = (
+        rmin.max(CONSERVATIVE_MIN_RPM),
+        rmax.min(CONSERVATIVE_MAX_RPM),
+    );
     if min > max {
         return Err(format!("Fan {fan} reported an unsafe RPM range"));
     }
@@ -84,15 +106,25 @@ mod tests {
     fn request_wire_format() {
         let json = serde_json::to_string(&Request::SetManual { fan: 1, rpm: 2400 }).unwrap();
         assert_eq!(json, r#"{"op":"setManual","fan":1,"rpm":2400}"#);
-        assert_eq!(serde_json::from_str::<Request>(r#"{"op":"renew"}"#).unwrap(), Request::Renew);
+        assert_eq!(
+            serde_json::from_str::<Request>(r#"{"op":"renew"}"#).unwrap(),
+            Request::Renew
+        );
         assert!(serde_json::from_str::<Request>(r#"{"op":"exec","cmd":"rm"}"#).is_err());
     }
 
     #[test]
     fn rpm_safety() {
-        assert!(validate_fan_id(10).is_err() && validate_fan_id(-1).is_err() && validate_fan_id(9).is_ok());
+        assert!(
+            validate_fan_id(10).is_err()
+                && validate_fan_id(-1).is_err()
+                && validate_fan_id(9).is_ok()
+        );
         assert!(validate_requested_rpm(499).is_err() && validate_requested_rpm(10_001).is_err());
-        assert_eq!(validated_hardware_rpm(0, 2000, Some(1200), Some(7000)), Ok(2000));
+        assert_eq!(
+            validated_hardware_rpm(0, 2000, Some(1200), Some(7000)),
+            Ok(2000)
+        );
         assert!(validated_hardware_rpm(0, 6600, Some(1200), Some(7000)).is_err());
         assert!(validated_hardware_rpm(0, 1100, Some(1200), Some(5000)).is_err());
         assert!(validated_hardware_rpm(0, 2000, None, Some(5000)).is_err());

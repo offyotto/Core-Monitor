@@ -19,7 +19,12 @@ fn usage() -> ! {
 fn main() {
     use core_monitor_core::{helper_protocol as p, smc};
     let args: Vec<String> = std::env::args().skip(1).collect();
-    let result = match args.iter().map(String::as_str).collect::<Vec<_>>().as_slice() {
+    let result = match args
+        .iter()
+        .map(String::as_str)
+        .collect::<Vec<_>>()
+        .as_slice()
+    {
         ["serve", "--client-requirement", req] => service::serve(p::SOCKET_PATH, req),
         ["read", key] => smc::validate_key(key).and_then(|k| {
             let s = fans::Fans::open()?;

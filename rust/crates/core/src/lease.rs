@@ -50,7 +50,11 @@ impl FanControlLease {
     }
 
     /// Failed restores stay due so a transient SMC failure is retried.
-    pub fn restore_expired<E>(&mut self, now: f64, mut restore: impl FnMut(usize) -> Result<(), E>) -> Vec<usize> {
+    pub fn restore_expired<E>(
+        &mut self,
+        now: f64,
+        mut restore: impl FnMut(usize) -> Result<(), E>,
+    ) -> Vec<usize> {
         let mut failed = Vec::new();
         for fan in self.fan_ids() {
             if self.entries[&fan].1 <= now {
@@ -89,7 +93,10 @@ mod tests {
         lease.acquire(1, 7, 0.0);
         assert!(!lease.renewed(7, 16.0));
         assert_eq!(lease.restore_expired(16.0, |_| Err(())), vec![1]);
-        assert_eq!(lease.restore_expired::<()>(17.0, |_| Ok(())), Vec::<usize>::new());
+        assert_eq!(
+            lease.restore_expired::<()>(17.0, |_| Ok(())),
+            Vec::<usize>::new()
+        );
         assert!(lease.fan_ids().is_empty());
     }
 

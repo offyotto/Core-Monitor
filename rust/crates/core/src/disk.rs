@@ -32,11 +32,19 @@ mod tests {
     #[test]
     fn caches_and_retries_failures() {
         let mut cache = DiskStatsCache::default();
-        let good = DiskStats { total_gb: 100.0, free_gb: 40.0, ..Default::default() };
+        let good = DiskStats {
+            total_gb: 100.0,
+            free_gb: 40.0,
+            ..Default::default()
+        };
         assert_eq!(cache.read::<()>(0.0, || Ok(good.clone())), good);
         assert_eq!(cache.read::<()>(10.0, || panic!("not due")), good);
         assert_eq!(cache.read(31.0, || Err(())), good);
-        let newer = DiskStats { total_gb: 100.0, free_gb: 30.0, ..Default::default() };
+        let newer = DiskStats {
+            total_gb: 100.0,
+            free_gb: 30.0,
+            ..Default::default()
+        };
         assert_eq!(cache.read::<()>(32.0, || Ok(newer.clone())), newer);
     }
 }

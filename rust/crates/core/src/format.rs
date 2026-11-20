@@ -35,7 +35,11 @@ pub fn time_remaining_minutes(
     if !(is_charging || !is_plugged_in) {
         return None;
     }
-    let minutes = if is_charging { time_to_full } else { time_to_empty }?;
+    let minutes = if is_charging {
+        time_to_full
+    } else {
+        time_to_empty
+    }?;
     (minutes >= 0).then_some(minutes)
 }
 
@@ -48,7 +52,11 @@ pub fn duration(minutes: i64) -> String {
     }
 }
 
-pub fn runtime_description(is_charging: bool, is_plugged_in: bool, minutes: Option<i64>) -> Option<String> {
+pub fn runtime_description(
+    is_charging: bool,
+    is_plugged_in: bool,
+    minutes: Option<i64>,
+) -> Option<String> {
     if !(is_charging || !is_plugged_in) {
         return None;
     }
@@ -85,11 +93,23 @@ mod tests {
 
     #[test]
     fn battery_runtime() {
-        assert_eq!(time_remaining_minutes(false, true, Some(30), Some(40)), None);
-        assert_eq!(time_remaining_minutes(true, true, Some(30), Some(40)), Some(40));
+        assert_eq!(
+            time_remaining_minutes(false, true, Some(30), Some(40)),
+            None
+        );
+        assert_eq!(
+            time_remaining_minutes(true, true, Some(30), Some(40)),
+            Some(40)
+        );
         assert_eq!(time_remaining_minutes(false, false, Some(-1), None), None);
-        assert_eq!(runtime_description(false, false, Some(95)).as_deref(), Some("1h 35m remaining"));
-        assert_eq!(runtime_description(true, true, Some(0)).as_deref(), Some("Finishing soon"));
+        assert_eq!(
+            runtime_description(false, false, Some(95)).as_deref(),
+            Some("1h 35m remaining")
+        );
+        assert_eq!(
+            runtime_description(true, true, Some(0)).as_deref(),
+            Some("Finishing soon")
+        );
         assert_eq!(power_state(false, true), "AC Power");
     }
 }

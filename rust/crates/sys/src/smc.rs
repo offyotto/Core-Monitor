@@ -11,7 +11,12 @@ type KernReturn = i32;
 extern "C" {
     fn IOServiceMatching(name: *const c_char) -> *mut c_void;
     fn IOServiceGetMatchingService(main_port: u32, matching: *mut c_void) -> IoObject;
-    fn IOServiceOpen(service: IoObject, owning_task: u32, kind: u32, connect: *mut IoObject) -> KernReturn;
+    fn IOServiceOpen(
+        service: IoObject,
+        owning_task: u32,
+        kind: u32,
+        connect: *mut IoObject,
+    ) -> KernReturn;
     fn IOServiceClose(connect: IoObject) -> KernReturn;
     pub(crate) fn IOObjectRelease(object: IoObject) -> KernReturn;
     fn IOConnectCallStructMethod(
@@ -42,7 +47,8 @@ unsafe impl Sync for Smc {}
 
 impl Smc {
     pub fn open() -> Result<Self> {
-        let service = matching_service("AppleSMC").ok_or_else(|| Error("AppleSMC service not found".into()))?;
+        let service = matching_service("AppleSMC")
+            .ok_or_else(|| Error("AppleSMC service not found".into()))?;
         let mut connection = 0;
         #[allow(deprecated)]
         let task = unsafe { libc::mach_task_self() };
@@ -51,7 +57,10 @@ impl Smc {
         if kr != 0 {
             return Err(Error(format!("IOServiceOpen(AppleSMC) failed: {kr:#x}")));
         }
-        Ok(Self { connection, key_info_cache: Mutex::new(Default::default()) })
+        Ok(Self {
+            connection,
+            key_info_cache: Mutex::new(Default::default()),
+        })
     }
 
     fn call(&self, input: &SmcParam) -> Result<SmcParam> {
@@ -82,7 +91,11 @@ impl Smc {
         if let Some(info) = self.key_info_cache.lock().unwrap().get(&code) {
             return Ok(*info);
         }
-        let input = SmcParam { key: code, data8: codec::CMD_READ_KEY_INFO, ..Default::default() };
+        let input = SmcParam {
+            key: code,
+            data8: codec::CMD_READ_KEY_INFO,
+            ..Default::default()
+        };
         let info = self.call(&input)?.key_info;
         self.key_info_cache.lock().unwrap().insert(code, info);
         Ok(info)
@@ -90,7 +103,12 @@ impl Smc {
 
     pub fn read_raw(&self, key: &str) -> Result<(SmcKeyInfo, [u8; 32])> {
         let info = self.key_info(key)?;
-        let input = SmcParam { key: codec::four_cc_str(key), key_info: info, data8: codec::CMD_READ_BYTES, ..Default::default() };
+        let input = SmcParam {
+            key: codec::four_cc_str(key),
+            key_info: info,
+            data8: codec::CMD_READ_BYTES,
+            ..Default::default()
+        };
         Ok((info, self.call(&input)?.bytes))
     }
 
@@ -111,13 +129,20 @@ impl Smc {
     pub fn write(&self, key: &str, value: i64) -> Result<()> {
         let info = self.key_info(key)?;
         let bytes = codec::encode(value, info.data_type, info.data_size).map_err(Error)?;
-        let input = SmcParam { key: codec::four_cc_str(key), key_info: info, data8: codec::CMD_WRITE_BYTES, bytes, ..Default::default() };
+        let input = SmcParam {
+            key: codec::four_cc_str(key),
+            key_info: info,
+            data8: codec::CMD_WRITE_BYTES,
+            bytes,
+            ..Default::default()
+        };
         self.call(&input).map(|_| ())
     }
 
     pub fn fan_count(&self) -> usize {
-        core_monitor_core::fan_detection::validated_count(self.read("FNum"))
-            .unwrap_or_else(|| core_monitor_core::fan_detection::fallback_count(|k| self.key_exists(k)))
+        core_monitor_core::fan_detection::validated_count(self.read("FNum")).unwrap_or_else(|| {
+            core_monitor_core::fan_detection::fallback_count(|k| self.key_exists(k))
+        })
     }
 }
 

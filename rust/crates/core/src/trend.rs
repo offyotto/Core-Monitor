@@ -37,7 +37,11 @@ impl SnapshotHealth {
     pub fn new(sampled_at: Option<Timestamp>, expected_interval: f64, now: Timestamp) -> Self {
         let expected_interval = expected_interval.max(1.0);
         let Some(sampled_at) = sampled_at else {
-            return Self { freshness: Freshness::Waiting, age: None, expected_interval };
+            return Self {
+                freshness: Freshness::Waiting,
+                age: None,
+                expected_interval,
+            };
         };
         let age = (now - sampled_at).max(0.0);
         let freshness = if age <= (expected_interval * 1.5).max(2.5) {
@@ -47,7 +51,11 @@ impl SnapshotHealth {
         } else {
             Freshness::Stale
         };
-        Self { freshness, age: Some(age), expected_interval }
+        Self {
+            freshness,
+            age: Some(age),
+            expected_interval,
+        }
     }
 
     pub fn status_label(&self) -> &'static str {
@@ -100,7 +108,10 @@ pub struct TrendSeries {
 
 impl Default for TrendSeries {
     fn default() -> Self {
-        Self { points: Vec::new(), retention: TrendRange::FifteenMinutes.duration() }
+        Self {
+            points: Vec::new(),
+            retention: TrendRange::FifteenMinutes.duration(),
+        }
     }
 }
 
@@ -115,7 +126,11 @@ impl TrendSeries {
 
     pub fn points_in(&self, range: TrendRange, now: Timestamp) -> Vec<TrendPoint> {
         let cutoff = now - range.duration();
-        self.points.iter().copied().filter(|p| p.timestamp >= cutoff).collect()
+        self.points
+            .iter()
+            .copied()
+            .filter(|p| p.timestamp >= cutoff)
+            .collect()
     }
 
     pub fn values(&self, range: TrendRange, now: Timestamp) -> Vec<f64> {
@@ -176,11 +191,26 @@ mod tests {
 
     #[test]
     fn freshness_thresholds() {
-        assert_eq!(SnapshotHealth::new(None, 1.0, 0.0).freshness, Freshness::Waiting);
-        assert_eq!(SnapshotHealth::new(Some(0.0), 1.0, 2.5).freshness, Freshness::Live);
-        assert_eq!(SnapshotHealth::new(Some(0.0), 1.0, 12.0).freshness, Freshness::Delayed);
-        assert_eq!(SnapshotHealth::new(Some(0.0), 1.0, 12.1).freshness, Freshness::Stale);
-        assert_eq!(SnapshotHealth::new(Some(0.0), 5.0, 30.0).age_description(), "Updated 30s ago");
+        assert_eq!(
+            SnapshotHealth::new(None, 1.0, 0.0).freshness,
+            Freshness::Waiting
+        );
+        assert_eq!(
+            SnapshotHealth::new(Some(0.0), 1.0, 2.5).freshness,
+            Freshness::Live
+        );
+        assert_eq!(
+            SnapshotHealth::new(Some(0.0), 1.0, 12.0).freshness,
+            Freshness::Delayed
+        );
+        assert_eq!(
+            SnapshotHealth::new(Some(0.0), 1.0, 12.1).freshness,
+            Freshness::Stale
+        );
+        assert_eq!(
+            SnapshotHealth::new(Some(0.0), 5.0, 30.0).age_description(),
+            "Updated 30s ago"
+        );
         assert_eq!(compact_duration(125.0), "2m 5s");
     }
 
@@ -193,14 +223,20 @@ mod tests {
         assert_eq!(s.points.len(), 1);
         s.append(Some(20.0), 961.0);
         let sum = s.summary(TrendRange::FifteenMinutes, 961.0).unwrap();
-        assert_eq!((sum.latest, sum.minimum, sum.maximum, sum.average, sum.delta), (20.0, 20.0, 30.0, 25.0, -10.0));
+        assert_eq!(
+            (sum.latest, sum.minimum, sum.maximum, sum.average, sum.delta),
+            (20.0, 20.0, 30.0, 25.0, -10.0)
+        );
         assert!(s.summary(TrendRange::OneMinute, 2000.0).is_none());
     }
 
     #[test]
     fn decimation_keeps_extremes_and_endpoints() {
         let pts: Vec<TrendPoint> = (0..100)
-            .map(|i| TrendPoint { timestamp: i as f64, value: if i == 37 { 99.0 } else { 1.0 } })
+            .map(|i| TrendPoint {
+                timestamp: i as f64,
+                value: if i == 37 { 99.0 } else { 1.0 },
+            })
             .collect();
         let d = TrendSeries::decimated(&pts, 10);
         assert!(d.len() <= 12);

@@ -33,7 +33,11 @@ impl FanControlMode {
 
     /// `silent` is a legacy alias of system automatic.
     pub fn canonical(self) -> Self {
-        if self == Self::Silent { Self::Automatic } else { self }
+        if self == Self::Silent {
+            Self::Automatic
+        } else {
+            self
+        }
     }
 
     pub fn title(self) -> &'static str {
@@ -109,7 +113,11 @@ pub struct PowerBoost {
 
 impl Default for PowerBoost {
     fn default() -> Self {
-        Self { enabled: true, watts_at_max_boost: 40.0, max_added_temperature_c: 8.0 }
+        Self {
+            enabled: true,
+            watts_at_max_boost: 40.0,
+            max_added_temperature_c: 8.0,
+        }
     }
 }
 
@@ -137,7 +145,10 @@ pub struct CustomFanPreset {
 
 impl CustomFanPreset {
     pub fn starter() -> Self {
-        let p = |t, s| CurvePoint { temperature_c: t, speed_percent: s };
+        let p = |t, s| CurvePoint {
+            temperature_c: t,
+            speed_percent: s,
+        };
         Self {
             name: "Quiet ramp with thermal boost".into(),
             version: 1,
@@ -147,8 +158,18 @@ impl CustomFanPreset {
             minimum_rpm: Some(1400),
             maximum_rpm: Some(6200),
             per_fan_rpm_offset: Some(vec![0, 0]),
-            power_boost: Some(PowerBoost { enabled: true, watts_at_max_boost: 42.0, max_added_temperature_c: 8.0 }),
-            points: vec![p(38.0, 24.0), p(50.0, 32.0), p(65.0, 50.0), p(78.0, 72.0), p(88.0, 100.0)],
+            power_boost: Some(PowerBoost {
+                enabled: true,
+                watts_at_max_boost: 42.0,
+                max_added_temperature_c: 8.0,
+            }),
+            points: vec![
+                p(38.0, 24.0),
+                p(50.0, 32.0),
+                p(65.0, 50.0),
+                p(78.0, 72.0),
+                p(88.0, 100.0),
+            ],
         }
     }
 
@@ -169,7 +190,11 @@ impl CustomFanPreset {
     }
 
     pub fn resolved_per_fan_offsets(&self) -> Vec<i64> {
-        self.per_fan_rpm_offset.iter().flatten().map(|o| (*o).clamp(-3000, 3000)).collect()
+        self.per_fan_rpm_offset
+            .iter()
+            .flatten()
+            .map(|o| (*o).clamp(-3000, 3000))
+            .collect()
     }
 
     pub fn validation_errors(&self, global_min_rpm: i64, global_max_rpm: i64) -> Vec<String> {
@@ -186,10 +211,14 @@ impl CustomFanPreset {
         let mut previous = f64::NEG_INFINITY;
         for (i, point) in self.points.iter().enumerate() {
             if !(0.0..=120.0).contains(&point.temperature_c) {
-                errors.push(format!("points[{i}].temperatureC must be between 0 and 120."));
+                errors.push(format!(
+                    "points[{i}].temperatureC must be between 0 and 120."
+                ));
             }
             if !(0.0..=100.0).contains(&point.speed_percent) {
-                errors.push(format!("points[{i}].speedPercent must be between 0 and 100."));
+                errors.push(format!(
+                    "points[{i}].speedPercent must be between 0 and 100."
+                ));
             }
             if point.temperature_c <= previous {
                 errors.push("Curve temperatures must be strictly increasing.".into());
@@ -199,10 +228,14 @@ impl CustomFanPreset {
         }
         if let Some(min) = self.minimum_rpm.filter(|m| *m < global_min_rpm) {
             let _ = min;
-            errors.push(format!("minimumRPM cannot be below the app safety floor of {global_min_rpm} RPM."));
+            errors.push(format!(
+                "minimumRPM cannot be below the app safety floor of {global_min_rpm} RPM."
+            ));
         }
         if self.maximum_rpm.is_some_and(|m| m > global_max_rpm) {
-            errors.push(format!("maximumRPM cannot exceed the app safety ceiling of {global_max_rpm} RPM."));
+            errors.push(format!(
+                "maximumRPM cannot exceed the app safety ceiling of {global_max_rpm} RPM."
+            ));
         }
         if let (Some(min), Some(max)) = (self.minimum_rpm, self.maximum_rpm) {
             if min > max {
@@ -217,22 +250,32 @@ impl CustomFanPreset {
                 errors.push("powerBoost.maxAddedTemperatureC must be between 0 and 30.".into());
             }
         }
-        if self.update_interval_seconds.is_some_and(|u| !(0.5..=10.0).contains(&u)) {
+        if self
+            .update_interval_seconds
+            .is_some_and(|u| !(0.5..=10.0).contains(&u))
+        {
             errors.push("updateIntervalSeconds must be between 0.5 and 10 seconds.".into());
         }
-        if self.smoothing_step_rpm.is_some_and(|s| !(0..=2000).contains(&s)) {
+        if self
+            .smoothing_step_rpm
+            .is_some_and(|s| !(0..=2000).contains(&s))
+        {
             errors.push("smoothingStepRPM must be between 0 and 2000 RPM.".into());
         }
         for (i, offset) in self.per_fan_rpm_offset.iter().flatten().enumerate() {
             if offset.abs() > 3000 {
-                errors.push(format!("perFanRPMOffset[{i}] must stay between -3000 and 3000 RPM."));
+                errors.push(format!(
+                    "perFanRPMOffset[{i}] must stay between -3000 and 3000 RPM."
+                ));
             }
         }
         errors
     }
 
     pub fn interpolated_speed_percent(&self, t: f64) -> f64 {
-        let (Some(first), Some(last)) = (self.points.first(), self.points.last()) else { return 0.0 };
+        let (Some(first), Some(last)) = (self.points.first(), self.points.last()) else {
+            return 0.0;
+        };
         if t <= first.temperature_c {
             return first.speed_percent;
         }
@@ -248,7 +291,8 @@ impl CustomFanPreset {
             if span <= 0.0 {
                 return r.speed_percent;
             }
-            return l.speed_percent + (r.speed_percent - l.speed_percent) * (t - l.temperature_c) / span;
+            return l.speed_percent
+                + (r.speed_percent - l.speed_percent) * (t - l.temperature_c) / span;
         }
         last.speed_percent
     }
@@ -256,7 +300,8 @@ impl CustomFanPreset {
     pub fn power_boost_c(&self, system_watts: Option<f64>) -> f64 {
         match self.power_boost {
             Some(b) if b.enabled => {
-                let ratio = (system_watts.unwrap_or(0.0).abs() / b.watts_at_max_boost.max(0.1)).clamp(0.0, 1.0);
+                let ratio = (system_watts.unwrap_or(0.0).abs() / b.watts_at_max_boost.max(0.1))
+                    .clamp(0.0, 1.0);
                 ratio * b.max_added_temperature_c
             }
             _ => 0.0,
@@ -282,7 +327,10 @@ pub struct SmartSettings {
 
 impl Default for SmartSettings {
     fn default() -> Self {
-        Self { aggressiveness: 1.5, max_speed: MAX_SPEED }
+        Self {
+            aggressiveness: 1.5,
+            max_speed: MAX_SPEED,
+        }
     }
 }
 
@@ -293,11 +341,17 @@ pub fn should_apply(target: i64, last_applied: i64) -> bool {
 /// Smart mode: hottest sensor plus up to 8°C of watt boost mapped from
 /// 35–92°C onto `[MIN_SPEED, max_speed]`, blended by aggressiveness 0–3.
 pub fn smart_target(inputs: &FanInputs, settings: SmartSettings) -> Option<i64> {
-    let max_temp = inputs.cpu_temperature.unwrap_or(0.0).max(inputs.gpu_temperature.unwrap_or(0.0));
+    let max_temp = inputs
+        .cpu_temperature
+        .unwrap_or(0.0)
+        .max(inputs.gpu_temperature.unwrap_or(0.0));
     if max_temp <= 0.0 {
         return None;
     }
-    let (min, max) = (MIN_SPEED as f64, settings.max_speed.clamp(MIN_SPEED, MAX_SPEED) as f64);
+    let (min, max) = (
+        MIN_SPEED as f64,
+        settings.max_speed.clamp(MIN_SPEED, MAX_SPEED) as f64,
+    );
     let watt_boost = (inputs.system_watts.unwrap_or(0.0).abs() / 40.0).min(1.0) * 8.0;
     let effective = (max_temp + watt_boost).min(105.0);
     let ratio = ((effective - 35.0) / (92.0 - 35.0)).clamp(0.0, 1.0);
@@ -326,8 +380,16 @@ pub struct CustomTarget {
     pub per_fan: Vec<i64>,
 }
 
-pub fn custom_target(preset: &CustomFanPreset, inputs: &FanInputs, last_applied: i64, fan_count: usize) -> Option<CustomTarget> {
-    let (cpu, gpu) = (inputs.cpu_temperature.unwrap_or(0.0), inputs.gpu_temperature.unwrap_or(0.0));
+pub fn custom_target(
+    preset: &CustomFanPreset,
+    inputs: &FanInputs,
+    last_applied: i64,
+    fan_count: usize,
+) -> Option<CustomTarget> {
+    let (cpu, gpu) = (
+        inputs.cpu_temperature.unwrap_or(0.0),
+        inputs.gpu_temperature.unwrap_or(0.0),
+    );
     let (base, label) = match preset.sensor {
         PresetSensor::Cpu => (cpu, "CPU"),
         PresetSensor::Gpu => (gpu, "GPU"),
@@ -337,7 +399,9 @@ pub fn custom_target(preset: &CustomFanPreset, inputs: &FanInputs, last_applied:
         return None;
     }
     let effective = (base + preset.power_boost_c(inputs.system_watts)).min(120.0);
-    let percent = preset.interpolated_speed_percent(effective).clamp(0.0, 100.0);
+    let percent = preset
+        .interpolated_speed_percent(effective)
+        .clamp(0.0, 100.0);
     let fallback_min = inputs.fan_min_speeds.first().copied().unwrap_or(MIN_SPEED);
     let fallback_max = inputs.fan_max_speeds.first().copied().unwrap_or(MAX_SPEED);
     let preset_min = preset.minimum_rpm.unwrap_or(fallback_min).max(MIN_SPEED);
@@ -351,8 +415,15 @@ pub fn custom_target(preset: &CustomFanPreset, inputs: &FanInputs, last_applied:
         base_rpm
     };
     let offsets = preset.resolved_per_fan_offsets();
-    let per_fan = (0..fan_count.max(1)).map(|i| smoothed + offsets.get(i).copied().unwrap_or(0)).collect();
-    Some(CustomTarget { sensor_label: label, effective_temperature: effective, smoothed_target: smoothed, per_fan })
+    let per_fan = (0..fan_count.max(1))
+        .map(|i| smoothed + offsets.get(i).copied().unwrap_or(0))
+        .collect();
+    Some(CustomTarget {
+        sensor_label: label,
+        effective_temperature: effective,
+        smoothed_target: smoothed,
+        per_fan,
+    })
 }
 
 /// Expands requested speeds to every fan and clamps each to its reported range.
@@ -361,7 +432,11 @@ pub fn per_fan_speeds(requested: &[i64], fan_count: usize, inputs: &FanInputs) -
         .map(|i| {
             let min = inputs.fan_min_speeds.get(i).copied().unwrap_or(MIN_SPEED);
             let max = inputs.fan_max_speeds.get(i).copied().unwrap_or(MAX_SPEED);
-            let r = requested.get(i).or(requested.last()).copied().unwrap_or(MIN_SPEED);
+            let r = requested
+                .get(i)
+                .or(requested.last())
+                .copied()
+                .unwrap_or(MIN_SPEED);
             r.min(max).max(min)
         })
         .collect()
@@ -427,10 +502,19 @@ mod tests {
 
     #[test]
     fn smart_mode_blends_aggressiveness() {
-        assert_eq!(smart_target(&inputs(0.0, 0.0, 0.0), SmartSettings::default()), None);
-        let cool = SmartSettings { aggressiveness: 0.0, max_speed: 6500 };
+        assert_eq!(
+            smart_target(&inputs(0.0, 0.0, 0.0), SmartSettings::default()),
+            None
+        );
+        let cool = SmartSettings {
+            aggressiveness: 0.0,
+            max_speed: 6500,
+        };
         assert_eq!(smart_target(&inputs(90.0, 50.0, 100.0), cool), Some(1000));
-        let max = SmartSettings { aggressiveness: 3.0, max_speed: 6500 };
+        let max = SmartSettings {
+            aggressiveness: 3.0,
+            max_speed: 6500,
+        };
         assert_eq!(smart_target(&inputs(40.0, 0.0, 0.0), max), Some(6500));
         let mid = SmartSettings::default();
         // 35°C + 0 boost -> ratio 0 -> min speed
@@ -454,7 +538,10 @@ mod tests {
     #[test]
     fn fixed_profiles_and_clamping() {
         let i = inputs(50.0, 50.0, 0.0);
-        assert_eq!(fixed_percent_target(&i, FanControlMode::Balanced.fixed_percent().unwrap()), 3600);
+        assert_eq!(
+            fixed_percent_target(&i, FanControlMode::Balanced.fixed_percent().unwrap()),
+            3600
+        );
         assert_eq!(per_fan_speeds(&[7000], 2, &i), vec![6000, 5800]);
         assert_eq!(per_fan_speeds(&[100, 3000], 2, &i), vec![1200, 3000]);
         assert!(should_apply(3000, 0) && !should_apply(3049, 3000) && should_apply(3050, 3000));

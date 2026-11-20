@@ -84,7 +84,10 @@ mod imp {
         }
 
         fn sample_processes(&mut self, now: f64) {
-            if self.process_sampled.is_some_and(|t| now - t < PROCESS_INTERVAL) {
+            if self
+                .process_sampled
+                .is_some_and(|t| now - t < PROCESS_INTERVAL)
+            {
                 return;
             }
             let procs = macos::processes();
@@ -100,16 +103,25 @@ mod imp {
             }
             self.process_times = procs.iter().map(|(pid, _, t, _)| (*pid, *t)).collect();
             let (top_cpu, top_memory) = macos::top(&procs, &cpu, 5);
-            self.top = TopProcessSnapshot { sampled_at: Some(now), top_cpu, top_memory };
+            self.top = TopProcessSnapshot {
+                sampled_at: Some(now),
+                top_cpu,
+                top_memory,
+            };
             self.process_sampled = Some(now);
         }
 
         pub fn sample(&mut self, now: f64) -> SystemSnapshot {
-            let mut s = SystemSnapshot { sampled_at: Some(now), chip_name: self.chip.clone(), ..Default::default() };
+            let mut s = SystemSnapshot {
+                sampled_at: Some(now),
+                chip_name: self.chip.clone(),
+                ..Default::default()
+            };
 
             if let Some(ticks) = macos::cpu_ticks() {
                 if let Some(prev) = self.previous_ticks {
-                    if let Some(usage) = core_monitor_core::snapshot::cpu_usage_percent(prev, ticks) {
+                    if let Some(usage) = core_monitor_core::snapshot::cpu_usage_percent(prev, ticks)
+                    {
                         self.last_cpu = usage;
                     }
                 }
@@ -134,7 +146,10 @@ mod imp {
             s.disk = self.disk.read(now, || macos::disk().ok_or(()));
             if let Some(counters) = macos::network_counters() {
                 let (up, down) = self.network.sample(counters, now);
-                s.network = NetworkStats { upload_bytes_per_second: up, download_bytes_per_second: down };
+                s.network = NetworkStats {
+                    upload_bytes_per_second: up,
+                    download_bytes_per_second: down,
+                };
             }
             s.thermal_state = macos::thermal_state();
             self.sample_processes(now);
@@ -152,16 +167,27 @@ mod imp {
                         s.gpu_temperature = Some(g.average);
                         s.gpu_peak_temperature = Some(g.peak);
                     }
-                    if let Some((sensor, v)) = sensors::first_storage_temperature(&self.sensors.storage_sensors, read) {
+                    if let Some((sensor, v)) =
+                        sensors::first_storage_temperature(&self.sensors.storage_sensors, read)
+                    {
                         s.ssd_temperature = Some(v);
                         s.storage_temperature_label = sensor.label.into();
                     }
                     s.number_of_fans = smc.fan_count();
                     for i in 0..s.number_of_fans {
                         // -1 marks a failed read so it is never mistaken for a stall.
-                        s.fan_speeds.push(smc.read(&format!("F{i}Ac")).map_or(-1, |v| v.max(0.0).round() as i64));
-                        s.fan_min_speeds.push(smc.read(&format!("F{i}Mn")).map_or(1000, |v| v.round() as i64));
-                        s.fan_max_speeds.push(smc.read(&format!("F{i}Mx")).map_or(6500, |v| v.round() as i64));
+                        s.fan_speeds.push(
+                            smc.read(&format!("F{i}Ac"))
+                                .map_or(-1, |v| v.max(0.0).round() as i64),
+                        );
+                        s.fan_min_speeds.push(
+                            smc.read(&format!("F{i}Mn"))
+                                .map_or(1000, |v| v.round() as i64),
+                        );
+                        s.fan_max_speeds.push(
+                            smc.read(&format!("F{i}Mx"))
+                                .map_or(6500, |v| v.round() as i64),
+                        );
                     }
                     s.cpu_power_watts = smc.read("PCPU").filter(|v| v.is_finite() && *v >= 0.0);
                     s.gpu_power_watts = smc.read("PGPU").filter(|v| v.is_finite() && *v >= 0.0);

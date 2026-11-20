@@ -20,7 +20,12 @@ use std::time::{Duration, Instant};
 extern "C" {
     static kSecGuestAttributeAudit: CFStringRef;
     fn SecRequirementCreateWithString(text: CFStringRef, flags: u32, req: *mut CFTypeRef) -> i32;
-    fn SecCodeCopyGuestWithAttributes(host: CFTypeRef, attrs: CFTypeRef, flags: u32, guest: *mut CFTypeRef) -> i32;
+    fn SecCodeCopyGuestWithAttributes(
+        host: CFTypeRef,
+        attrs: CFTypeRef,
+        flags: u32,
+        guest: *mut CFTypeRef,
+    ) -> i32;
     fn SecCodeCheckValidity(code: CFTypeRef, flags: u32, req: CFTypeRef) -> i32;
 }
 
@@ -37,7 +42,9 @@ impl Requirement {
             return Err("A client code signing requirement is required".into());
         }
         let mut req: CFTypeRef = std::ptr::null();
-        let status = unsafe { SecRequirementCreateWithString(CFString::new(text).as_concrete_TypeRef(), 0, &mut req) };
+        let status = unsafe {
+            SecRequirementCreateWithString(CFString::new(text).as_concrete_TypeRef(), 0, &mut req)
+        };
         if status != 0 || req.is_null() {
             return Err(format!("Invalid client requirement ({status})"));
         }
@@ -48,15 +55,28 @@ impl Requirement {
         let mut token = [0u8; 32];
         let mut len = token.len() as libc::socklen_t;
         let rc = unsafe {
-            libc::getsockopt(stream.as_raw_fd(), SOL_LOCAL, LOCAL_PEERTOKEN, token.as_mut_ptr() as *mut c_void, &mut len)
+            libc::getsockopt(
+                stream.as_raw_fd(),
+                SOL_LOCAL,
+                LOCAL_PEERTOKEN,
+                token.as_mut_ptr() as *mut c_void,
+                &mut len,
+            )
         };
         if rc != 0 || len as usize != token.len() {
             return false;
         }
         let key = unsafe { CFString::wrap_under_get_rule(kSecGuestAttributeAudit) };
-        let attrs = CFDictionary::from_CFType_pairs(&[(key.as_CFType(), CFData::from_buffer(&token).as_CFType())]);
+        let attrs = CFDictionary::from_CFType_pairs(&[(
+            key.as_CFType(),
+            CFData::from_buffer(&token).as_CFType(),
+        )]);
         let mut code: CFTypeRef = std::ptr::null();
-        if unsafe { SecCodeCopyGuestWithAttributes(std::ptr::null(), attrs.as_CFTypeRef(), 0, &mut code) } != 0 || code.is_null() {
+        if unsafe {
+            SecCodeCopyGuestWithAttributes(std::ptr::null(), attrs.as_CFTypeRef(), 0, &mut code)
+        } != 0
+            || code.is_null()
+        {
             return false;
         }
         let code = unsafe { CFType::wrap_under_create_rule(code) };
@@ -81,11 +101,20 @@ fn handle(state: &Mutex<State>, owner: u64, start: Instant, request: Request) ->
             .map(str::to_owned)
             .and_then(|k| s.fans.read(&k))
             .map(Response::value),
-        Request::Renew => Ok(Response::value(if s.lease.renewed(owner, now) { 1.0 } else { 0.0 })),
+        Request::Renew => Ok(Response::value(if s.lease.renewed(owner, now) {
+            1.0
+        } else {
+            0.0
+        })),
         Request::Metadata => {
             let template = s.fans.mode_key_template().to_string();
             let force = s.fans.has_force_test();
-            Ok(Response { ok: true, mode_key_template: Some(template), has_force_test_key: Some(force), ..Default::default() })
+            Ok(Response {
+                ok: true,
+                mode_key_template: Some(template),
+                has_force_test_key: Some(force),
+                ..Default::default()
+            })
         }
         Request::SetManual { fan, rpm } => p::validate_fan_id(fan).and_then(|fan| {
             let rpm = p::validate_requested_rpm(rpm)?;
@@ -133,12 +162,16 @@ fn session(stream: UnixStream, state: Arc<Mutex<State>>, owner: u64, start: Inst
 
 pub fn serve(path: &str, requirement: &str) -> Result<(), String> {
     let requirement = Arc::new(Requirement::new(requirement)?);
-    let state = Arc::new(Mutex::new(State { fans: Fans::open()?, lease: FanControlLease::default() }));
+    let state = Arc::new(Mutex::new(State {
+        fans: Fans::open()?,
+        lease: FanControlLease::default(),
+    }));
     let start = Instant::now();
     let _ = std::fs::remove_file(path);
     let listener = UnixListener::bind(path).map_err(|e| format!("bind {path}: {e}"))?;
     // Any local user may connect; the code signing check below is the gate.
-    std::fs::set_permissions(path, std::os::unix::fs::PermissionsExt::from_mode(0o666)).map_err(|e| e.to_string())?;
+    std::fs::set_permissions(path, std::os::unix::fs::PermissionsExt::from_mode(0o666))
+        .map_err(|e| e.to_string())?;
 
     let watchdog = state.clone();
     std::thread::spawn(move || loop {

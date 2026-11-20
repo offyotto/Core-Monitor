@@ -12,11 +12,17 @@ pub struct Fans {
 
 impl Fans {
     pub fn open() -> Result<Self, String> {
-        Ok(Self { smc: Smc::open().map_err(|e| e.0)?, mode_template_lower: None, has_force_test: None })
+        Ok(Self {
+            smc: Smc::open().map_err(|e| e.0)?,
+            mode_template_lower: None,
+            has_force_test: None,
+        })
     }
 
     pub fn read(&self, key: &str) -> Result<f64, String> {
-        self.smc.read_strict(key).ok_or_else(|| format!("Could not read SMC key {key}"))
+        self.smc
+            .read_strict(key)
+            .ok_or_else(|| format!("Could not read SMC key {key}"))
     }
 
     fn detect(&mut self) {
@@ -30,7 +36,11 @@ impl Fans {
 
     pub fn mode_key_template(&mut self) -> &'static str {
         self.detect();
-        if self.mode_template_lower == Some(true) { "F%dmd" } else { "F%dMd" }
+        if self.mode_template_lower == Some(true) {
+            "F%dmd"
+        } else {
+            "F%dMd"
+        }
     }
 
     pub fn has_force_test(&mut self) -> bool {
@@ -47,7 +57,9 @@ impl Fans {
     }
 
     fn write(&self, key: &str, value: i64) -> Result<(), String> {
-        self.smc.write(key, value).map_err(|e| format!("Write {key} failed: {e}"))
+        self.smc
+            .write(key, value)
+            .map_err(|e| format!("Write {key} failed: {e}"))
     }
 
     fn manual_fans_excluding(&mut self, excluded: usize) -> usize {
@@ -65,8 +77,14 @@ impl Fans {
         let rpm = p::validated_hardware_rpm(
             fan,
             rpm,
-            self.smc.read(&format!("F{fan}Mn")).filter(|v| v.is_finite()).map(|v| v.round() as i64),
-            self.smc.read(&format!("F{fan}Mx")).filter(|v| v.is_finite()).map(|v| v.round() as i64),
+            self.smc
+                .read(&format!("F{fan}Mn"))
+                .filter(|v| v.is_finite())
+                .map(|v| v.round() as i64),
+            self.smc
+                .read(&format!("F{fan}Mx"))
+                .filter(|v| v.is_finite())
+                .map(|v| v.round() as i64),
         )?;
         if self.has_force_test() && !self.force_test_enabled() {
             let _ = self.write("Ftst", 1);

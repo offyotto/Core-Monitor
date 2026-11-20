@@ -41,6 +41,7 @@
 - [Privacy](#privacy)
 - [How it compares](#how-it-compares)
 - [Build from source](#build-from-source)
+- [Rust rewrite](#rust-rewrite)
 
 ## Install
 
@@ -121,7 +122,21 @@ iStat Menus is paid. TG Pro and Macs Fan Control focus mainly on fans. Stats is 
 2. Open `Core-Monitor.xcodeproj` in Xcode.
 3. Build and run the `Core-Monitor` scheme.
 
+To build the Rust rewrite instead, see [Rust rewrite](#rust-rewrite).
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) before you send a change. Report security problems as described in [SECURITY.md](SECURITY.md).
+
+## Rust rewrite
+
+The [`rust/`](rust/) directory holds a Rust rewrite of Core-Monitor: the monitoring core, alerts, fan control, the privileged SMC helper, and a menu bar app with a dashboard. It needs Rust 1.95 or later.
+
+```bash
+cd rust
+cargo test --workspace
+./scripts/bundle.sh   # builds build/rust/Core-Monitor.app
+```
+
+See [rust/README.md](rust/README.md) for its layout, the helper install steps, and the Swift features it does not port yet.
 
 ## License
 

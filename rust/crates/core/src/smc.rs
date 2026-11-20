@@ -83,7 +83,10 @@ pub fn decode_ioft(raw: &[u8], data_size: u32) -> Option<f64> {
     if data_size != 8 || raw.len() < 8 {
         return None;
     }
-    let value = raw[..8].iter().rev().fold(0u64, |acc, b| (acc << 8) | *b as u64);
+    let value = raw[..8]
+        .iter()
+        .rev()
+        .fold(0u64, |acc, b| (acc << 8) | *b as u64);
     Some(value as f64 / 65_536.0)
 }
 
@@ -108,11 +111,19 @@ pub fn decode(raw: &[u8; 32], key: Option<&str>, data_type: u32, data_size: u32)
 }
 
 /// Strict decoder used by the privileged helper: no generic fallbacks.
-pub fn decode_strict(raw: &[u8; 32], key: Option<&str>, data_type: u32, data_size: u32) -> Option<f64> {
+pub fn decode_strict(
+    raw: &[u8; 32],
+    key: Option<&str>,
+    data_type: u32,
+    data_size: u32,
+) -> Option<f64> {
     match (data_type, data_size) {
-        (TYPE_SP78, 2) | (TYPE_FPE2, 2) | (TYPE_UI8, 1) | (TYPE_UI16, 2) | (TYPE_FLT, 4) | (TYPE_IOFT, 8) => {
-            decode(raw, key, data_type, data_size)
-        }
+        (TYPE_SP78, 2)
+        | (TYPE_FPE2, 2)
+        | (TYPE_UI8, 1)
+        | (TYPE_UI16, 2)
+        | (TYPE_FLT, 4)
+        | (TYPE_IOFT, 8) => decode(raw, key, data_type, data_size),
         _ => None,
     }
 }
@@ -194,11 +205,26 @@ mod tests {
 
     #[test]
     fn decodes_fixed_point_types() {
-        assert_eq!(decode(&bytes(&[0x2A, 0x80]), None, TYPE_SP78, 2), Some(42.5));
-        assert_eq!(decode(&bytes(&[0x1F, 0x40]), None, TYPE_FPE2, 2), Some(2000.0));
-        assert_eq!(decode(&bytes(&[0xFF, 0xFE]), None, TYPE_SI16, 2), Some(-2.0));
-        assert_eq!(decode(&bytes(&[0x00, 0x05]), None, four_cc(b"zzzz"), 2), Some(5.0));
-        assert_eq!(decode_strict(&bytes(&[0x00, 0x05]), None, four_cc(b"zzzz"), 2), None);
+        assert_eq!(
+            decode(&bytes(&[0x2A, 0x80]), None, TYPE_SP78, 2),
+            Some(42.5)
+        );
+        assert_eq!(
+            decode(&bytes(&[0x1F, 0x40]), None, TYPE_FPE2, 2),
+            Some(2000.0)
+        );
+        assert_eq!(
+            decode(&bytes(&[0xFF, 0xFE]), None, TYPE_SI16, 2),
+            Some(-2.0)
+        );
+        assert_eq!(
+            decode(&bytes(&[0x00, 0x05]), None, four_cc(b"zzzz"), 2),
+            Some(5.0)
+        );
+        assert_eq!(
+            decode_strict(&bytes(&[0x00, 0x05]), None, four_cc(b"zzzz"), 2),
+            None
+        );
     }
 
     #[test]

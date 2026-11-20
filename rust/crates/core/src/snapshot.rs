@@ -74,7 +74,11 @@ impl DiskStats {
             used_gb: used as f64 / GB,
             free_gb: available as f64 / GB,
             purgeable_gb: purgeable as f64 / GB,
-            usage_percent: if total > 0 { used as f64 / total as f64 * 100.0 } else { 0.0 },
+            usage_percent: if total > 0 {
+                used as f64 / total as f64 * 100.0
+            } else {
+                0.0
+            },
         }
     }
 }
@@ -120,14 +124,24 @@ pub struct MemoryStats {
 
 /// Used memory is active + wired + compressor pages; pressure follows the
 /// remaining fraction (green above 25%, yellow above 12%, red otherwise).
-pub fn memory_stats(active_pages: u64, wired_pages: u64, compressed_pages: u64, page_size: u64, total_bytes: u64) -> Option<MemoryStats> {
+pub fn memory_stats(
+    active_pages: u64,
+    wired_pages: u64,
+    compressed_pages: u64,
+    page_size: u64,
+    total_bytes: u64,
+) -> Option<MemoryStats> {
     const GIB: f64 = 1_073_741_824.0;
     let total = total_bytes as f64;
     if total <= 0.0 {
         return None;
     }
     let page = page_size as f64;
-    let (app, wired, compressed) = (active_pages as f64 * page, wired_pages as f64 * page, compressed_pages as f64 * page);
+    let (app, wired, compressed) = (
+        active_pages as f64 * page,
+        wired_pages as f64 * page,
+        compressed_pages as f64 * page,
+    );
     let used = app + wired + compressed;
     let available = (total - used).max(0.0);
     let ratio = (available / total).clamp(0.0, 1.0);
@@ -166,13 +180,17 @@ pub fn battery_health_percent(max_capacity: i64, design_capacity: i64) -> Option
 
 /// AppleSmartBattery reports decikelvin or centikelvin depending on model.
 pub fn battery_temperature_c(raw: i64) -> Option<f64> {
-    [raw as f64 / 10.0 - 273.15, raw as f64 / 100.0 - 273.15].into_iter().find(|c| *c > -40.0 && *c < 120.0)
+    [raw as f64 / 10.0 - 273.15, raw as f64 / 100.0 - 273.15]
+        .into_iter()
+        .find(|c| *c > -40.0 && *c < 120.0)
 }
 
 /// Wrapping-safe CPU usage from two `host_cpu_load_info` tick samples
 /// (`[user, system, idle, nice]`).
 pub fn cpu_usage_percent(previous: [u32; 4], current: [u32; 4]) -> Option<f64> {
-    let d: Vec<f64> = (0..4).map(|i| current[i].wrapping_sub(previous[i]) as f64).collect();
+    let d: Vec<f64> = (0..4)
+        .map(|i| current[i].wrapping_sub(previous[i]) as f64)
+        .collect();
     let total: f64 = d.iter().sum();
     (total > 0.0).then(|| ((d[0] + d[1] + d[3]) / total * 100.0).clamp(0.0, 100.0))
 }
@@ -240,7 +258,11 @@ mod tests {
 
     #[test]
     fn safety_temperature_prefers_peak() {
-        let s = SystemSnapshot { cpu_temperature: Some(60.0), cpu_peak_temperature: Some(80.0), ..Default::default() };
+        let s = SystemSnapshot {
+            cpu_temperature: Some(60.0),
+            cpu_peak_temperature: Some(80.0),
+            ..Default::default()
+        };
         assert_eq!(s.cpu_safety_temperature(), Some(80.0));
         assert_eq!(s.gpu_safety_temperature(), None);
     }
@@ -250,10 +272,23 @@ mod tests {
         let total = 16 * 1_073_741_824u64;
         let page = 16_384u64;
         let pages = |fraction: f64| (total as f64 * fraction / page as f64) as u64;
-        assert_eq!(memory_stats(pages(0.5), 0, 0, page, total).unwrap().pressure, MemoryPressure::Green);
-        assert_eq!(memory_stats(pages(0.8), 0, 0, page, total).unwrap().pressure, MemoryPressure::Yellow);
+        assert_eq!(
+            memory_stats(pages(0.5), 0, 0, page, total)
+                .unwrap()
+                .pressure,
+            MemoryPressure::Green
+        );
+        assert_eq!(
+            memory_stats(pages(0.8), 0, 0, page, total)
+                .unwrap()
+                .pressure,
+            MemoryPressure::Yellow
+        );
         let red = memory_stats(pages(0.6), pages(0.2), pages(0.2), page, total).unwrap();
-        assert_eq!((red.pressure, red.usage_percent.round()), (MemoryPressure::Red, 100.0));
+        assert_eq!(
+            (red.pressure, red.usage_percent.round()),
+            (MemoryPressure::Red, 100.0)
+        );
         assert!(memory_stats(1, 1, 1, page, 0).is_none());
     }
 

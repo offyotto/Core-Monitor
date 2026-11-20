@@ -19,28 +19,38 @@ pub struct TemperatureSummary {
     pub peak: f64,
 }
 
-const INTEL_CPU: &[&str] = &["TC0P", "TCXC", "TC0E", "TC0F", "TC0D", "TC1C", "TC2C", "TC3C", "TC4C"];
+const INTEL_CPU: &[&str] = &[
+    "TC0P", "TCXC", "TC0E", "TC0F", "TC0D", "TC1C", "TC2C", "TC3C", "TC4C",
+];
 const INTEL_GPU: &[&str] = &["TGDD", "TG0P", "TG0D", "TG0E", "TG0F"];
-const M1_CPU: &[&str] = &["Tp09", "Tp0T", "Tp01", "Tp05", "Tp0D", "Tp0H", "Tp0L", "Tp0P", "Tp0X", "Tp0b"];
+const M1_CPU: &[&str] = &[
+    "Tp09", "Tp0T", "Tp01", "Tp05", "Tp0D", "Tp0H", "Tp0L", "Tp0P", "Tp0X", "Tp0b",
+];
 const M1_GPU: &[&str] = &["Tg05", "Tg0D", "Tg0L", "Tg0T"];
 const M2_CPU: &[&str] = &[
     "Tp1h", "Tp1t", "Tp1p", "Tp1l", "Tp01", "Tp05", "Tp09", "Tp0D", "Tp0X", "Tp0b", "Tp0f", "Tp0j",
 ];
 const M2_GPU: &[&str] = &["Tg0f", "Tg0j"];
 const M3_CPU: &[&str] = &[
-    "Te05", "Te0L", "Te0P", "Te0S", "Tf04", "Tf09", "Tf0A", "Tf0B", "Tf0D", "Tf0E", "Tf44", "Tf49", "Tf4A",
-    "Tf4B", "Tf4D", "Tf4E",
+    "Te05", "Te0L", "Te0P", "Te0S", "Tf04", "Tf09", "Tf0A", "Tf0B", "Tf0D", "Tf0E", "Tf44", "Tf49",
+    "Tf4A", "Tf4B", "Tf4D", "Tf4E",
 ];
-const M3_GPU: &[&str] = &["Tf14", "Tf18", "Tf19", "Tf1A", "Tf24", "Tf28", "Tf29", "Tf2A"];
+const M3_GPU: &[&str] = &[
+    "Tf14", "Tf18", "Tf19", "Tf1A", "Tf24", "Tf28", "Tf29", "Tf2A",
+];
 const M4_CPU: &[&str] = &[
     "Te05", "Te0S", "Te09", "Te0H", "Tp01", "Tp05", "Tp09", "Tp0D", "Tp0V", "Tp0Y", "Tp0b", "Tp0e",
 ];
-const M4_GPU: &[&str] = &["Tg0G", "Tg0H", "Tg1U", "Tg1k", "Tg0K", "Tg0L", "Tg0d", "Tg0e", "Tg0j", "Tg0k"];
-const M5_CPU: &[&str] = &[
-    "Tp00", "Tp04", "Tp08", "Tp0C", "Tp0G", "Tp0K", "Tp0O", "Tp0R", "Tp0U", "Tp0X", "Tp0a", "Tp0d", "Tp0g",
-    "Tp0j", "Tp0m", "Tp0p", "Tp0u", "Tp0y",
+const M4_GPU: &[&str] = &[
+    "Tg0G", "Tg0H", "Tg1U", "Tg1k", "Tg0K", "Tg0L", "Tg0d", "Tg0e", "Tg0j", "Tg0k",
 ];
-const M5_GPU: &[&str] = &["Tg0U", "Tg0X", "Tg0d", "Tg0g", "Tg0j", "Tg1Y", "Tg1c", "Tg1g"];
+const M5_CPU: &[&str] = &[
+    "Tp00", "Tp04", "Tp08", "Tp0C", "Tp0G", "Tp0K", "Tp0O", "Tp0R", "Tp0U", "Tp0X", "Tp0a", "Tp0d",
+    "Tp0g", "Tp0j", "Tp0m", "Tp0p", "Tp0u", "Tp0y",
+];
+const M5_GPU: &[&str] = &[
+    "Tg0U", "Tg0X", "Tg0d", "Tg0g", "Tg0j", "Tg1Y", "Tg1c", "Tg1g",
+];
 
 fn unique(lists: &[&[&'static str]]) -> Vec<&'static str> {
     let mut out: Vec<&'static str> = Vec::new();
@@ -94,7 +104,10 @@ pub fn sensors(chip_name: &str, is_apple_silicon: bool) -> SensorSet {
     SensorSet {
         cpu_keys: cpu,
         gpu_keys: gpu,
-        storage_sensors: vec![StorageSensor { key: "TH0x", label: "NAND (SMC)" }],
+        storage_sensors: vec![StorageSensor {
+            key: "TH0x",
+            label: "NAND (SMC)",
+        }],
     }
 }
 
@@ -102,19 +115,34 @@ fn valid(value: f64, upper: f64) -> bool {
     value.is_finite() && value > 0.0 && value < upper
 }
 
-pub fn summary(keys: &[&str], mut read: impl FnMut(&str) -> Option<f64>) -> Option<TemperatureSummary> {
-    let values: Vec<f64> = keys.iter().filter_map(|k| read(k)).filter(|v| valid(*v, 150.0)).collect();
-    let peak = values.iter().copied().fold(None, |m: Option<f64>, v| Some(m.map_or(v, |m| m.max(v))))?;
-    Some(TemperatureSummary { average: values.iter().sum::<f64>() / values.len() as f64, peak })
+pub fn summary(
+    keys: &[&str],
+    mut read: impl FnMut(&str) -> Option<f64>,
+) -> Option<TemperatureSummary> {
+    let values: Vec<f64> = keys
+        .iter()
+        .filter_map(|k| read(k))
+        .filter(|v| valid(*v, 150.0))
+        .collect();
+    let peak = values
+        .iter()
+        .copied()
+        .fold(None, |m: Option<f64>, v| Some(m.map_or(v, |m| m.max(v))))?;
+    Some(TemperatureSummary {
+        average: values.iter().sum::<f64>() / values.len() as f64,
+        peak,
+    })
 }
 
 pub fn first_storage_temperature(
     sensors: &[StorageSensor],
     mut read: impl FnMut(&str) -> Option<f64>,
 ) -> Option<(StorageSensor, f64)> {
-    sensors
-        .iter()
-        .find_map(|s| read(s.key).filter(|v| valid(*v, 100.0)).map(|v| (s.clone(), v)))
+    sensors.iter().find_map(|s| {
+        read(s.key)
+            .filter(|v| valid(*v, 100.0))
+            .map(|v| (s.clone(), v))
+    })
 }
 
 #[cfg(test)]
@@ -152,7 +180,9 @@ mod tests {
     #[test]
     fn storage_temperature_skips_out_of_range() {
         let set = sensors("x", false).storage_sensors;
-        let (s, v) = first_storage_temperature(&set, |k| if k == "TH0A" { Some(120.0) } else { Some(41.0) }).unwrap();
+        let (s, v) =
+            first_storage_temperature(&set, |k| if k == "TH0A" { Some(120.0) } else { Some(41.0) })
+                .unwrap();
         assert_eq!((s.key, v), ("TH0B", 41.0));
     }
 }

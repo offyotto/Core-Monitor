@@ -21,7 +21,9 @@ impl NetworkCounterTracker {
             let (mut sent, mut received) = (0u64, 0u64);
             for (id, value) in &counters {
                 // A new or reset interface gets its own baseline.
-                let Some(old) = self.previous.get(id) else { continue };
+                let Some(old) = self.previous.get(id) else {
+                    continue;
+                };
                 sent += value.sent.saturating_sub(old.sent);
                 received += value.received.saturating_sub(old.received);
             }
@@ -46,7 +48,10 @@ mod tests {
     fn first_sample_is_baseline_and_new_interfaces_are_ignored() {
         let mut t = NetworkCounterTracker::default();
         assert_eq!(t.sample(HashMap::from([(1, c(100, 100))]), 0.0), (0.0, 0.0));
-        let rates = t.sample(HashMap::from([(1, c(300, 500)), (2, c(1_000_000, 1_000_000))]), 2.0);
+        let rates = t.sample(
+            HashMap::from([(1, c(300, 500)), (2, c(1_000_000, 1_000_000))]),
+            2.0,
+        );
         assert_eq!(rates, (100.0, 200.0));
     }
 
