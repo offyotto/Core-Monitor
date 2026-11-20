@@ -186,7 +186,10 @@ fn notify(title: &str, message: &str) {
         );
         // Wait on a worker thread so the exited osascript is reaped.
         std::thread::spawn(move || {
-            let _ = std::process::Command::new("/usr/bin/osascript").arg("-e").arg(script).status();
+            let _ = std::process::Command::new("/usr/bin/osascript")
+                .arg("-e")
+                .arg(script)
+                .status();
         });
     }
     #[cfg(not(target_os = "macos"))]

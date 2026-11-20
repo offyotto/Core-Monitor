@@ -470,7 +470,12 @@ mod tests {
     fn decodes_swift_preset_with_ids_and_missing_optionals() {
         let swift = r#"{"name":"x","version":1,"sensor":"cpu","smoothingStepRPM":250,"points":[
             {"temperatureC":40,"speedPercent":10},{"temperatureC":80,"speedPercent":90}]}"#;
-        assert_eq!(CustomFanPreset::from_json(swift).unwrap().resolved_smoothing_step_rpm(), 250);
+        assert_eq!(
+            CustomFanPreset::from_json(swift)
+                .unwrap()
+                .resolved_smoothing_step_rpm(),
+            250
+        );
         let src = r#"{"name":"x","version":1,"sensor":"cpu","points":[
             {"id":"9A1F0D52-1E0B-4C7F-A9E7-6D9C9C0B1F11","temperatureC":40,"speedPercent":10},
             {"temperatureC":80,"speedPercent":90}]}"#;
