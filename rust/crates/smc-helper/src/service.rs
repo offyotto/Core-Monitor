@@ -122,7 +122,13 @@ fn handle(state: &Mutex<State>, owner: u64, start: Instant, request: Request) ->
             if !s.lease.acquire(fan, owner, now) {
                 return Err(format!("Fan {fan} is controlled by another client"));
             }
-            s.fans.set_manual(fan, rpm).map(|_| Response::ok())
+            s.fans.set_manual(fan, rpm).map(|_| Response::ok()).inspect_err(|_| {
+                // A partial write may have left the fan in manual mode; hand it
+                // back now instead of waiting for a lease the client keeps renewing.
+                if s.fans.set_auto(fan).is_ok() {
+                    s.lease.release(fan);
+                }
+            })
         }),
         Request::SetAuto { fan } => p::validate_fan_id(fan).and_then(|fan| {
             if !s.lease.can_control(fan, owner) {
