@@ -90,6 +90,12 @@ fn run(shared: SharedState, on_sample: impl Fn()) {
             let mut s = shared.lock().unwrap();
             if s.quit {
                 fans.restore_automatic(&snapshot);
+                if s.settings_dirty {
+                    settings::save_settings(&s.settings);
+                }
+                if s.alerts_dirty {
+                    settings::save_alerts(&s.alerts);
+                }
                 return;
             }
             record_trends(&mut s.trends, &snapshot, t);
