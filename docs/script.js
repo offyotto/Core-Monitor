@@ -1,6 +1,7 @@
 /* Core-Monitor site
-   A simulated Mac, sampled ten times a second, drives every live number on the
-   page. Nothing here talks to a server. */
+   A simulated Mac drives every live number on the page. It steps ten times a
+   second so the charts move smoothly, but the numbers change once a second,
+   the same rate the app samples at. Nothing here talks to a server. */
 
 (function () {
   "use strict";
@@ -286,13 +287,37 @@
     var key = el.getAttribute("data-r");
     (bound[key] = bound[key] || []).push(el);
   });
+  // Big readouts use a monospace face, where "," and "." take a full
+  // character cell. Wrapping them lets CSS pull the digits back together.
+  function setTight(el, value) {
+    el.textContent = "";
+    var parts = value.split(/([.,])/);
+    for (var j = 0; j < parts.length; j++) {
+      if (!parts[j]) continue;
+      if (parts[j] === "," || parts[j] === ".") {
+        var p = doc.createElement("span");
+        p.className = "punct";
+        p.textContent = parts[j];
+        el.appendChild(p);
+      } else {
+        el.appendChild(doc.createTextNode(parts[j]));
+      }
+    }
+  }
   function setText(key, value) {
     var list = bound[key];
     if (!list) return;
     for (var i = 0; i < list.length; i++) {
-      if (list[i].textContent !== value) list[i].textContent = value;
+      var el = list[i];
+      if (el.textContent === value) continue;
+      if (el.hasAttribute("data-tight")) setTight(el, value);
+      else el.textContent = value;
     }
   }
+  $$(".val [data-r]").forEach(function (el) {
+    el.setAttribute("data-tight", "");
+    setTight(el, el.textContent);
+  });
 
   var coreBars = $$("[data-cores] i");
   var diskBar = $("[data-disk]");
@@ -713,7 +738,7 @@
   // Interior pages share this script but have nothing live to drive.
   var live = sparks.length > 0 || !!trace || !!lab || coreBars.length > 0 || Object.keys(bound).length > 0;
 
-  var textEvery = HZ / 2; // numbers settle at 2 Hz so they stay readable
+  var textEvery = HZ; // numbers change once a second, matching the app
   var stepCount = 0;
 
   function afterStep() {

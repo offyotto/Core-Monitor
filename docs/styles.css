@@ -29,7 +29,7 @@
   --paper-2: #ebe8e0;
   --ink: #17160f;
   --ink-2: #55534c;
-  --ink-3: #8b887f;
+  --ink-3: #67645b;
   --rule: rgba(23, 22, 15, 0.16);
   --rule-strong: rgba(23, 22, 15, 0.55);
 
@@ -59,7 +59,7 @@
     --paper-2: #1d1d1a;
     --ink: #efede6;
     --ink-2: #b0ada4;
-    --ink-3: #777469;
+    --ink-3: #8c897e;
     --rule: rgba(239, 237, 230, 0.16);
     --rule-strong: rgba(239, 237, 230, 0.5);
     --heat: #ff7a33;
@@ -330,6 +330,8 @@ b, strong { font-weight: 600; }
 }
 .strip .val small { font-size: 0.42em; letter-spacing: 0; color: var(--ink-2); margin-left: 0.12em; font-weight: 500; }
 .strip .lbl { display: block; margin-top: 0.7rem; font-size: 0.9375rem; color: var(--ink-2); }
+.strip-note { margin: 0.75rem 0 0; font-size: 0.8125rem; color: var(--ink-2); }
+.val .punct { margin-inline: -0.2em; }
 
 /* the trace: sixty seconds, three sensors, labelled at the line ends */
 
