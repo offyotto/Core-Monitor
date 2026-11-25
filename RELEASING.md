@@ -13,9 +13,11 @@ Core-Monitor is not a throwaway unsigned zip anymore. The release path in this r
 - Homebrew: this repository acts as a custom tap; users should tap it first, then install `offyotto/core-monitor/core-monitor`.
 - Direct support/install docs: README, website, and release notes should present DMG as the standard drag-to-Applications path and ZIP as the fallback/manual path.
 
-## GitHub Actions secrets
+## GitHub release signing setup
 
-The release workflow expects these repository or organization secrets:
+Create the `release-signing` environment in GitHub. Under deployment branches and tags, allow only the branch `main`. Use an active tag ruleset for `v*` to restrict tag creation to release maintainers and block tag updates and deletions.
+
+Put the following secrets in `release-signing`. Remove repository-level copies and remove this repository's access to organization-level copies before enabling signing. This keeps signing credentials unavailable to workflows on other refs, including old tag-triggered workflow definitions.
 
 - `BUILD_CERTIFICATE_BASE64`: base64-encoded Developer ID Application `.p12`
 - `P12_PASSWORD`: password for the `.p12`
@@ -37,9 +39,9 @@ Do not rely on a bare `NOTARYTOOL_PROFILE` secret on GitHub Actions. A profile n
 
 1. Update the changelog-worthy product copy in the README and website if the release shifts positioning or install instructions.
 2. Make sure the marketing version and build number in Xcode are correct.
-3. Tag the commit with a release tag such as `v14.0.0`.
-4. Push the branch and tag.
-5. Let `.github/workflows/release.yml` build, notarize, and publish both `Core-Monitor.app.zip` and `Core-Monitor.dmg`.
+3. Merge the release commit into protected `main`.
+4. Push a release tag such as `v14.0.0` for that commit.
+5. The tag push queues the Release workflow on `main`. To rerun a release, dispatch the workflow on `main` and enter the existing tag. Set `create_release` to false to build and notarize without publishing.
 6. Confirm the release contains:
 - `Core-Monitor.dmg`
 - `Core-Monitor.dmg.sha256`
@@ -47,7 +49,8 @@ Do not rely on a bare `NOTARYTOOL_PROFILE` secret on GitHub Actions. A profile n
 - `Core-Monitor.app.zip.sha256`
 - `core-monitor.rb`
 7. Verify the website's main download button resolves to the DMG and the install section still exposes the ZIP fallback.
-8. Test the Homebrew install path:
+8. Verify the ZIP against its published checksum. Copy the release's generated `core-monitor.rb` to `Casks/core-monitor.rb`, check that its versioned URL and checksum match the release, and merge that cask update into `main`.
+9. Test the Homebrew install path:
 
 ```bash
 brew tap --custom-remote offyotto/core-monitor https://github.com/offyotto/Core-Monitor
