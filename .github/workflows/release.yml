@@ -6,46 +6,78 @@ on:
       tag:
         description: Existing git tag to release, for example v14.0.0
         required: true
+        type: string
       create_release:
         description: Create or update the GitHub Release after notarization
         required: false
-        default: "true"
+        type: boolean
+        default: true
   push:
     tags:
       - "v*"
 
-permissions: read-all
+permissions: {}
 
 jobs:
+  dispatch-tag-release:
+    name: Queue release from main
+    if: github.event_name == 'push' && github.ref_type == 'tag' && !github.event.deleted
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Dispatch release on protected main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh workflow run release.yml --repo "${GITHUB_REPOSITORY}" --ref main --raw-field "tag=${RELEASE_TAG}"
+
   notarized-release:
     name: Build, Notarize, and Publish
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: macos-26
     timeout-minutes: 60
+    environment: release-signing
     permissions:
       contents: write
       id-token: write
       attestations: write
       artifact-metadata: write
     env:
-      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}
+      RELEASE_TAG: ${{ inputs.tag }}
 
     steps:
-      - name: Check out repository
+      - name: Check out trusted main revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
-          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref }}
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Validate and check out release commit
+        shell: bash
+        run: |
+          if [[ ! "${RELEASE_TAG}" =~ ^v[0-9]+[.][0-9]+[.][0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "Expected a version tag such as v17.0.5 or v17.0.5-rc.1." >&2
+            exit 1
+          fi
+          tag_ref="refs/tags/${RELEASE_TAG}"
+          tag_object=$(git show-ref --verify --hash "${tag_ref}")
+          release_commit=$(git rev-parse --verify "${tag_object}^{commit}")
+          if ! git merge-base --is-ancestor "${release_commit}" "${GITHUB_SHA}"; then
+            echo "The release tag must point to a commit on protected main." >&2
+            exit 1
+          fi
+          git checkout --detach "${release_commit}"
+          printf 'RELEASE_TAG_OBJECT=%s\n' "${tag_object}" >> "${GITHUB_ENV}"
+          printf 'Building %s from commit %s\n' "${RELEASE_TAG}" "${release_commit}"
 
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
         with:
           # The macOS 26 SDK enables Liquid Glass in standard controls.
           xcode-version: '26.6'
-
-      - name: Verify release tag exists
-        run: |
-          git show-ref --verify --quiet "refs/tags/${RELEASE_TAG}"
-          git rev-parse --verify "${RELEASE_TAG}^{commit}"
 
       - name: Check out release validator
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -219,11 +251,19 @@ jobs:
             build/release/Core-Monitor.dmg
 
       - name: Create or update GitHub Release
-        if: github.event_name == 'push' || github.event.inputs.create_release == 'true'
+        if: inputs.create_release
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ env.RELEASE_TAG }}
         run: |
+          tag_ref="refs/tags/${RELEASE_TAG}"
+          remote_tag_object=$(git ls-remote --refs --tags origin "${tag_ref}" |
+            awk -v ref="${tag_ref}" '$2 == ref { print $1 }')
+          if [[ "${remote_tag_object}" != "${RELEASE_TAG_OBJECT}" ]]; then
+            echo "The release tag changed after the build started." >&2
+            exit 1
+          fi
           if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
             gh release upload "${RELEASE_TAG}" \
               build/release/Core-Monitor.app.zip \
@@ -239,6 +279,7 @@ jobs:
               build/release/Core-Monitor.dmg \
               build/release/Core-Monitor.dmg.sha256 \
               build/release/core-monitor.rb \
+              --verify-tag \
               --title "Core-Monitor ${VERSION}" \
               --generate-notes
           fi

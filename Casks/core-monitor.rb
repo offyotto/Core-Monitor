@@ -1,8 +1,8 @@
 cask "core-monitor" do
-  version :latest
-  sha256 :no_check
+  version "17.0.5"
+  sha256 "ffd20ac98b73396f8bbbee787d45931f71e16fef4614046098696bf0de18a931"
 
-  url "https://github.com/offyotto/Core-Monitor/releases/latest/download/Core-Monitor.app.zip",
+  url "https://github.com/offyotto/Core-Monitor/releases/download/v17.0.5/Core-Monitor.app.zip",
       verified: "github.com/offyotto/Core-Monitor/"
   name "Core-Monitor"
   desc "Native Apple Silicon system monitor with menu bar stats, alerts, and SMC-backed fan control"
